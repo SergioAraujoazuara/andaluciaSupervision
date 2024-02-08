@@ -18,10 +18,10 @@ function Home() {
   return (
     <div className='min-h-screen px-14 py-5 text-gray-500'>
 
-      <div className='flex gap-2 items-center justify start bg-white px-5 py-4 rounded rounded-xl shadow-md'>
+      <div className='flex gap-2 items-center justify start bg-white px-5 py-4 rounded rounded-xl shadow-md text-sm'>
         <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
         <Link to={'/'}>
-          <h1 className='text-base font-medium text-gray-500 text-amber-600'>Inicio</h1>
+          <h1 className='font-medium text-gray-500 text-amber-600'>Inicio</h1>
         </Link>
       </div>
 

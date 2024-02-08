@@ -43,7 +43,7 @@ function FormularioInspeccion() {
            <div className='flex gap-2 items-center justify start bg-white px-5 py-4 rounded rounded-xl shadow-md text-sm'>
                 <GoHomeFill style={{ width: 12, height: 12, fill: '#d97706' }} />
                 <Link to={'/'}>
-                    <h1 className='font-medium text-gray-500 text-amber-600'>Home</h1>
+                    <h1 className='font-medium text-gray-500 text-amber-600'>Inicio</h1>
                 </Link>
                 <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                 <Link to={'/modulos'}>
@@ -55,7 +55,7 @@ function FormularioInspeccion() {
                 </Link>
                 <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                 <Link to={'/modulos'}>
-                    <h1 className='text-gray-500 text-gray-500'>Formulario</h1>
+                    <h1 className='font-medium text-amber-600'>Formulario</h1>
                 </Link>
             </div>
 
