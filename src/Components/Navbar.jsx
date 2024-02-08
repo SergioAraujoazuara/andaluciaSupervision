@@ -6,14 +6,8 @@ import { Link, useLocation } from 'react-router-dom';
 const Navbar = () => {
   const location = useLocation();
   const [activeLink, setActiveLink] = React.useState(location.pathname);
-  const [projectName, setProjectName] = React.useState('');
 
-  // Obtener el nombre del proyecto del almacenamiento local
-  React.useEffect(() => {
-    const storedProjectName = localStorage.getItem('proyectoNombre');
-    setProjectName(storedProjectName);
-    setActiveLink(location.pathname);
-  }, [location.pathname]);
+
 
   const handleLinkClick = (linkName) => {
     setActiveLink(linkName);
@@ -46,16 +40,7 @@ const Navbar = () => {
                 activeLink={activeLink}
                 handleLinkClick={handleLinkClick}
               />
-              {location.pathname !== '/' && location.pathname !== '/admin' && (
               
-                <Link
-                  to="/"
-                  onClick={() => handleLinkClick('/')}
-                  className={`flex items-center px-1 pt-1 border-b-2 border-sky-500 text-sky-600 text-base font-medium flex-grow flex-grow`}
-                >
-                  {projectName || 'Proyecto'}
-                </Link>
-              )}
             </div>
           </div>
         </div>

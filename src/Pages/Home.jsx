@@ -18,12 +18,14 @@ function Home() {
   return (
     <div className='min-h-screen px-14 py-5 text-gray-500'>
 
-      <div className='flex gap-2 items-center justify start bg-white px-5 py-4 rounded rounded-xl shadow-md text-sm'>
-        <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-        <Link to={'/'}>
-          <h1 className='font-medium text-gray-500 text-amber-600'>Inicio</h1>
-        </Link>
-      </div>
+<div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+  <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+  <Link to={'/'}>
+    <h1 className='font-medium text-gray-500 text-amber-600'>Inicio</h1>
+  </Link>
+  <button className='bg-sky-600 text-white text-base font-medium px-5 py-2 rounded-md shadow-md' style={{ marginLeft: 'auto' }}>{proyectoNombre}</button>
+</div>
+
 
      
         <div className='flex gap-3 flex-col  mt-5 bg-white p-8 rounded rounded-xl shadow-md'>

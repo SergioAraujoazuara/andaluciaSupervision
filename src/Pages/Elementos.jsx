@@ -5,10 +5,11 @@ import { GoHomeFill } from "react-icons/go";
 import { Link } from 'react-router-dom';
 
 function Elementos() {
+    const proyectoNombre = localStorage.getItem('proyectoNombre')
     return (
         <div className='min-h-screen px-14 py-5'>
 
-            <div className='flex gap-2 items-center justify start bg-white px-5 py-4 rounded rounded-xl shadow-md text-sm'>
+            <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
                 <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                 <Link to={'/'}>
                     <h1 className=' text-gray-500'>Inicio</h1>
@@ -21,6 +22,8 @@ function Elementos() {
                 <Link to={'/elementos'}>
                     <h1 className='font-medium text-amber-600'>Elementos</h1>
                 </Link>
+
+                <button className='bg-sky-600 text-white text-base font-medium px-5 py-2 rounded-md shadow-md' style={{ marginLeft: 'auto' }}>{proyectoNombre}</button>
             </div>
 
             <div>
@@ -42,7 +45,7 @@ function Elementos() {
                             <div className='sm:col-span-2 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Información</div>
                         </div>
 
-                        <Link to={'/formularioInspeccion'}>
+                        <Link to={'/tablaPpi'}>
                             <div className='cursor-pointer grid sm:grid-cols-8 grid-cols-1 items-center justify-start sm:p-5 border-b-2'>
                                 <div className='sm:border-r-2 sm:border-b-0 flex items-center'>
                                     Elemento 1

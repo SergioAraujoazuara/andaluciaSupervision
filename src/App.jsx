@@ -9,7 +9,9 @@ import Contacto from './Pages/Contacto'
 import Footer from './Components/Footer'
 import Modulos from './Pages/Modulos'
 import Elementos from './Pages/Elementos'
-import FormularioInspeccion from './Pages/FormularioInspeccion'
+
+import TablaPpi from './Pages/TablaPpi'
+import FormularioInspeccion from './Components/FormularioInspeccion'
 
 function App() {
 
@@ -24,6 +26,7 @@ function App() {
       <Route path='/modulos' element={<Modulos/>}></Route>
       <Route path='/elementos' element={<Elementos/>}></Route>
   
+      <Route path='/tablaPpi' element={<TablaPpi/>}></Route>
       <Route path='/formularioInspeccion' element={<FormularioInspeccion/>}></Route>
     </Routes>
 
