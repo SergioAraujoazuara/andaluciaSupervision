@@ -4,7 +4,7 @@ import './App.css'
 import { Routes, Route } from 'react-router-dom'
 import Home from './Pages/Home'
 import Navbar from './Components/Navbar'
-import Admin from './Pages/Admin'
+
 import Contacto from './Pages/Contacto'
 import Footer from './Components/Footer'
 import Modulos from './Pages/Modulos'
@@ -12,6 +12,8 @@ import Elementos from './Pages/Elementos'
 
 import TablaPpi from './Pages/TablaPpi'
 import FormularioInspeccion from './Components/FormularioInspeccion'
+import AdminHome from './Pages/Administrador/AdminHome'
+import CrearProyecto from './Pages/Administrador/CrearProyecto'
 
 function App() {
 
@@ -21,10 +23,14 @@ function App() {
 
     <Routes>
       <Route path='/' element={<Home/>}></Route>
-      <Route path='/admin' element={<Admin/>}></Route>
+
+      <Route path='/admin' element={<AdminHome/>}></Route>
+      <Route path='/admin/crearProyecto' element={<CrearProyecto/>}></Route>
+
       <Route path='/contacto' element={<Contacto/>}></Route>
       <Route path='/modulos' element={<Modulos/>}></Route>
       <Route path='/elementos' element={<Elementos/>}></Route>
+      
   
       <Route path='/tablaPpi' element={<TablaPpi/>}></Route>
       <Route path='/formularioInspeccion' element={<FormularioInspeccion/>}></Route>

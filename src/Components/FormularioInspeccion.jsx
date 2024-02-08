@@ -84,9 +84,9 @@ function FormularioInspeccion() {
                                 <input type="text" id="plano" placeholder="Nombre del plano" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                             </div>
                             <div className="mb-4">
-  <label htmlFor="imagen" className="block text-gray-700 text-sm font-bold mb-2">Seleccionar imagen</label>
-  <input type="file" id="imagen" accept="image/*" className=" rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-</div>
+                                <label htmlFor="imagen" className="block text-gray-700 text-sm font-bold mb-2">Seleccionar imagen</label>
+                                <input type="file" id="imagen" accept="image/*" className=" rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                            </div>
 
 
                             <div className="mb-4 sm:col-span-4">
