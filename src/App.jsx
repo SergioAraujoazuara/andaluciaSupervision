@@ -8,12 +8,15 @@ import Navbar from './Components/Navbar'
 import Contacto from './Pages/Contacto'
 import Footer from './Components/Footer'
 import Modulos from './Pages/Modulos'
-import Elementos from './Pages/Elementos'
+
 
 import TablaPpi from './Pages/TablaPpi'
 import FormularioInspeccion from './Components/FormularioInspeccion'
 import AdminHome from './Pages/Administrador/AdminHome'
 import CrearProyecto from './Pages/Administrador/CrearProyecto'
+import ViewProject from './Pages/Administrador/ViewProject'
+import EditProject from './Pages/Administrador/EditProject'
+import Ppi from './Pages/Ppi'
 
 function App() {
 
@@ -25,11 +28,13 @@ function App() {
       <Route path='/' element={<Home/>}></Route>
 
       <Route path='/admin' element={<AdminHome/>}></Route>
-      <Route path='/admin/crearProyecto' element={<CrearProyecto/>}></Route>
+      <Route path='/crearProyecto' element={<CrearProyecto/>}></Route>
+      <Route path='/viewProject' element={<ViewProject/>}></Route>
+      <Route path='/editProject/:id' element={<EditProject/>}></Route>
 
       <Route path='/contacto' element={<Contacto/>}></Route>
       <Route path='/modulos' element={<Modulos/>}></Route>
-      <Route path='/elementos' element={<Elementos/>}></Route>
+      <Route path='/ppi' element={<Ppi/>}></Route>
       
   
       <Route path='/tablaPpi' element={<TablaPpi/>}></Route>

@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 
 
 function Modulos() {
-    const proyectoNombre = localStorage.getItem('proyectoNombre')
+    const nombre_proyecto = localStorage.getItem('nombre_proyecto')
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500'>
 
@@ -23,7 +23,7 @@ function Modulos() {
                 <Link to={'/modulos'}>
                     <h1 className='font-medium text-amber-600'>Módulos</h1>
                 </Link>
-                <button className='bg-sky-600 text-white text-base font-medium px-5 py-2 rounded-md shadow-md' style={{ marginLeft: 'auto' }}>{proyectoNombre}</button>
+               
             </div>
 
 
@@ -32,7 +32,7 @@ function Modulos() {
 
                     <div className='flex gap-2 items-center'>
 
-                        <h1 className='font-bold text-xl text-gray-500  px-5 '>Módulos</h1>
+                    <button className='bg-sky-600 text-white text-base font-medium px-5 py-2 rounded-md shadow-md' style={{ marginLeft: 'auto' }}>{nombre_proyecto}</button>
                     </div>
 
                     <div className='border-t-2 w-full p-0 m-0'></div>

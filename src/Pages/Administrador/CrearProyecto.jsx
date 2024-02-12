@@ -3,13 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { db, storage } from '../../../firebase_config';
 import { addDoc, collection, doc, setDoc, getDocs, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Asegúrate de tener esta línea
-
-
 import { GoHomeFill } from "react-icons/go";
 import { Link } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
-import { HiClipboardDocumentCheck } from "react-icons/hi2";
 import AlertaContrato from './AlertaContrato';
+
+
 function CrearProyecto() {
     const proyectoNombre = localStorage.getItem('proyectoNombre')
 
@@ -269,7 +268,7 @@ function CrearProyecto() {
                    
 
                         <div className="flex items-center justify-between">
-                            <button type="submit" className=" bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Guardar</button>
+                            <button type="submit" className=" bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Guardar</button>
                         </div>
 
                         </div>

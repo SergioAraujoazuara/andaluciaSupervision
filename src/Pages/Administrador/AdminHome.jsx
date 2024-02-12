@@ -21,7 +21,7 @@ function AdminHome() {
                     <h1 className='font-ligth text-gray-500'>Inicio</h1>
                 </Link>
                 <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'/modulos'}>
+                <Link to={'#'}>
                     <h1 className='font-medium text-amber-600'>Administración</h1>
                 </Link>
                 <button className='bg-sky-600 text-white text-base font-medium px-5 py-2 rounded-md shadow-md' style={{ marginLeft: 'auto' }}>{proyectoNombre}</button>
@@ -47,7 +47,7 @@ function AdminHome() {
                         <div className='cursor-pointer flex gap-20 items-center justify-start p-5
      '>
 
-                            <Link to={'/admin/crearProyecto'}>
+                            <Link to={'/crearProyecto'}>
                                 <div className='flex gap-3'>
                                 <div className='h-10 flex items-center text-gray-600'>
                                     <IoMdAddCircleOutline style={{ width: 40, height: 40 }} />
@@ -59,13 +59,13 @@ function AdminHome() {
                                 
                             </Link>
 
-                            <Link to={'#'}>
+                            <Link to={'/viewProject'}>
                                 <div className='flex gap-3'>
                                 <div className='h-10 flex items-center text-gray-600'>
                                     <IoCreateOutline style={{ width: 40, height: 40 }} />
                                 </div>
                                 <div className='sm:col-span-9 h-10 flex items-center sm:justify-start text-base font-medium'>
-                                    Editar proyecto
+                                    Ver proyectos
                                 </div>
                                 </div>
                                 

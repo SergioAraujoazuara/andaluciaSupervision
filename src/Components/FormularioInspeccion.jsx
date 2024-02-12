@@ -5,7 +5,7 @@ import { FaArrowRight } from "react-icons/fa";
 import { HiClipboardDocumentCheck } from "react-icons/hi2";
 
 function FormularioInspeccion() {
-    const proyectoNombre = localStorage.getItem('proyectoNombre')
+    const nombre_proyecto = localStorage.getItem('nombre_proyecto')
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500'>
 
@@ -16,18 +16,18 @@ function FormularioInspeccion() {
                     <h1 className='font-medium text-gray-500 text-amber-600'>Inicio</h1>
                 </Link>
                 <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'/modulos'}>
-                    <h1 className='text-gray-500 text-gray-500'>Módulos</h1>
+                <Link to={'/ppi'}>
+                    <h1 className='text-gray-500 text-gray-500'>PPI</h1>
                 </Link>
                 <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'/modulos'}>
-                    <h1 className='text-gray-500 text-gray-500'>Elementos</h1>
+                <Link to={'/tablaPpi'}>
+                    <h1 className='text-gray-500 text-gray-500'>Tabla</h1>
                 </Link>
                 <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'/modulos'}>
+                <Link to={'#'}>
                     <h1 className='font-medium text-amber-600'>Formulario</h1>
                 </Link>
-                <button className='bg-sky-600 text-white text-base font-medium px-5 py-2 rounded-md shadow-md' style={{ marginLeft: 'auto' }}>{proyectoNombre}</button>
+              
             </div>
 
 
@@ -36,7 +36,7 @@ function FormularioInspeccion() {
 
                 <div className='flex gap-2 items-center'>
 
-                    <h1 className='font-bold text-xl text-gray-500  px-5 '>Formulario</h1>
+                <button className='bg-sky-600 text-white text-base font-medium px-5 py-2 rounded-lg shadow-md'>{nombre_proyecto}</button>
                 </div>
 
                 <div className='border-t-2 w-full p-0 m-0'></div>
@@ -51,7 +51,7 @@ function FormularioInspeccion() {
                         <div className='grid sm:grid-cols-4 grid-cols-1 gap-4'>
                             <div className="mb-4">
                                 <label htmlFor="Proyecto" className="block text-gray-700 text-sm font-bold mb-2">Proyecto</label>
-                                <input type="text" id="Proyecto" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value={proyectoNombre} />
+                                <input type="text" id="Proyecto" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value={nombre_proyecto} />
                             </div>
 
                             <div className="mb-4">
@@ -96,7 +96,7 @@ function FormularioInspeccion() {
                         </div>
 
                         <div className="mb-4">
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Trazabilidad</label>
+                            <label className="block text-gray-700 text-sm font-bold mb-5">Trazabilidad</label>
                             <div className="grid sm:grid-cols-4 grid-cols-1 gap-4">
                                 <div>
                                     <label htmlFor="Sector" className="block text-gray-700 text-sm font-bold mb-2">Sector</label>
@@ -129,8 +129,8 @@ function FormularioInspeccion() {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                            <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Guardar</button>
+                        <div>
+                            <button type="submit" className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Guardar</button>
                         </div>
                     </form>
 

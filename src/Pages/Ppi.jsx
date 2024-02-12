@@ -4,8 +4,8 @@ import { FaArrowRight } from "react-icons/fa";
 import { GoHomeFill } from "react-icons/go";
 import { Link } from 'react-router-dom';
 
-function Elementos() {
-    const proyectoNombre = localStorage.getItem('proyectoNombre')
+function Ppi() {
+    const nombre_proyecto = localStorage.getItem('nombre_proyecto')
     return (
         <div className='min-h-screen px-14 py-5'>
 
@@ -14,16 +14,13 @@ function Elementos() {
                 <Link to={'/'}>
                     <h1 className=' text-gray-500'>Inicio</h1>
                 </Link>
+                
                 <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'/modulos'}>
-                    <h1 className=' text-gray-500 text-gray-500'>Módulos</h1>
-                </Link>
-                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'/elementos'}>
-                    <h1 className='font-medium text-amber-600'>Elementos</h1>
+                <Link to={'#'}>
+                    <h1 className='font-medium text-amber-600'>Punto de inspección (PPI)</h1>
                 </Link>
 
-                <button className='bg-sky-600 text-white text-base font-medium px-5 py-2 rounded-md shadow-md' style={{ marginLeft: 'auto' }}>{proyectoNombre}</button>
+               
             </div>
 
             <div>
@@ -31,7 +28,7 @@ function Elementos() {
 
                     <div className='flex gap-2 items-center'>
 
-                        <h1 className='font-bold text-xl text-gray-500 px-5 '>Elementos</h1>
+                    <button className='bg-sky-600 text-white text-base font-medium px-5 py-2 rounded-lg shadow-md' style={{ marginLeft: 'auto' }}>{nombre_proyecto}</button>
                     </div>
 
                     <div className='border-t-2 w-full p-0 m-0'></div>
@@ -41,17 +38,22 @@ function Elementos() {
 
                     <div class="w-full rounded rounded-xl  mt-5">
                         <div className='grid sm:grid-cols-8 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-100 rounded rounded-md '>
-                            <div className='text-left ps-2 font-medium text-gray-600 sm:block hidden'>Nombre</div>
-                            <div className='sm:col-span-2 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Información</div>
+                            <div className='text-left font-medium text-gray-600 sm:block hidden'>Número</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden sm:col-span-3'>Nombre</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden sm:col-span-3'>Información</div>
                         </div>
 
                         <Link to={'/tablaPpi'}>
                             <div className='cursor-pointer grid sm:grid-cols-8 grid-cols-1 items-center justify-start sm:p-5 border-b-2'>
                                 <div className='sm:border-r-2 sm:border-b-0 flex items-center'>
-                                    Elemento 1
+                                0302		
                                 </div>
 
-                                <div className='sm:col-span-2  h-10 flex items-center sm:justify-start sm:ps-10 font-medium text-gray-600'>
+                                 <div className='sm:border-r-2 sm:border-b-0 flex items-center sm:col-span-3 sm:ps-10'>
+                             Elementos estructurales de hormigón	
+                                </div>
+
+                                <div className='h-10 flex items-center sm:justify-start font-medium text-gray-600 sm:col-span-3 sm:ps-10'>
                                     Información sobre elemento 1
                                 </div>
 
@@ -74,4 +76,4 @@ function Elementos() {
     )
 }
 
-export default Elementos
+export default Ppi
