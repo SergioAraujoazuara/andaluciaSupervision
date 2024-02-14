@@ -24,24 +24,17 @@ function AdminHome() {
                 <Link to={'#'}>
                     <h1 className='font-medium text-amber-600'>Administración</h1>
                 </Link>
-                <button className='bg-sky-600 text-white text-base font-medium px-5 py-2 rounded-md shadow-md' style={{ marginLeft: 'auto' }}>{proyectoNombre}</button>
+                
             </div>
 
 
             <div>
             <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
 
-                    <div className='flex gap-2 items-center'>
-
-                        <h1 className='font-bold text-xl text-gray-500  px-5 '>Módulos</h1>
-                    </div>
-
-                    <div className='border-t-2 w-full p-0 m-0'></div>
 
 
 
-
-                    <div class="w-full rounded rounded-xl  mt-5">
+                    <div class="w-full rounded rounded-xl">
 
 
                         <div className='cursor-pointer flex gap-20 items-center justify-start p-5

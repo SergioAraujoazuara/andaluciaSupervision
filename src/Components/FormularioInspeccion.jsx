@@ -16,12 +16,12 @@ function FormularioInspeccion() {
                     <h1 className='font-medium text-gray-500 text-amber-600'>Inicio</h1>
                 </Link>
                 <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'/ppi'}>
-                    <h1 className='text-gray-500 text-gray-500'>PPI</h1>
+                <Link to={'/elemento'}>
+                    <h1 className='text-gray-500 text-gray-500'>Elementos</h1>
                 </Link>
                 <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                 <Link to={'/tablaPpi'}>
-                    <h1 className='text-gray-500 text-gray-500'>Tabla</h1>
+                    <h1 className='text-gray-500 text-gray-500'>PPI</h1>
                 </Link>
                 <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                 <Link to={'#'}>
@@ -36,7 +36,7 @@ function FormularioInspeccion() {
 
                 <div className='flex gap-2 items-center'>
 
-                <button className='bg-sky-600 text-white text-base font-medium px-5 py-2 rounded-lg shadow-md'>{nombre_proyecto}</button>
+               
                 </div>
 
                 <div className='border-t-2 w-full p-0 m-0'></div>
@@ -130,7 +130,7 @@ function FormularioInspeccion() {
                         </div>
 
                         <div>
-                            <button type="submit" className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Guardar</button>
+                            <button type="submit" className="bg-sky-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Guardar</button>
                         </div>
                     </form>
 

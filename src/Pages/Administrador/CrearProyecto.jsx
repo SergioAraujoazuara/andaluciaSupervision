@@ -268,7 +268,7 @@ function CrearProyecto() {
                    
 
                         <div className="flex items-center justify-between">
-                            <button type="submit" className=" bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Guardar</button>
+                            <button type="submit" className=" bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Guardar</button>
                         </div>
 
                         </div>

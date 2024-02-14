@@ -16,7 +16,8 @@ import AdminHome from './Pages/Administrador/AdminHome'
 import CrearProyecto from './Pages/Administrador/CrearProyecto'
 import ViewProject from './Pages/Administrador/ViewProject'
 import EditProject from './Pages/Administrador/EditProject'
-import Ppi from './Pages/Ppi'
+import Elemento from './Pages/Elemento'
+import Capitulos from './Pages/Administrador/Capitulos'
 
 function App() {
 
@@ -31,10 +32,11 @@ function App() {
       <Route path='/crearProyecto' element={<CrearProyecto/>}></Route>
       <Route path='/viewProject' element={<ViewProject/>}></Route>
       <Route path='/editProject/:id' element={<EditProject/>}></Route>
+      <Route path='/capitulos/:id' element={<Capitulos/>}></Route>
 
       <Route path='/contacto' element={<Contacto/>}></Route>
       <Route path='/modulos' element={<Modulos/>}></Route>
-      <Route path='/ppi' element={<Ppi/>}></Route>
+      <Route path='/elemento' element={<Elemento/>}></Route>
       
   
       <Route path='/tablaPpi' element={<TablaPpi/>}></Route>

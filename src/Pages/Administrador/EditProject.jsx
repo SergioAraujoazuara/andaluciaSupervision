@@ -54,30 +54,30 @@ function EditProject() {
         try {
             const proyectoRef = doc(db, 'proyectos', id);
             const batch = writeBatch(db);
-    
+
             // Actualizar el proyecto con el nuevo nombre corto
             batch.update(proyectoRef, { nombre_corto: proyecto.nombre_corto });
-    
+
             // Ejecutar actualización por cada campo individual excepto nombre_corto
             const camposAActualizar = { ...proyecto };
             delete camposAActualizar.nombre_corto; // Eliminar el campo nombre_corto
             for (const campo in camposAActualizar) {
                 batch.update(proyectoRef, { [campo]: camposAActualizar[campo] });
             }
-    
+
             // Obtener todos los registros que tengan el nombre del proyecto anterior
             const registrosQuery = query(collection(db, 'registros'), where('idProyecto', '==', proyecto.id));
             const registrosSnapshot = await getDocs(registrosQuery);
-    
+
             // Actualizar el campo proyecto en los registros encontrados
             registrosSnapshot.forEach((registroDoc) => {
                 const registroRef = doc(db, 'registros', registroDoc.id);
                 batch.update(registroRef, { proyecto: proyecto.nombre_corto });
             });
-    
+
             // Ejecutar el lote de escritura para aplicar todas las actualizaciones
             await batch.commit();
-    
+
             setAlertMessage('Actualizado correctamente');
             setIsAlertOpen(true);
         } catch (error) {
@@ -86,35 +86,35 @@ function EditProject() {
             setIsAlertOpen(true);
         }
     };
-    
+
 
 
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500'>
 
-<div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
-        <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-        <Link to={'/'}>
-          <h1 className='font-ligth text-gray-500'>Inicio</h1>
-        </Link>
-        <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-        <Link to={'/admin'}>
-          <h1 className='text-gray-600'>Administración</h1>
-        </Link>
-        <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-        <Link to={'/viewProject'}>
-          <h1 className=' text-gray-600'>Ver proyectos</h1>
-          
-        </Link>
-        <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-        <Link to={'#'}>
-          <h1 className='font-medium text-amber-600'>Editar </h1>
-          
-        </Link>
-    
-      </div>
+            <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+                <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+                <Link to={'/'}>
+                    <h1 className='font-ligth text-gray-500'>Inicio</h1>
+                </Link>
+                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                <Link to={'/admin'}>
+                    <h1 className='text-gray-600'>Administración</h1>
+                </Link>
+                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                <Link to={'/viewProject'}>
+                    <h1 className=' text-gray-600'>Ver proyectos</h1>
 
-            
+                </Link>
+                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                <Link to={'#'}>
+                    <h1 className='font-medium text-amber-600'>Editar </h1>
+
+                </Link>
+
+            </div>
+
+
 
             <div className="bg-white mx-auto mt-5 grid sm:grid-cols-3 grid-cols-1 gap-8 bg-gray-100 p-8 shadow-xl rounded-lg text-base">
                 {proyecto && (
@@ -122,7 +122,7 @@ function EditProject() {
 
                         {/* Imagen */}
                         <div className='flex justify-start'>
-                            <img className='rounded-md w-20' src={proyecto.logo} alt="logo" />
+                            <img className='rounded-md w-40' src={proyecto.logo} alt="logo" />
                         </div>
 
                         {/* Nombre corto y Código TPF */}
@@ -234,7 +234,7 @@ function EditProject() {
                             <button
                                 type="button"
                                 onClick={actualizarProyecto}
-                                className='mt-8 bg-amber-600 text-white font-bold py-2 px-4 rounded-md hover:bg-sky-900 focus:outline-none focus:ring focus:border-sky-800'
+                                className='mt-8 bg-sky-600 text-white font-bold py-2 px-4 rounded-md hover:bg-sky-700 focus:outline-none focus:ring focus:border-sky-800'
                             >
                                 Actualizar Proyecto
                             </button>
