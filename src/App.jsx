@@ -17,7 +17,8 @@ import CrearProyecto from './Pages/Administrador/CrearProyecto'
 import ViewProject from './Pages/Administrador/ViewProject'
 import EditProject from './Pages/Administrador/EditProject'
 import Elemento from './Pages/Elemento'
-import Capitulos from './Pages/Administrador/Capitulos'
+
+import Trazabilidad from './Pages/Administrador/Trazabilidad'
 
 function App() {
 
@@ -32,7 +33,7 @@ function App() {
       <Route path='/crearProyecto' element={<CrearProyecto/>}></Route>
       <Route path='/viewProject' element={<ViewProject/>}></Route>
       <Route path='/editProject/:id' element={<EditProject/>}></Route>
-      <Route path='/capitulos/:id' element={<Capitulos/>}></Route>
+      <Route path='/trazabilidad/:id' element={<Trazabilidad/>}></Route>
 
       <Route path='/contacto' element={<Contacto/>}></Route>
       <Route path='/modulos' element={<Modulos/>}></Route>

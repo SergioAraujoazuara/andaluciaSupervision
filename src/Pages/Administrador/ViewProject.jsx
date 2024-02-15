@@ -126,8 +126,8 @@ function ViewProject() {
               </div>
               <div className='sm:col-span-3 h-10 flex items-center sm:justify-start sm:ps-6 font-medium text-gray-600'>
 
-                <Link to={`/capitulos/${p.id}`}>
-                  <button className='text-sky-600 px-3 py-1 flex items-center gap-1'> <IoAddCircle style={{ fontSize: 25 }} /> <p> Elementos, capitulos y ppi</p> </button>
+                <Link to={`/trazabilidad/${p.id}`}>
+                  <button className='text-sky-600 px-3 py-1 flex items-center gap-1'> <IoAddCircle style={{ fontSize: 25 }} /> <p> Elementos y trazabilidad</p> </button>
                 </Link>
                 <Link to={`/editProject/${p.id}`}>
                   <button className='text-gray-600 px-3 py-1 text-2xl'> <FaRegEdit /></button>
