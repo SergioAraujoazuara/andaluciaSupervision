@@ -16,12 +16,13 @@ function Trazabilidad() {
     const [sectores, setSectores] = useState([]);
     const [subSectores, setSubSectores] = useState([]);
 
+
     // Inputs
     const [sectorInput, setSectorInput] = useState('');
     const [selectedSector, setSelectedSector] = useState('');
     const [subSectorInput, setSubSectorInput] = useState('');
     const [selectedSubSector, setSelectedSubSector] = useState('');
-
+    const [parteInput, setParteInput] = useState(''); // Nuevo input para la parte
 
     useEffect(() => {
         obtenerProyecto();
@@ -56,7 +57,7 @@ function Trazabilidad() {
             const sectoresSnapshot = await getDocs(sectoresCollectionRef);
             const sectoresData = sectoresSnapshot.docs.map(async doc => {
                 const sectorData = { id: doc.id, ...doc.data() };
-                sectorData.subsectores = await obtenerSubsectores(doc.id); // Obtener subsectores asociados a este sector
+                sectorData.subsectores = await obtenerSubsectores(doc.id);
                 return sectorData;
             });
             const sectoresWithSubsectores = await Promise.all(sectoresData);
@@ -66,30 +67,28 @@ function Trazabilidad() {
         }
     };
 
-
-
-
     // Función para agregar un sector con validación de nombre
     const agregarSector = async () => {
         try {
             // Convertir el nombre del sector ingresado a minúsculas y eliminar espacios
             const nombreSectorNormalizado = sectorInput.toLowerCase().trim();
 
-            // Obtener todos los sectores de la base de datos
-            const sectoresCollectionRef = collection(db, `proyectos/${id}/sector`);
-            const sectoresSnapshot = await getDocs(sectoresCollectionRef);
-            const nombresSectores = sectoresSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
-
-            // Verificar si el nombre del sector ya existe en la base de datos
+            // Verificar si el nombre del sector ya existe en el estado local
+            const nombresSectores = sectores.map(sector => sector.nombre.toLowerCase().trim());
             if (nombresSectores.includes(nombreSectorNormalizado)) {
-                console.log('El nombre del sector ya existe en la base de datos.');
-            } else {
-                // Si el nombre del sector no existe, agregarlo a la base de datos
-                await addDoc(sectoresCollectionRef, { nombre: sectorInput });
-                console.log('Sector agregado correctamente.');
-                setSectorInput(''); // Limpiar el input después de agregar el sector
-                obtenerSectores(); // Actualizar la lista de sectores después de agregar uno nuevo
+                console.log('El nombre del sector ya existe en la lista de sectores.');
+                return;
             }
+
+            // Si el nombre del sector no existe en la lista local, agregarlo
+            const nuevoSector = { nombre: sectorInput };
+            setSectores([...sectores, nuevoSector]);
+
+            // Agregar el nuevo sector a la base de datos
+            const sectoresCollectionRef = collection(db, `proyectos/${id}/sector`);
+            await addDoc(sectoresCollectionRef, { nombre: sectorInput });
+            console.log('Sector agregado correctamente.');
+            setSectorInput(''); // Limpiar el input después de agregar el sector
         } catch (error) {
             console.error('Error al agregar el sector:', error);
         }
@@ -123,18 +122,23 @@ function Trazabilidad() {
     // SUB SECTOR /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Obtener sub sectores
+
     const obtenerSubsectores = async (sectorId) => {
         try {
             const subsectorCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector`);
             const subsectoresSnapshot = await getDocs(subsectorCollectionRef);
-            const subsectoresData = subsectoresSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-            return subsectoresData;
-
+            const subsectoresData = subsectoresSnapshot.docs.map(async doc => {
+                const subsectorData = { id: doc.id, ...doc.data() };
+                subsectorData.partes = await obtenerPartes(sectorId, doc.id); // Obtener partes asociadas a este subsector
+                return subsectorData;
+            });
+            const subsectoresWithPartes = await Promise.all(subsectoresData);
+            return subsectoresWithPartes;
         } catch (error) {
             console.error('Error al obtener los subsectores:', error);
         }
     };
+
 
     // Función para agregar un subsector a la subcolección de un sector específico
     // Función para agregar un subsector con validación de nombre
@@ -182,7 +186,71 @@ function Trazabilidad() {
     };
 
 
+    // PARTE /////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Obtener partes de un subsector específico
+    const obtenerPartes = async (sectorId, subSectorId) => {
+        try {
+            const parteCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte`);
+            const parteSnapshot = await getDocs(parteCollectionRef);
+            return parteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error('Error al obtener las partes:', error);
+        }
+    };
 
+
+// Función para agregar una parte a la subcolección de un subsector específico
+const agregarParte = async (subSectorId) => {
+    try {
+        // Convertir el nombre de la parte ingresado a minúsculas y eliminar espacios
+        const nombreParteNormalizado = parteInput.toLowerCase().trim();
+
+        // Verificar si el nombre de la parte está vacío
+        if (nombreParteNormalizado === '') {
+            console.log('Por favor, ingresa el nombre de la parte.');
+            return; // Salir de la función si el nombre de la parte está vacío
+        }
+
+        // Obtener todos las partes del subsector específico de la base de datos
+        const partesCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${subSectorId}/parte`);
+        const partesSnapshot = await getDocs(partesCollectionRef);
+        const nombresPartes = partesSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
+
+        // Verificar si el nombre de la parte ya existe en el subsector específico de la base de datos
+        if (nombresPartes.includes(nombreParteNormalizado)) {
+            console.log('El nombre de la parte ya existe en el subsector específico.');
+            return; // Salir de la función si el nombre de la parte ya existe
+        }
+
+        // Si el nombre de la parte no existe, agregarla al subsector específico en la base de datos
+        await addDoc(partesCollectionRef, { nombre: parteInput });
+        console.log('Parte agregada correctamente.');
+        setParteInput(''); // Limpiar el input después de agregar la parte
+
+        // Actualizar los subsectores para reflejar la nueva parte agregada
+        const nuevosSubsectores = await obtenerSubsectores(selectedSector);
+        const sectoresActualizados = sectores.map(sector => {
+            if (sector.id === selectedSector) {
+                sector.subsectores = nuevosSubsectores;
+            }
+            return sector;
+        });
+        setSectores(sectoresActualizados);
+    } catch (error) {
+        console.error('Error al agregar la parte:', error);
+    }
+};
+
+
+
+    // Manejar el evento cuando se hace clic en el botón para agregar una parte
+    const handleAgregarParte = () => {
+        if (selectedSubSector) {
+            agregarParte(selectedSubSector);
+        } else {
+            console.error('No se ha seleccionado ningún subsector.');
+        }
+    };
 
 
     return (
@@ -298,42 +366,80 @@ function Trazabilidad() {
                                     onChange={handleSubSectorChange}
 
                                 >
-                                    <option value="">Seleccione un sector</option>
-                                    {subSectores.map((sectore) => (
-                                        <option key={sectore.id} value={sectore.id}>{sectore.nombre}</option>
+                                    <option value="">Seleccione un subsector</option>
+                                    {subSectores.map((subsector) => (
+                                        <option key={subsector.id} value={subsector.id}>{subsector.nombre}</option>
                                     ))}
                                 </select>
                             </div>
 
                         </div>
+
+                        {/* Nuevo input para la parte */}
+                        <div className="flex flex-col items-start gap-3">
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="parte">Parte: </label>
+                                <input
+                                    type="text"
+                                    id="parte"
+                                    className='border px-3 py-1 rounded-lg'
+                                    value={parteInput}
+                                    onChange={(e) => setParteInput(e.target.value)}
+                                />
+                                <button
+                                    onClick={handleAgregarParte}
+                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                >
+                                    <IoMdAddCircle />
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
 
 
                 </div>
 
                 {/* Tabla de sectores y subsectores */}
-                <table className="mt-4 w-full">
-                    <thead>
-                        <tr className='bg-gray-100 border'>
-                            <th className="px-4 py-2 border text-left">Sector</th>
-                            <th className="px-4 py-2 border text-left">Subsectores</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {sectores.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map((sector) => (
-                            <tr key={sector.id}>
-                                <td className="border px-4 py-2">{sector.nombre}</td>
-                                <td className="border px-4 py-2">
-                                    <ul>
-                                        {sector.subsectores.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map((subsector) => (
-                                            <li key={subsector.id}>{subsector.nombre}</li>
-                                        ))}
-                                    </ul>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                {/* Tabla de sectores y subsectores */}
+{/* Tabla de sectores y subsectores */}
+{/* Tabla de sectores, subsectores y partes */}
+<table className="mt-4 w-full border-collapse">
+    <thead>
+        <tr className='bg-gray-100 border'>
+            <th className="px-4 py-2 border-r text-left">Sector</th>
+            <th className="px-4 py-2 border-r text-left">Subsector</th>
+            <th className="px-4 py-2 border-r text-left">Parte</th>
+        </tr>
+    </thead>
+    <tbody>
+        {sectores.map((sector) => (
+            <React.Fragment key={sector.id}>
+                {sector.subsectores.map((subsector, index) => (
+                    <tr key={subsector.id}>
+                        {index === 0 && (
+                            <td className="px-4 py-2 border" rowSpan={sector.subsectores.length}>{sector.nombre}</td>
+                        )}
+                        <td className="px-2 py-1 border-b">{subsector.nombre}</td>
+                        <td className="px-2 py-1 border">
+                            <ul className=''>
+                                {subsector.partes.map((parte) => (
+                                    <li key={parte.id} >{parte.nombre}</li>
+                                ))}
+                            </ul>
+                        </td>
+                    </tr>
+                ))}
+            </React.Fragment>
+        ))}
+    </tbody>
+</table>
+
+
+
+
+
+
 
 
             </div>
