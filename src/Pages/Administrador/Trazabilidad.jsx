@@ -12,25 +12,20 @@ function Trazabilidad() {
 
     // Variables de estado
     const [proyecto, setProyecto] = useState({});
-    // Sub colecciones
     const [sectores, setSectores] = useState([]);
     const [subSectores, setSubSectores] = useState([]);
-
 
     // Inputs
     const [sectorInput, setSectorInput] = useState('');
     const [selectedSector, setSelectedSector] = useState('');
     const [subSectorInput, setSubSectorInput] = useState('');
     const [selectedSubSector, setSelectedSubSector] = useState('');
-    const [parteInput, setParteInput] = useState(''); // Nuevo input para la parte
+    const [parteInput, setParteInput] = useState('');
 
     useEffect(() => {
         obtenerProyecto();
         obtenerSectores();
-        obtenerSubsectores();
     }, []);
-
-    // PROYECTOS /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Obtener información del proyecto
     const obtenerProyecto = async () => {
@@ -48,146 +43,45 @@ function Trazabilidad() {
         }
     };
 
-    // SECTOR /////////////////////////////////////////////////////////////////////////////////////////////////////
-
     // Obtener sectores
     const obtenerSectores = async () => {
         try {
             const sectoresCollectionRef = collection(db, `proyectos/${id}/sector`);
             const sectoresSnapshot = await getDocs(sectoresCollectionRef);
-            const sectoresData = sectoresSnapshot.docs.map(async doc => {
+            const sectoresData = [];
+
+            for (const doc of sectoresSnapshot.docs) {
                 const sectorData = { id: doc.id, ...doc.data() };
                 sectorData.subsectores = await obtenerSubsectores(doc.id);
-                return sectorData;
-            });
-            const sectoresWithSubsectores = await Promise.all(sectoresData);
-            setSectores(sectoresWithSubsectores);
+                sectoresData.push(sectorData);
+            }
+
+            setSectores(sectoresData);
         } catch (error) {
             console.error('Error al obtener los sectores:', error);
         }
     };
 
-    // Función para agregar un sector con validación de nombre
-    const agregarSector = async () => {
-        try {
-            // Convertir el nombre del sector ingresado a minúsculas y eliminar espacios
-            const nombreSectorNormalizado = sectorInput.toLowerCase().trim();
-
-            // Verificar si el nombre del sector ya existe en el estado local
-            const nombresSectores = sectores.map(sector => sector.nombre.toLowerCase().trim());
-            if (nombresSectores.includes(nombreSectorNormalizado)) {
-                console.log('El nombre del sector ya existe en la lista de sectores.');
-                return;
-            }
-
-            // Si el nombre del sector no existe en la lista local, agregarlo
-            const nuevoSector = { nombre: sectorInput };
-            setSectores([...sectores, nuevoSector]);
-
-            // Agregar el nuevo sector a la base de datos
-            const sectoresCollectionRef = collection(db, `proyectos/${id}/sector`);
-            await addDoc(sectoresCollectionRef, { nombre: sectorInput });
-            console.log('Sector agregado correctamente.');
-            setSectorInput(''); // Limpiar el input después de agregar el sector
-        } catch (error) {
-            console.error('Error al agregar el sector:', error);
-        }
-    };
-
-
-    // SELECCIONAR desplegables /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // Función para manejar el cambio de selección en el desplegable de sector
-    const handleSectorChange = async (event) => {
-        const selectedSectorId = event.target.value;
-        setSelectedSector(selectedSectorId);
-
-        // Obtener los subsectores asociados al sector seleccionado
-        if (selectedSectorId) {
-            const subsectores = await obtenerSubsectores(selectedSectorId);
-            setSubSectores(subsectores);
-        } else {
-            // Si no se selecciona ningún sector, limpiar la lista de subsectores
-            setSubSectores([]);
-        }
-    };
-
-    // Función para manejar el cambio de selección en el desplegable de subsector
-    const handleSubSectorChange = (event) => {
-        setSelectedSubSector(event.target.value);
-    };
-
-
-
-    // SUB SECTOR /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // Obtener sub sectores
-
+    // Obtener subsectores
     const obtenerSubsectores = async (sectorId) => {
         try {
             const subsectorCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector`);
             const subsectoresSnapshot = await getDocs(subsectorCollectionRef);
-            const subsectoresData = subsectoresSnapshot.docs.map(async doc => {
+            const subsectoresData = [];
+
+            for (const doc of subsectoresSnapshot.docs) {
                 const subsectorData = { id: doc.id, ...doc.data() };
-                subsectorData.partes = await obtenerPartes(sectorId, doc.id); // Obtener partes asociadas a este subsector
-                return subsectorData;
-            });
-            const subsectoresWithPartes = await Promise.all(subsectoresData);
-            return subsectoresWithPartes;
+                subsectorData.partes = await obtenerPartes(sectorId, doc.id);
+                subsectoresData.push(subsectorData);
+            }
+
+            return subsectoresData;
         } catch (error) {
             console.error('Error al obtener los subsectores:', error);
         }
     };
 
-
-    // Función para agregar un subsector a la subcolección de un sector específico
-    // Función para agregar un subsector con validación de nombre
-    const agregarSubsector = async (sectorId) => {
-        try {
-            // Convertir el nombre del subsector ingresado a minúsculas y eliminar espacios
-            const nombreSubsectorNormalizado = subSectorInput.toLowerCase().trim();
-
-            // Obtener todos los subsectores del sector específico de la base de datos
-            const subsectoresCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector`);
-            const subsectoresSnapshot = await getDocs(subsectoresCollectionRef);
-            const nombresSubsectores = subsectoresSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
-
-            // Verificar si el nombre del subsector ya existe en el sector específico de la base de datos
-            if (nombresSubsectores.includes(nombreSubsectorNormalizado)) {
-                console.log('El nombre del subsector ya existe en el sector específico.');
-            } else {
-                // Si el nombre del subsector no existe, agregarlo al sector específico en la base de datos
-                await addDoc(subsectoresCollectionRef, { nombre: subSectorInput });
-                console.log('Subsector agregado correctamente.');
-                setSubSectorInput(''); // Limpiar el input después de agregar el subsector
-
-                // Actualizar la lista de subsectores para el sector actual
-                const nuevosSubsectores = await obtenerSubsectores(sectorId);
-                const sectoresActualizados = sectores.map(sector => {
-                    if (sector.id === sectorId) {
-                        sector.subsectores = nuevosSubsectores;
-                    }
-                    return sector;
-                });
-                setSectores(sectoresActualizados);
-            }
-        } catch (error) {
-            console.error('Error al agregar el subsector:', error);
-        }
-    };
-
-    // Manejar el evento cuando se hace clic en el botón para agregar un subsector
-    const handleAgregarSubsector = () => {
-        if (selectedSector) {
-            agregarSubsector(selectedSector);
-        } else {
-            console.error('No se ha seleccionado ningún sector.');
-        }
-    };
-
-
-    // PARTE /////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Obtener partes de un subsector específico
+    // Obtener partes
     const obtenerPartes = async (sectorId, subSectorId) => {
         try {
             const parteCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte`);
@@ -198,52 +92,99 @@ function Trazabilidad() {
         }
     };
 
+    // Agregar sector
+    const agregarSector = async () => {
+        try {
+            const nombreSectorNormalizado = sectorInput.toLowerCase().trim();
+            const sectoresCollectionRef = collection(db, `proyectos/${id}/sector`);
+            const sectoresSnapshot = await getDocs(sectoresCollectionRef);
+            const nombresSectores = sectoresSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
 
-// Función para agregar una parte a la subcolección de un subsector específico
-const agregarParte = async (subSectorId) => {
-    try {
-        // Convertir el nombre de la parte ingresado a minúsculas y eliminar espacios
-        const nombreParteNormalizado = parteInput.toLowerCase().trim();
-
-        // Verificar si el nombre de la parte está vacío
-        if (nombreParteNormalizado === '') {
-            console.log('Por favor, ingresa el nombre de la parte.');
-            return; // Salir de la función si el nombre de la parte está vacío
-        }
-
-        // Obtener todos las partes del subsector específico de la base de datos
-        const partesCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${subSectorId}/parte`);
-        const partesSnapshot = await getDocs(partesCollectionRef);
-        const nombresPartes = partesSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
-
-        // Verificar si el nombre de la parte ya existe en el subsector específico de la base de datos
-        if (nombresPartes.includes(nombreParteNormalizado)) {
-            console.log('El nombre de la parte ya existe en el subsector específico.');
-            return; // Salir de la función si el nombre de la parte ya existe
-        }
-
-        // Si el nombre de la parte no existe, agregarla al subsector específico en la base de datos
-        await addDoc(partesCollectionRef, { nombre: parteInput });
-        console.log('Parte agregada correctamente.');
-        setParteInput(''); // Limpiar el input después de agregar la parte
-
-        // Actualizar los subsectores para reflejar la nueva parte agregada
-        const nuevosSubsectores = await obtenerSubsectores(selectedSector);
-        const sectoresActualizados = sectores.map(sector => {
-            if (sector.id === selectedSector) {
-                sector.subsectores = nuevosSubsectores;
+            if (nombresSectores.includes(nombreSectorNormalizado)) {
+                console.log('El nombre del sector ya existe en la base de datos.');
+            } else {
+                await addDoc(sectoresCollectionRef, { nombre: sectorInput });
+                console.log('Sector agregado correctamente.');
+                setSectorInput('');
+                const nuevoSector = { id: sectoresSnapshot.id, nombre: sectorInput, subsectores: [] };
+                setSectores([...sectores, nuevoSector]);
             }
-            return sector;
-        });
-        setSectores(sectoresActualizados);
-    } catch (error) {
-        console.error('Error al agregar la parte:', error);
-    }
-};
+        } catch (error) {
+            console.error('Error al agregar el sector:', error);
+        }
+    };
 
+    // Agregar subsector
+    const agregarSubsector = async (sectorId) => {
+        try {
+            const nombreSubsectorNormalizado = subSectorInput.toLowerCase().trim();
+            const subsectoresCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector`);
+            const subsectoresSnapshot = await getDocs(subsectoresCollectionRef);
+            const nombresSubsectores = subsectoresSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
 
+            if (nombresSubsectores.includes(nombreSubsectorNormalizado)) {
+                console.log('El nombre del subsector ya existe en el sector específico.');
+            } else {
+                await addDoc(subsectoresCollectionRef, { nombre: subSectorInput });
+                console.log('Subsector agregado correctamente.');
+                setSubSectorInput('');
+                const nuevoSubsector = { id: subsectoresSnapshot.id, nombre: subSectorInput, partes: [] };
+                const nuevosSubsectores = await obtenerSubsectores(sectorId);
+                const sectorIndex = sectores.findIndex(sector => sector.id === sectorId);
+                const sectoresActualizados = [...sectores];
+                sectoresActualizados[sectorIndex].subsectores = nuevosSubsectores;
+                setSectores(sectoresActualizados);
+            }
+        } catch (error) {
+            console.error('Error al agregar el subsector:', error);
+        }
+    };
 
-    // Manejar el evento cuando se hace clic en el botón para agregar una parte
+    // Agregar parte
+    const agregarParte = async (subSectorId) => {
+        try {
+            const partesCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${subSectorId}/parte`);
+            await addDoc(partesCollectionRef, { nombre: parteInput });
+            console.log('Parte agregada correctamente.');
+            setParteInput('');
+            const nuevosSubsectores = await obtenerSubsectores(selectedSector);
+            const sectorIndex = sectores.findIndex(sector => sector.id === selectedSector);
+            const sectoresActualizados = [...sectores];
+            sectoresActualizados[sectorIndex].subsectores = nuevosSubsectores;
+            setSectores(sectoresActualizados);
+        } catch (error) {
+            console.error('Error al agregar la parte:', error);
+        }
+    };
+
+    // Manejar cambio de selección en el desplegable de sector
+    const handleSectorChange = async (event) => {
+        const selectedSectorId = event.target.value;
+        setSelectedSector(selectedSectorId);
+
+        if (selectedSectorId) {
+            const subsectores = await obtenerSubsectores(selectedSectorId);
+            setSubSectores(subsectores);
+        } else {
+            setSubSectores([]);
+        }
+    };
+
+    // Manejar cambio de selección en el desplegable de subsector
+    const handleSubSectorChange = (event) => {
+        setSelectedSubSector(event.target.value);
+    };
+
+    // Manejar evento de agregar subsector
+    const handleAgregarSubsector = () => {
+        if (selectedSector) {
+            agregarSubsector(selectedSector);
+        } else {
+            console.error('No se ha seleccionado ningún sector.');
+        }
+    };
+
+    // Manejar evento de agregar parte
     const handleAgregarParte = () => {
         if (selectedSubSector) {
             agregarParte(selectedSubSector);
@@ -251,7 +192,6 @@ const agregarParte = async (subSectorId) => {
             console.error('No se ha seleccionado ningún subsector.');
         }
     };
-
 
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500'>
@@ -293,11 +233,7 @@ const agregarParte = async (subSectorId) => {
                     <p className='text-lg font-medium text-gray-500 mb-3 flex items-center gap-2'><TbBuildingFactory /> Trazabilidad</p>
 
                     <div className='flex gap-10'>
-
-
                         <div className="flex flex-col items-start gap-3">
-
-                            {/* Sector */}
                             <div className="flex items-center gap-3">
                                 <label htmlFor="sector">Sector: </label>
                                 <input
@@ -305,7 +241,6 @@ const agregarParte = async (subSectorId) => {
                                     className='border px-3 py-1 rounded-lg'
                                     value={sectorInput}
                                     onChange={(e) => setSectorInput(e.target.value)}
-
                                 />
                                 <button
                                     onClick={agregarSector}
@@ -314,8 +249,6 @@ const agregarParte = async (subSectorId) => {
                                     <IoMdAddCircle />
                                 </button>
                             </div>
-
-                            {/* Desplegable de sectores */}
                             <div className="flex items-center gap-3">
                                 <label htmlFor="sectores">Seleccionar sector: </label>
                                 <select
@@ -323,7 +256,6 @@ const agregarParte = async (subSectorId) => {
                                     className="border px-3 py-1 rounded-lg"
                                     value={selectedSector}
                                     onChange={handleSectorChange}
-
                                 >
                                     <option value="">Seleccione un sector</option>
                                     {sectores.map((sector) => (
@@ -331,13 +263,9 @@ const agregarParte = async (subSectorId) => {
                                     ))}
                                 </select>
                             </div>
-
                         </div>
 
                         <div className="flex flex-col items-start gap-3">
-
-
-                            {/* Sub Sector */}
                             <div className="flex items-center gap-3">
                                 <label htmlFor="subsector">Subsector: </label>
                                 <input
@@ -346,7 +274,6 @@ const agregarParte = async (subSectorId) => {
                                     className='border px-3 py-1 rounded-lg'
                                     value={subSectorInput}
                                     onChange={(e) => setSubSectorInput(e.target.value)}
-
                                 />
                                 <button
                                     onClick={handleAgregarSubsector}
@@ -355,8 +282,6 @@ const agregarParte = async (subSectorId) => {
                                     <IoMdAddCircle />
                                 </button>
                             </div>
-
-                            {/* Desplegable de subsectores */}
                             <div className="flex items-center gap-3">
                                 <label htmlFor="subsectores">Seleccionar Subsector: </label>
                                 <select
@@ -364,7 +289,6 @@ const agregarParte = async (subSectorId) => {
                                     className="border px-3 py-1 rounded-lg"
                                     value={selectedSubSector}
                                     onChange={handleSubSectorChange}
-
                                 >
                                     <option value="">Seleccione un subsector</option>
                                     {subSectores.map((subsector) => (
@@ -372,10 +296,8 @@ const agregarParte = async (subSectorId) => {
                                     ))}
                                 </select>
                             </div>
-
                         </div>
 
-                        {/* Nuevo input para la parte */}
                         <div className="flex flex-col items-start gap-3">
                             <div className="flex items-center gap-3">
                                 <label htmlFor="parte">Parte: </label>
@@ -394,54 +316,34 @@ const agregarParte = async (subSectorId) => {
                                 </button>
                             </div>
                         </div>
-
                     </div>
-
-
                 </div>
 
-                {/* Tabla de sectores y subsectores */}
-                {/* Tabla de sectores y subsectores */}
-{/* Tabla de sectores y subsectores */}
-{/* Tabla de sectores, subsectores y partes */}
-<table className="mt-4 w-full border-collapse">
-    <thead>
-        <tr className='bg-gray-100 border'>
-            <th className="px-4 py-2 border-r text-left">Sector</th>
-            <th className="px-4 py-2 border-r text-left">Subsector</th>
-            <th className="px-4 py-2 border-r text-left">Parte</th>
-        </tr>
-    </thead>
-    <tbody>
-        {sectores.map((sector) => (
-            <React.Fragment key={sector.id}>
-                {sector.subsectores.map((subsector, index) => (
-                    <tr key={subsector.id}>
-                        {index === 0 && (
-                            <td className="px-4 py-2 border" rowSpan={sector.subsectores.length}>{sector.nombre}</td>
-                        )}
-                        <td className="px-2 py-1 border-b">{subsector.nombre}</td>
-                        <td className="px-2 py-1 border">
-                            <ul className=''>
-                                {subsector.partes.map((parte) => (
-                                    <li key={parte.id} >{parte.nombre}</li>
-                                ))}
-                            </ul>
-                        </td>
-                    </tr>
-                ))}
-            </React.Fragment>
-        ))}
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
+                {/* Tabla de trazabilidad */}
+                <div class="container mx-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subsector</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parte</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {sectores.map((sector) => (
+                                sector.subsectores.map((subsector) => (
+                                    subsector.partes.map((parte) => (
+                                        <tr key={parte.id}>
+                                            <td class="px-6 py-4 whitespace-nowrap">{sector.nombre}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">{subsector.nombre}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">{parte.nombre}</td>
+                                        </tr>
+                                    ))
+                                ))
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
