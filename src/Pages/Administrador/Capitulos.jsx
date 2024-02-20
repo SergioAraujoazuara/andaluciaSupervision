@@ -152,11 +152,11 @@ function Capitulos() {
                 <div className='w-full border border-b-2'></div>
 
                 <div className="mt-4 ">
-                    <p className='text-lg font-medium text-gray-500 mb-3 flex items-center gap-2'><TbBuildingFactory/> Capitulos</p>
+                    <p className='text-lg font-medium text-gray-500 mb-3 flex items-center gap-2'><TbBuildingFactory/> Sector</p>
 
 
                     <div className="flex items-center gap-3">
-                        <label htmlFor="capitulo">Capitulo: </label>
+                        <label htmlFor="capitulo">Sector: </label>
                         <input type="text" className='border px-3 py-1 rounded-lg' value={nuevoCapitulo} onChange={(e) => setNuevoCapitulo(e.target.value)} />
                         <button onClick={agregarCapitulo} className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded">
                             <IoMdAddCircle />
@@ -165,10 +165,10 @@ function Capitulos() {
                 </div>
 
                 <div className="mt-4">
-                    <p className='text-lg font-medium text-gray-500 mb-3 flex items-center gap-2'><FaCubes/> Elementos y PPI</p>
+                    <p className='text-lg font-medium text-gray-500 mb-3 flex items-center gap-2'><FaCubes/> Sub sector</p>
 
                     <div className="flex items-center gap-3">
-                        <label htmlFor="capituloSeleccionado">Selecciona un capítulo:</label>
+                        <label htmlFor="capituloSeleccionado">Selecciona un sector:</label>
                         <select id="capituloSeleccionado" value={nuevoCapitulo} onChange={(e) => setNuevoCapitulo(e.target.value)} className="border">
                             <option value="">Seleccionar</option>
                             {capitulos.map((item, index) => (
@@ -181,7 +181,7 @@ function Capitulos() {
 
                 <div className="mt-4 flex gap-20">
                     <div className="flex items-center gap-3">
-                        <label htmlFor="elemento">Elemento:</label>
+                        <label htmlFor="elemento">Sub sector:</label>
                         <input type="text" id="elemento" value={elemento} onChange={(e) => setElemento(e.target.value)} className="border px-3 py-1 rounded-lg" />
                         <button onClick={agregarElemento} className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded">
                             <IoMdAddCircle />
@@ -189,7 +189,7 @@ function Capitulos() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <label htmlFor="ppi">PPI:</label>
+                        <label htmlFor="ppi">Parte</label>
                         <input type="text" id="ppi" value={ppi} onChange={(e) => setPpi(e.target.value)} className="border px-3 py-1 rounded-lg" />
                         <button onClick={agregarPpi} className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded">
                             <IoMdAddCircle />
@@ -199,7 +199,7 @@ function Capitulos() {
 
                 <div className="mt-4">
 
-                    <p className='text-lg font-medium text-gray-500 mb-3 flex items-center gap-2'><MdOutlineShareLocation/>Trazabilidad</p>
+                    <p className='text-lg font-medium text-gray-500 mb-3 flex items-center gap-2'><MdOutlineShareLocation/>Lote</p>
 
                     <div className="flex items-center gap-3">
                         <label htmlFor="ppiSeleccionado">Selecciona un PPI:</label>
@@ -266,10 +266,14 @@ function Capitulos() {
                     <table className="border-collapse border w-full mt-4 rounded-xl" style={{ borderRadius: 10 }}>
                         <thead className='bg-gray-100'>
                             <tr>
-                                <th className="px-4 py-2">Capítulo</th>
-                                <th className="border border-gray-200 px-4 py-2">Elementos</th>
-                                <th className="border border-gray-200 px-4 py-2">PPIs</th>
-                                <th className="border border-gray-200 px-4 py-2">Trazabilidad</th>
+                                <th className="px-4 py-2">Sector</th>
+                                <th className="border border-gray-200 px-4 py-2">Sub sector</th>
+                                <th className="border border-gray-200 px-4 py-2">Parte</th>
+                                <th className="border border-gray-200 px-4 py-2">Pk inicial</th>
+                                <th className="border border-gray-200 px-4 py-2">Pk Final</th>
+                                <th className="border border-gray-200 px-4 py-2">Elemento</th>
+                                <th className="border border-gray-200 px-4 py-2">Código elemento</th>
+                                <th className="border border-gray-200 px-4 py-2">Lote</th>
                             </tr>
                         </thead>
                         <tbody>

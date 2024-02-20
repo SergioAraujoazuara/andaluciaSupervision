@@ -30,24 +30,48 @@ function Elemento() {
 
 
                     <div class="w-full rounded rounded-xl">
-                        <div className='grid sm:grid-cols-10 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-100 rounded rounded-md '>
-                            <div className='text-left font-medium text-gray-600 sm:block hidden sm:col-span-2'>Capítulo</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden sm:col-span-4'>Elemento</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden sm:col-span-4'>PPI</div>
+                        <div className='grid grid-cols-9 sm:px-5 sm:py-2 sm:bg-gray-100 rounded rounded-md '>
+                            <div className='text-left font-medium text-gray-600 sm:block hidden'>Sector</div>
+                            <div className='text-left font-medium text-gray-600 sm:block hidden '>Sub sector</div>
+                            <div className='text-left font-medium text-gray-600 sm:block hidden '>Codigo elemento</div>
+                            <div className='text-left font-medium text-gray-600 sm:block hidden '>Parte</div>
+                            <div className='text-left font-medium text-gray-600 sm:block hidden '>Elemento</div>
+                            <div className='text-left font-medium text-gray-600 sm:block hidden '>Lote</div>
+                            <div className='text-left font-medium text-gray-600 sm:block hidden '>pk inicial</div>
+                            <div className='text-left font-medium text-gray-600 sm:block hidden '>Pk final</div>
                         </div>
 
                         <Link to={'/tablaPpi'}>
-                            <div className='cursor-pointer grid sm:grid-cols-10 grid-cols-1 items-center justify-start sm:p-5 border-b-2 font-normal text-gray-600'>
-                                <div className='sm:border-r-2 sm:border-b-0 flex items-center sm:col-span-2'>
-                                Viaducto de Kortazar	
+                            <div className='grid grid-cols-9 cursor-pointer items-center justify-start sm:p-5 border-b-2 font-normal text-gray-600'>
+                                <div className='flex items-center '>
+                                Estructuras
                                 </div>
 
-                                 <div className='sm:border-r-2 sm:border-b-0 flex items-center sm:col-span-3 sm:ps-10'>
-                             	Zapata
+                                <div className='h-10 flex items-center sm:justify-start'>
+                                Viaducto de kortazar
                                 </div>
 
-                                <div className='h-10 flex items-center sm:justify-start sm:col-span-5 sm:ps-10'>
-                                0302 Elementos estructurales de hormigón
+                                <div className='flex items-center'>
+                             	V101
+                                </div>
+
+                                <div className='flex items-center'>
+                             	Pilar 1
+                                </div>
+
+                                <div className='flex items-center'>
+                             	Cimentación
+                                </div>
+
+                                <div className='flex items-center'>
+                             	Excavación
+                                </div>
+
+                                <div className='flex items-center'>
+                             	101+120.22
+                                </div>
+                                <div className='flex items-center'>
+                             	101+120.22
                                 </div>
 
 
