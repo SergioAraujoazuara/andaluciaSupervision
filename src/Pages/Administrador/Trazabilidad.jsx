@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '../../../firebase_config';
-import { getDoc, getDocs, doc, collection, addDoc, runTransaction, writeBatch } from 'firebase/firestore';
+import { getDoc, getDocs, doc, collection, addDoc, runTransaction, writeBatch, setDoc } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 import { IoMdAddCircle } from "react-icons/io";
 import { FaArrowRight } from "react-icons/fa";
 import { TbBuildingFactory } from "react-icons/tb";
+import { IoIosCheckmarkCircle } from "react-icons/io";
+import { IoCloseCircle } from "react-icons/io5";
 
 function Trazabilidad() {
     const { id } = useParams();
@@ -20,7 +22,22 @@ function Trazabilidad() {
     const [subSectorInput, setSubSectorInput] = useState('');
     const [selectedSubSector, setSelectedSubSector] = useState('');
     const [parteInput, setParteInput] = useState('');
+    const [selectedParte, setSelectedParte] = useState('');
+    const [elementoInput, setElementoInput] = useState('');
+    const [selectedElemento, setSelectedElemento] = useState('');
+    const [loteInput, setLoteInput] = useState('');
 
+    //alertas 
+    const [alerta, setAlerta] = useState('');
+    const [tipoAlerta, setTipoAlerta] = useState('');
+
+    const [mostrarModal, setMostrarModal] = useState(false);
+
+    const handleCloseAlert = () => {
+        setMostrarModal(false)
+    }
+
+    // Llamar elemetos de la base de datos
     useEffect(() => {
         obtenerProyecto();
         obtenerSectores();
@@ -74,34 +91,52 @@ function Trazabilidad() {
         }
     };
 
-    // Obtener partes de un subsector específico
+
+
     const obtenerPartes = async (sectorId, subSectorId) => {
         try {
             const parteCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte`);
             const parteSnapshot = await getDocs(parteCollectionRef);
-            return parteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const partesData = await Promise.all(parteSnapshot.docs.map(async doc => {
+                const parteData = { id: doc.id, ...doc.data() };
+                // Aquí se obtienen los elementos de cada parte
+                parteData.elementos = await obtenerElementos(sectorId, subSectorId, doc.id);
+                return parteData;
+            }));
+            return partesData;
         } catch (error) {
             console.error('Error al obtener las partes:', error);
         }
     };
 
+   
+    
+
     // Función para agregar un sector con validación de nombre
     const agregarSector = async () => {
         try {
+            // Normalizar el nombre del sector (convertir a minúsculas y eliminar espacios en blanco)
             const nombreSectorNormalizado = sectorInput.toLowerCase().trim();
 
-            const sectoresCollectionRef = collection(db, `proyectos/${id}/sector`);
-            const nombresSectores = await getNombresSectores(sectoresCollectionRef);
+            // Obtener los nombres de los sectores existentes y normalizarlos
+            const nombresSectoresNormalizados = sectores.map(sector => sector.nombre.toLowerCase().trim());
 
-            if (nombresSectores.includes(nombreSectorNormalizado)) {
+            // Verificar si el nombre del sector ya existe
+            if (nombresSectoresNormalizados.includes(nombreSectorNormalizado)) {
                 console.log('El nombre del sector ya existe en la base de datos.');
             } else {
+                // Agregar el sector si no existe
                 const batch = writeBatch(db);
-                const nuevoSectorRef = doc(sectoresCollectionRef);
+                const nuevoSectorRef = doc(collection(db, `proyectos/${id}/sector`));
                 batch.set(nuevoSectorRef, { nombre: sectorInput });
                 await batch.commit();
-                console.log('Sector agregado correctamente.');
+                //alerta
+                setAlerta('Agregado correctamente.');
+                setTipoAlerta('success')
+                setMostrarModal(true)
+                // limpiar input
                 setSectorInput('');
+                // actualizar lista
                 obtenerSectores();
             }
         } catch (error) {
@@ -109,11 +144,6 @@ function Trazabilidad() {
         }
     };
 
-    // Función para obtener los nombres de los sectores
-    const getNombresSectores = async (sectoresCollectionRef) => {
-        const sectoresSnapshot = await getDocs(sectoresCollectionRef);
-        return sectoresSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
-    };
 
     // Función para manejar el cambio de selección en el desplegable de sector
     const handleSectorChange = async (event) => {
@@ -124,21 +154,30 @@ function Trazabilidad() {
     // Función para agregar un subsector con validación de nombre
     const agregarSubsector = async (sectorId) => {
         try {
+            // Normalizar el nombre del subsector
             const nombreSubsectorNormalizado = subSectorInput.toLowerCase().trim();
 
-            const subsectoresCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector`);
-            const nombresSubsectores = await getNombresSubsectores(subsectoresCollectionRef);
+            // Obtener los nombres de los subsectores existentes del sector seleccionado y normalizarlos
+            const subsectoresDelSector = sectores.find(sector => sector.id === sectorId)?.subsectores || [];
+            const nombresSubsectoresNormalizados = subsectoresDelSector.map(subsector => subsector.nombre.toLowerCase().trim());
 
-            if (nombresSubsectores.includes(nombreSubsectorNormalizado)) {
+            // Verificar si el nombre del subsector ya existe en el sector seleccionado
+            if (nombresSubsectoresNormalizados.includes(nombreSubsectorNormalizado)) {
                 console.log('El nombre del subsector ya existe en el sector específico.');
             } else {
+                // Agregar el subsector si no existe
                 const batch = writeBatch(db);
-                const nuevoSubsectorRef = doc(subsectoresCollectionRef);
+                const nuevoSubsectorRef = doc(collection(db, `proyectos/${id}/sector/${sectorId}/subsector`));
                 batch.set(nuevoSubsectorRef, { nombre: subSectorInput });
                 await batch.commit();
-                console.log('Subsector agregado correctamente.');
+                //alerta
+                setAlerta('Agregado correctamente.');
+                setTipoAlerta('success')
+                setMostrarModal(true)
+                // Limoiar input
                 setSubSectorInput('');
 
+                // Actualizar la lista de subsectores del sector
                 const nuevosSubsectores = await obtenerSubsectores(sectorId);
                 const sectoresActualizados = sectores.map(sector => {
                     if (sector.id === sectorId) {
@@ -153,12 +192,6 @@ function Trazabilidad() {
         }
     };
 
-    // Función para obtener los nombres de los subsectores
-    const getNombresSubsectores = async (subsectoresCollectionRef) => {
-        const subsectoresSnapshot = await getDocs(subsectoresCollectionRef);
-        return subsectoresSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
-    };
-
     // Función para manejar el cambio de selección en el desplegable de subsector
     const handleSubSectorChange = (event) => {
         setSelectedSubSector(event.target.value);
@@ -167,22 +200,40 @@ function Trazabilidad() {
     // Función para agregar una parte a la subcolección de un subsector específico
     const agregarParte = async (subSectorId) => {
         try {
-            const partesCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${subSectorId}/parte`);
-            const batch = writeBatch(db);
-            const nuevaParteRef = doc(partesCollectionRef);
-            batch.set(nuevaParteRef, { nombre: parteInput });
-            await batch.commit();
-            console.log('Parte agregada correctamente.');
-            setParteInput('');
+            // Normalizar el nombre de la parte
+            const nombreParteNormalizado = parteInput.toLowerCase().trim();
 
-            const nuevosSubsectores = await obtenerSubsectores(selectedSector);
-            const sectoresActualizados = sectores.map(sector => {
-                if (sector.id === selectedSector) {
-                    sector.subsectores = nuevosSubsectores;
-                }
-                return sector;
-            });
-            setSectores(sectoresActualizados);
+            // Obtener los nombres de las partes existentes del subsector seleccionado y normalizarlos
+            const subsectorSeleccionado = sectores.flatMap(sector => sector.subsectores).find(subsector => subsector.id === subSectorId);
+            const nombresPartesNormalizados = subsectorSeleccionado?.partes.map(parte => parte.nombre.toLowerCase().trim()) || [];
+
+            // Verificar si el nombre de la parte ya existe en el subsector seleccionado
+            if (nombresPartesNormalizados.includes(nombreParteNormalizado)) {
+                console.log('El nombre de la parte ya existe en el subsector específico.');
+            } else {
+                // Agregar la parte si no existe
+                const parteCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${subSectorId}/parte`);
+                const batch = writeBatch(db);
+                const nuevaParteRef = doc(parteCollectionRef);
+                batch.set(nuevaParteRef, { nombre: parteInput });
+                await batch.commit();
+                //alerta
+                setAlerta('Agregado correctamente.');
+                setTipoAlerta('success')
+                setMostrarModal(true)
+                // Limoiar input
+                setParteInput('');
+
+                // Actualizar la lista de partes del subsector
+                const nuevosSubsectores = await obtenerSubsectores(selectedSector);
+                const sectoresActualizados = sectores.map(sector => {
+                    if (sector.id === selectedSector) {
+                        sector.subsectores = nuevosSubsectores;
+                    }
+                    return sector;
+                });
+                setSectores(sectoresActualizados);
+            }
         } catch (error) {
             console.error('Error al agregar la parte:', error);
         }
@@ -196,6 +247,132 @@ function Trazabilidad() {
             console.error('No se ha seleccionado ningún subsector.');
         }
     };
+
+    // Función para manejar el cambio de selección en el desplegable de parte
+    const handleParteChange = (event) => {
+        setSelectedParte(event.target.value);
+    };
+
+
+    const agregarElemento = async (parteId) => {
+        try {
+            // Normalizar el nombre del elemento
+            const nombreElementoNormalizado = elementoInput.toLowerCase().trim();
+
+            // Obtener los elementos existentes para esta parte
+            const elementoCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${parteId}/elemento`);
+            const elementosSnapshot = await getDocs(elementoCollectionRef);
+            const nombresElementosExistentes = elementosSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
+
+            // Verificar si el nombre del elemento ya existe
+            if (nombresElementosExistentes.includes(nombreElementoNormalizado)) {
+                console.log('El nombre del elemento ya existe en la base de datos.');
+                setAlerta('El nombre del elemento ya existe.');
+                setTipoAlerta('error');
+                setMostrarModal(true);
+            } else {
+                // Agregar el elemento si no existe
+                const nuevoElementoRef = doc(elementoCollectionRef);
+                await setDoc(nuevoElementoRef, { nombre: elementoInput }); // Usando setDoc en lugar de writeBatch para simplificar
+                // Aquí es donde necesitas actualizar el estado para incluir el nuevo elemento
+
+                // Encuentra la parte en la estructura del estado y actualízala con el nuevo elemento
+                const sectoresActualizados = sectores.map(sector => {
+                    if (sector.id === selectedSector) {
+                        return {
+                            ...sector,
+                            subsectores: sector.subsectores.map(subsector => {
+                                if (subsector.id === selectedSubSector) {
+                                    return {
+                                        ...subsector,
+                                        partes: subsector.partes.map(parte => {
+                                            if (parte.id === parteId) {
+                                                const nuevosElementos = parte.elementos ? [...parte.elementos, { id: nuevoElementoRef.id, nombre: elementoInput }] : [{ id: nuevoElementoRef.id, nombre: elementoInput }];
+                                                return { ...parte, elementos: nuevosElementos };
+                                            }
+                                            return parte;
+                                        })
+                                    };
+                                }
+                                return subsector;
+                            })
+                        };
+                    }
+                    return sector;
+                });
+
+                setSectores(sectoresActualizados);
+                setElementoInput('');
+                setAlerta('Elemento agregado correctamente.');
+                setTipoAlerta('success');
+                setMostrarModal(true);
+            }
+        } catch (error) {
+            console.error('Error al agregar el elemento:', error);
+            setAlerta('Error al agregar el elemento.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+    };
+
+
+
+    const agregarLote = async (elementoId) => {
+        if (!elementoId) {
+            console.error('No se ha seleccionado ningún elemento.');
+            return;
+        }
+    
+        try {
+            const loteCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${selectedParte}/elemento/${elementoId}/lote`);
+            const nuevoLoteRef = doc(loteCollectionRef);
+            await setDoc(nuevoLoteRef, { nombre: loteInput });
+    
+            setLoteInput('');
+            setAlerta('Lote agregado correctamente.');
+            setTipoAlerta('success');
+            setMostrarModal(true);
+    
+            // Actualizar estado para reflejar el nuevo lote agregado (similar a como actualizaste para elementos)
+        } catch (error) {
+            console.error('Error al agregar el lote:', error);
+            setAlerta('Error al agregar el lote.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+    };
+
+    const obtenerLotes = async (sectorId, subSectorId, parteId, elementoId) => {
+        try {
+            const loteCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte/${parteId}/elemento/${elementoId}/lote`);
+            const loteSnapshot = await getDocs(loteCollectionRef);
+            return loteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error('Error al obtener los lotes:', error);
+            return []; // Retorna un arreglo vacío en caso de error para evitar interrupciones
+        }
+    };
+
+    const obtenerElementos = async (sectorId, subSectorId, parteId) => {
+        try {
+            const elementoCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte/${parteId}/elemento`);
+            const elementoSnapshot = await getDocs(elementoCollectionRef);
+            const elementos = await Promise.all(elementoSnapshot.docs.map(async doc => {
+                const elementoData = { id: doc.id, ...doc.data() };
+                elementoData.lotes = await obtenerLotes(sectorId, subSectorId, parteId, doc.id);
+                return elementoData;
+            }));
+            return elementos;
+        } catch (error) {
+            console.error('Error al obtener los elementos:', error);
+            return []; // Retorna un arreglo vacío en caso de error para evitar interrupciones
+        }
+    };
+    
+    
+    
+
+
 
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500'>
@@ -236,7 +413,7 @@ function Trazabilidad() {
                 <div className="mt-4 flex flex-col gap-5">
                     <p className='text-lg font-medium text-gray-500 mb-3 flex items-center gap-2'><TbBuildingFactory /> Trazabilidad</p>
 
-                    <div className='flex gap-10'>
+                    <div className='grid grid-cols-3 gap-10'>
 
                         <div className="flex flex-col items-start gap-3">
                             <div className="flex items-center gap-3">
@@ -320,50 +497,170 @@ function Trazabilidad() {
                                     <IoMdAddCircle />
                                 </button>
                             </div>
+
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="partes">Seleccionar Parte: </label>
+                                <select
+                                    id="partes"
+                                    className="border px-3 py-1 rounded-lg"
+                                    value={selectedParte}
+                                    onChange={handleParteChange}
+                                >
+                                    <option value="">Seleccione una parte</option>
+                                    {(sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes || []).map((parte) => (
+                                        <option key={parte.id} value={parte.id}>{parte.nombre}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
+
+                        <div className="flex flex-col items-start gap-3">
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="elemento">Elemento: </label>
+                                <input
+                                    type="text"
+                                    id="elemento"
+                                    className='border px-3 py-1 rounded-lg'
+                                    value={elementoInput}
+                                    onChange={(e) => setElementoInput(e.target.value)}
+                                />
+                                <button
+                                    onClick={() => agregarElemento(selectedParte)} // Asegúrate de tener un estado selectedParte para manejar la parte seleccionada
+                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                >
+                                    <IoMdAddCircle />
+                                </button>
+                            </div>
+
+
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="elementos">Seleccionar Elemento: </label>
+                                <select
+                                    id="elementos"
+                                    className="border px-3 py-1 rounded-lg"
+                                    value={selectedElemento}
+                                    onChange={(e) => setSelectedElemento(e.target.value)}
+                                >
+                                    <option value="">Seleccione un elemento</option>
+                                    {/* Asumiendo que tienes una manera de obtener los elementos del estado para el subsector y parte seleccionados */}
+                                    {sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes.find(parte => parte.id === selectedParte)?.elementos.map((elemento) => (
+                                        <option key={elemento.id} value={elemento.id}>{elemento.nombre}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <label htmlFor="lote">Lote: </label>
+                            <input
+                                type="text"
+                                id="lote"
+                                className='border px-3 py-1 rounded-lg'
+                                value={loteInput}
+                                onChange={(e) => setLoteInput(e.target.value)}
+                            />
+                            <button
+                                onClick={() => agregarLote(selectedElemento)} // Función para agregar lote a elemento seleccionado
+                                className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                            >
+                                <IoMdAddCircle />
+                            </button>
+                        </div>
+
+
+
+
+
+
                     </div>
                 </div>
 
-                <div class="container mx-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subsector</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parte</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            {sectores.map((sector) => (
-                                <React.Fragment key={sector.id}>
-                                    {sector.subsectores.map((subsector) => (
-                                        <React.Fragment key={subsector.id}>
-                                            <tr>
-                                                <td class="px-6 py-4 whitespace-nowrap" rowSpan={subsector.partes.length}>
-                                                    <div class="flex items-center">
-                                                        <div class="ml-4">
-                                                            <div class="text-sm font-medium text-gray-900">{sector.nombre}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="text-sm text-gray-900">{subsector.nombre}</div>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <ul>
-                                                        {subsector.partes.map((parte, index) => (
-                                                            <li key={parte.id} class={`text-sm text-gray-900 ${index === 0 ? '' : 'mt-2'}`}>{parte.nombre}</li>
-                                                        ))}
-                                                    </ul>
-                                                </td>
-                                            </tr>
-                                        </React.Fragment>
-                                    ))}
-                                </React.Fragment>
-                            ))}
-                        </tbody>
-                    </table>
+                <div class="">
+                <table className="w-full divide-y divide-gray-200 rounded-xl">
+    <thead className="bg-gray-100 border">
+        <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subsector</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parte</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Elemento</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lote</th> {/* Columna de Lote agregada */}
+        </tr>
+    </thead>
+    <tbody>
+        {sectores.map((sector) => (
+            <React.Fragment key={sector.id}>
+                {sector.subsectores.length > 0 ? (
+                    sector.subsectores.map((subsector, subIndex) => (
+                        subsector.partes.map((parte, parteIndex) => (
+                            parte.elementos.map((elemento, elementoIndex) => (
+                                <tr key={elemento.id} className='bg-gray-50 border'>
+                                    {subIndex === 0 && parteIndex === 0 && elementoIndex === 0 && (
+                                        <td rowSpan={sector.subsectores.flatMap(subsector => subsector.partes).flatMap(parte => parte.elementos).length} className="px-6 py-4 whitespace-nowrap">
+                                            {sector.nombre}
+                                        </td>
+                                    )}
+                                    {parteIndex === 0 && elementoIndex === 0 && (
+                                        <td rowSpan={subsector.partes.flatMap(parte => parte.elementos).length} className="px-6 py-4 whitespace-nowrap">
+                                            {subsector.nombre}
+                                        </td>
+                                    )}
+                                    {elementoIndex === 0 && (
+                                        <td rowSpan={parte.elementos.length} className="px-6 py-4 whitespace-nowrap">
+                                            {parte.nombre}
+                                        </td>
+                                    )}
+                                    <td className="px-6 py-4 whitespace-nowrap">{elemento.nombre}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {/* Aquí asumimos que elemento.lotes es un arreglo de lotes */}
+                                        {elemento.lotes && elemento.lotes.length > 0 ? (
+                                            elemento.lotes.map(lote => <div key={lote.id}>{lote.nombre}</div>)
+                                        ) : "Sin lote"}
+                                    </td>
+                                </tr>
+                            ))
+                        ))
+                    ))
+                ) : (
+                    <tr className='bg-gray-50 border'>
+                        <td className="px-6 py-4 whitespace-nowrap">{sector.nombre}</td>
+                        <td colSpan="4">&nbsp;</td>
+                    </tr>
+                )}
+            </React.Fragment>
+        ))}
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
                 </div>
+
+                {mostrarModal && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4">
+
+                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
+                            {tipoAlerta === 'success' ?
+                                <div className='text-green-600 flex justify-center'><IoIosCheckmarkCircle className='text-6xl' /></div>
+                                :
+                                null
+                            }
+
+                            <div className="modal-content py-4 text-left px-6 flex justify-center font-medium">
+                                {alerta}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
