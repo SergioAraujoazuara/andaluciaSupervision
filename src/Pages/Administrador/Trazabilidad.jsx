@@ -9,6 +9,7 @@ import { TbBuildingFactory } from "react-icons/tb";
 import { IoIosCheckmarkCircle } from "react-icons/io";
 import { IoCloseCircle } from "react-icons/io5";
 
+
 function Trazabilidad() {
     const { id } = useParams();
 
@@ -123,7 +124,11 @@ function Trazabilidad() {
 
             // Verificar si el nombre del sector ya existe
             if (nombresSectoresNormalizados.includes(nombreSectorNormalizado)) {
-                console.log('El nombre del sector ya existe en la base de datos.');
+                  //alerta
+                  setAlerta('El nombre ya existe en la base de datos.');
+                  setTipoAlerta('error')
+                  setMostrarModal(true)
+                
             } else {
                 // Agregar el sector si no existe
                 const batch = writeBatch(db);
@@ -163,7 +168,11 @@ function Trazabilidad() {
 
             // Verificar si el nombre del subsector ya existe en el sector seleccionado
             if (nombresSubsectoresNormalizados.includes(nombreSubsectorNormalizado)) {
-                console.log('El nombre del subsector ya existe en el sector específico.');
+                //alerta
+                setAlerta('El nombre ya existe en la base de datos.');
+                setTipoAlerta('error')
+                setMostrarModal(true)
+              
             } else {
                 // Agregar el subsector si no existe
                 const batch = writeBatch(db);
@@ -209,7 +218,10 @@ function Trazabilidad() {
 
             // Verificar si el nombre de la parte ya existe en el subsector seleccionado
             if (nombresPartesNormalizados.includes(nombreParteNormalizado)) {
-                console.log('El nombre de la parte ya existe en el subsector específico.');
+                   //alerta
+                   setAlerta('El nombre ya existe en la base de datos.');
+                   setTipoAlerta('error')
+                   setMostrarModal(true)
             } else {
                 // Agregar la parte si no existe
                 const parteCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${subSectorId}/parte`);
@@ -266,10 +278,10 @@ function Trazabilidad() {
 
             // Verificar si el nombre del elemento ya existe
             if (nombresElementosExistentes.includes(nombreElementoNormalizado)) {
-                console.log('El nombre del elemento ya existe en la base de datos.');
-                setAlerta('El nombre del elemento ya existe.');
-                setTipoAlerta('error');
-                setMostrarModal(true);
+                   //alerta
+                   setAlerta('El nombre ya existe en la base de datos.');
+                   setTipoAlerta('error')
+                   setMostrarModal(true)
             } else {
                 // Agregar el elemento si no existe
                 const nuevoElementoRef = doc(elementoCollectionRef);
@@ -316,24 +328,72 @@ function Trazabilidad() {
     };
 
 
-
     const agregarLote = async (elementoId) => {
-        if (!elementoId) {
-            console.error('No se ha seleccionado ningún elemento.');
+        if (!elementoId || !selectedParte || !selectedSubSector || !selectedSector) {
+            console.error('No se ha seleccionado correctamente el elemento, parte, subsector o sector.');
+            setAlerta('Selecciona correctamente todos los campos requeridos.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
             return;
         }
     
         try {
+            // Obtén la referencia de la colección donde se almacenarán los lotes
             const loteCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${selectedParte}/elemento/${elementoId}/lote`);
-            const nuevoLoteRef = doc(loteCollectionRef);
-            await setDoc(nuevoLoteRef, { nombre: loteInput });
+            // Verifica si el lote ya existe
+            const loteSnapshot = await getDocs(loteCollectionRef);
+            const existeLote = loteSnapshot.docs.some(doc => doc.data().nombre.toLowerCase().trim() === loteInput.toLowerCase().trim());
     
-            setLoteInput('');
-            setAlerta('Lote agregado correctamente.');
-            setTipoAlerta('success');
-            setMostrarModal(true);
+            if (existeLote) {
+                // Si el lote ya existe, muestra una alerta y no procedas a agregarlo
+                setAlerta('El nombre ya existe en la base de datos.');
+                setTipoAlerta('error');
+                setMostrarModal(true);
+            } else {
+                // Si el lote no existe, procede a agregarlo
+                const nuevoLoteRef = doc(loteCollectionRef);
+                await setDoc(nuevoLoteRef, { nombre: loteInput });
     
-            // Actualizar estado para reflejar el nuevo lote agregado (similar a como actualizaste para elementos)
+                setLoteInput('');
+                setAlerta('Lote agregado correctamente.');
+                setTipoAlerta('success');
+                setMostrarModal(true);
+    
+                // Actualiza el estado para reflejar el nuevo lote agregado
+                const sectoresActualizados = sectores.map(sector => {
+                    if (sector.id === selectedSector) {
+                        return {
+                            ...sector,
+                            subsectores: sector.subsectores.map(subsector => {
+                                if (subsector.id === selectedSubSector) {
+                                    return {
+                                        ...subsector,
+                                        partes: subsector.partes.map(parte => {
+                                            if (parte.id === selectedParte) {
+                                                return {
+                                                    ...parte,
+                                                    elementos: parte.elementos.map(elemento => {
+                                                        if (elemento.id === elementoId) {
+                                                            const nuevosLotes = elemento.lotes ? [...elemento.lotes, { id: nuevoLoteRef.id, nombre: loteInput }] : [{ id: nuevoLoteRef.id, nombre: loteInput }];
+                                                            return { ...elemento, lotes: nuevosLotes };
+                                                        }
+                                                        return elemento;
+                                                    })
+                                                };
+                                            }
+                                            return parte;
+                                        })
+                                    };
+                                }
+                                return subsector;
+                            })
+                        };
+                    }
+                    return sector;
+                });
+    
+                setSectores(sectoresActualizados);
+            }
         } catch (error) {
             console.error('Error al agregar el lote:', error);
             setAlerta('Error al agregar el lote.');
@@ -341,6 +401,8 @@ function Trazabilidad() {
             setMostrarModal(true);
         }
     };
+    
+    
 
     const obtenerLotes = async (sectorId, subSectorId, parteId, elementoId) => {
         try {
@@ -577,7 +639,7 @@ function Trazabilidad() {
 
                 <div class="">
                 <table className="w-full divide-y divide-gray-200 rounded-xl">
-    <thead className="bg-gray-100 border">
+    <thead className="bg-gray-200 border">
         <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subsector</th>
@@ -587,48 +649,71 @@ function Trazabilidad() {
         </tr>
     </thead>
     <tbody>
-        {sectores.map((sector) => (
-            <React.Fragment key={sector.id}>
-                {sector.subsectores.length > 0 ? (
-                    sector.subsectores.map((subsector, subIndex) => (
-                        subsector.partes.map((parte, parteIndex) => (
-                            parte.elementos.map((elemento, elementoIndex) => (
-                                <tr key={elemento.id} className='bg-gray-50 border'>
-                                    {subIndex === 0 && parteIndex === 0 && elementoIndex === 0 && (
-                                        <td rowSpan={sector.subsectores.flatMap(subsector => subsector.partes).flatMap(parte => parte.elementos).length} className="px-6 py-4 whitespace-nowrap">
-                                            {sector.nombre}
-                                        </td>
-                                    )}
-                                    {parteIndex === 0 && elementoIndex === 0 && (
-                                        <td rowSpan={subsector.partes.flatMap(parte => parte.elementos).length} className="px-6 py-4 whitespace-nowrap">
-                                            {subsector.nombre}
-                                        </td>
-                                    )}
-                                    {elementoIndex === 0 && (
-                                        <td rowSpan={parte.elementos.length} className="px-6 py-4 whitespace-nowrap">
-                                            {parte.nombre}
-                                        </td>
-                                    )}
-                                    <td className="px-6 py-4 whitespace-nowrap">{elemento.nombre}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {/* Aquí asumimos que elemento.lotes es un arreglo de lotes */}
-                                        {elemento.lotes && elemento.lotes.length > 0 ? (
-                                            elemento.lotes.map(lote => <div key={lote.id}>{lote.nombre}</div>)
-                                        ) : "Sin lote"}
-                                    </td>
-                                </tr>
-                            ))
-                        ))
-                    ))
-                ) : (
-                    <tr className='bg-gray-50 border'>
-                        <td className="px-6 py-4 whitespace-nowrap">{sector.nombre}</td>
-                        <td colSpan="4">&nbsp;</td>
+    {sectores.length > 0 ? sectores.map((sector) => (
+        sector.subsectores.length > 0 ? sector.subsectores.map((subsector) => (
+            subsector.partes.length > 0 ? subsector.partes.map((parte) => (
+                parte.elementos.length > 0 ? parte.elementos.map((elemento, elementoIndex) => (
+                    // Renderiza filas para elementos
+                    <tr key={elemento.id} className='bg-gray-50 border'>
+                        {elementoIndex === 0 && (
+                            <React.Fragment>
+                                <td rowSpan={subsector.partes.flatMap(parte => parte.elementos).length} className="px-6 py-4 whitespace-nowrap border">
+                                    {sector.nombre}
+                                </td>
+                                <td rowSpan={parte.elementos.length} className="px-6 py-4 whitespace-nowrap border">
+                                    {subsector.nombre}
+                                </td>
+                                <td rowSpan={parte.elementos.length} className="px-6 py-4 whitespace-nowrap border">
+                                    {parte.nombre}
+                                </td>
+                            </React.Fragment>
+                        )}
+                        <td className="px-6 py-4 whitespace-nowrap border">{elemento.nombre}</td>
+                        <td className="px-6 py-4 whitespace-nowrap border">
+                            {elemento.lotes && elemento.lotes.length > 0 ? (
+                                elemento.lotes.map(lote => <div key={lote.id}>{lote.nombre}</div>)
+                            ) : "N/A"}
+                        </td>
                     </tr>
-                )}
-            </React.Fragment>
-        ))}
-    </tbody>
+                )) : (
+                    // Renderiza fila para parte si no hay elementos
+                    <tr key={parte.id} className='bg-gray-50 border'>
+                        <td className="px-6 py-4 whitespace-nowrap border">{sector.nombre}</td>
+                        <td className="px-6 py-4 whitespace-nowrap border">{subsector.nombre}</td>
+                        <td className="px-6 py-4 whitespace-nowrap border">{parte.nombre}</td>
+                        <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                        <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                    </tr>
+                )
+            )) : (
+                // Renderiza fila para subsector si no hay partes
+                <tr key={subsector.id} className='bg-gray-50 border'>
+                    <td className="px-6 py-4 whitespace-nowrap border">{sector.nombre}</td>
+                    <td className="px-6 py-4 whitespace-nowrap border">{subsector.nombre}</td>
+                    <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                    <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                    <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                </tr>
+            )
+        )) : (
+            // Renderiza fila para sector si no hay subsectores
+            <tr key={sector.id} className='bg-gray-50 border'>
+                <td className="px-6 py-4 whitespace-nowrap border">{sector.nombre}</td>
+                <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+            </tr>
+        )
+    )) : (
+        // Renderiza un mensaje si no hay sectores
+        <tr>
+            <td colSpan="5" className="px-6 py-4 whitespace-nowrap border text-center">No hay sectores agregados aún.</td>
+        </tr>
+    )}
+</tbody>
+
+
 </table>
 
 
@@ -651,6 +736,12 @@ function Trazabilidad() {
                             <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
                             {tipoAlerta === 'success' ?
                                 <div className='text-green-600 flex justify-center'><IoIosCheckmarkCircle className='text-6xl' /></div>
+                                :
+                                null
+                            }
+
+                             {tipoAlerta === 'error' ?
+                                <div className='text-red-600 flex justify-center'><IoCloseCircle className='text-6xl' /></div>
                                 :
                                 null
                             }
