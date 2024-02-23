@@ -19,6 +19,7 @@ import EditProject from './Pages/Administrador/EditProject'
 import Elemento from './Pages/Elemento'
 
 import Trazabilidad from './Pages/Administrador/Trazabilidad'
+import AgregarPPi from './Pages/Administrador/AgregarPPi'
 
 function App() {
 
@@ -34,6 +35,7 @@ function App() {
       <Route path='/viewProject' element={<ViewProject/>}></Route>
       <Route path='/editProject/:id' element={<EditProject/>}></Route>
       <Route path='/trazabilidad/:id' element={<Trazabilidad/>}></Route>
+      <Route path='/agregarPpi/:id' element={<AgregarPPi/>}></Route>
 
       <Route path='/contacto' element={<Contacto/>}></Route>
       <Route path='/modulos' element={<Modulos/>}></Route>
