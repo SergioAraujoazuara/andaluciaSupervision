@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '../../../firebase_config';
-import { getDoc, getDocs, doc, collection, addDoc } from 'firebase/firestore';
+import { getDoc, getDocs, doc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 import { IoMdAddCircle } from "react-icons/io";
 import { FaArrowRight } from "react-icons/fa";
 import { TbBuildingFactory } from "react-icons/tb";
+import { IoIosCheckmarkCircle } from "react-icons/io";
+import { IoCloseCircle } from "react-icons/io5";
+import { MdOutlineAddLocationAlt } from "react-icons/md";
+
 
 function Trazabilidad() {
     const { id } = useParams();
@@ -13,7 +17,6 @@ function Trazabilidad() {
     // Variables de estado
     const [proyecto, setProyecto] = useState({});
     const [sectores, setSectores] = useState([]);
-    const [subSectores, setSubSectores] = useState([]);
 
     // Inputs
     const [sectorInput, setSectorInput] = useState('');
@@ -21,7 +24,36 @@ function Trazabilidad() {
     const [subSectorInput, setSubSectorInput] = useState('');
     const [selectedSubSector, setSelectedSubSector] = useState('');
     const [parteInput, setParteInput] = useState('');
+    const [selectedParte, setSelectedParte] = useState('');
+    const [elementoInput, setElementoInput] = useState('');
+    const [selectedElemento, setSelectedElemento] = useState('');
+    const [loteInput, setLoteInput] = useState('');
+    const [selectedLote, setSelectedLote] = useState('');
 
+    const [objetoLote, setObjetoLote] = useState({})
+
+
+    //alertas 
+    const [alerta, setAlerta] = useState('');
+    const [tipoAlerta, setTipoAlerta] = useState('');
+    const [mostrarModal, setMostrarModal] = useState(false);
+
+    const handleCloseAlert = () => {
+        setMostrarModal(false)
+    }
+
+    // Modal PPI
+    const [mostrarModalPpi, setMostrarModalPpi] = useState(false);
+
+    const handleVerPpi = () => {
+        setMostrarModalPpi(true)
+    }
+
+    const handleCloseModalPpi = () => {
+        setMostrarModalPpi(false)
+    }
+
+    // Llamar elemetos de la base de datos
     useEffect(() => {
         obtenerProyecto();
         obtenerSectores();
@@ -48,14 +80,11 @@ function Trazabilidad() {
         try {
             const sectoresCollectionRef = collection(db, `proyectos/${id}/sector`);
             const sectoresSnapshot = await getDocs(sectoresCollectionRef);
-            const sectoresData = [];
-
-            for (const doc of sectoresSnapshot.docs) {
+            const sectoresData = await Promise.all(sectoresSnapshot.docs.map(async doc => {
                 const sectorData = { id: doc.id, ...doc.data() };
-                sectorData.subsectores = await obtenerSubsectores(doc.id);
-                sectoresData.push(sectorData);
-            }
-
+                sectorData.subsectores = await obtenerSubsectores(doc.id); // Obtener subsectores asociados a este sector
+                return sectorData;
+            }));
             setSectores(sectoresData);
         } catch (error) {
             console.error('Error al obtener los sectores:', error);
@@ -67,126 +96,177 @@ function Trazabilidad() {
         try {
             const subsectorCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector`);
             const subsectoresSnapshot = await getDocs(subsectorCollectionRef);
-            const subsectoresData = [];
-
-            for (const doc of subsectoresSnapshot.docs) {
+            const subsectoresData = await Promise.all(subsectoresSnapshot.docs.map(async doc => {
                 const subsectorData = { id: doc.id, ...doc.data() };
-                subsectorData.partes = await obtenerPartes(sectorId, doc.id);
-                subsectoresData.push(subsectorData);
-            }
-
+                subsectorData.partes = await obtenerPartes(sectorId, doc.id); // Obtener partes asociadas a este subsector
+                return subsectorData;
+            }));
             return subsectoresData;
         } catch (error) {
             console.error('Error al obtener los subsectores:', error);
         }
     };
 
-    // Obtener partes
+
+
     const obtenerPartes = async (sectorId, subSectorId) => {
         try {
             const parteCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte`);
             const parteSnapshot = await getDocs(parteCollectionRef);
-            return parteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const partesData = await Promise.all(parteSnapshot.docs.map(async doc => {
+                const parteData = { id: doc.id, ...doc.data() };
+                // Aquí se obtienen los elementos de cada parte
+                parteData.elementos = await obtenerElementos(sectorId, subSectorId, doc.id);
+                return parteData;
+            }));
+            return partesData;
         } catch (error) {
             console.error('Error al obtener las partes:', error);
         }
     };
 
-    // Agregar sector
+
+
+
+    // Función para agregar un sector con validación de nombre
     const agregarSector = async () => {
         try {
+            // Normalizar el nombre del sector (convertir a minúsculas y eliminar espacios en blanco)
             const nombreSectorNormalizado = sectorInput.toLowerCase().trim();
-            const sectoresCollectionRef = collection(db, `proyectos/${id}/sector`);
-            const sectoresSnapshot = await getDocs(sectoresCollectionRef);
-            const nombresSectores = sectoresSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
 
-            if (nombresSectores.includes(nombreSectorNormalizado)) {
-                console.log('El nombre del sector ya existe en la base de datos.');
+            // Obtener los nombres de los sectores existentes y normalizarlos
+            const nombresSectoresNormalizados = sectores.map(sector => sector.nombre.toLowerCase().trim());
+
+            // Verificar si el nombre del sector ya existe
+            if (nombresSectoresNormalizados.includes(nombreSectorNormalizado)) {
+                //alerta
+                setAlerta('El nombre ya existe en la base de datos.');
+                setTipoAlerta('error')
+                setMostrarModal(true)
+
             } else {
-                const docRef = await addDoc(sectoresCollectionRef, { nombre: sectorInput });
-                console.log('Sector agregado correctamente.');
+                // Agregar el sector si no existe
+                const batch = writeBatch(db);
+                const nuevoSectorRef = doc(collection(db, `proyectos/${id}/sector`));
+                batch.set(nuevoSectorRef, { nombre: sectorInput });
+                await batch.commit();
+                //alerta
+                setAlerta('Agregado correctamente.');
+                setTipoAlerta('success')
+                setMostrarModal(true)
+                // limpiar input
                 setSectorInput('');
-                const nuevoSector = { id: docRef.id, nombre: sectorInput, subsectores: [] }; // Asegúrate de incluir la propiedad subsectores
-                setSectores([...sectores, nuevoSector]);
+                // actualizar lista
+                obtenerSectores();
             }
         } catch (error) {
             console.error('Error al agregar el sector:', error);
         }
     };
 
-    // Agregar subsector
+
+    // Función para manejar el cambio de selección en el desplegable de sector
+    const handleSectorChange = async (event) => {
+        const selectedSectorId = event.target.value;
+        setSelectedSector(selectedSectorId);
+    };
+
+    // Función para agregar un subsector con validación de nombre
     const agregarSubsector = async (sectorId) => {
         try {
+            // Normalizar el nombre del subsector
             const nombreSubsectorNormalizado = subSectorInput.toLowerCase().trim();
-            const subsectoresCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector`);
-            const docRef = await addDoc(subsectoresCollectionRef, { nombre: subSectorInput });
-            console.log('Subsector agregado correctamente.');
-            setSubSectorInput('');
-            // Actualizar el estado con el nuevo subsector
-            const nuevosSubsectores = [...sectores];
-            const sectorIndex = nuevosSubsectores.findIndex(sector => sector.id === sectorId);
-            if (sectorIndex !== -1) {
-                const nuevoSubsector = { id: docRef.id, nombre: subSectorInput, partes: [] };
-                if (!nuevosSubsectores[sectorIndex].subsectores) {
-                    nuevosSubsectores[sectorIndex].subsectores = [];
-                }
-                nuevosSubsectores[sectorIndex].subsectores.push(nuevoSubsector);
-                setSectores(nuevosSubsectores);
+
+            // Obtener los nombres de los subsectores existentes del sector seleccionado y normalizarlos
+            const subsectoresDelSector = sectores.find(sector => sector.id === sectorId)?.subsectores || [];
+            const nombresSubsectoresNormalizados = subsectoresDelSector.map(subsector => subsector.nombre.toLowerCase().trim());
+
+            // Verificar si el nombre del subsector ya existe en el sector seleccionado
+            if (nombresSubsectoresNormalizados.includes(nombreSubsectorNormalizado)) {
+                //alerta
+                setAlerta('El nombre ya existe en la base de datos.');
+                setTipoAlerta('error')
+                setMostrarModal(true)
+
+            } else {
+                // Agregar el subsector si no existe
+                const batch = writeBatch(db);
+                const nuevoSubsectorRef = doc(collection(db, `proyectos/${id}/sector/${sectorId}/subsector`));
+                batch.set(nuevoSubsectorRef, { nombre: subSectorInput });
+                await batch.commit();
+                //alerta
+                setAlerta('Agregado correctamente.');
+                setTipoAlerta('success')
+                setMostrarModal(true)
+                // Limoiar input
+                setSubSectorInput('');
+
+                // Actualizar la lista de subsectores del sector
+                const nuevosSubsectores = await obtenerSubsectores(sectorId);
+                const sectoresActualizados = sectores.map(sector => {
+                    if (sector.id === sectorId) {
+                        sector.subsectores = nuevosSubsectores;
+                    }
+                    return sector;
+                });
+                setSectores(sectoresActualizados);
             }
         } catch (error) {
             console.error('Error al agregar el subsector:', error);
         }
     };
 
+    // Función para manejar el cambio de selección en el desplegable de subsector
+    const handleSubSectorChange = (event) => {
+        setSelectedSubSector(event.target.value);
+    };
 
-    // Agregar parte
+    // Función para agregar una parte a la subcolección de un subsector específico
     const agregarParte = async (subSectorId) => {
         try {
-            const partesCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${subSectorId}/parte`);
-            await addDoc(partesCollectionRef, { nombre: parteInput });
-            console.log('Parte agregada correctamente.');
-            setParteInput('');
-            const nuevosSubsectores = await obtenerSubsectores(selectedSector);
-            const sectorIndex = sectores.findIndex(sector => sector.id === selectedSector);
-            const sectoresActualizados = [...sectores];
-            sectoresActualizados[sectorIndex].subsectores = nuevosSubsectores;
-            setSectores(sectoresActualizados);
+            // Normalizar el nombre de la parte
+            const nombreParteNormalizado = parteInput.toLowerCase().trim();
+
+            // Obtener los nombres de las partes existentes del subsector seleccionado y normalizarlos
+            const subsectorSeleccionado = sectores.flatMap(sector => sector.subsectores).find(subsector => subsector.id === subSectorId);
+            const nombresPartesNormalizados = subsectorSeleccionado?.partes.map(parte => parte.nombre.toLowerCase().trim()) || [];
+
+            // Verificar si el nombre de la parte ya existe en el subsector seleccionado
+            if (nombresPartesNormalizados.includes(nombreParteNormalizado)) {
+                //alerta
+                setAlerta('El nombre ya existe en la base de datos.');
+                setTipoAlerta('error')
+                setMostrarModal(true)
+            } else {
+                // Agregar la parte si no existe
+                const parteCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${subSectorId}/parte`);
+                const batch = writeBatch(db);
+                const nuevaParteRef = doc(parteCollectionRef);
+                batch.set(nuevaParteRef, { nombre: parteInput });
+                await batch.commit();
+                //alerta
+                setAlerta('Agregado correctamente.');
+                setTipoAlerta('success')
+                setMostrarModal(true)
+                // Limoiar input
+                setParteInput('');
+
+                // Actualizar la lista de partes del subsector
+                const nuevosSubsectores = await obtenerSubsectores(selectedSector);
+                const sectoresActualizados = sectores.map(sector => {
+                    if (sector.id === selectedSector) {
+                        sector.subsectores = nuevosSubsectores;
+                    }
+                    return sector;
+                });
+                setSectores(sectoresActualizados);
+            }
         } catch (error) {
             console.error('Error al agregar la parte:', error);
         }
     };
 
-    // Manejar cambio de selección en el desplegable de subsector
-    const handleSubSectorChange = (event) => {
-        setSelectedSubSector(event.target.value);
-    };
-
-    // Manejar evento de agregar subsector
-    const handleAgregarSubsector = () => {
-        if (selectedSector) {
-            agregarSubsector(selectedSector);
-        } else {
-            console.error('No se ha seleccionado ningún sector.');
-        }
-    };
-
-
-    // Manejar cambio de selección en el desplegable de sector
-    const handleSectorChange = (event) => {
-        const selectedSectorId = event.target.value;
-        setSelectedSector(selectedSectorId);
-
-        if (selectedSectorId) {
-            const sector = sectores.find(sector => sector.id === selectedSectorId);
-            if (sector) {
-                setSubSectores(sector.subsectores);
-            }
-        } else {
-            setSubSectores([]);
-        }
-    };
-
-    // Manejar evento de agregar parte
+    // Función para manejar el evento cuando se hace clic en el botón para agregar una parte
     const handleAgregarParte = () => {
         if (selectedSubSector) {
             agregarParte(selectedSubSector);
@@ -194,6 +274,234 @@ function Trazabilidad() {
             console.error('No se ha seleccionado ningún subsector.');
         }
     };
+
+    // Función para manejar el cambio de selección en el desplegable de parte
+    const handleParteChange = (event) => {
+        setSelectedParte(event.target.value);
+    };
+
+
+    const agregarElemento = async (parteId) => {
+        try {
+            // Normalizar el nombre del elemento
+            const nombreElementoNormalizado = elementoInput.toLowerCase().trim();
+
+            // Obtener los elementos existentes para esta parte
+            const elementoCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${parteId}/elemento`);
+            const elementosSnapshot = await getDocs(elementoCollectionRef);
+            const nombresElementosExistentes = elementosSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
+
+            // Verificar si el nombre del elemento ya existe
+            if (nombresElementosExistentes.includes(nombreElementoNormalizado)) {
+                //alerta
+                setAlerta('El nombre ya existe en la base de datos.');
+                setTipoAlerta('error')
+                setMostrarModal(true)
+            } else {
+                // Agregar el elemento si no existe
+                const nuevoElementoRef = doc(elementoCollectionRef);
+                await setDoc(nuevoElementoRef, { nombre: elementoInput }); // Usando setDoc en lugar de writeBatch para simplificar
+                // Aquí es donde necesitas actualizar el estado para incluir el nuevo elemento
+
+                // Encuentra la parte en la estructura del estado y actualízala con el nuevo elemento
+                const sectoresActualizados = sectores.map(sector => {
+                    if (sector.id === selectedSector) {
+                        return {
+                            ...sector,
+                            subsectores: sector.subsectores.map(subsector => {
+                                if (subsector.id === selectedSubSector) {
+                                    return {
+                                        ...subsector,
+                                        partes: subsector.partes.map(parte => {
+                                            if (parte.id === parteId) {
+                                                const nuevosElementos = parte.elementos ? [...parte.elementos, { id: nuevoElementoRef.id, nombre: elementoInput }] : [{ id: nuevoElementoRef.id, nombre: elementoInput }];
+                                                return { ...parte, elementos: nuevosElementos };
+                                            }
+                                            return parte;
+                                        })
+                                    };
+                                }
+                                return subsector;
+                            })
+                        };
+                    }
+                    return sector;
+                });
+
+                setSectores(sectoresActualizados);
+                setElementoInput('');
+                setAlerta('Elemento agregado correctamente.');
+                setTipoAlerta('success');
+                setMostrarModal(true);
+            }
+        } catch (error) {
+            console.error('Error al agregar el elemento:', error);
+            setAlerta('Error al agregar el elemento.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+    };
+
+
+    const agregarLote = async (elementoId) => {
+        if (!elementoId || !selectedParte || !selectedSubSector || !selectedSector) {
+            console.error('No se ha seleccionado correctamente el elemento, parte, subsector o sector.');
+            setAlerta('Selecciona correctamente todos los campos requeridos.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+            return;
+        }
+
+        try {
+            // Obtén la referencia de la colección donde se almacenarán los lotes
+            const loteCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${selectedParte}/elemento/${elementoId}/lote`);
+            // Verifica si el lote ya existe
+            const loteSnapshot = await getDocs(loteCollectionRef);
+            const existeLote = loteSnapshot.docs.some(doc => doc.data().nombre.toLowerCase().trim() === loteInput.toLowerCase().trim());
+
+            if (existeLote) {
+                // Si el lote ya existe, muestra una alerta y no procedas a agregarlo
+                setAlerta('El nombre ya existe en la base de datos.');
+                setTipoAlerta('error');
+                setMostrarModal(true);
+            } else {
+                // Si el lote no existe, procede a agregarlo
+                const nuevoLoteRef = doc(loteCollectionRef);
+                await setDoc(nuevoLoteRef, { nombre: loteInput });
+
+                setLoteInput('');
+                setAlerta('Lote agregado correctamente.');
+                setTipoAlerta('success');
+                setMostrarModal(true);
+
+                // Actualiza el estado para reflejar el nuevo lote agregado
+                const sectoresActualizados = sectores.map(sector => {
+                    if (sector.id === selectedSector) {
+                        return {
+                            ...sector,
+                            subsectores: sector.subsectores.map(subsector => {
+                                if (subsector.id === selectedSubSector) {
+                                    return {
+                                        ...subsector,
+                                        partes: subsector.partes.map(parte => {
+                                            if (parte.id === selectedParte) {
+                                                return {
+                                                    ...parte,
+                                                    elementos: parte.elementos.map(elemento => {
+                                                        if (elemento.id === elementoId) {
+                                                            const nuevosLotes = elemento.lotes ? [...elemento.lotes, { id: nuevoLoteRef.id, nombre: loteInput }] : [{ id: nuevoLoteRef.id, nombre: loteInput }];
+                                                            return { ...elemento, lotes: nuevosLotes };
+                                                        }
+                                                        return elemento;
+                                                    })
+                                                };
+                                            }
+                                            return parte;
+                                        })
+                                    };
+                                }
+                                return subsector;
+                            })
+                        };
+                    }
+                    return sector;
+                });
+
+                setSectores(sectoresActualizados);
+            }
+        } catch (error) {
+            console.error('Error al agregar el lote:', error);
+            setAlerta('Error al agregar el lote.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+    };
+
+
+
+    const obtenerLotes = async (sectorId, subSectorId, parteId, elementoId) => {
+        try {
+            const loteCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte/${parteId}/elemento/${elementoId}/lote`);
+            const loteSnapshot = await getDocs(loteCollectionRef);
+            return loteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error('Error al obtener los lotes:', error);
+            return []; // Retorna un arreglo vacío en caso de error para evitar interrupciones
+        }
+    };
+
+    const obtenerElementos = async (sectorId, subSectorId, parteId) => {
+        try {
+            const elementoCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte/${parteId}/elemento`);
+            const elementoSnapshot = await getDocs(elementoCollectionRef);
+            const elementos = await Promise.all(elementoSnapshot.docs.map(async doc => {
+                const elementoData = { id: doc.id, ...doc.data() };
+                elementoData.lotes = await obtenerLotes(sectorId, subSectorId, parteId, doc.id);
+                return elementoData;
+            }));
+            return elementos;
+        } catch (error) {
+            console.error('Error al obtener los elementos:', error);
+            return []; // Retorna un arreglo vacío en caso de error para evitar interrupciones
+        }
+    };
+
+    const mostrarDetallesLote = async (elementoId, loteId) => {
+        if (!loteId) return; // Asegúrate de tener un loteId válido antes de hacer la consulta
+
+        try {
+            const loteRef = doc(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${selectedParte}/elemento/${elementoId}/lote`, loteId);
+            const loteSnapshot = await getDoc(loteRef);
+
+            if (loteSnapshot.exists()) {
+                setObjetoLote(loteSnapshot.data());
+
+            } else {
+                console.log("No se encontró el lote");
+            }
+        } catch (error) {
+            console.error("Error al obtener detalles del lote:", error);
+        }
+    };
+
+
+    const handleLoteChange = (event) => {
+        const loteIdSeleccionado = event.target.value;
+        setSelectedLote(loteIdSeleccionado);
+        // Llamar a la función para obtener los PPIs asociados al lote seleccionado
+        obtenerPpiPorLote(loteIdSeleccionado);
+    };
+
+    const [ppiObject, setPpiObject] = useState(null);
+    const [mesnajePpi, setmensajePpi] = useState('');
+
+    const obtenerPpiPorLote = async (idLote) => {
+        try {
+            const ppiCollectionRef = collection(db, 'ppis');
+            const q = query(ppiCollectionRef, where('idLote', '==', idLote));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                // Si se encuentra un PPI, guardar el primer documento
+                const doc = querySnapshot.docs[0];
+                console.log(doc.id, " => ", doc.data());
+                setPpiObject({ id: doc.id, data: doc.data() });
+            } else {
+
+
+                setmensajePpi("No se encontraron PPIs para el lote con ID:", idLote);
+                // Si no se encuentra ningún PPI, establecer el objeto en null
+                setPpiObject(null);
+            }
+        } catch (error) {
+            console.error("Error al obtener PPIs por lote:", error);
+        }
+    };
+
+
+
+
+
 
 
     return (
@@ -233,186 +541,374 @@ function Trazabilidad() {
 
                 {/* Formulario de trazabilidad */}
                 <div className="mt-4 flex flex-col gap-5">
+                    <p className='text-lg font-medium text-gray-500 mb-3 flex items-center gap-2'><TbBuildingFactory /> Trazabilidad</p>
 
+                    <div className='grid grid-cols-3 gap-10'>
 
-                    <div className='flex flex-col gap-5'>
+                        <div className="flex flex-col items-start gap-3">
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="sector">Sector: </label>
+                                <input
+                                    type="text"
+                                    className='border px-3 py-1 rounded-lg'
+                                    value={sectorInput}
+                                    onChange={(e) => setSectorInput(e.target.value)}
+                                />
+                                <button
+                                    onClick={agregarSector}
+                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                >
+                                    <IoMdAddCircle />
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="sectores">Seleccionar sector: </label>
+                                <select
+                                    id="sectores"
+                                    className="border px-3 py-1 rounded-lg"
+                                    value={selectedSector}
+                                    onChange={handleSectorChange}
+                                >
+                                    <option value="">Seleccione un sector</option>
+                                    {sectores.map((sector) => (
+                                        <option key={sector.id} value={sector.id}>{sector.nombre}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
 
-                        <div className="flex flex-col items-start justify-center">
-                            <p className='text-lg font-medium text-gray-500 mb-3 flex items-center gap-2'><TbBuildingFactory /> Sector</p>
+                        <div className="flex flex-col items-start gap-3">
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="subsector">Subsector: </label>
+                                <input
+                                    type="text"
+                                    id="subsector"
+                                    className='border px-3 py-1 rounded-lg'
+                                    value={subSectorInput}
+                                    onChange={(e) => setSubSectorInput(e.target.value)}
+                                />
+                                <button
+                                    onClick={() => agregarSubsector(selectedSector)}
+                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                >
+                                    <IoMdAddCircle />
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="subsectores">Seleccionar Subsector: </label>
+                                <select
+                                    id="subsectores"
+                                    className="border px-3 py-1 rounded-lg"
+                                    value={selectedSubSector}
+                                    onChange={handleSubSectorChange}
+                                >
+                                    <option value="">Seleccione un subsector</option>
+                                    {(sectores.find(sector => sector.id === selectedSector)?.subsectores || []).map((subsector) => (
+                                        <option key={subsector.id} value={subsector.id}>{subsector.nombre}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
 
-                            <div className='flex gap-5'>
-                                <div>
-                                    <label htmlFor="sector">Sector: </label>
-                                    <input
-                                        type="text"
-                                        className='border px-3 py-1 rounded-lg'
-                                        value={sectorInput}
-                                        onChange={(e) => setSectorInput(e.target.value)}
-                                    />
-                                    <button
-                                        onClick={agregarSector}
-                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
-                                    >
-                                        <IoMdAddCircle />
-                                    </button>
-                                </div>
-                                <div className="flex items-center gap-3">
-
-                                    <label htmlFor="sectores">Seleccionar sector: </label>
-                                    <select
-                                        id="sectores"
-                                        className="border px-3 py-1 rounded-lg"
-                                        value={selectedSector}
-                                        onChange={handleSectorChange}
-                                    >
-                                        <option value="">Seleccione un sector</option>
-                                        {sectores.map((sector) => (
-                                            <option key={sector.id} value={sector.id}>{sector.nombre}</option>
-                                        ))}
-                                    </select>
-
-                                </div>
+                        <div className="flex flex-col items-start gap-3">
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="parte">Parte: </label>
+                                <input
+                                    type="text"
+                                    id="parte"
+                                    className='border px-3 py-1 rounded-lg'
+                                    value={parteInput}
+                                    onChange={(e) => setParteInput(e.target.value)}
+                                />
+                                <button
+                                    onClick={handleAgregarParte}
+                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                >
+                                    <IoMdAddCircle />
+                                </button>
                             </div>
 
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="partes">Seleccionar Parte: </label>
+                                <select
+                                    id="partes"
+                                    className="border px-3 py-1 rounded-lg"
+                                    value={selectedParte}
+                                    onChange={handleParteChange}
+                                >
+                                    <option value="">Seleccione una parte</option>
+                                    {(sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes || []).map((parte) => (
+                                        <option key={parte.id} value={parte.id}>{parte.nombre}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col items-start gap-3">
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="elemento">Elemento: </label>
+                                <input
+                                    type="text"
+                                    id="elemento"
+                                    className='border px-3 py-1 rounded-lg'
+                                    value={elementoInput}
+                                    onChange={(e) => setElementoInput(e.target.value)}
+                                />
+                                <button
+                                    onClick={() => agregarElemento(selectedParte)} // Asegúrate de tener un estado selectedParte para manejar la parte seleccionada
+                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                >
+                                    <IoMdAddCircle />
+                                </button>
+                            </div>
+
+
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="elementos">Seleccionar Elemento: </label>
+                                <select
+                                    id="elementos"
+                                    className="border px-3 py-1 rounded-lg"
+                                    value={selectedElemento}
+                                    onChange={(e) => setSelectedElemento(e.target.value)}
+                                >
+                                    <option value="">Seleccione un elemento</option>
+                                    {/* Asumiendo que tienes una manera de obtener los elementos del estado para el subsector y parte seleccionados */}
+                                    {sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes.find(parte => parte.id === selectedParte)?.elementos.map((elemento) => (
+                                        <option key={elemento.id} value={elemento.id}>{elemento.nombre}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
 
+                        <div className="flex flex-col items-start gap-3">
 
 
-
-                        <div className="flex flex-col items-start justify-center gap-3">
-
-                            <p className='text-lg font-medium text-gray-500 mb-3 flex items-center gap-2'><TbBuildingFactory /> Sub sector</p>
-
-                            <div className='flex gap-5'>
-                                <div>
-                                    <label htmlFor="subsector">Subsector: </label>
-                                    <input
-                                        type="text"
-                                        id="subsector"
-                                        className='border px-3 py-1 rounded-lg'
-                                        value={subSectorInput}
-                                        onChange={(e) => setSubSectorInput(e.target.value)}
-                                    />
-                                    <button
-                                        onClick={handleAgregarSubsector}
-                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
-                                    >
-                                        <IoMdAddCircle />
-                                    </button>
-                                </div>
-                                <div className="flex items-center gap-3">
-
-                                    <label htmlFor="subsectores">Seleccionar Subsector: </label>
-                                    <select
-                                        id="subsectores"
-                                        className="border px-3 py-1 rounded-lg"
-                                        value={selectedSubSector}
-                                        onChange={handleSubSectorChange}
-                                    >
-                                        <option value="">Seleccione un subsector</option>
-                                        {subSectores.map((subsector) => (
-                                            <option key={subsector.id} value={subsector.id}>{subsector.nombre}</option>
-                                        ))}
-                                    </select>
-
-                                </div>
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="lote">Lote: </label>
+                                <input
+                                    type="text"
+                                    id="lote"
+                                    className='border px-3 py-1 rounded-lg'
+                                    value={loteInput}
+                                    onChange={(e) => setLoteInput(e.target.value)}
+                                />
+                                <button
+                                    onClick={() => agregarLote(selectedElemento)} // Función para agregar lote a elemento seleccionado
+                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                >
+                                    <IoMdAddCircle />
+                                </button>
                             </div>
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="lotes">Seleccionar Lote: </label>
+                                <select
+                                    id="lotes"
+                                    className="border px-3 py-1 rounded-lg"
+                                    value={selectedLote}
+                                    onChange={handleLoteChange}
+                                >
+                                    <option value="">Seleccione un lote</option>
+                                    {sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes.find(parte => parte.id === selectedParte)?.elementos.find(elemento => elemento.id === selectedElemento)?.lotes.map((lote) => (
+                                        <option key={lote.id} value={lote.id}>{lote.nombre}</option>
+                                    ))}
+                                </select>
+
+                            </div>
+
+
+
+
+
 
                         </div>
 
-
-
-
-                        <div className="flex flex-col items-start justify-center">
-                            <p className='text-lg font-medium text-gray-500 mb-3 flex items-center gap-2'><TbBuildingFactory /> Parte</p>
-
-                            <div className='flex gap-5'>
-                                <div>
-                                    <label htmlFor="parte">Parte: </label>
-                                    <input
-                                        type="text"
-                                        id="parte"
-                                        className='border px-3 py-1 rounded-lg'
-                                        value={parteInput}
-                                        onChange={(e) => setParteInput(e.target.value)}
-                                    />
-                                    <button
-                                        onClick={handleAgregarParte}
-                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
-                                    >
-                                        <IoMdAddCircle />
-                                    </button>
-                                </div>
-                                <div className="flex items-center gap-3">
-
-                                    <label htmlFor="sectores">Seleccionar parte: </label>
-                                    <select
-                                        id="sectores"
-                                        className="border px-3 py-1 rounded-lg"
-                                        value={selectedSector}
-                                        onChange={handleSectorChange}
-                                    >
-                                        <option value="">Seleccione un parte</option>
-                                        {sectores.map((sector) => (
-                                            <option key={sector.id} value={sector.id}>{sector.nombre}</option>
-                                        ))}
-                                    </select>
-
-                                </div>
-                            </div>
+                        <div>
+                            <button
+                                onClick={() => {
+                                    selectedLote && mostrarDetallesLote(selectedElemento, selectedLote)
+                                    handleVerPpi()
+                                }}
+                                className='text-base text-sky-600 flex items-center gap-1 font-bold'>
+                                <MdOutlineAddLocationAlt className='font-bold' />Puntos de inspección (Ppi)
+                            </button>
+                            <p>Importante: Selecciona sector, sub sector, parte, elemento y lote previamente para visualizar o agregar PPI</p>
 
                         </div>
-
-
 
 
 
                     </div>
                 </div>
 
-                {/* Tabla de trazabilidad */}
-                <div className="">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 w-full">
+                <div class="">
+                    <table className="w-full divide-y divide-gray-200 rounded-xl">
+                        <thead className="bg-gray-200 border">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subsector</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parte</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Elemento</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lote</th> {/* Columna de Lote agregada */}
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {sectores.map((sector) => (
-                                <tr key={sector.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <div className="ml-4">
-                                                <div className="text-sm font-medium text-gray-900">{sector.nombre}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {sector.subsectores.map((subsector) => (
-                                            <div key={subsector.id} className="text-sm text-gray-900">{subsector.nombre}</div>
-                                        ))}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {sector.subsectores.map((subsector) => (
-                                            <ul key={subsector.id}>
-                                                {subsector.partes.map((parte) => (
-                                                    <li key={parte.id} className="text-sm text-gray-900">{parte.nombre}</li>
-                                                ))}
-                                            </ul>
-                                        ))}
-                                    </td>
+                        <tbody>
+                            {sectores.length > 0 ? sectores.map((sector) => (
+                                sector.subsectores.length > 0 ? sector.subsectores.map((subsector) => (
+                                    subsector.partes.length > 0 ? subsector.partes.map((parte) => (
+                                        parte.elementos.length > 0 ? parte.elementos.map((elemento, elementoIndex) => (
+                                            // Renderiza filas para elementos
+                                            <tr key={elemento.id} className='bg-gray-50 border'>
+                                                {elementoIndex === 0 && (
+                                                    <React.Fragment>
+                                                        <td rowSpan={subsector.partes.flatMap(parte => parte.elementos).length} className="px-6 py-4 whitespace-nowrap border">
+                                                            {sector.nombre}
+                                                        </td>
+                                                        <td rowSpan={parte.elementos.length} className="px-6 py-4 whitespace-nowrap border">
+                                                            {subsector.nombre}
+                                                        </td>
+                                                        <td rowSpan={parte.elementos.length} className="px-6 py-4 whitespace-nowrap border">
+                                                            {parte.nombre}
+                                                        </td>
+                                                    </React.Fragment>
+                                                )}
+                                                <td className="px-6 py-4 whitespace-nowrap border">{elemento.nombre}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap border">
+                                                    {elemento.lotes && elemento.lotes.length > 0 ? (
+                                                        elemento.lotes.map(lote => (
+                                                            <div
+                                                            className='flex items-center gap-3 mb-2 '
+                                                             key={lote.id}
+                                                                >
+                                                                {lote.nombre}
+
+
+                                                                <button className='bg-amber-600 text-white px-4 py-1 rounded-md font-medium text-sm'>Agregar Ppi</button>
+
+                                                            </div>)
+                                                        )
+                                                    ) : "N/A"}
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            // Renderiza fila para parte si no hay elementos
+                                            <tr key={parte.id} className='bg-gray-50 border'>
+                                                <td className="px-6 py-4 whitespace-nowrap border">{sector.nombre}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap border">{subsector.nombre}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap border">{parte.nombre}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                                                <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                                            </tr>
+                                        )
+                                    )) : (
+                                        // Renderiza fila para subsector si no hay partes
+                                        <tr key={subsector.id} className='bg-gray-50 border'>
+                                            <td className="px-6 py-4 whitespace-nowrap border">{sector.nombre}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap border">{subsector.nombre}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                                            <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                                            <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                                        </tr>
+                                    )
+                                )) : (
+                                    // Renderiza fila para sector si no hay subsectores
+                                    <tr key={sector.id} className='bg-gray-50 border'>
+                                        <td className="px-6 py-4 whitespace-nowrap border">{sector.nombre}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                                        <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                                        <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                                        <td className="px-6 py-4 whitespace-nowrap border">N/A</td>
+                                    </tr>
+                                )
+                            )) : (
+                                // Renderiza un mensaje si no hay sectores
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-4 whitespace-nowrap border text-center">No hay sectores agregados aún.</td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
+
+
                     </table>
+
+
+
+
+
+
+
+
+
+
                 </div>
+
+                {mostrarModal && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4">
+
+                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
+                            {tipoAlerta === 'success' ?
+                                <div className='text-green-600 flex justify-center'><IoIosCheckmarkCircle className='text-6xl' /></div>
+                                :
+                                null
+                            }
+
+                            {tipoAlerta === 'error' ?
+                                <div className='text-red-600 flex justify-center'><IoCloseCircle className='text-6xl' /></div>
+                                :
+                                null
+                            }
+
+                            <div className="modal-content py-4 text-left px-6 flex justify-center font-medium">
+                                {alerta}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {mostrarModalPpi && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+                        <div className="modal-container bg-white mx-auto rounded shadow-lg z-50 overflow-y-auto p-5"
+                            style={{ width: '320px', height: 'auto', maxWidth: '100%' }}>
+                            <button onClick={handleCloseModalPpi} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
+
+                            <div className='text-center flex justify-center flex-col items-center gap-2'>
+                                <MdOutlineAddLocationAlt className='font-bold text-2xl' />
+
+                                <p><strong>Lote: </strong>{objetoLote.nombre ? objetoLote.nombre : "Ppi no encontrado, selecciona la ubicación correctamente"}</p>
+
+                                {ppiObject && ppiObject.data && (
+                                    <div>
+                                        <p><strong>Ppi: </strong>{ppiObject.data.nombre}</p>
+                                    </div>
+                                )}
+
+                                {!ppiObject && (
+                                    <div>
+                                        <p className='font-medium'>No se encontraron PPIs para el lote.</p>
+                                        <Link to={`/agregarPpi/${selectedLote}`}>
+                                        <button className='bg-amber-600 text-white px-4 py-1 rounded-md mt-2 font-medium text-sm'>Agregar Ppi</button>
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+
+
             </div>
         </div>
     );
 }
 
 export default Trazabilidad;
+
+
+
+
