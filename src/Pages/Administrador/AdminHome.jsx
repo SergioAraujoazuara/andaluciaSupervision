@@ -64,6 +64,18 @@ function AdminHome() {
                                 
                             </Link>
 
+                            <Link to={'/verPpis'}>
+                                <div className='flex gap-3'>
+                                <div className='h-10 flex items-center text-gray-600'>
+                                    <IoCreateOutline style={{ width: 40, height: 40 }} />
+                                </div>
+                                <div className='sm:col-span-9 h-10 flex items-center sm:justify-start text-base font-medium'>
+                                    Ver plantillas Ppi
+                                </div>
+                                </div>
+                                
+                            </Link>
+
                         </div>
 
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '../../../firebase_config';
-import { getDoc, getDocs, doc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where } from 'firebase/firestore';
+import { getDoc, getDocs, doc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc, deleteDoc } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 import { IoMdAddCircle } from "react-icons/io";
 import { FaArrowRight } from "react-icons/fa";
@@ -42,6 +42,7 @@ function Trazabilidad() {
 
     const handleCloseAlert = () => {
         setMostrarModal(false)
+        setMostrarModalEliminar(false)
     }
 
     // Modal PPI
@@ -130,35 +131,33 @@ function Trazabilidad() {
 
 
 
-    // Función para agregar un sector con validación de nombre
     const agregarSector = async () => {
         try {
-            // Normalizar el nombre del sector (convertir a minúsculas y eliminar espacios en blanco)
+            if (!sectorInput.trim()) {
+                setAlerta('El campo no puede estar vacío.');
+                setTipoAlerta('error');
+                setMostrarModal(true);
+                return;
+            }
             const nombreSectorNormalizado = sectorInput.toLowerCase().trim();
-
-            // Obtener los nombres de los sectores existentes y normalizarlos
             const nombresSectoresNormalizados = sectores.map(sector => sector.nombre.toLowerCase().trim());
 
-            // Verificar si el nombre del sector ya existe
             if (nombresSectoresNormalizados.includes(nombreSectorNormalizado)) {
-                //alerta
                 setAlerta('El nombre ya existe en la base de datos.');
-                setTipoAlerta('error')
-                setMostrarModal(true)
-
+                setTipoAlerta('error');
+                setMostrarModal(true);
             } else {
-                // Agregar el sector si no existe
-                const batch = writeBatch(db);
+                // Primero, crea el documento sin el campo 'id'
                 const nuevoSectorRef = doc(collection(db, `proyectos/${id}/sector`));
-                batch.set(nuevoSectorRef, { nombre: sectorInput });
-                await batch.commit();
-                //alerta
+                await setDoc(nuevoSectorRef, { nombre: sectorInput });
+
+                // Luego, actualiza el documento recién creado con su 'id'
+                await updateDoc(nuevoSectorRef, { id: nuevoSectorRef.id });
+
                 setAlerta('Agregado correctamente.');
-                setTipoAlerta('success')
-                setMostrarModal(true)
-                // limpiar input
+                setTipoAlerta('success');
+                setMostrarModal(true);
                 setSectorInput('');
-                // actualizar lista
                 obtenerSectores();
             }
         } catch (error) {
@@ -167,40 +166,39 @@ function Trazabilidad() {
     };
 
 
+
     // Función para manejar el cambio de selección en el desplegable de sector
     const handleSectorChange = async (event) => {
         const selectedSectorId = event.target.value;
         setSelectedSector(selectedSectorId);
     };
 
-    // Función para agregar un subsector con validación de nombre
     const agregarSubsector = async (sectorId) => {
         try {
-            // Normalizar el nombre del subsector
+            if (!subSectorInput.trim()) {
+                setAlerta('El campo no puede estar vacío.');
+                setTipoAlerta('error');
+                setMostrarModal(true);
+                return;
+            }
             const nombreSubsectorNormalizado = subSectorInput.toLowerCase().trim();
-
-            // Obtener los nombres de los subsectores existentes del sector seleccionado y normalizarlos
             const subsectoresDelSector = sectores.find(sector => sector.id === sectorId)?.subsectores || [];
             const nombresSubsectoresNormalizados = subsectoresDelSector.map(subsector => subsector.nombre.toLowerCase().trim());
 
-            // Verificar si el nombre del subsector ya existe en el sector seleccionado
             if (nombresSubsectoresNormalizados.includes(nombreSubsectorNormalizado)) {
-                //alerta
                 setAlerta('El nombre ya existe en la base de datos.');
-                setTipoAlerta('error')
-                setMostrarModal(true)
-
+                setTipoAlerta('error');
+                setMostrarModal(true);
             } else {
-                // Agregar el subsector si no existe
-                const batch = writeBatch(db);
+                // Crear el documento con el nombre del subsector y el id del sector
                 const nuevoSubsectorRef = doc(collection(db, `proyectos/${id}/sector/${sectorId}/subsector`));
-                batch.set(nuevoSubsectorRef, { nombre: subSectorInput });
-                await batch.commit();
-                //alerta
+                await setDoc(nuevoSubsectorRef, { nombre: subSectorInput, sectorId: sectorId });
+
+                // No es necesario actualizar el documento para agregar el id, ya que este se genera automáticamente
+
                 setAlerta('Agregado correctamente.');
-                setTipoAlerta('success')
-                setMostrarModal(true)
-                // Limoiar input
+                setTipoAlerta('success');
+                setMostrarModal(true);
                 setSubSectorInput('');
 
                 // Actualizar la lista de subsectores del sector
@@ -218,6 +216,7 @@ function Trazabilidad() {
         }
     };
 
+
     // Función para manejar el cambio de selección en el desplegable de subsector
     const handleSubSectorChange = (event) => {
         setSelectedSubSector(event.target.value);
@@ -226,6 +225,14 @@ function Trazabilidad() {
     // Función para agregar una parte a la subcolección de un subsector específico
     const agregarParte = async (subSectorId) => {
         try {
+            // Verificar si el input está vacío o sólo contiene espacios en blanco
+            if (!parteInput.trim()) {
+                // Mostrar alerta indicando que el campo no puede estar vacío
+                setAlerta('El campo no puede estar vacío.');
+                setTipoAlerta('error');
+                setMostrarModal(true);
+                return; // Detener la ejecución de la función
+            }
             // Normalizar el nombre de la parte
             const nombreParteNormalizado = parteInput.toLowerCase().trim();
 
@@ -285,6 +292,14 @@ function Trazabilidad() {
 
     const agregarElemento = async (parteId) => {
         try {
+            // Verificar si el input está vacío o sólo contiene espacios en blanco
+            if (!elementoInput.trim()) {
+                // Mostrar alerta indicando que el campo no puede estar vacío
+                setAlerta('El campo no puede estar vacío.');
+                setTipoAlerta('error');
+                setMostrarModal(true);
+                return; // Detener la ejecución de la función
+            }
             // Normalizar el nombre del elemento
             const nombreElementoNormalizado = elementoInput.toLowerCase().trim();
 
@@ -346,6 +361,16 @@ function Trazabilidad() {
 
 
     const agregarLote = async (elementoId) => {
+        // Verificar si el input de lote está vacío o sólo contiene espacios en blanco
+        if (!loteInput.trim()) {
+            // Mostrar alerta indicando que el campo no puede estar vacío
+            setAlerta('El campo no puede estar vacío.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+            return; // Detener la ejecución de la función
+        }
+
+        // Verificar si todos los campos requeridos están seleccionados
         if (!elementoId || !selectedParte || !selectedSubSector || !selectedSector) {
             console.error('No se ha seleccionado correctamente el elemento, parte, subsector, sector o PPI.');
             setAlerta('Selecciona correctamente todos los campos requeridos, incluido el PPI.');
@@ -355,9 +380,25 @@ function Trazabilidad() {
         }
 
         try {
+            // Normalizar el nombre del lote para la verificación
+            const nombreLoteNormalizado = loteInput.toLowerCase().trim();
+
+            // Verificar si ya existe un lote con el mismo nombre dentro del elemento seleccionado
+            const elementoActual = sectores.find(sector => sector.id === selectedSector)
+                ?.subsectores.find(subsector => subsector.id === selectedSubSector)
+                ?.partes.find(parte => parte.id === selectedParte)
+                ?.elementos.find(elemento => elemento.id === elementoId);
+
+            if (elementoActual && elementoActual.lotes && elementoActual.lotes.some(lote => lote.nombre.toLowerCase().trim() === nombreLoteNormalizado)) {
+                setAlerta('El nombre del lote ya existe.');
+                setTipoAlerta('error');
+                setMostrarModal(true);
+                return; // Detener la ejecución de la función
+            }
+
             const loteCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${selectedParte}/elemento/${elementoId}/lote`);
 
-            // Encuentra el PPI seleccionado para incluir su ID y nombre en el documento del lote
+            // Encuentra el PPI seleccionado para incluir su ID y nombre en el nuevo lote
             const ppiSeleccionado = ppis.find(ppi => ppi.id === selectedPpi);
 
             const nuevoLote = {
@@ -366,6 +407,7 @@ function Trazabilidad() {
                 ppiNombre: ppiSeleccionado ? ppiSeleccionado.nombre : '' // Nombre del PPI seleccionado
             };
 
+            // Agregar el nuevo lote a la base de datos
             const docRef = await addDoc(loteCollectionRef, nuevoLote);
 
             // Restablecer estados y mostrar mensaje de éxito
@@ -416,6 +458,7 @@ function Trazabilidad() {
             setMostrarModal(true);
         }
     };
+
 
 
 
@@ -525,6 +568,53 @@ function Trazabilidad() {
         cargarPpis();
     }, []);
 
+
+    const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false)
+    const [sectorIdAEliminar, setSectorIdAEliminar] = useState(null);
+    const [subsectorIdAEliminar, setSubsectorIdAEliminar] = useState(null);
+
+
+    const eliminarSubsector = async (sectorId, subsectorId) => {
+        try {
+            // Elimina el subsector de Firestore
+            const subsectorRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector`, subsectorIdAEliminar);
+            await deleteDoc(subsectorRef);
+
+            // Elimina el subsector del estado local
+            const sectoresActualizados = sectores.map((sector) => {
+                if (sector.id === sectorId) {
+                    // Filtra el subsector que se va a eliminar
+                    const subsectoresActualizados = sector.subsectores.filter(subsector => subsector.id !== subsectorId);
+                    return { ...sector, subsectores: subsectoresActualizados };
+                }
+                return sector;
+            });
+
+            // Actualiza el estado con la nueva lista de sectores
+            setSectores(sectoresActualizados);
+
+            // Muestra mensaje de éxito y cierra el modal
+            setAlerta('Subsector eliminado correctamente.');
+            setTipoAlerta('success');
+            setMostrarModal(true);
+            setMostrarModalEliminar(false);
+        } catch (error) {
+            console.error('Error al eliminar el subsector:', error);
+            setAlerta('Error al eliminar el subsector.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+    };
+
+
+    const confirmarDeleteSubSector = (sectorId, subsectorId) => {
+        setSectorIdAEliminar(sectorId);
+        setSubsectorIdAEliminar(subsectorId);
+        setMostrarModalEliminar(true);
+    };
+
+
+
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500'>
             {/* Encabezado */}
@@ -561,16 +651,16 @@ function Trazabilidad() {
                 <div className='w-full border border-b-2'></div>
 
                 {/* Formulario de trazabilidad */}
-                <div className="mt-4 flex flex-col gap-5">
-                    
+                <div className="mt-4 flex flex-col ">
 
-                    <div className='grid grid-cols-3 gap-10'>
 
-                        <div className="flex flex-col items-start gap-3">
-                        <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sector</p>
-                            <div className="flex items-center gap-3">
-                                <label htmlFor="sector">Agregar sector: </label>
+                    <div className='grid grid-cols-5 text-sm'>
+                        {/* Sector */}
+                        <div className="flex flex-col items-start gap-3 border-r-2 p-5">
+                            <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sector</p>
+                            <div className="flex items-center">
                                 <input
+                                    placeholder='Agregar sector'
                                     type="text"
                                     className='border px-3 py-1 rounded-lg'
                                     value={sectorInput}
@@ -583,8 +673,13 @@ function Trazabilidad() {
                                     <IoMdAddCircle />
                                 </button>
                             </div>
+
+                        </div>
+                        {/* Sub Sector */}
+                        <div className="flex flex-col items-start gap-3 border-r-2 p-5">
+                            <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sub sector</p>
                             <div className="flex flex-col items-start gap-3">
-                                <label htmlFor="sectores"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el sector: </label>
+                                <label htmlFor="sectores"><strong className='text-amber-600 '>*</strong> Para agregar información selecciona el sector: </label>
                                 <select
                                     id="sectores"
                                     className="border px-3 py-1 rounded-lg"
@@ -597,13 +692,11 @@ function Trazabilidad() {
                                     ))}
                                 </select>
                             </div>
-                        </div>
 
-                        <div className="flex flex-col items-start gap-3">
-                        <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sub sector</p>
-                            <div className="flex items-center gap-3">
-                                <label htmlFor="subsector">Agregar: </label>
+                            <div className="flex items-center">
+
                                 <input
+                                    placeholder='Agregar sub sector: '
                                     type="text"
                                     id="subsector"
                                     className='border px-3 py-1 rounded-lg'
@@ -617,6 +710,11 @@ function Trazabilidad() {
                                     <IoMdAddCircle />
                                 </button>
                             </div>
+
+                        </div>
+
+                        <div className="flex flex-col items-start gap-3 border-r-2 p-5">
+                            <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Parte</p>
                             <div className="flex flex-col items-start gap-3">
                                 <label htmlFor="subsectores"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el sub sector: </label>
                                 <select
@@ -631,12 +729,10 @@ function Trazabilidad() {
                                     ))}
                                 </select>
                             </div>
-                        </div>
+                            <div className="flex items-center">
 
-                        <div className="flex flex-col items-start gap-3">
-                            <div className="flex items-center gap-3">
-                                <label htmlFor="parte">Parte: </label>
                                 <input
+                                    placeholder='Agregar parte: '
                                     type="text"
                                     id="parte"
                                     className='border px-3 py-1 rounded-lg'
@@ -651,8 +747,13 @@ function Trazabilidad() {
                                 </button>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                <label htmlFor="partes">Seleccionar Parte: </label>
+
+                        </div>
+
+                        <div className="flex flex-col items-start gap-3 border-r-2 p-5">
+                            <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Elemento</p>
+                            <div className="flex flex-col items-start gap-3">
+                                <label htmlFor="partes"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el parte: </label>
                                 <select
                                     id="partes"
                                     className="border px-3 py-1 rounded-lg"
@@ -665,12 +766,10 @@ function Trazabilidad() {
                                     ))}
                                 </select>
                             </div>
-                        </div>
+                            <div className="flex items-center">
 
-                        <div className="flex flex-col items-start gap-3">
-                            <div className="flex items-center gap-3">
-                                <label htmlFor="elemento">Elemento: </label>
                                 <input
+                                    placeholder='Agregar elemento: '
                                     type="text"
                                     id="elemento"
                                     className='border px-3 py-1 rounded-lg'
@@ -686,8 +785,14 @@ function Trazabilidad() {
                             </div>
 
 
-                            <div className="flex items-center gap-3">
-                                <label htmlFor="elementos">Seleccionar Elemento: </label>
+
+                        </div>
+
+
+                        <div className="flex flex-col items-start gap-3 p-5">
+                            <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Lote y ppi</p>
+                            <div className="flex flex-col items-start gap-3">
+                                <label htmlFor="elementos"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el elemento: </label>
                                 <select
                                     id="elementos"
                                     className="border px-3 py-1 rounded-lg"
@@ -701,39 +806,37 @@ function Trazabilidad() {
                                     ))}
                                 </select>
                             </div>
-                        </div>
-
-
-                        <div className="flex flex-col items-start gap-3">
-
-
-                            <div className="flex items-center gap-3">
-                                <label htmlFor="lote">Lote: </label>
-                                <input
-                                    type="text"
-                                    id="lote"
-                                    className='border px-3 py-1 rounded-lg'
-                                    value={loteInput}
-                                    onChange={(e) => setLoteInput(e.target.value)}
-                                />
-                                <button
-                                    onClick={() => agregarLote(selectedElemento)} // Función para agregar lote a elemento seleccionado
-                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                            <div className="flex flex-col items-start gap-3">
+                                <select
+                                    value={selectedPpi}
+                                    onChange={(e) => setSelectedPpi(e.target.value)}
+                                    className="border px-3 py-1 rounded-lg"
                                 >
-                                    <IoMdAddCircle />
-                                </button>
+                                    <option value="">Seleccione un PPI</option>
+                                    {ppis.map(ppi => (
+                                        <option key={ppi.id} value={ppi.id}>{ppi.nombre}</option>
+                                    ))}
+                                </select>
+                                <div className="flex items-start">
+                                    <input
+                                        placeholder='Agregar lote: '
+                                        type="text"
+                                        id="lote"
+                                        className='border px-3 py-1 rounded-lg'
+                                        value={loteInput}
+                                        onChange={(e) => setLoteInput(e.target.value)}
+                                    />
+                                    <button
+                                        onClick={() => agregarLote(selectedElemento)} // Función para agregar lote a elemento seleccionado
+                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                    >
+                                        <IoMdAddCircle />
+                                    </button>
+                                </div>
+
                             </div>
 
-                            <select
-                                value={selectedPpi}
-                                onChange={(e) => setSelectedPpi(e.target.value)}
-                                className="border px-3 py-1 rounded-lg"
-                            >
-                                <option value="">Seleccione un PPI</option>
-                                {ppis.map(ppi => (
-                                    <option key={ppi.id} value={ppi.id}>{ppi.nombre}</option>
-                                ))}
-                            </select>
+
 
 
 
@@ -742,86 +845,143 @@ function Trazabilidad() {
 
                         </div>
 
-                        <div>
-                            <button
-                                onClick={() => {
-                                    selectedLote && mostrarDetallesLote(selectedElemento, selectedLote)
-                                    handleVerPpi()
-                                }}
-                                className='text-base text-sky-600 flex items-center gap-1 font-bold'>
-                                <MdOutlineAddLocationAlt className='font-bold' />Puntos de inspección (Ppi)
-                            </button>
-                            <p>Importante: Selecciona sector, sub sector, parte, elemento y lote previamente para visualizar o agregar PPI</p>
 
-                        </div>
 
 
 
                     </div>
                 </div>
 
-                <div class="mt-5">
-                    <table className="w-full divide-y divide-gray-200 rounded-xl">
-                        <thead className="bg-gray-200 border">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subsector</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parte</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Elemento</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lote</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ppi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sectores.map((sector) =>
-                                sector.subsectores.map((subsector) =>
-                                    subsector.partes.map((parte) =>
-                                        parte.elementos.map((elemento) =>
-                                            elemento.lotes.map((lote, index) => (
-                                                <tr key={lote.id} className="bg-white border">
-                                                    {index === 0 && (
-                                                        <>
-                                                            <td rowSpan={elemento.lotes.length} className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border">
-                                                                {sector.nombre}
-                                                            </td>
-                                                            <td rowSpan={elemento.lotes.length} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border">
-                                                                {subsector.nombre}
-                                                            </td>
-                                                            <td rowSpan={elemento.lotes.length} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border">
-                                                                {parte.nombre}
-                                                            </td>
-                                                            <td rowSpan={elemento.lotes.length} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border">
-                                                                {elemento.nombre}
-                                                            </td>
-                                                        </>
-                                                    )}
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border">
-                                                        {lote.nombre}
-                                                    </td>
-                                                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${lote.ppiNombre ? 'bg-green-200' : 'bg-red-200'}`}>
-                                                        {lote.ppiNombre ? lote.ppiNombre : "Ppi sin Asignar"}
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )
-                                    )
-                                )
-                            )}
-                        </tbody>
+                <div className="mt-5">
+                    <div className='grid grid-cols-5 bg-gray-200 rounded-t-lg  border font-medium'>
+                        <p className='px-4 py-2'>Sector</p>
+                        <p className='border-r-2 border-l-2  border-gray-300 px-4 py-2'>Sub sector</p>
+                        <p className='border-r-2 border-gray-300 px-4 py-2'>Parte</p>
+                        <p className='border-r-2 border-gray-300 px-4 py-2'>Elemento</p>
+                        <p className='px-4 py-2'>Lote y ppi</p>
+                    </div>
 
-                    </table>
+                    <div className="divide-y divide-gray-200 border rounded-b-lg">
+                        {sectores.map((sector, index) => (
+                            <div key={sector.id} className={`flex flex-wrap items-center ${index % 2 === 0 ? 'bg-gray-100' : 'bg-gray-50'}`}>
+                                <h2 className="text-lg font-medium px-4 py-2 rounded-lg w-full md:w-1/5">{sector.nombre}</h2>
+                                {sector.subsectores && sector.subsectores.length > 0 && (
+                                    <ul className="divide-y divide-gray-200 w-full md:w-4/5">
+                                        {sector.subsectores.map((subsector) => (
+                                            subsector.partes && subsector.partes.length > 0 ? (
+                                                subsector.partes.map((parte) => (
+                                                    parte.elementos && parte.elementos.length > 0 ? (
+                                                        parte.elementos.map((elemento) => (
+                                                            elemento.lotes && elemento.lotes.length > 0 ? (
+                                                                elemento.lotes.map((lote) => (
+                                                                    <li key={lote.id} className="grid grid-cols-4 items-center py-4 ">
+                                                                        <div className='flex justify-between pr-5 gap-1 border-r-2 border-l-2'>
+                                                                            <p className='px-4 '>{subsector.nombre}</p>
+                                                                            <div className='flex gap-4'>
+                                                                                <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-lg'><IoCloseCircle /></button>
+                                                                            </div>
+                                                                        </div>
 
 
 
 
-
-
-
-
-
-
-
+                                                                        <p className='px-4 border-r-2'>{parte.nombre}</p>
+                                                                        <p className='px-4 border-r-2'>{elemento.nombre}</p>
+                                                                        <div className='flex flex-col justify-center  px-4'>
+                                                                            <p className='font-medium'>{lote.nombre}</p>
+                                                                            <div className='flex justify-between'>
+                                                                                <div>
+                                                                                    <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
+                                                                                        {lote.ppiNombre ? lote.ppiNombre : "Ppi sin Asignar"}
+                                                                                    </p>
+                                                                                </div>
+                                                                                <div className='flex gap-4'>
+                                                                                    <button className='text-xl'><FaEdit /></button>
+                                                                                    <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-2xl'><IoCloseCircle /></button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </li>
+                                                                ))
+                                                            ) : (
+                                                                <li key={`${elemento.id}-sin-lote`} className="font-medium grid grid-cols-4">
+                                                                    <p className='px-4'>{subsector.nombre}</p>
+                                                                    <p className='px-4'>{parte.nombre}</p>
+                                                                    <p className='px-4'>{elemento.nombre}</p>
+                                                                    <div className='flex gap-3 px-4'>
+                                                                        <p>-</p>
+                                                                        <p className="text-red-500">Sin PPI</p>
+                                                                        <div>
+                                                                            <button className='text-xl'><FaEdit /></button>
+                                                                            <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-2xl'><IoCloseCircle /></button>
+                                                                        </div>
+                                                                    </div>
+                                                                </li>
+                                                            )
+                                                        ))
+                                                    ) : (
+                                                        <li key={`${parte.id}-sin-elemento`} className="font-medium grid grid-cols-4">
+                                                            <p className='px-4'>{subsector.nombre}</p>
+                                                            <p className='px-4'>{parte.nombre}</p>
+                                                            <p className='px-4'>-</p>
+                                                            <div className='flex gap-3 px-4'>
+                                                                <p>-</p>
+                                                                <p className="text-red-500">Sin PPI</p>
+                                                                <div>
+                                                                    <button className='text-xl'><FaEdit /></button>
+                                                                    <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-2xl'><IoCloseCircle /></button>
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    )
+                                                ))
+                                            ) : (
+                                                <li key={`${subsector.id}-sin-parte`} className="font-medium grid grid-cols-4">
+                                                    <p className='px-4'>{subsector.nombre}</p>
+                                                    <p className='px-4'>-</p>
+                                                    <p className='px-4'>-</p>
+                                                    <div className='flex gap-3 px-4'>
+                                                        <p>-</p>
+                                                        <p className="text-red-500">-</p>
+                                                        <div>
+                                                            <button className='text-xl'><FaEdit /></button>
+                                                            <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-2xl'><IoCloseCircle /></button>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            )
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
+
+
+                {mostrarModalEliminar && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+
+                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
+                            <div>
+                                <p>¿Estas seguro de eliminar?</p>
+                                <p className='text-amber-700 text-xs mt-2'>* Se eliminara el sub sector completo con sus datos asociados</p>
+                            </div>
+
+                            <div className='flex justify-center gap-5 mt-3'>
+                                <button
+                                    onClick={eliminarSubsector}
+                                    className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'>Eliminar</button>
+                                <button
+                                    onClick={handleCloseAlert}
+                                    className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'>Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {mostrarModal && (
                     <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">

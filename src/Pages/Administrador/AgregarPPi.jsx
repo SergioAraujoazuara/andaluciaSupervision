@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../../firebase_config';
 
-function AgregarPPi() {
+function PlantillaPpi() {
     const { id } = useParams();
     const [nombre, setNombre] = useState('');
     const [actividades, setActividades] = useState([
@@ -204,4 +204,4 @@ function AgregarPPi() {
     );
 }
 
-export default AgregarPPi;
+export default PlantillaPpi;
