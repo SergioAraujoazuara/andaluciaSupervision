@@ -11,6 +11,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { MdOutlineAddLocationAlt } from "react-icons/md";
 import { ImLocation } from "react-icons/im";
 import { FaEdit } from "react-icons/fa";
+import { RiDeleteBinLine } from "react-icons/ri";
 
 
 function Trazabilidad() {
@@ -42,7 +43,12 @@ function Trazabilidad() {
 
     const handleCloseAlert = () => {
         setMostrarModal(false)
-        setMostrarModalEliminar(false)
+        setMostrarModalEliminarSector(false)
+        setMostrarModalEliminarSubSector(false)
+        setMostrarModalEliminarParte(false)
+        setMostrarModalEliminarElemento(false)
+        setMostrarModalEliminarLote(false)
+
     }
 
     // Modal PPI
@@ -225,42 +231,39 @@ function Trazabilidad() {
     // Función para agregar una parte a la subcolección de un subsector específico
     const agregarParte = async (subSectorId) => {
         try {
-            // Verificar si el input está vacío o sólo contiene espacios en blanco
             if (!parteInput.trim()) {
-                // Mostrar alerta indicando que el campo no puede estar vacío
                 setAlerta('El campo no puede estar vacío.');
                 setTipoAlerta('error');
                 setMostrarModal(true);
-                return; // Detener la ejecución de la función
+                return;
             }
-            // Normalizar el nombre de la parte
             const nombreParteNormalizado = parteInput.toLowerCase().trim();
 
-            // Obtener los nombres de las partes existentes del subsector seleccionado y normalizarlos
             const subsectorSeleccionado = sectores.flatMap(sector => sector.subsectores).find(subsector => subsector.id === subSectorId);
             const nombresPartesNormalizados = subsectorSeleccionado?.partes.map(parte => parte.nombre.toLowerCase().trim()) || [];
 
-            // Verificar si el nombre de la parte ya existe en el subsector seleccionado
             if (nombresPartesNormalizados.includes(nombreParteNormalizado)) {
-                //alerta
                 setAlerta('El nombre ya existe en la base de datos.');
-                setTipoAlerta('error')
-                setMostrarModal(true)
+                setTipoAlerta('error');
+                setMostrarModal(true);
             } else {
-                // Agregar la parte si no existe
                 const parteCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${subSectorId}/parte`);
                 const batch = writeBatch(db);
                 const nuevaParteRef = doc(parteCollectionRef);
-                batch.set(nuevaParteRef, { nombre: parteInput });
+                // Incluir idSector e idSubSector al crear la nueva parte
+                batch.set(nuevaParteRef, {
+                    nombre: parteInput,
+                    sectorId: selectedSector, // Agregar el id del sector seleccionado
+                    subSectorId: subSectorId, // Agregar el id del subsector
+                });
                 await batch.commit();
-                //alerta
+
                 setAlerta('Agregado correctamente.');
-                setTipoAlerta('success')
-                setMostrarModal(true)
-                // Limoiar input
+                setTipoAlerta('success');
+                setMostrarModal(true);
                 setParteInput('');
 
-                // Actualizar la lista de partes del subsector
+                // Actualizar la UI, si es necesario
                 const nuevosSubsectores = await obtenerSubsectores(selectedSector);
                 const sectoresActualizados = sectores.map(sector => {
                     if (sector.id === selectedSector) {
@@ -274,6 +277,7 @@ function Trazabilidad() {
             console.error('Error al agregar la parte:', error);
         }
     };
+
 
     // Función para manejar el evento cuando se hace clic en el botón para agregar una parte
     const handleAgregarParte = () => {
@@ -292,35 +296,34 @@ function Trazabilidad() {
 
     const agregarElemento = async (parteId) => {
         try {
-            // Verificar si el input está vacío o sólo contiene espacios en blanco
             if (!elementoInput.trim()) {
-                // Mostrar alerta indicando que el campo no puede estar vacío
                 setAlerta('El campo no puede estar vacío.');
                 setTipoAlerta('error');
                 setMostrarModal(true);
                 return; // Detener la ejecución de la función
             }
-            // Normalizar el nombre del elemento
-            const nombreElementoNormalizado = elementoInput.toLowerCase().trim();
 
-            // Obtener los elementos existentes para esta parte
+            const nombreElementoNormalizado = elementoInput.toLowerCase().trim();
             const elementoCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${parteId}/elemento`);
             const elementosSnapshot = await getDocs(elementoCollectionRef);
             const nombresElementosExistentes = elementosSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
 
-            // Verificar si el nombre del elemento ya existe
             if (nombresElementosExistentes.includes(nombreElementoNormalizado)) {
-                //alerta
                 setAlerta('El nombre ya existe en la base de datos.');
-                setTipoAlerta('error')
-                setMostrarModal(true)
+                setTipoAlerta('error');
+                setMostrarModal(true);
             } else {
-                // Agregar el elemento si no existe
+                // Incluir idSector, idSubSector y parteId al crear el nuevo elemento
                 const nuevoElementoRef = doc(elementoCollectionRef);
-                await setDoc(nuevoElementoRef, { nombre: elementoInput }); // Usando setDoc en lugar de writeBatch para simplificar
-                // Aquí es donde necesitas actualizar el estado para incluir el nuevo elemento
+                await setDoc(nuevoElementoRef, {
+                    nombre: elementoInput,
+                    sectorId: selectedSector, // ID del sector seleccionado
+                    subScetorId: selectedSubSector, // ID del subsector seleccionado
+                    parteId: parteId, // ID de la parte a la que pertenece el elemento
+                });
 
-                // Encuentra la parte en la estructura del estado y actualízala con el nuevo elemento
+                // Aquí es donde necesitas actualizar el estado para incluir el nuevo elemento
+                // Este es un ejemplo genérico, asegúrate de ajustarlo según la estructura de tu estado
                 const sectoresActualizados = sectores.map(sector => {
                     if (sector.id === selectedSector) {
                         return {
@@ -404,7 +407,11 @@ function Trazabilidad() {
             const nuevoLote = {
                 nombre: loteInput,
                 ppiId: selectedPpi, // ID del PPI seleccionado
-                ppiNombre: ppiSeleccionado ? ppiSeleccionado.nombre : '' // Nombre del PPI seleccionado
+                ppiNombre: ppiSeleccionado ? ppiSeleccionado.nombre : '', // Nombre del PPI seleccionado
+                idSector: selectedSector, // Incluir el ID del sector
+                idSubSector: selectedSubSector, // Incluir el ID del subsector
+                parteId: selectedParte, // Incluir el ID de la parte
+                elementoId: elementoId, // Incluir el ID del elemento
             };
 
             // Agregar el nuevo lote a la base de datos
@@ -493,61 +500,6 @@ function Trazabilidad() {
         }
     };
 
-    const mostrarDetallesLote = async (elementoId, loteId) => {
-        if (!loteId) return; // Asegúrate de tener un loteId válido antes de hacer la consulta
-
-        try {
-            const loteRef = doc(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${selectedParte}/elemento/${elementoId}/lote`, loteId);
-            const loteSnapshot = await getDoc(loteRef);
-
-            if (loteSnapshot.exists()) {
-                setObjetoLote(loteSnapshot.data());
-
-            } else {
-                console.log("No se encontró el lote");
-            }
-        } catch (error) {
-            console.error("Error al obtener detalles del lote:", error);
-        }
-    };
-
-
-    const handleLoteChange = (event) => {
-        const loteIdSeleccionado = event.target.value;
-        setSelectedLote(loteIdSeleccionado);
-        // Llamar a la función para obtener los PPIs asociados al lote seleccionado
-        obtenerPpiPorLote(loteIdSeleccionado);
-    };
-
-    const [ppiObject, setPpiObject] = useState(null);
-    const [mesnajePpi, setmensajePpi] = useState('');
-
-    const obtenerPpiPorLote = async (idLote) => {
-        try {
-            const ppiCollectionRef = collection(db, 'ppis');
-            const q = query(ppiCollectionRef, where('idLote', '==', idLote));
-            const querySnapshot = await getDocs(q);
-
-            if (!querySnapshot.empty) {
-                // Si se encuentra un PPI, guardar el primer documento
-                const doc = querySnapshot.docs[0];
-                console.log(doc.id, " => ", doc.data());
-                setPpiObject({ id: doc.id, data: doc.data() });
-            } else {
-
-
-                setmensajePpi("No se encontraron PPIs para el lote con ID:", idLote);
-                // Si no se encuentra ningún PPI, establecer el objeto en null
-                setPpiObject(null);
-            }
-        } catch (error) {
-            console.error("Error al obtener PPIs por lote:", error);
-        }
-    };
-
-
-
-
 
     const [ppis, setPpis] = useState([]);
     const [selectedPpi, setSelectedPpi] = useState("");
@@ -569,48 +521,257 @@ function Trazabilidad() {
     }, []);
 
 
-    const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false)
+    const [mostrarModalEliminarSubSector, setMostrarModalEliminarSubSector] = useState(false)
     const [sectorIdAEliminar, setSectorIdAEliminar] = useState(null);
     const [subsectorIdAEliminar, setSubsectorIdAEliminar] = useState(null);
 
-
-    const eliminarSubsector = async (sectorId, subsectorId) => {
+    //Eliminar sub sector
+    const eliminarSubsector = async () => {
         try {
-            // Elimina el subsector de Firestore
             const subsectorRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector`, subsectorIdAEliminar);
             await deleteDoc(subsectorRef);
 
-            // Elimina el subsector del estado local
-            const sectoresActualizados = sectores.map((sector) => {
-                if (sector.id === sectorId) {
-                    // Filtra el subsector que se va a eliminar
-                    const subsectoresActualizados = sector.subsectores.filter(subsector => subsector.id !== subsectorId);
+            // Actualizar el estado para excluir el subsector eliminado
+            const sectoresActualizados = sectores.map(sector => {
+                if (sector.id === sectorIdAEliminar) {
+                    const subsectoresActualizados = sector.subsectores.filter(subsector => subsector.id !== subsectorIdAEliminar);
                     return { ...sector, subsectores: subsectoresActualizados };
                 }
                 return sector;
             });
-
-            // Actualiza el estado con la nueva lista de sectores
             setSectores(sectoresActualizados);
 
-            // Muestra mensaje de éxito y cierra el modal
             setAlerta('Subsector eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
-            setMostrarModalEliminar(false);
         } catch (error) {
             console.error('Error al eliminar el subsector:', error);
             setAlerta('Error al eliminar el subsector.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
+        setMostrarModalEliminarSubSector(false);
     };
+
+
+    // Elminar lote
+    const [mostrarModalEliminarLote, setMostrarModalEliminarLote] = useState(false);
+    const [loteIdAEliminar, setLoteIdAEliminar] = useState(null);
+
+    const confirmarDeleteLote = (sectorId, subsectorId, parteId, elementoId, loteId) => {
+        setSectorIdAEliminar(sectorId);
+        setSubsectorIdAEliminar(subsectorId);
+        setParteIdAEliminar(parteId);
+        setElementoIdAEliminar(elementoId);
+        setLoteIdAEliminar(loteId);
+        setMostrarModalEliminarLote(true);
+    };
+
+    const confirmarEliminarLote = async () => {
+        const { sectorId, subSectorId, parteId, elementoId, loteId } = datosLoteAEliminar;
+        try {
+            // Paso 1: Eliminar el lote de Firestore
+            const loteRef = doc(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte/${parteId}/elemento/${elementoId}/lote`, loteId);
+            await deleteDoc(loteRef);
+    
+            // Paso 2: Actualizar el estado para reflejar la eliminación del lote
+            setSectores(prevSectores => prevSectores.map(sector => {
+                if (sector.id === sectorId) {
+                    return {
+                        ...sector,
+                        subsectores: sector.subsectores.map(subsector => {
+                            if (subsector.id === subSectorId) {
+                                return {
+                                    ...subsector,
+                                    partes: subsector.partes.map(parte => {
+                                        if (parte.id === parteId) {
+                                            return {
+                                                ...parte,
+                                                elementos: parte.elementos.map(elemento => {
+                                                    if (elemento.id === elementoId) {
+                                                        // Filtrar el lote eliminado
+                                                        const lotesActualizados = elemento.lotes.filter(lote => lote.id !== loteId);
+                                                        return {
+                                                            ...elemento,
+                                                            lotes: lotesActualizados
+                                                        };
+                                                    }
+                                                    return elemento;
+                                                })
+                                            };
+                                        }
+                                        return parte;
+                                    })
+                                };
+                            }
+                            return subsector;
+                        })
+                    };
+                }
+                return sector;
+            }));
+    
+            // Paso 3: Mostrar mensaje de éxito y cerrar el modal de confirmación
+            setAlerta('Lote eliminado correctamente.');
+            setTipoAlerta('success');
+            setMostrarModal(true);
+        } catch (error) {
+            // En caso de error, mostrar mensaje de error y cerrar el modal de confirmación
+            console.error('Error al eliminar el lote:', error);
+            setAlerta('Error al eliminar el lote.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+        setMostrarModalEliminarLote(false);
+        setDatosLoteAEliminar(null); // Limpiar los datos del lote a eliminar
+    };
+    
+
 
 
     const confirmarDeleteSubSector = (sectorId, subsectorId) => {
         setSectorIdAEliminar(sectorId);
         setSubsectorIdAEliminar(subsectorId);
-        setMostrarModalEliminar(true);
+        setMostrarModalEliminarSubSector(true);
+    };
+
+
+    // Eliminar sector
+    const [mostrarModalEliminarSector, setMostrarModalEliminarSector] = useState(false)
+
+    const solicitarEliminarSector = (sectorId) => {
+        setSectorIdAEliminar(sectorId);
+        setMostrarModalEliminarSector(true);
+    };
+
+    const eliminarSector = async () => {
+        try {
+            // Referencia al documento del sector a eliminar
+            const sectorRef = doc(db, `proyectos/${id}/sector`, sectorIdAEliminar);
+            await deleteDoc(sectorRef);
+
+            // Filtrar el estado actual para excluir el sector eliminado
+            const sectoresActualizados = sectores.filter(sector => sector.id !== sectorIdAEliminar);
+            setSectores(sectoresActualizados);
+
+            setAlerta('Sector eliminado correctamente.');
+            setTipoAlerta('success');
+            setMostrarModal(true);
+        } catch (error) {
+            console.error('Error al eliminar el sector:', error);
+            setAlerta('Error al eliminar el sector.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+
+        // Ocultar el modal de confirmación
+        setMostrarModalEliminarSector(false);
+    };
+
+    const [parteIdAEliminar, setParteIdAEliminar] = useState(null);
+    const [mostrarModalEliminarParte, setMostrarModalEliminarParte] = useState(false)
+
+    const confirmarDeleteParte = (sectorId, subsectorId, parteId) => {
+        setSectorIdAEliminar(sectorId); // Asegúrate de tener este estado si necesitas referenciar al sector para la eliminación
+        setSubsectorIdAEliminar(subsectorId); // Similarmente, si necesitas el ID del subsector, asegúrate de tener un estado para ello
+        setParteIdAEliminar(parteId);
+        setMostrarModalEliminarParte(true);
+    };
+
+    const eliminarParte = async () => {
+        try {
+            const parteRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte`, parteIdAEliminar);
+            await deleteDoc(parteRef);
+
+            // Actualizar el estado de 'sectores' para reflejar la eliminación de la parte
+            const sectoresActualizados = sectores.map(sector => {
+                if (sector.id === sectorIdAEliminar) {
+                    return {
+                        ...sector,
+                        subsectores: sector.subsectores.map(subsector => {
+                            if (subsector.id === subsectorIdAEliminar) {
+                                return {
+                                    ...subsector,
+                                    partes: subsector.partes.filter(parte => parte.id !== parteIdAEliminar),
+                                };
+                            }
+                            return subsector;
+                        }),
+                    };
+                }
+                return sector;
+            });
+
+            setSectores(sectoresActualizados);
+            setAlerta('Parte eliminada correctamente.');
+            setTipoAlerta('success');
+            setMostrarModal(true);
+        } catch (error) {
+            console.error('Error al eliminar la parte:', error);
+            setAlerta('Error al eliminar la parte.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+
+        setMostrarModalEliminarParte(false);
+    };
+
+
+    // Eliminar elemento
+    const [mostrarModalEliminarElemento, setMostrarModalEliminarElemento] = useState(false);
+    const [elementoIdAEliminar, setElementoIdAEliminar] = useState(null);
+
+    const confirmarDeleteElemento = (sectorId, subsectorId, parteId, elementoId) => {
+        setSectorIdAEliminar(sectorId);
+        setSubsectorIdAEliminar(subsectorId);
+        setParteIdAEliminar(parteId);
+        setElementoIdAEliminar(elementoId);
+        setMostrarModalEliminarElemento(true);
+    };
+
+    const eliminarElemento = async () => {
+        try {
+            const elementoRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento`, elementoIdAEliminar);
+            await deleteDoc(elementoRef);
+
+            // Actualizar el estado para reflejar la eliminación del elemento
+            const sectoresActualizados = sectores.map(sector => {
+                if (sector.id === sectorIdAEliminar) {
+                    return {
+                        ...sector,
+                        subsectores: sector.subsectores.map(subsector => {
+                            if (subsector.id === subsectorIdAEliminar) {
+                                return {
+                                    ...subsector,
+                                    partes: subsector.partes.map(parte => {
+                                        if (parte.id === parteIdAEliminar) {
+                                            return {
+                                                ...parte,
+                                                elementos: parte.elementos.filter(elemento => elemento.id !== elementoIdAEliminar)
+                                            };
+                                        }
+                                        return parte;
+                                    })
+                                };
+                            }
+                            return subsector;
+                        })
+                    };
+                }
+                return sector;
+            });
+            setSectores(sectoresActualizados);
+
+            setAlerta('Elemento eliminado correctamente.');
+            setTipoAlerta('success');
+            setMostrarModal(true);
+        } catch (error) {
+            console.error('Error al eliminar el elemento:', error);
+            setAlerta('Error al eliminar el elemento.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+        setMostrarModalEliminarElemento(false);
     };
 
 
@@ -864,7 +1025,16 @@ function Trazabilidad() {
                     <div className="divide-y divide-gray-200 border rounded-b-lg">
                         {sectores.map((sector, index) => (
                             <div key={sector.id} className={`flex flex-wrap items-center ${index % 2 === 0 ? 'bg-gray-100' : 'bg-gray-50'}`}>
-                                <h2 className="text-lg font-medium px-4 py-2 rounded-lg w-full md:w-1/5">{sector.nombre}</h2>
+                                <div className="text-lg font-medium px-4 py-2 rounded-lg w-full md:w-1/5 group cursor-pointer flex justify-between">
+                                    <p>{sector.nombre}</p>
+                                    <button
+                                        onClick={() => solicitarEliminarSector(sector.id)}
+                                        className="text-amber-600 text-md opacity-0 group-hover:opacity-100"
+                                    >
+                                        <RiDeleteBinLine />
+                                    </button>
+
+                                </div>
                                 {sector.subsectores && sector.subsectores.length > 0 && (
                                     <ul className="divide-y divide-gray-200 w-full md:w-4/5">
                                         {sector.subsectores.map((subsector) => (
@@ -874,20 +1044,30 @@ function Trazabilidad() {
                                                         parte.elementos.map((elemento) => (
                                                             elemento.lotes && elemento.lotes.length > 0 ? (
                                                                 elemento.lotes.map((lote) => (
-                                                                    <li key={lote.id} className="grid grid-cols-4 items-center py-4 ">
-                                                                        <div className='flex justify-between pr-5 gap-1 border-r-2 border-l-2'>
+                                                                    <li key={lote.id} className="grid grid-cols-4 items-center py-4">
+                                                                        <div className='flex justify-between items-center pr-5 gap-1 border-r-2 border-l-2 group cursor-pointer'>
                                                                             <p className='px-4 '>{subsector.nombre}</p>
                                                                             <div className='flex gap-4'>
-                                                                                <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-lg'><IoCloseCircle /></button>
+                                                                                <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
+                                                                            <p className='px-4'>{parte.nombre}</p>
+                                                                            <div className='flex gap-4'>
+                                                                                <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
+                                                                            <p className='px-4 border-r-2'>{elemento.nombre}</p>
+                                                                            <div className='flex gap-4'>
+                                                                                <button onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
                                                                             </div>
                                                                         </div>
 
 
 
-
-                                                                        <p className='px-4 border-r-2'>{parte.nombre}</p>
-                                                                        <p className='px-4 border-r-2'>{elemento.nombre}</p>
-                                                                        <div className='flex flex-col justify-center  px-4'>
+                                                                        <div className='flex flex-col justify-center px-4 group'>
                                                                             <p className='font-medium'>{lote.nombre}</p>
                                                                             <div className='flex justify-between'>
                                                                                 <div>
@@ -896,56 +1076,105 @@ function Trazabilidad() {
                                                                                     </p>
                                                                                 </div>
                                                                                 <div className='flex gap-4'>
-                                                                                    <button className='text-xl'><FaEdit /></button>
-                                                                                    <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-2xl'><IoCloseCircle /></button>
+                                                                                    {/* Condición para mostrar el botón solo si existe un ppiId */}
+                                                                                    {lote.ppiId && (
+                                                                                        <button
+                                                                                            onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)}
+                                                                                            className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
+                                                                                            <RiDeleteBinLine />
+                                                                                        </button>
+                                                                                    )}
                                                                                 </div>
+
                                                                             </div>
                                                                         </div>
                                                                     </li>
                                                                 ))
                                                             ) : (
-                                                                <li key={`${elemento.id}-sin-lote`} className="font-medium grid grid-cols-4">
-                                                                    <p className='px-4'>{subsector.nombre}</p>
-                                                                    <p className='px-4'>{parte.nombre}</p>
-                                                                    <p className='px-4'>{elemento.nombre}</p>
-                                                                    <div className='flex gap-3 px-4'>
-                                                                        <p>-</p>
-                                                                        <p className="text-red-500">Sin PPI</p>
-                                                                        <div>
-                                                                            <button className='text-xl'><FaEdit /></button>
-                                                                            <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-2xl'><IoCloseCircle /></button>
+                                                                <li key={`${elemento.id}-sin-lote`} className="grid grid-cols-4 items-center py-4 ">
+                                                                    <div className='flex justify-between items-center pr-5 gap-1 border-r-2 border-l-2 group cursor-pointer'>
+                                                                        <p className='px-4 '>{subsector.nombre}</p>
+                                                                        <div className='flex gap-4'>
+                                                                            <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                                                                        </div>
+                                                                    </div>
+                                                                    <p className='px-4 border-r-2'>{parte.nombre}</p>
+                                                                    <p className='px-4 border-r-2'>{elemento.nombre}</p>
+                                                                    <div className='lex flex-col justify-center px-4'>
+                                                                        <div className='flex justify-between'>
+                                                                            <div>
+                                                                                <p>-</p>
+                                                                                <p className="text-red-500">Sin PPI</p>
+                                                                            </div>
+
+                                                                            <div className='flex gap-4'>
+                                                                                {/* Condición para mostrar el botón solo si existe un ppiId */}
+                                                                                {lote.ppiId && (
+                                                                                    <button onClick={() => eliminarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
+                                                                                        <RiDeleteBinLine />
+                                                                                    </button>
+                                                                                )}
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </li>
                                                             )
                                                         ))
                                                     ) : (
-                                                        <li key={`${parte.id}-sin-elemento`} className="font-medium grid grid-cols-4">
-                                                            <p className='px-4'>{subsector.nombre}</p>
-                                                            <p className='px-4'>{parte.nombre}</p>
-                                                            <p className='px-4'>-</p>
-                                                            <div className='flex gap-3 px-4'>
-                                                                <p>-</p>
-                                                                <p className="text-red-500">Sin PPI</p>
-                                                                <div>
-                                                                    <button className='text-xl'><FaEdit /></button>
-                                                                    <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-2xl'><IoCloseCircle /></button>
+                                                        <li key={`${parte.id}-sin-elemento`} className="items-center grid grid-cols-4">
+                                                            <div className='flex justify-between items-center pr-5 gap-1 border-r-2 border-l-2 cursor-pointer group'>
+                                                                <p className='px-4 '>{subsector.nombre}</p>
+                                                                <div className='flex gap-4'>
+                                                                    <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                                                                </div>
+                                                            </div>
+                                                            <p className='px-4 border-r-2'>{parte.nombre}</p>
+                                                            <p className='px-4 border-r-2'>-</p>
+                                                            <div className='lex flex-col justify-center px-4'>
+                                                                <div className='flex justify-between'>
+                                                                    <div>
+                                                                        <p>-</p>
+                                                                        <p className="text-red-500">Sin PPI</p>
+                                                                    </div>
+
+                                                                    <div className='flex gap-4'>
+                                                                        {/* Condición para mostrar el botón solo si existe un ppiId */}
+                                                                        {lote.ppiId && (
+                                                                            <button onClick={() => eliminarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
+                                                                                <RiDeleteBinLine />
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </li>
                                                     )
                                                 ))
                                             ) : (
-                                                <li key={`${subsector.id}-sin-parte`} className="font-medium grid grid-cols-4">
-                                                    <p className='px-4'>{subsector.nombre}</p>
-                                                    <p className='px-4'>-</p>
-                                                    <p className='px-4'>-</p>
-                                                    <div className='flex gap-3 px-4'>
-                                                        <p>-</p>
-                                                        <p className="text-red-500">-</p>
-                                                        <div>
-                                                            <button className='text-xl'><FaEdit /></button>
-                                                            <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-2xl'><IoCloseCircle /></button>
+                                                <li key={`${subsector.id}-sin-parte`} className="grid grid-cols-4 items-center">
+                                                    <div className='flex justify-between pr-5 gap-1 border-r-2 border-l-2 cursor-pointer group'>
+                                                        <p className='px-4 '>{subsector.nombre}</p>
+                                                        <div className='flex gap-4'>
+                                                            <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                                                        </div>
+                                                    </div>
+                                                    <p className='px-4 border-r-2'>-</p>
+                                                    <p className='px-4 border-r-2'>-</p>
+                                                    <div className='lex flex-col justify-center px-4'>
+                                                        <div className='flex justify-between'>
+                                                            <div>
+                                                                <p>-</p>
+                                                                <p className="text-red-500">Sin PPI</p>
+                                                            </div>
+
+                                                            <div className='flex gap-4'>
+                                                                {/* Condición para mostrar el botón solo si existe un ppiId */}
+                                                                {lote.ppiId && (
+                                                                    <button onClick={() => eliminarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
+                                                                        <RiDeleteBinLine />
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </li>
@@ -959,7 +1188,7 @@ function Trazabilidad() {
                 </div>
 
 
-                {mostrarModalEliminar && (
+                {mostrarModalEliminarSubSector && (
                     <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
                         <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
 
@@ -968,12 +1197,106 @@ function Trazabilidad() {
                             <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
                             <div>
                                 <p>¿Estas seguro de eliminar?</p>
-                                <p className='text-amber-700 text-xs mt-2'>* Se eliminara el sub sector completo con sus datos asociados</p>
+                                <p className='text-amber-700 text-sm mt-2'>* Se eliminara el elemento seleccionado con sus datos asociados</p>
                             </div>
 
                             <div className='flex justify-center gap-5 mt-3'>
                                 <button
                                     onClick={eliminarSubsector}
+                                    className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'>Eliminar</button>
+                                <button
+                                    onClick={handleCloseAlert}
+                                    className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'>Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {mostrarModalEliminarSector && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+
+                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
+                            <div>
+                                <p>¿Estas seguro de eliminar?</p>
+                                <p className='text-amber-700 text-sm mt-2'>* Se eliminara el elemento seleccionado con sus datos asociados</p>
+                            </div>
+
+                            <div className='flex justify-center gap-5 mt-3'>
+                                <button
+                                    onClick={eliminarSector}
+                                    className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'>Eliminar</button>
+                                <button
+                                    onClick={handleCloseAlert}
+                                    className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'>Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {mostrarModalEliminarParte && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+
+                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
+                            <div>
+                                <p>¿Estas seguro de eliminar?</p>
+                                <p className='text-amber-700 text-sm mt-2'>* Se eliminara el elemento seleccionado con sus datos asociados</p>
+                            </div>
+
+                            <div className='flex justify-center gap-5 mt-3'>
+                                <button
+                                    onClick={eliminarParte}
+                                    className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'>Eliminar</button>
+                                <button
+                                    onClick={handleCloseAlert}
+                                    className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'>Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {mostrarModalEliminarElemento && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+
+                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
+                            <div>
+                                <p>¿Estas seguro de eliminar?</p>
+                                <p className='text-amber-700 text-sm mt-2'>* Se eliminara el elemento seleccionado con sus datos asociados</p>
+                            </div>
+
+                            <div className='flex justify-center gap-5 mt-3'>
+                                <button
+                                    onClick={eliminarElemento}
+                                    className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'>Eliminar</button>
+                                <button
+                                    onClick={handleCloseAlert}
+                                    className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'>Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {mostrarModalEliminarLote && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+
+                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
+                            <div>
+                                <p>¿Estas seguro de eliminar?</p>
+                                <p className='text-amber-700 text-sm mt-2'>* Se eliminara el elemento seleccionado con sus datos asociados</p>
+                            </div>
+
+                            <div className='flex justify-center gap-5 mt-3'>
+                                <button
+                                    onClick={eliminarLote}
                                     className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'>Eliminar</button>
                                 <button
                                     onClick={handleCloseAlert}
