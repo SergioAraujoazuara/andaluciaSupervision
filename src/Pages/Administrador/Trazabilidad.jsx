@@ -375,11 +375,20 @@ function Trazabilidad() {
 
         // Verificar si todos los campos requeridos están seleccionados
         if (!elementoId || !selectedParte || !selectedSubSector || !selectedSector) {
-            console.error('No se ha seleccionado correctamente el elemento, parte, subsector, sector o PPI.');
-            setAlerta('Selecciona correctamente todos los campos requeridos, incluido el PPI.');
+            console.error('No se ha seleccionado correctamente el elemento, parte, subsector, sector.');
+            setAlerta('Selecciona correctamente todos los campos requeridos.');
             setTipoAlerta('error');
             setMostrarModal(true);
             return;
+        }
+
+        // Verificar si se ha seleccionado un PPI
+        if (!selectedPpi) {
+            console.error('No se ha seleccionado un PPI.');
+            setAlerta('Debes seleccionar un PPI.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+            return; // Detener la ejecución de la función si no se ha seleccionado un PPI
         }
 
         try {
@@ -465,6 +474,7 @@ function Trazabilidad() {
             setMostrarModal(true);
         }
     };
+
 
 
 
@@ -567,30 +577,29 @@ function Trazabilidad() {
         setMostrarModalEliminarLote(true);
     };
 
-    const confirmarEliminarLote = async () => {
-        const { sectorId, subSectorId, parteId, elementoId, loteId } = datosLoteAEliminar;
+    const eliminarLote = async () => {
         try {
-            // Paso 1: Eliminar el lote de Firestore
-            const loteRef = doc(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte/${parteId}/elemento/${elementoId}/lote`, loteId);
+            // Paso 1: Eliminar el lote de Firestore utilizando las variables de estado
+            const loteRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento/${elementoIdAEliminar}/lote`, loteIdAEliminar);
             await deleteDoc(loteRef);
-    
+
             // Paso 2: Actualizar el estado para reflejar la eliminación del lote
             setSectores(prevSectores => prevSectores.map(sector => {
-                if (sector.id === sectorId) {
+                if (sector.id === sectorIdAEliminar) {
                     return {
                         ...sector,
                         subsectores: sector.subsectores.map(subsector => {
-                            if (subsector.id === subSectorId) {
+                            if (subsector.id === subsectorIdAEliminar) {
                                 return {
                                     ...subsector,
                                     partes: subsector.partes.map(parte => {
-                                        if (parte.id === parteId) {
+                                        if (parte.id === parteIdAEliminar) {
                                             return {
                                                 ...parte,
                                                 elementos: parte.elementos.map(elemento => {
-                                                    if (elemento.id === elementoId) {
+                                                    if (elemento.id === elementoIdAEliminar) {
                                                         // Filtrar el lote eliminado
-                                                        const lotesActualizados = elemento.lotes.filter(lote => lote.id !== loteId);
+                                                        const lotesActualizados = elemento.lotes.filter(lote => lote.id !== loteIdAEliminar);
                                                         return {
                                                             ...elemento,
                                                             lotes: lotesActualizados
@@ -610,7 +619,7 @@ function Trazabilidad() {
                 }
                 return sector;
             }));
-    
+
             // Paso 3: Mostrar mensaje de éxito y cerrar el modal de confirmación
             setAlerta('Lote eliminado correctamente.');
             setTipoAlerta('success');
@@ -622,10 +631,18 @@ function Trazabilidad() {
             setTipoAlerta('error');
             setMostrarModal(true);
         }
+
+        // Restablece el estado de las variables relacionadas con la eliminación
         setMostrarModalEliminarLote(false);
-        setDatosLoteAEliminar(null); // Limpiar los datos del lote a eliminar
+        // Restablece las variables de estado relacionadas con el lote a eliminar
+        setSectorIdAEliminar(null);
+        setSubsectorIdAEliminar(null);
+        setParteIdAEliminar(null);
+        setElementoIdAEliminar(null);
+        setLoteIdAEliminar(null);
     };
-    
+
+
 
 
 
@@ -776,6 +793,50 @@ function Trazabilidad() {
 
 
 
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Editar
+
+    // const [mostrarModalEditarSector, setMostrarModalEditarSector] = useState(false);
+    // const [sectorIdAEditar, setSectorIdAEditar] = useState(null);
+    // const [nuevoNombreSector, setNuevoNombreSector] = useState('');
+
+    // const solicitarEditarSector = (sectorId, nombreActual) => {
+    //     setSectorIdAEditar(sectorId);
+    //     setNuevoNombreSector(nombreActual); // Pre-populate the input with the current name
+    //     setMostrarModalEditarSector(true);
+    // };
+    // const guardarEdicionSector = async () => {
+    //     if (!nuevoNombreSector.trim()) {
+    //         setAlerta('El nombre del sector no puede estar vacío.');
+    //         setTipoAlerta('error');
+    //         setMostrarModal(true);
+    //         return;
+    //     }
+    //     try {
+    //         const sectorRef = doc(db, `proyectos/${id}/sector`, sectorIdAEditar);
+    //         await updateDoc(sectorRef, { nombre: nuevoNombreSector });
+
+    //         const sectoresActualizados = sectores.map(sector =>
+    //             sector.id === sectorIdAEditar ? { ...sector, nombre: nuevoNombreSector } : sector
+    //         );
+    //         setSectores(sectoresActualizados);
+
+    //         setAlerta('Sector actualizado correctamente.');
+    //         setTipoAlerta('success');
+    //         setMostrarModal(true);
+    //     } catch (error) {
+    //         console.error('Error al actualizar el sector:', error);
+    //         setAlerta('Error al actualizar el sector.');
+    //         setTipoAlerta('error');
+    //         setMostrarModal(true);
+    //     }
+    //     setMostrarModalEditarSector(false);
+    // };
+
+
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500'>
             {/* Encabezado */}
@@ -797,6 +858,8 @@ function Trazabilidad() {
                     <h1 className='font-medium text-amber-600'>Elementos y razabilidad </h1>
                 </Link>
             </div>
+
+
 
             {/* Contenido */}
             <div className='flex gap-3 flex-col mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
@@ -1027,6 +1090,12 @@ function Trazabilidad() {
                             <div key={sector.id} className={`flex flex-wrap items-center ${index % 2 === 0 ? 'bg-gray-100' : 'bg-gray-50'}`}>
                                 <div className="text-lg font-medium px-4 py-2 rounded-lg w-full md:w-1/5 group cursor-pointer flex justify-between">
                                     <p>{sector.nombre}</p>
+                                    {/* <button
+                                        onClick={() => solicitarEditarSector(sector.id, sector.nombre)}
+                                        className="editar-sector-btn"
+                                    >
+                                        Editar
+                                    </button> */}
                                     <button
                                         onClick={() => solicitarEliminarSector(sector.id)}
                                         className="text-amber-600 text-md opacity-0 group-hover:opacity-100"
@@ -1059,8 +1128,9 @@ function Trazabilidad() {
                                                                             </div>
                                                                         </div>
                                                                         <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
-                                                                            <p className='px-4 border-r-2'>{elemento.nombre}</p>
+                                                                            <p className='px-4 '>{elemento.nombre}</p>
                                                                             <div className='flex gap-4'>
+
                                                                                 <button onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
                                                                             </div>
                                                                         </div>
@@ -1078,11 +1148,16 @@ function Trazabilidad() {
                                                                                 <div className='flex gap-4'>
                                                                                     {/* Condición para mostrar el botón solo si existe un ppiId */}
                                                                                     {lote.ppiId && (
-                                                                                        <button
-                                                                                            onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)}
-                                                                                            className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
-                                                                                            <RiDeleteBinLine />
-                                                                                        </button>
+                                                                                        <div>
+
+
+
+                                                                                            <button
+                                                                                                onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)}
+                                                                                                className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
+                                                                                                <RiDeleteBinLine />
+                                                                                            </button>
+                                                                                        </div>
                                                                                     )}
                                                                                 </div>
 
@@ -1098,19 +1173,29 @@ function Trazabilidad() {
                                                                             <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
                                                                         </div>
                                                                     </div>
-                                                                    <p className='px-4 border-r-2'>{parte.nombre}</p>
-                                                                    <p className='px-4 border-r-2'>{elemento.nombre}</p>
+                                                                    <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
+                                                                        <p className='px-4'>{parte.nombre}</p>
+                                                                        <div className='flex gap-4'>
+                                                                            <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
+                                                                        <p className='px-4'>{elemento.nombre}</p>
+                                                                        <div className='flex gap-4'>
+                                                                            <button onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                                                                        </div>
+                                                                    </div>
                                                                     <div className='lex flex-col justify-center px-4'>
                                                                         <div className='flex justify-between'>
                                                                             <div>
                                                                                 <p>-</p>
-                                                                                <p className="text-red-500">Sin PPI</p>
+                                                                                <p className="text-red-500">-</p>
                                                                             </div>
 
                                                                             <div className='flex gap-4'>
                                                                                 {/* Condición para mostrar el botón solo si existe un ppiId */}
                                                                                 {lote.ppiId && (
-                                                                                    <button onClick={() => eliminarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
+                                                                                    <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
                                                                                         <RiDeleteBinLine />
                                                                                     </button>
                                                                                 )}
@@ -1128,19 +1213,24 @@ function Trazabilidad() {
                                                                     <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
                                                                 </div>
                                                             </div>
-                                                            <p className='px-4 border-r-2'>{parte.nombre}</p>
+                                                            <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
+                                                                <p className='px-4'>{parte.nombre}</p>
+                                                                <div className='flex gap-4'>
+                                                                    <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                                                                </div>
+                                                            </div>
                                                             <p className='px-4 border-r-2'>-</p>
                                                             <div className='lex flex-col justify-center px-4'>
                                                                 <div className='flex justify-between'>
                                                                     <div>
                                                                         <p>-</p>
-                                                                        <p className="text-red-500">Sin PPI</p>
+                                                                        <p className="text-red-500">-</p>
                                                                     </div>
 
                                                                     <div className='flex gap-4'>
                                                                         {/* Condición para mostrar el botón solo si existe un ppiId */}
                                                                         {lote.ppiId && (
-                                                                            <button onClick={() => eliminarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
+                                                                            <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
                                                                                 <RiDeleteBinLine />
                                                                             </button>
                                                                         )}
@@ -1164,13 +1254,13 @@ function Trazabilidad() {
                                                         <div className='flex justify-between'>
                                                             <div>
                                                                 <p>-</p>
-                                                                <p className="text-red-500">Sin PPI</p>
+                                                                <p className="text-red-500">-</p>
                                                             </div>
 
                                                             <div className='flex gap-4'>
                                                                 {/* Condición para mostrar el botón solo si existe un ppiId */}
                                                                 {lote.ppiId && (
-                                                                    <button onClick={() => eliminarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
+                                                                    <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
                                                                         <RiDeleteBinLine />
                                                                     </button>
                                                                 )}
@@ -1306,6 +1396,9 @@ function Trazabilidad() {
                     </div>
                 )}
 
+
+
+
                 {mostrarModal && (
                     <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
                         <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
@@ -1364,6 +1457,22 @@ function Trazabilidad() {
                     </div>
                 )}
 
+
+                {/* {mostrarModalEditarSector && (
+                    <div className="modal">
+                        <div className="modal-content">
+                            <h3>Editar Sector</h3>
+                            <input
+                                type="text"
+                                value={nuevoNombreSector}
+                                onChange={(e) => setNuevoNombreSector(e.target.value)}
+                                placeholder="Nuevo nombre del sector"
+                            />
+                            <button onClick={guardarEdicionSector}>Guardar</button>
+                            <button onClick={() => setMostrarModalEditarSector(false)}>Cancelar</button>
+                        </div>
+                    </div>
+                )} */}
 
 
             </div>
