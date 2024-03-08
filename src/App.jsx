@@ -42,6 +42,7 @@ function App() {
       <Route path='/contacto' element={<Contacto/>}></Route>
       <Route path='/modulos' element={<Modulos/>}></Route>
       <Route path='/elemento' element={<Elemento/>}></Route>
+      <Route path='/elemento/:id' element={<Elemento/>}></Route>
       
   
       <Route path='/tablaPpi' element={<TablaPpi/>}></Route>

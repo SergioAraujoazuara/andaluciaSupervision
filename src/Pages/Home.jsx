@@ -67,7 +67,7 @@ function Home() {
 
 
           {proyectos.map((p, i) => (
-            <Link to={'/elemento'} onClick={() => obtenerProyecto(p)}>
+            <Link to={`/elemento/${p.id}`} onClick={() => obtenerProyecto(p)}>
               <div className='cursor-pointer grid sm:grid-cols-8 grid-cols-1 items-center justify-start sm:p-5 border-b-2'>
                 <div className='sm:border-r-2 sm:border-b-0 flex items-center'>
                   <img className='sm:max-w-20 sm:max-h-12 max-w-32' src={p.logo} alt="" />
