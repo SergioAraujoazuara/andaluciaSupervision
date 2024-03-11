@@ -190,23 +190,25 @@ function Trazabilidad() {
             const nombreSubsectorNormalizado = subSectorInput.toLowerCase().trim();
             const subsectoresDelSector = sectores.find(sector => sector.id === sectorId)?.subsectores || [];
             const nombresSubsectoresNormalizados = subsectoresDelSector.map(subsector => subsector.nombre.toLowerCase().trim());
-
+    
             if (nombresSubsectoresNormalizados.includes(nombreSubsectorNormalizado)) {
                 setAlerta('El nombre ya existe en la base de datos.');
                 setTipoAlerta('error');
                 setMostrarModal(true);
             } else {
-                // Crear el documento con el nombre del subsector y el id del sector
+                // Obtener el nombre del sector seleccionado
+                const sectorSeleccionado = sectores.find(sector => sector.id === sectorId);
+                const sectorNombre = sectorSeleccionado ? sectorSeleccionado.nombre : '';
+    
+                // Crear el documento con el nombre del subsector, el id y el nombre del sector
                 const nuevoSubsectorRef = doc(collection(db, `proyectos/${id}/sector/${sectorId}/subsector`));
-                await setDoc(nuevoSubsectorRef, { nombre: subSectorInput, sectorId: sectorId });
-
-                // No es necesario actualizar el documento para agregar el id, ya que este se genera automáticamente
-
+                await setDoc(nuevoSubsectorRef, { nombre: subSectorInput, sectorId: sectorId, sectorNombre: sectorNombre });
+    
                 setAlerta('Agregado correctamente.');
                 setTipoAlerta('success');
                 setMostrarModal(true);
                 setSubSectorInput('');
-
+    
                 // Actualizar la lista de subsectores del sector
                 const nuevosSubsectores = await obtenerSubsectores(sectorId);
                 const sectoresActualizados = sectores.map(sector => {
@@ -221,7 +223,7 @@ function Trazabilidad() {
             console.error('Error al agregar el subsector:', error);
         }
     };
-
+    
 
     // Función para manejar el cambio de selección en el desplegable de subsector
     const handleSubSectorChange = (event) => {
@@ -277,6 +279,7 @@ function Trazabilidad() {
             console.error('Error al agregar la parte:', error);
         }
     };
+    
 
 
     // Función para manejar el evento cuando se hace clic en el botón para agregar una parte
@@ -534,6 +537,8 @@ function Trazabilidad() {
     const [mostrarModalEliminarSubSector, setMostrarModalEliminarSubSector] = useState(false)
     const [sectorIdAEliminar, setSectorIdAEliminar] = useState(null);
     const [subsectorIdAEliminar, setSubsectorIdAEliminar] = useState(null);
+
+    
 
     //Eliminar sub sector
     const eliminarSubsector = async () => {
