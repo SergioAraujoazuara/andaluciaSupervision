@@ -5,7 +5,7 @@ import { GoHomeFill } from "react-icons/go";
 
 import { IoCreateOutline } from "react-icons/io5";
 import { IoMdAddCircleOutline } from "react-icons/io";
-
+import { MdOutlineEditLocation } from "react-icons/md";
 import { Link } from 'react-router-dom';
 
 
@@ -17,10 +17,8 @@ function AdminHome() {
 
             <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
                 <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'/'}>
-                    <h1 className='font-ligth text-gray-500'>Inicio</h1>
-                </Link>
-                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                
+                
                 <Link to={'#'}>
                     <h1 className='font-medium text-amber-600'>Administración</h1>
                 </Link>
@@ -67,10 +65,10 @@ function AdminHome() {
                             <Link to={'/verPpis'}>
                                 <div className='flex gap-3'>
                                 <div className='h-10 flex items-center text-gray-600'>
-                                    <IoCreateOutline style={{ width: 40, height: 40 }} />
+                                    <MdOutlineEditLocation style={{ width: 30, height: 30 }} />
                                 </div>
                                 <div className='sm:col-span-9 h-10 flex items-center sm:justify-start text-base font-medium'>
-                                    Ver plantillas Ppi
+                                Plantillas Ppi
                                 </div>
                                 </div>
                                 

@@ -76,10 +76,7 @@ function ViewProject() {
 
       <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
         <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-        <Link to={'/'}>
-          <h1 className='font-ligth text-gray-500'>Inicio</h1>
-        </Link>
-        <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+        
         <Link to={'/admin'}>
           <h1 className='text-gray-600'>Administración</h1>
         </Link>
@@ -127,7 +124,7 @@ function ViewProject() {
               <div className='sm:col-span-3 h-10 flex items-center sm:justify-start sm:ps-6 font-medium text-gray-600'>
 
                 <Link to={`/trazabilidad/${p.id}`}>
-                  <button className='text-sky-600 px-3 py-1 flex items-center gap-1'> <IoAddCircle style={{ fontSize: 25 }} /> <p> Elementos y trazabilidad</p> </button>
+                  <button className='text-sky-600 px-3 py-1 flex items-center gap-1'> <IoAddCircle style={{ fontSize: 25 }} /> <p> Trazabilidad</p> </button>
                 </Link>
                 <Link to={`/editProject/${p.id}`}>
                   <button className='text-gray-600 px-3 py-1 text-2xl'> <FaRegEdit /></button>

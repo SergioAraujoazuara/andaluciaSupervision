@@ -4,8 +4,10 @@ import { getDoc, getDocs, doc, collection, addDoc, runTransaction, writeBatch, s
 import { Link } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
 import { GoHomeFill } from "react-icons/go";
+import { FaEdit } from "react-icons/fa";
+import { MdDeleteOutline } from "react-icons/md";
 
-import { IoCreateOutline } from "react-icons/io5";
+
 import { IoMdAddCircleOutline } from "react-icons/io";
 
 function VerPpis() {
@@ -32,17 +34,21 @@ function VerPpis() {
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500'>
 
-            <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
-                <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'/'}>
-                    <h1 className='font-ligth text-gray-500'>Inicio</h1>
-                </Link>
-                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'#'}>
-                    <h1 className='font-medium text-amber-600'>Administración</h1>
-                </Link>
+            
 
-            </div>
+             {/* Navigation section */}
+             <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+                    <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+                    <Link to={'/admin'}>
+                        <h1 className='text-gray-500 text-gray-500'>Administración</h1>
+                    </Link>
+                    <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
+                    <Link to={'/verPpis'}>
+                        <h1 className='text-gray-500 text-gray-500'>Ver Ppis</h1>
+                    </Link>
+                   
+
+                </div>
 
 
             <div>
@@ -55,7 +61,7 @@ function VerPpis() {
 
                         <div>
                             <Link to={'/agregarPpi'}>
-                            <button className='bg-sky-600 flex gap-1 items-center text-white px-4 py-2 rounded-lg'> <IoMdAddCircleOutline/> Agregar ppi</button>
+                                <button className='bg-sky-600 flex gap-1 items-center text-white px-4 py-2 rounded-lg'> <IoMdAddCircleOutline /> Agregar ppi</button>
                             </Link>
                         </div>
 
@@ -71,11 +77,25 @@ function VerPpis() {
                                 </thead>
                                 <tbody>
                                     {ppis.map((p, index) => (
+                                       
                                         <tr key={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                             <Link to={`/editarPpi/${p.id}`} className='flex flex-col'>
                                             <td className="py-4 px-6">
-                                                {p.nombre}
+                                           
+                                                <div className='flex justify-between'>
+                                                    <p>{p.nombre}</p>
+                                                    <div className='flex gap-5'>
+                                                       
+                                                        
+                                                        <button className='text-xl'><MdDeleteOutline /></button>
+                                                    </div>
+
+                                                </div>
+                                               
                                             </td>
+                                            </Link>
                                         </tr>
+                                       
                                     ))}
                                 </tbody>
                             </table>

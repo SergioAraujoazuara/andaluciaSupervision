@@ -21,6 +21,7 @@ import Elemento from './Pages/Elemento'
 import Trazabilidad from './Pages/Administrador/Trazabilidad'
 import AgregarPPi from './Pages/Administrador/AgregarPPi'
 import VerPpis from './Pages/Administrador/VerPpis'
+import EditarPpi from './Pages/Administrador/EditarPpi'
 
 function App() {
 
@@ -46,6 +47,8 @@ function App() {
       
   
       <Route path='/tablaPpi' element={<TablaPpi/>}></Route>
+      <Route path='/tablaPpi/:ppiNombre' element={<TablaPpi/>}></Route>
+      <Route path='/editarPpi/:id' element={<EditarPpi/>}></Route>
       <Route path='/formularioInspeccion' element={<FormularioInspeccion/>}></Route>
     </Routes>
 

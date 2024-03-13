@@ -137,11 +137,8 @@ function CrearProyecto() {
 
             {/* Navigation section */}
             <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
-                <GoHomeFill style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'/'}>
-                    <h1 className='font-base text-gray-500 text-amber-600'>Inicio</h1>
-                </Link>
-                <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
+                <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+              
                 <Link to={'/Admin'}>
                     <h1 className='font-base text-gray-500 text-amber-600'>Administración</h1>
                 </Link>

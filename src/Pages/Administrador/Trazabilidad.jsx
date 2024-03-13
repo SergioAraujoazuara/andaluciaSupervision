@@ -240,10 +240,21 @@ function Trazabilidad() {
                 return;
             }
             const nombreParteNormalizado = parteInput.toLowerCase().trim();
-
-            const subsectorSeleccionado = sectores.flatMap(sector => sector.subsectores).find(subsector => subsector.id === subSectorId);
+    
+            // Encuentra el subsector y el sector seleccionados
+            let subSectorNombre = '', sectorNombre = '';
+            const subsectorSeleccionado = sectores.flatMap(sector => {
+                if (sector.id === selectedSector) {
+                    sectorNombre = sector.nombre; // Obtener el nombre del sector
+                }
+                return sector.subsectores;
+            }).find(subsector => subsector.id === subSectorId);
+    
+            if (subsectorSeleccionado) {
+                subSectorNombre = subsectorSeleccionado.nombre; // Obtener el nombre del subsector
+            }
+    
             const nombresPartesNormalizados = subsectorSeleccionado?.partes.map(parte => parte.nombre.toLowerCase().trim()) || [];
-
             if (nombresPartesNormalizados.includes(nombreParteNormalizado)) {
                 setAlerta('El nombre ya existe en la base de datos.');
                 setTipoAlerta('error');
@@ -252,20 +263,22 @@ function Trazabilidad() {
                 const parteCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${subSectorId}/parte`);
                 const batch = writeBatch(db);
                 const nuevaParteRef = doc(parteCollectionRef);
-                // Incluir idSector e idSubSector al crear la nueva parte
+                // Agregar nombre del sector y del subsector al documento
                 batch.set(nuevaParteRef, {
                     nombre: parteInput,
-                    sectorId: selectedSector, // Agregar el id del sector seleccionado
-                    subSectorId: subSectorId, // Agregar el id del subsector
+                    sectorId: selectedSector,
+                    subSectorId: subSectorId,
+                    sectorNombre: sectorNombre, // Agregado
+                    subSectorNombre: subSectorNombre, // Agregado
                 });
                 await batch.commit();
-
+    
                 setAlerta('Agregado correctamente.');
                 setTipoAlerta('success');
                 setMostrarModal(true);
                 setParteInput('');
-
-                // Actualizar la UI, si es necesario
+    
+                // Actualizar la UI con los nuevos subsectores
                 const nuevosSubsectores = await obtenerSubsectores(selectedSector);
                 const sectoresActualizados = sectores.map(sector => {
                     if (sector.id === selectedSector) {
@@ -305,29 +318,46 @@ function Trazabilidad() {
                 setMostrarModal(true);
                 return; // Detener la ejecución de la función
             }
-
+    
             const nombreElementoNormalizado = elementoInput.toLowerCase().trim();
+            let sectorNombre = '', subSectorNombre = '', parteNombre = '';
+    
+            // Encuentra los nombres del sector y subsector seleccionados, y el nombre de la parte
+            const sectorSeleccionado = sectores.find(sector => sector.id === selectedSector);
+            if (sectorSeleccionado) {
+                sectorNombre = sectorSeleccionado.nombre; // Obtener el nombre del sector
+                const subsectorSeleccionado = sectorSeleccionado.subsectores.find(subsector => subsector.id === selectedSubSector);
+                if (subsectorSeleccionado) {
+                    subSectorNombre = subsectorSeleccionado.nombre; // Obtener el nombre del subsector
+                    const parteSeleccionada = subsectorSeleccionado.partes.find(parte => parte.id === parteId);
+                    if (parteSeleccionada) {
+                        parteNombre = parteSeleccionada.nombre; // Obtener el nombre de la parte
+                    }
+                }
+            }
+    
             const elementoCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${parteId}/elemento`);
             const elementosSnapshot = await getDocs(elementoCollectionRef);
             const nombresElementosExistentes = elementosSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
-
+    
             if (nombresElementosExistentes.includes(nombreElementoNormalizado)) {
                 setAlerta('El nombre ya existe en la base de datos.');
                 setTipoAlerta('error');
                 setMostrarModal(true);
             } else {
-                // Incluir idSector, idSubSector y parteId al crear el nuevo elemento
                 const nuevoElementoRef = doc(elementoCollectionRef);
                 await setDoc(nuevoElementoRef, {
                     nombre: elementoInput,
-                    sectorId: selectedSector, // ID del sector seleccionado
-                    subScetorId: selectedSubSector, // ID del subsector seleccionado
-                    parteId: parteId, // ID de la parte a la que pertenece el elemento
+                    sectorId: selectedSector,
+                    subSectorId: selectedSubSector,
+                    parteId: parteId,
+                    sectorNombre: sectorNombre, // Nombre del sector
+                    subSectorNombre: subSectorNombre, // Nombre del subsector
+                    parteNombre: parteNombre, // Nombre de la parte
                 });
-
-                // Aquí es donde necesitas actualizar el estado para incluir el nuevo elemento
-                // Este es un ejemplo genérico, asegúrate de ajustarlo según la estructura de tu estado
-                const sectoresActualizados = sectores.map(sector => {
+    
+                // Actualización de la UI con el nuevo elemento
+                const nuevosSectores = sectores.map(sector => {
                     if (sector.id === selectedSector) {
                         return {
                             ...sector,
@@ -337,7 +367,14 @@ function Trazabilidad() {
                                         ...subsector,
                                         partes: subsector.partes.map(parte => {
                                             if (parte.id === parteId) {
-                                                const nuevosElementos = parte.elementos ? [...parte.elementos, { id: nuevoElementoRef.id, nombre: elementoInput }] : [{ id: nuevoElementoRef.id, nombre: elementoInput }];
+                                                const nuevoElemento = {
+                                                    id: nuevoElementoRef.id,
+                                                    nombre: elementoInput,
+                                                    sectorNombre, // Agregado
+                                                    subSectorNombre, // Agregado
+                                                    parteNombre, // Agregado
+                                                };
+                                                const nuevosElementos = [...parte.elementos, nuevoElemento];
                                                 return { ...parte, elementos: nuevosElementos };
                                             }
                                             return parte;
@@ -350,8 +387,8 @@ function Trazabilidad() {
                     }
                     return sector;
                 });
-
-                setSectores(sectoresActualizados);
+    
+                setSectores(nuevosSectores);
                 setElementoInput('');
                 setAlerta('Elemento agregado correctamente.');
                 setTipoAlerta('success');
@@ -364,19 +401,17 @@ function Trazabilidad() {
             setMostrarModal(true);
         }
     };
-
+    
 
     const agregarLote = async (elementoId) => {
-        // Verificar si el input de lote está vacío o sólo contiene espacios en blanco
+        // Verificación inicial de los campos requeridos
         if (!loteInput.trim()) {
-            // Mostrar alerta indicando que el campo no puede estar vacío
             setAlerta('El campo no puede estar vacío.');
             setTipoAlerta('error');
             setMostrarModal(true);
-            return; // Detener la ejecución de la función
+            return;
         }
-
-        // Verificar si todos los campos requeridos están seleccionados
+    
         if (!elementoId || !selectedParte || !selectedSubSector || !selectedSector) {
             console.error('No se ha seleccionado correctamente el elemento, parte, subsector, sector.');
             setAlerta('Selecciona correctamente todos los campos requeridos.');
@@ -384,59 +419,84 @@ function Trazabilidad() {
             setMostrarModal(true);
             return;
         }
-
-        // Verificar si se ha seleccionado un PPI
+    
         if (!selectedPpi) {
             console.error('No se ha seleccionado un PPI.');
             setAlerta('Debes seleccionar un PPI.');
             setTipoAlerta('error');
             setMostrarModal(true);
-            return; // Detener la ejecución de la función si no se ha seleccionado un PPI
+            return;
         }
-
+    
         try {
-            // Normalizar el nombre del lote para la verificación
             const nombreLoteNormalizado = loteInput.toLowerCase().trim();
-
-            // Verificar si ya existe un lote con el mismo nombre dentro del elemento seleccionado
-            const elementoActual = sectores.find(sector => sector.id === selectedSector)
-                ?.subsectores.find(subsector => subsector.id === selectedSubSector)
-                ?.partes.find(parte => parte.id === selectedParte)
-                ?.elementos.find(elemento => elemento.id === elementoId);
-
+            
+            // Genera un ID único para el nuevo lote
+            const loteId = doc(collection(db, 'lotes')).id;
+    
+            // Encuentra los nombres del sector, subsector, parte y elemento
+            let sectorNombre = '', subSectorNombre = '', parteNombre = '', elementoNombre = '';
+            const sectorSeleccionado = sectores.find(sector => sector.id === selectedSector);
+            if (sectorSeleccionado) {
+                sectorNombre = sectorSeleccionado.nombre;
+                const subsectorSeleccionado = sectorSeleccionado.subsectores.find(subsector => subsector.id === selectedSubSector);
+                if (subsectorSeleccionado) {
+                    subSectorNombre = subsectorSeleccionado.nombre;
+                    const parteSeleccionada = subsectorSeleccionado.partes.find(parte => parte.id === selectedParte);
+                    if (parteSeleccionada) {
+                        parteNombre = parteSeleccionada.nombre;
+                        const elementoSeleccionado = parteSeleccionada.elementos.find(elemento => elemento.id === elementoId);
+                        if (elementoSeleccionado) {
+                            elementoNombre = elementoSeleccionado.nombre;
+                        }
+                    }
+                }
+            }
+    
+            // Verifica si el nombre del lote ya existe
+            const elementoActual = sectores.flatMap(sector => sector.subsectores)
+                .flatMap(subsector => subsector.partes)
+                .flatMap(parte => parte.elementos)
+                .find(elemento => elemento.id === elementoId);
             if (elementoActual && elementoActual.lotes && elementoActual.lotes.some(lote => lote.nombre.toLowerCase().trim() === nombreLoteNormalizado)) {
                 setAlerta('El nombre del lote ya existe.');
                 setTipoAlerta('error');
                 setMostrarModal(true);
-                return; // Detener la ejecución de la función
+                return;
             }
-
-            const loteCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${selectedParte}/elemento/${elementoId}/lote`);
-
-            // Encuentra el PPI seleccionado para incluir su ID y nombre en el nuevo lote
-            const ppiSeleccionado = ppis.find(ppi => ppi.id === selectedPpi);
-
+    
+            // Prepara el nuevo lote
             const nuevoLote = {
                 nombre: loteInput,
-                ppiId: selectedPpi, // ID del PPI seleccionado
-                ppiNombre: ppiSeleccionado ? ppiSeleccionado.nombre : '', // Nombre del PPI seleccionado
-                idSector: selectedSector, // Incluir el ID del sector
-                idSubSector: selectedSubSector, // Incluir el ID del subsector
-                parteId: selectedParte, // Incluir el ID de la parte
-                elementoId: elementoId, // Incluir el ID del elemento
+                ppiId: selectedPpi,
+                ppiNombre: ppis.find(ppi => ppi.id === selectedPpi)?.nombre || '',
+                idSector: selectedSector,
+                idSubSector: selectedSubSector,
+                parteId: selectedParte,
+                elementoId: elementoId,
+                sectorNombre: sectorNombre,
+                subSectorNombre: subSectorNombre,
+                parteNombre: parteNombre,
+                elementoNombre: elementoNombre,
             };
-
-            // Agregar el nuevo lote a la base de datos
-            const docRef = await addDoc(loteCollectionRef, nuevoLote);
-
-            // Restablecer estados y mostrar mensaje de éxito
+    
+            // Referencia a la subcolección específica y añade el nuevo lote
+            const loteSubColeccionRef = doc(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${selectedParte}/elemento/${elementoId}/lote/${loteId}`);
+            await setDoc(loteSubColeccionRef, nuevoLote);
+    
+            // Referencia a la colección principal y añade el nuevo lote
+            const lotePrincipalRef = doc(db, `lotes/${loteId}`);
+            await setDoc(lotePrincipalRef, nuevoLote);
+    
+            // Limpia los campos y muestra alerta de éxito
             setLoteInput('');
             setSelectedPpi('');
             setAlerta('Lote agregado correctamente con PPI asociado.');
             setTipoAlerta('success');
             setMostrarModal(true);
-
-            // Actualizar el estado para reflejar el nuevo lote agregado
+    
+            // Actualización del estado para incluir el nuevo lote sin necesidad de recargar
+            // (Asegúrate de que esta parte se adapta correctamente a cómo gestionas el estado de 'sectores')
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === selectedSector) {
                     return {
@@ -451,7 +511,7 @@ function Trazabilidad() {
                                                 ...parte,
                                                 elementos: parte.elementos.map(elemento => {
                                                     if (elemento.id === elementoId) {
-                                                        const nuevosLotes = elemento.lotes ? [...elemento.lotes, { ...nuevoLote, id: docRef.id }] : [{ ...nuevoLote, id: docRef.id }];
+                                                        const nuevosLotes = elemento.lotes ? [...elemento.lotes, { ...nuevoLote, id: loteId }] : [{ ...nuevoLote, id: loteId }];
                                                         return { ...elemento, lotes: nuevosLotes };
                                                     }
                                                     return elemento;
@@ -468,7 +528,7 @@ function Trazabilidad() {
                 }
                 return sector;
             });
-
+    
             setSectores(sectoresActualizados);
         } catch (error) {
             console.error('Error al agregar el lote:', error);
@@ -477,6 +537,8 @@ function Trazabilidad() {
             setMostrarModal(true);
         }
     };
+    
+    
 
 
 
@@ -584,10 +646,14 @@ function Trazabilidad() {
 
     const eliminarLote = async () => {
         try {
-            // Paso 1: Eliminar el lote de Firestore utilizando las variables de estado
-            const loteRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento/${elementoIdAEliminar}/lote`, loteIdAEliminar);
-            await deleteDoc(loteRef);
-
+            // Paso 1: Eliminar el lote de la subcolección específica en Firestore
+            const loteRefSubcoleccion = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento/${elementoIdAEliminar}/lote/${loteIdAEliminar}`);
+            await deleteDoc(loteRefSubcoleccion);
+    
+            // Paso 1.1: Eliminar el lote de la colección principal 'lotes'
+            const loteRefPrincipal = doc(db, `lotes/${loteIdAEliminar}`);
+            await deleteDoc(loteRefPrincipal);
+    
             // Paso 2: Actualizar el estado para reflejar la eliminación del lote
             setSectores(prevSectores => prevSectores.map(sector => {
                 if (sector.id === sectorIdAEliminar) {
@@ -624,7 +690,7 @@ function Trazabilidad() {
                 }
                 return sector;
             }));
-
+    
             // Paso 3: Mostrar mensaje de éxito y cerrar el modal de confirmación
             setAlerta('Lote eliminado correctamente.');
             setTipoAlerta('success');
@@ -636,16 +702,16 @@ function Trazabilidad() {
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-
+    
         // Restablece el estado de las variables relacionadas con la eliminación
         setMostrarModalEliminarLote(false);
-        // Restablece las variables de estado relacionadas con el lote a eliminar
         setSectorIdAEliminar(null);
         setSubsectorIdAEliminar(null);
         setParteIdAEliminar(null);
         setElementoIdAEliminar(null);
         setLoteIdAEliminar(null);
     };
+    
 
 
 
@@ -847,10 +913,7 @@ function Trazabilidad() {
             {/* Encabezado */}
             <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
                 <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'/'}>
-                    <h1 className='font-ligth text-gray-500'>Inicio</h1>
-                </Link>
-                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                
                 <Link to={'/admin'}>
                     <h1 className='text-gray-600'>Administración</h1>
                 </Link>
@@ -860,7 +923,7 @@ function Trazabilidad() {
                 </Link>
                 <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                 <Link to={'#'}>
-                    <h1 className='font-medium text-amber-600'>Elementos y razabilidad </h1>
+                    <h1 className='font-medium text-amber-600'>Trazabilidad </h1>
                 </Link>
             </div>
 
@@ -1486,7 +1549,6 @@ function Trazabilidad() {
 }
 
 export default Trazabilidad;
-
 
 
 
