@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GoHomeFill } from "react-icons/go";
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { FaArrowRight, FaFilePdf } from "react-icons/fa";
 import jsPDF from 'jspdf';
 import logo from '../assets/tpf_logo_azul.png'
+import { db } from '../../firebase_config';
+import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where } from 'firebase/firestore';
 
 function FormularioInspeccion() {
+    const {id} = useParams()
+    const {idLote} = useParams()
     const [nombreProyecto, setNombreProyecto] = useState(localStorage.getItem('nombre_proyecto') || '');
     const [numeroRegistro, setNumeroRegistro] = useState('');
     const [fecha, setFecha] = useState('');
@@ -26,6 +30,78 @@ function FormularioInspeccion() {
     const [imagen2, setImagen2] = useState(null);
     const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
     const imagenPath2 = logo
+
+
+    useEffect(() => {
+        const obtenerLotesPorPpiId = async () => {
+            try {
+                // Asegúrate de que `id` sea el ID de PPI por el cual quieres filtrar
+                const q = query(collection(db, "lotes"), where("ppiId", "==", id));
+                const querySnapshot = await getDocs(q);
+    
+                if (!querySnapshot.empty) {
+                    const lotesData = querySnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                  
+                   
+                    setPpi(lotesData);
+                } else {
+                
+                    setPpi(null);
+                }
+            } catch (error) {
+                
+                setPpi(null);
+            }
+        };
+    
+        if (id) {
+            obtenerLotesPorPpiId();
+        }
+    }, [id]); // Asegúrate de que `id` sea una dependencia del efecto
+    
+    
+
+    const [loteInfo, setLoteInfo] = useState(null); // Estado para almacenar los datos del PPI
+    const [sectorInfoLote, setSectorInfoLote] = useState(null); // Estado para almacenar los datos del PPI
+    useEffect(() => {
+        const obtenerLotePorId = async () => {
+            console.log('**********',idLote)
+            if (!idLote) return; // Verifica si idLote está presente
+
+            try {
+                const docRef = doc(db, "lotes", idLote); // Crea una referencia al documento usando el id
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    console.log("Datos del lote:", docSnap.data());
+                    setLoteInfo({ id: docSnap.id, ...docSnap.data() });
+                } else {
+                    console.log("No se encontró el lote con el ID:", idLote);
+                    
+                }
+            } catch (error) {
+                console.error("Error al obtener el lote:", error);
+                
+            }
+        };
+
+        obtenerLotePorId();
+    }, [idLote]); 
+    
+   
+
+
+
+
+
+
+
+
+
+
     const handleImagenChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -218,13 +294,13 @@ doc.setTextColor(0, 0, 0); // Color negro
 doc.rect(rectX5, rectY5, rectWidth5, rectHeight5); 
 
 // Colocar texto dentro del recuadro 5
-doc.text(`Sector: ${sector}`, 15, 100);
-doc.text(`Subsector: ${subSector}`, 15, 110);
-doc.text(`Parte: ${parte}`, 15, 120);
-doc.text(`Elemento: ${elemento}`, 15, 130);
-doc.text(`Lote: ${lote}`, 15, 140);
-doc.text(`Pk inicial: ${pkInicial}`, 15, 150);
-doc.text(`Pk final: ${pkFinal}`, 15, 160);
+doc.text(`Sector: ${loteInfo.sectorNombre}`, 15, 100);
+doc.text(`Subsector: ${loteInfo.subSectorNombre}`, 15, 110);
+doc.text(`Parte: ${loteInfo.parteNombre}`, 15, 120);
+doc.text(`Elemento: ${loteInfo.elementoNombre}`, 15, 130);
+doc.text(`Lote: ${loteInfo.nombre}`, 15, 140);
+doc.text(`Pk inicial: ${loteInfo.pkInicial}`, 15, 150);
+doc.text(`Pk final: ${loteInfo.pkFinal}`, 15, 160);
 
 // Tamaño y posición del recuadro 6
 const rectX6 = 10;
@@ -316,7 +392,8 @@ doc.text('Firma', 150, 260);
                             {/* Campos de entrada */}
                             <div className="mb-4">
                                 <label htmlFor="Proyecto" className="block text-gray-700 text-sm font-bold mb-2">Proyecto</label>
-                                <input type="text" id="Proyecto" value={nombreProyecto} onChange={(e) => setNombreProyecto(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                <input type="text" id="Proyecto" value={nombreProyecto} onChange={(e) => setNombreProyecto(e.target.value)} 
+                                className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="numeroRegistro" className="block text-gray-700 text-sm font-bold mb-2">Nº de registro</label>
@@ -336,7 +413,8 @@ doc.text('Firma', 150, 260);
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="ppi" className="block text-gray-700 text-sm font-bold mb-2">PPI</label>
-                                <input type="text" id="ppi" value={ppi} onChange={(e) => setPpi(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                <input type="text" id="ppi" value={localStorage.getItem('ppi'||'')}onChange={(e) => setPpi(e.target.value)} 
+                                className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="plano" className="block text-gray-700 text-sm font-bold mb-2">Plano que aplica</label>
@@ -362,31 +440,32 @@ doc.text('Firma', 150, 260);
                             <div className="grid sm:grid-cols-4 grid-cols-1 gap-4">
                                 <div>
                                     <label htmlFor="sector" className="block text-gray-700 text-sm font-bold mb-2">Sector</label>
-                                    <input type="text" id="sector" value={sector} onChange={(e) => setSector(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                    <input
+                                     type="text" id="sector" value={loteInfo?.sectorNombre || ''}  onChange={(e) => setSector(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                 </div>
                                 <div>
                                     <label htmlFor="subSector" className="block text-gray-700 text-sm font-bold mb-2">Sub sector</label>
-                                    <input type="text" id="subSector" value={subSector} onChange={(e) => setSubSector(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                    <input type="text" id="subSector" value={loteInfo?.subSectorNombre || ''} onChange={(e) => setSubSector(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                 </div>
                                 <div>
                                     <label htmlFor="parte" className="block text-gray-700 text-sm font-bold mb-2">Parte</label>
-                                    <input type="text" id="parte" value={parte} onChange={(e) => setParte(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                    <input type="text" id="parte" value={loteInfo?.parteNombre || ''} onChange={(e) => setParte(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                 </div>
                                 <div>
                                     <label htmlFor="elemento" className="block text-gray-700 text-sm font-bold mb-2">Elemento</label>
-                                    <input type="text" id="elemento" value={elemento} onChange={(e) => setElemento(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                    <input type="text" id="elemento" value={loteInfo?.elementoNombre || ''} onChange={(e) => setElemento(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                 </div>
                                 <div>
                                     <label htmlFor="lote" className="block text-gray-700 text-sm font-bold mb-2">Lote</label>
-                                    <input type="text" id="lote" value={lote} onChange={(e) => setLote(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                    <input type="text" id="lote" value={loteInfo?.nombre || ''} onChange={(e) => setLote(e.target.value)} className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                 </div>
                                 <div>
                                     <label htmlFor="pkInicial" className="block text-gray-700 text-sm font-bold mb-2">Pk inicial</label>
-                                    <input type="text" id="pkInicial" value={pkInicial} onChange={(e) => setPkInicial(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                    <input type="text" id="pkInicial" value={loteInfo?.pkInicial || ''}  onChange={(e) => setPkInicial(e.target.value)} className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                 </div>
                                 <div>
                                     <label htmlFor="pkFinal" className="block text-gray-700 text-sm font-bold mb-2">Pk final</label>
-                                    <input type="text" id="pkFinal" value={pkFinal} onChange={(e) => setPkFinal(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                    <input type="text" id="pkFinal" value={loteInfo?.pkFinal || ''}  onChange={(e) => setPkFinal(e.target.value)} className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                 </div>
                             </div>
                         </div>

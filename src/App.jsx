@@ -47,9 +47,9 @@ function App() {
       
   
       <Route path='/tablaPpi' element={<TablaPpi/>}></Route>
-      <Route path='/tablaPpi/:ppiNombre' element={<TablaPpi/>}></Route>
+      <Route path='/tablaPpi/:idLote/:ppiNombre' element={<TablaPpi/>}></Route>
       <Route path='/editarPpi/:id' element={<EditarPpi/>}></Route>
-      <Route path='/formularioInspeccion' element={<FormularioInspeccion/>}></Route>
+      <Route path='/formularioInspeccion/:idLote/:id' element={<FormularioInspeccion/>}></Route>
     </Routes>
 
     <Footer/>

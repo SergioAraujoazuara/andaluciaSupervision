@@ -151,6 +151,9 @@ function PlantillaPpi() {
         setActividades([...actividades, newActividad]);
     };
 
+
+    
+
     return (
         <>
 
@@ -212,6 +215,7 @@ function PlantillaPpi() {
 
                         <div>
                             {actividades.map((actividad, i) => (
+                                <>
                                 <div key={i} className="border rounded-md">
                                     <div className='bg-gray-100 grid grid-cols-6'>
                                         <input
@@ -286,15 +290,17 @@ function PlantillaPpi() {
 
                                         </div>
                                     ))}
-                                    <button type="button" onClick={() => addSubactividad(i)} className="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                        Añadir Subactividad
-                                    </button>
+                                    
                                 </div>
+                                <button type="button" onClick={() => addSubactividad(i)} className="mt-2 mb-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Añadir Subactividad
+                            </button>
+                            </>
                             ))}
                         </div>
 
                         <div className='flex gap-5'>
-                            <button type="submit" disabled={loading} className="w-1/6 mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <button type="submit" disabled={loading} className=" mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                 {loading ? 'Cargando...' : 'Agregar PPI'}
                             </button>
 

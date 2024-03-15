@@ -31,6 +31,18 @@ function Elemento() {
     };
 
 
+    const handleCaptrurarTrazabilidad = (l) => {
+        localStorage.setItem('sector', l.sectorNombre || '')
+        localStorage.setItem('subSector', l.subSectorNombre || '')
+        localStorage.setItem('parte', l.parteNombre || '')
+        localStorage.setItem('elemento', l.elementoNombre || '')
+        localStorage.setItem('lote', l.nombre || '')
+        localStorage.setItem('ppi', l.ppiNombre || '')
+        localStorage.setItem('pkInicial', l.pkInicial || '')
+        localStorage.setItem('pkFinal', l.pkFinal || '')
+    }
+
+
 
     return (
         <div className='min-h-screen px-14 py-5'>
@@ -67,8 +79,8 @@ function Elemento() {
 
 
                         {lotes.map((l, i) => (
-                            <Link to={`/tablaPpi/${l.ppiNombre}`}>
-                                <div className='cursor-pointer grid sm:grid-cols-5 grid-cols-1 items-center justify-start sm:p-5 border-b-2 font-normal text-gray-600 hover:bg-gray-100'>
+                            <Link to={`/tablaPpi/${l.id}/${l.ppiNombre}`} onClick={() => handleCaptrurarTrazabilidad(l)}>
+                                <div key={i} className='cursor-pointer grid sm:grid-cols-5 grid-cols-1 items-center justify-start sm:p-5 border-b-2 font-normal text-gray-600 hover:bg-gray-100'>
                                     <div className='sm:border-r-2 sm:border-b-0 flex items-center '>
                                         {l.sectorNombre}
                                     </div>
@@ -77,11 +89,11 @@ function Elemento() {
                                         {l.subSectorNombre}
                                     </div>
 
-                                    <div className='h-10 flex items-center sm:justify-start  sm:ps-10'>
+                                    <div className='sm:border-r-2 h-10 flex items-center sm:justify-start  sm:ps-10'>
                                         {l.parteNombre}
                                     </div>
 
-                                    <div className='h-10 flex items-center sm:justify-start  sm:ps-10'>
+                                    <div className=' sm:border-r-2 h-10 flex items-center sm:justify-start  sm:ps-10'>
                                         {l.elementoNombre}
                                     </div>
 

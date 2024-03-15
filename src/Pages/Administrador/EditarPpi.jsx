@@ -208,7 +208,7 @@ function EditarPpi() {
                             </div>
                         ))}
 
-                        <button type="submit">Guardar cambios</button>
+                        <button type="submit" className='bg-sky-600 hover:bg-sky-700 text-white font-medium px-4 py-2 rounded-lg my-4'>Guardar cambios</button>
                     </form>
 
 
