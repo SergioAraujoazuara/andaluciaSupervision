@@ -361,32 +361,13 @@ doc.text('Firma', 150, 260);
     };
 
     return (
-        <div className='min-h-screen px-14 py-5 text-gray-500'>
-            {/* Navigation section */}
-            <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
-                <GoHomeFill style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'/'}>
-                    <h1 className='font-medium text-gray-500 text-amber-600'>Inicio</h1>
-                </Link>
-                <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'/elemento'}>
-                    <h1 className='text-gray-500 text-gray-500'>Elementos</h1>
-                </Link>
-                <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'/tablaPpi'}>
-                    <h1 className='text-gray-500 text-gray-500'>PPI</h1>
-                </Link>
-                <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'#'}>
-                    <h1 className='font-medium text-amber-600'>Formulario</h1>
-                </Link>
-
-            </div>
+        <div className=' px-5 py-5 text-gray-500'>
+           
 
             <div className='flex gap-3 flex-col  mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
                 <div className='flex gap-2 items-center'></div>
                 <div className='border-t-2 w-full p-0 m-0'></div>
-                <div class="w-full rounded rounded-xl  mt-5">
+                <div class=" rounded rounded-xl  mt-5">
                     <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
                         <div className='grid sm:grid-cols-5 grid-cols-1 gap-4'>
                             {/* Campos de entrada */}
