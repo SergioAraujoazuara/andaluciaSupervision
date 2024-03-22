@@ -4,20 +4,21 @@ import { Link, useParams } from 'react-router-dom';
 import { FaArrowRight, FaFilePdf } from "react-icons/fa";
 import jsPDF from 'jspdf';
 import logo from '../assets/tpf_logo_azul.png'
+import { IoIosWarning } from "react-icons/io";
+import { IoCloseCircle } from "react-icons/io5";
 import { db } from '../../firebase_config';
-import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where } from 'firebase/firestore';
+import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 
-function FormularioInspeccion() {
-    const {id} = useParams()
-    const {idLote} = useParams()
+function FormularioInspeccion({ setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion }) {
+
+    const { id } = useParams()
+    const { idLote } = useParams()
     const [nombreProyecto, setNombreProyecto] = useState(localStorage.getItem('nombre_proyecto') || '');
     const [numeroRegistro, setNumeroRegistro] = useState('');
     const [fecha, setFecha] = useState('');
-    const [obra, setObra] = useState('');
-    const [tramo, setTramo] = useState('');
     const [ppi, setPpi] = useState('');
     const [plano, setPlano] = useState('');
-    const [observaciones, setObservaciones] = useState('');
+    // const [observaciones, setObservaciones] = useState('');
     const [sector, setSector] = useState('');
     const [subSector, setSubSector] = useState('');
     const [parte, setParte] = useState('');
@@ -30,6 +31,8 @@ function FormularioInspeccion() {
     const [imagen2, setImagen2] = useState(null);
     const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
     const imagenPath2 = logo
+    const [obra, setObra] = useState(localStorage.getItem('obra'));
+    const [tramo, setTramo] = useState(localStorage.getItem('tramo'));
 
 
     useEffect(() => {
@@ -38,37 +41,37 @@ function FormularioInspeccion() {
                 // Asegúrate de que `id` sea el ID de PPI por el cual quieres filtrar
                 const q = query(collection(db, "lotes"), where("ppiId", "==", id));
                 const querySnapshot = await getDocs(q);
-    
+
                 if (!querySnapshot.empty) {
                     const lotesData = querySnapshot.docs.map(doc => ({
                         id: doc.id,
                         ...doc.data()
                     }));
-                  
-                   
+
+
                     setPpi(lotesData);
                 } else {
-                
+
                     setPpi(null);
                 }
             } catch (error) {
-                
+
                 setPpi(null);
             }
         };
-    
+
         if (id) {
             obtenerLotesPorPpiId();
         }
     }, [id]); // Asegúrate de que `id` sea una dependencia del efecto
-    
-    
+
+
 
     const [loteInfo, setLoteInfo] = useState(null); // Estado para almacenar los datos del PPI
     const [sectorInfoLote, setSectorInfoLote] = useState(null); // Estado para almacenar los datos del PPI
     useEffect(() => {
         const obtenerLotePorId = async () => {
-            console.log('**********',idLote)
+            console.log('**********', idLote)
             if (!idLote) return; // Verifica si idLote está presente
 
             try {
@@ -78,27 +81,19 @@ function FormularioInspeccion() {
                 if (docSnap.exists()) {
                     console.log("Datos del lote:", docSnap.data());
                     setLoteInfo({ id: docSnap.id, ...docSnap.data() });
+                    console.log({ id: docSnap.id, ...docSnap.data() });
                 } else {
                     console.log("No se encontró el lote con el ID:", idLote);
-                    
+
                 }
             } catch (error) {
                 console.error("Error al obtener el lote:", error);
-                
+
             }
         };
 
         obtenerLotePorId();
-    }, [idLote]); 
-    
-   
-
-
-
-
-
-
-
+    }, [idLote]);
 
 
 
@@ -124,6 +119,70 @@ function FormularioInspeccion() {
         }
     };
 
+
+    const enviarDatosARegistros = async () => {
+        // Objeto que representa los datos del formulario
+        const datosFormulario = {
+            nombreProyecto,
+            fechaHoraActual: fechaHoraActual,
+            obra: obra,
+            tramo: tramo,
+            ppiNombre: loteInfo.ppiNombre,
+            comentario: comentario,
+            sector: loteInfo.sectorNombre,
+            subSector: loteInfo.subSectorNombre,
+            parte: loteInfo.parteNombre,
+            elemento: loteInfo.elementoNombre,
+            lote: loteInfo.nombre,
+            firma: firma,
+            pkInicial: loteInfo.pkInicial,
+            pkFinal: loteInfo.pkFinal,
+            nombreResponsable: nombreResponsable
+        };
+
+        try {
+            // Referencia a la colección 'registros' en Firestore
+
+            const coleccionRegistros = collection(db, "registros");
+            const docRef = await addDoc(coleccionRegistros, datosFormulario);
+            // Opcionalmente, cierra el modal o limpia el formulario aquí
+            setModalFormulario(false);
+            setResultadoInspeccion('')
+            setComentario('')
+            console.log("Documento escrito con ID: ", docRef.id);
+            return docRef.id; // Devolver el ID del documento creado
+
+
+        } catch (e) {
+            console.error("Error al añadir documento: ", e);
+        }
+    };
+
+    const handleConfirmarEnvio = async () => {
+        // Aquí llamarías a la función que realmente envía los datos del formulario
+        await handelEnviarFormulario();
+        setMostrarConfirmacion(false); // Ocultar el modal de confirmación después de enviar los datos
+    };
+
+    const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+
+
+    const handelEnviarFormulario = async () => {
+        const idRegistroFormulario = await enviarDatosARegistros();
+        if (idRegistroFormulario) {
+            await marcarFormularioComoEnviado(idRegistroFormulario, resultadoInspeccion);
+            generatePDF(firma, fechaHoraActual, nombreResponsable); // Si también deseas generar el PDF tras enviar el formulario
+        }
+    };
+
+
+    const handleSolicitarConfirmacion = () => {
+        setMostrarConfirmacion(true);
+    };
+
+
+
+
     const generatePDF = () => {
         const doc = new jsPDF();
 
@@ -132,225 +191,227 @@ function FormularioInspeccion() {
 
 
 
-// Establecer el tamaño de fuente deseado
-const fontSize = 10;
+        // Establecer el tamaño de fuente deseado
+        const fontSize = 10;
 
-// Tamaño y posición del recuadro
-const rectX = 10;
-const rectY = 10;
-const rectWidth = 190; // Ancho del recuadro
-const rectHeight = 20; // Altura del recuadro
+        // Tamaño y posición del recuadro
+        const rectX = 10;
+        const rectY = 10;
+        const rectWidth = 190; // Ancho del recuadro
+        const rectHeight = 20; // Altura del recuadro
 
-// Establecer el tamaño de fuente
-doc.setFontSize(fontSize);
+        // Establecer el tamaño de fuente
+        doc.setFontSize(fontSize);
 
-doc.setFillColor(230, 230, 230); // Gris muy claro casi blanco
+        doc.setFillColor(230, 230, 230); // Gris muy claro casi blanco
 
-// Dibujar el recuadro con fondo gris
-doc.rect(rectX, rectY, rectWidth, rectHeight, 'F'); // 'F' indica que se debe rellenar el rectángulo
+        // Dibujar el recuadro con fondo gris
+        doc.rect(rectX, rectY, rectWidth, rectHeight, 'F'); // 'F' indica que se debe rellenar el rectángulo
 
-// Establecer el color de texto
-doc.setTextColor(0, 0, 0); // Color negro
+        // Establecer el color de texto
+        doc.setTextColor(0, 0, 0); // Color negro
 
-// Colocar texto dentro del recuadro
-doc.text(titulo, 75, 18); // Ajusta las coordenadas según tu diseño
-doc.text(nombreProyecto, 75, 22); // Ajusta las coordenadas según tu diseño
+        // Colocar texto dentro del recuadro
+        doc.text(titulo, 75, 18); // Ajusta las coordenadas según tu diseño
+        doc.text(nombreProyecto, 75, 22); // Ajusta las coordenadas según tu diseño
 
-if (imagenPath2) {
-    const imgData = imagenPath2;
-    doc.addImage(imgData, 'JPEG', 12, 12, 30, 15); // Ajusta las coordenadas y dimensiones según tu diseño
-}
-if (imagenPath) {
-    const imgData = imagenPath;
-    doc.addImage(imgData, 'JPEG', 45, 15, 20, 10); // Ajusta las coordenadas y dimensiones según tu diseño
-}
+        if (imagenPath2) {
+            const imgData = imagenPath2;
+            doc.addImage(imgData, 'JPEG', 12, 12, 30, 15); // Ajusta las coordenadas y dimensiones según tu diseño
+        }
+        if (imagenPath) {
+            const imgData = imagenPath;
+            doc.addImage(imgData, 'JPEG', 45, 15, 20, 10); // Ajusta las coordenadas y dimensiones según tu diseño
+        }
 
-// Dibujar el borde después de agregar las imágenes
-doc.setDrawColor(0); // Color negro
-doc.rect(rectX, rectY, rectWidth, rectHeight); // Dibujar el borde del rectángulo
-
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////
-// Tamaño y posición del segundo recuadro
-const rectX2 = 10;
-const rectY2 = 30;
-const rectWidth2 = 190; // Ancho del recuadro
-const rectHeight2 = 20; // Altura del recuadro
-
-// Establecer el ancho de la línea del borde
-const borderWidth = 0.5; // Ancho del borde en puntos
-
-// Establecer el color de la línea del borde
-doc.setDrawColor(0); // Color negro
-
-// Dibujar el borde del segundo recuadro
-doc.rect(rectX2, rectY2, rectWidth2, rectHeight2); 
-
-// Establecer el color de fondo para el segundo recuadro
-doc.setFillColor(240, 240, 240); // Gris muy claro casi blanco
-
-// Dibujar el segundo recuadro con fondo gris claro y borde en todos los lados
-doc.rect(rectX2, rectY2, rectWidth2, rectHeight2, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde en todos los lados
-
-// Establecer el tamaño de fuente
-doc.setFontSize(fontSize);
-
-// Colocar texto dentro del segundo recuadro
-doc.text(`Obra: ${obra}`, 15, 40);
-doc.text(`Tramo: ${tramo}`, 15, 45);
-doc.text(`Nº de registro: ${numeroRegistro}`, 150, 40);
-doc.text(`Fecha: ${fecha}`, 150, 45);
+        // Dibujar el borde después de agregar las imágenes
+        doc.setDrawColor(0); // Color negro
+        doc.rect(rectX, rectY, rectWidth, rectHeight); // Dibujar el borde del rectángulo
 
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
-      // Tamaño y posición del recuadro
-const rectX3 = 10;
-const rectY3 = 50;
-const rectWidth3 = 190; // Ancho del recuadro
-const rectHeight3 = 20; // Altura del recuadro
+        // Tamaño y posición del segundo recuadro
+        const rectX2 = 10;
+        const rectY2 = 30;
+        const rectWidth2 = 190; // Ancho del recuadro
+        const rectHeight2 = 20; // Altura del recuadro
 
-// Establecer el tamaño de fuente
-doc.setFontSize(fontSize);
+        // Establecer el ancho de la línea del borde
+        const borderWidth = 0.5; // Ancho del borde en puntos
 
-// Establecer el color de fondo para el recuadro
-doc.setFillColor(240, 240, 240); // Gris muy claro casi blanco
+        // Establecer el color de la línea del borde
+        doc.setDrawColor(0); // Color negro
 
-// Dibujar el recuadro con fondo gris claro
-doc.rect(rectX3, rectY3, rectWidth3, rectHeight3, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
+        // Dibujar el borde del segundo recuadro
+        doc.rect(rectX2, rectY2, rectWidth2, rectHeight2);
 
-// Establecer el color de texto
-doc.setTextColor(0, 0, 0); // Color negro
+        // Establecer el color de fondo para el segundo recuadro
+        doc.setFillColor(240, 240, 240); // Gris muy claro casi blanco
 
-// Colocar texto dentro del recuadro
-doc.text(`PPI: ${obra}`, 15, 60);
-doc.text(`Plano que aplica: ${tramo}`, 15, 65);
+        // Dibujar el segundo recuadro con fondo gris claro y borde en todos los lados
+        doc.rect(rectX2, rectY2, rectWidth2, rectHeight2, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde en todos los lados
+
+        // Establecer el tamaño de fuente
+        doc.setFontSize(fontSize);
+
+        // Colocar texto dentro del segundo recuadro
+        doc.text(`Obra: ${obra}`, 15, 40);
+        doc.text(`Tramo: ${tramo}`, 15, 45);
+        doc.text(`Nº de registro: ${numeroRegistro}`, 150, 40);
+        doc.text(`Fecha: ${fechaHoraActual}`, 150, 45);
 
 
-// Tamaño y posición del recuadro
-const rectX4 = 10;
-const rectY4 = 70;
-const rectWidth4 = 190; // Ancho del recuadro
-const rectHeight4 = 20; // Altura del recuadro
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Tamaño y posición del recuadro
+        const rectX3 = 10;
+        const rectY3 = 50;
+        const rectWidth3 = 190; // Ancho del recuadro
+        const rectHeight3 = 20; // Altura del recuadro
 
-// Establecer el tamaño de fuente
-doc.setFontSize(fontSize);
+        // Establecer el tamaño de fuente
+        doc.setFontSize(fontSize);
 
-// Establecer el color de fondo para el recuadro
-doc.setFillColor(240, 240, 240); // Gris claro casi blanco
+        // Establecer el color de fondo para el recuadro
+        doc.setFillColor(240, 240, 240); // Gris muy claro casi blanco
 
-// Dibujar el recuadro con fondo gris claro
-doc.rect(rectX4, rectY4, rectWidth4, rectHeight4, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
+        // Dibujar el recuadro con fondo gris claro
+        doc.rect(rectX3, rectY3, rectWidth3, rectHeight3, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
 
-// Establecer el color de texto
-doc.setTextColor(0, 0, 0); // Color negro
+        // Establecer el color de texto
+        doc.setTextColor(0, 0, 0); // Color negro
 
-// Dibujar el borde del rectángulo
-doc.rect(rectX4, rectY4, rectWidth4, rectHeight4); 
+        // Colocar texto dentro del recuadro
+        doc.text(`PPI: ${ppiNombre}`, 15, 60);
+        doc.text(`Plano que aplica: `, 15, 65);
 
-// Texto a colocar con salto de línea
-const textoObservaciones = `Observaciones: ${observaciones}`;
 
-// Dividir el texto en líneas cada vez que exceda 15 palabras
-const words = textoObservaciones.split(' ');
-const maxWordsPerLine = 15;
-const lines = [];
-let currentLine = '';
+        // Tamaño y posición del recuadro
+        const rectX4 = 10;
+        const rectY4 = 70;
+        const rectWidth4 = 190; // Ancho del recuadro
+        const rectHeight4 = 20; // Altura del recuadro
 
-for (let i = 0; i < words.length; i++) {
-    currentLine += words[i] + ' ';
-    if ((i + 1) % maxWordsPerLine === 0 || i === words.length - 1) {
-        lines.push(currentLine.trim());
-        currentLine = '';
-    }
-}
+        // Establecer el tamaño de fuente
+        doc.setFontSize(fontSize);
 
-// Colocar texto en el PDF
-let yPosition = rectY4 + fontSize + 2; // Iniciar la posición dentro del recuadro
-let xPosition = rectX4 + 5; // Ajustar posición x para evitar que el texto toque el borde del rectángulo
-lines.forEach(line => {
-    doc.text(line, xPosition, yPosition, { maxWidth: rectWidth4 - 4 }); // Ajustar maxWidth para evitar que el texto exceda el ancho del rectángulo
-    yPosition += fontSize + 2; // Aumentar la posición para la siguiente línea
-});
+        // Establecer el color de fondo para el recuadro
+        doc.setFillColor(240, 240, 240); // Gris claro casi blanco
 
-       // Tamaño y posición del recuadro 5
-const rectX5 = 10;
-const rectY5 = 90;
-const rectWidth5 = 190; // Ancho del recuadro
-const rectHeight5 = 80; // Altura del recuadro
+        // Dibujar el recuadro con fondo gris claro
+        doc.rect(rectX4, rectY4, rectWidth4, rectHeight4, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
 
-// Establecer el tamaño de fuente
-doc.setFontSize(fontSize);
+        // Establecer el color de texto
+        doc.setTextColor(0, 0, 0); // Color negro
 
-// Establecer el color de fondo para el recuadro 5
-doc.setFillColor(240, 240, 240); // Gris claro casi blanco
+        // Dibujar el borde del rectángulo
+        doc.rect(rectX4, rectY4, rectWidth4, rectHeight4);
 
-// Dibujar el recuadro 5 con fondo gris claro
-doc.rect(rectX5, rectY5, rectWidth5, rectHeight5, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
+        // Texto a colocar con salto de línea
+        const textoObservaciones = `Observaciones: ${comentario}`;
 
-// Establecer el color de texto
-doc.setTextColor(0, 0, 0); // Color negro
+        // Dividir el texto en líneas cada vez que exceda 15 palabras
+        const words = textoObservaciones.split(' ');
+        const maxWordsPerLine = 15;
+        const lines = [];
+        let currentLine = '';
 
-// Dibujar el borde del recuadro 5
-doc.rect(rectX5, rectY5, rectWidth5, rectHeight5); 
+        for (let i = 0; i < words.length; i++) {
+            currentLine += words[i] + ' ';
+            if ((i + 1) % maxWordsPerLine === 0 || i === words.length - 1) {
+                lines.push(currentLine.trim());
+                currentLine = '';
+            }
+        }
 
-// Colocar texto dentro del recuadro 5
-doc.text(`Sector: ${loteInfo.sectorNombre}`, 15, 100);
-doc.text(`Subsector: ${loteInfo.subSectorNombre}`, 15, 110);
-doc.text(`Parte: ${loteInfo.parteNombre}`, 15, 120);
-doc.text(`Elemento: ${loteInfo.elementoNombre}`, 15, 130);
-doc.text(`Lote: ${loteInfo.nombre}`, 15, 140);
-doc.text(`Pk inicial: ${loteInfo.pkInicial}`, 15, 150);
-doc.text(`Pk final: ${loteInfo.pkFinal}`, 15, 160);
+        // Colocar texto en el PDF
+        let yPosition = rectY4 + fontSize + 2; // Iniciar la posición dentro del recuadro
+        let xPosition = rectX4 + 5; // Ajustar posición x para evitar que el texto toque el borde del rectángulo
+        lines.forEach(line => {
+            doc.text(line, xPosition, yPosition, { maxWidth: rectWidth4 - 4 }); // Ajustar maxWidth para evitar que el texto exceda el ancho del rectángulo
+            yPosition += fontSize + 2; // Aumentar la posición para la siguiente línea
+        });
 
-// Tamaño y posición del recuadro 6
-const rectX6 = 10;
-const rectY6 = 170;
-const rectWidth6 = 190; // Ancho del recuadro
-const rectHeight6 = 70; // Altura del recuadro
+        // Tamaño y posición del recuadro 5
+        const rectX5 = 10;
+        const rectY5 = 90;
+        const rectWidth5 = 190; // Ancho del recuadro
+        const rectHeight5 = 80; // Altura del recuadro
 
-// Establecer el tamaño de fuente
-doc.setFontSize(fontSize);
+        // Establecer el tamaño de fuente
+        doc.setFontSize(fontSize);
 
-// Establecer el color de fondo para el recuadro 6
-doc.setFillColor(240, 240, 240); // Gris claro casi blanco
+        // Establecer el color de fondo para el recuadro 5
+        doc.setFillColor(240, 240, 240); // Gris claro casi blanco
 
-// Dibujar el recuadro 6 con fondo gris claro
-doc.rect(rectX6, rectY6, rectWidth6, rectHeight6, 'FD');
+        // Dibujar el recuadro 5 con fondo gris claro
+        doc.rect(rectX5, rectY5, rectWidth5, rectHeight5, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
 
-// Dibujar el borde del recuadro 6
-doc.rect(rectX6, rectY6, rectWidth6, rectHeight6); 
+        // Establecer el color de texto
+        doc.setTextColor(0, 0, 0); // Color negro
 
-// Agregar imagen al PDF dentro del recuadro 6
-if (imagen) {
-    doc.addImage(imagen, 'JPEG', 25, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
-}
-if (imagen2) {
-    doc.addImage(imagen2, 'JPEG', 110, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
-}
+        // Dibujar el borde del recuadro 5
+        doc.rect(rectX5, rectY5, rectWidth5, rectHeight5);
 
-// Tamaño y posición del recuadro 7
-const rectX7 = 10;
-const rectY7 = 240;
-const rectWidth7 = 190; // Ancho del recuadro
-const rectHeight7 = 28; // Altura del recuadro
+        // Colocar texto dentro del recuadro 5
+        doc.text(`Sector: ${loteInfo.sectorNombre}`, 15, 100);
+        doc.text(`Subsector: ${loteInfo.subSectorNombre}`, 15, 110);
+        doc.text(`Parte: ${loteInfo.parteNombre}`, 15, 120);
+        doc.text(`Elemento: ${loteInfo.elementoNombre}`, 15, 130);
+        doc.text(`Lote: ${loteInfo.nombre}`, 15, 140);
+        doc.text(`Pk inicial: ${loteInfo.pkInicial}`, 15, 150);
+        doc.text(`Pk final: ${loteInfo.pkFinal}`, 15, 160);
 
-// Establecer el tamaño de fuente
-doc.setFontSize(fontSize);
+        // Tamaño y posición del recuadro 6
+        const rectX6 = 10;
+        const rectY6 = 170;
+        const rectWidth6 = 190; // Ancho del recuadro
+        const rectHeight6 = 70; // Altura del recuadro
 
-// Establecer el color de fondo para el recuadro 7
-doc.setFillColor(240, 240, 240); // Gris claro casi blanco
+        // Establecer el tamaño de fuente
+        doc.setFontSize(fontSize);
 
-// Dibujar el recuadro 7 con fondo gris claro
-doc.rect(rectX7, rectY7, rectWidth7, rectHeight7, 'FD');
+        // Establecer el color de fondo para el recuadro 6
+        doc.setFillColor(240, 240, 240); // Gris claro casi blanco
 
-// Dibujar el borde del recuadro 7
-doc.rect(rectX7, rectY7, rectWidth7, rectHeight7); 
+        // Dibujar el recuadro 6 con fondo gris claro
+        doc.rect(rectX6, rectY6, rectWidth6, rectHeight6, 'FD');
 
-// Colocar texto dentro del recuadro 7
-doc.text('Resultado de la inspección', 15, 250);
-doc.text('Aplica', 15, 260);
-doc.text('No Aplica', 40, 260);
-doc.text('Firma', 150, 260);
+        // Dibujar el borde del recuadro 6
+        doc.rect(rectX6, rectY6, rectWidth6, rectHeight6);
+
+        // Agregar imagen al PDF dentro del recuadro 6
+        if (imagen) {
+            doc.addImage(imagen, 'JPEG', 25, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
+        }
+        if (imagen2) {
+            doc.addImage(imagen2, 'JPEG', 110, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
+        }
+
+        // Tamaño y posición del recuadro 7
+        const rectX7 = 10;
+        const rectY7 = 240;
+        const rectWidth7 = 190; // Ancho del recuadro
+        const rectHeight7 = 28; // Altura del recuadro
+
+        // Establecer el tamaño de fuente
+        doc.setFontSize(fontSize);
+
+        // Establecer el color de fondo para el recuadro 7
+        doc.setFillColor(240, 240, 240); // Gris claro casi blanco
+
+        // Dibujar el recuadro 7 con fondo gris claro
+        doc.rect(rectX7, rectY7, rectWidth7, rectHeight7, 'FD');
+
+        // Dibujar el borde del recuadro 7
+        doc.rect(rectX7, rectY7, rectWidth7, rectHeight7);
+
+        // Colocar texto dentro del recuadro 7
+        doc.text('Resultado de la inspección', 150, 250);
+        doc.text(resultadoInspeccion, 150, 260);
+        doc.text(`Firmado electronicamente con blockchain`, 15, 250);
+        // Asegúrate de que la firma es una cadena y no está vacía
+        doc.text(firma, 15, 260);
+
 
 
 
@@ -360,104 +421,150 @@ doc.text('Firma', 150, 260);
         doc.save('formulario.pdf');
     };
 
+
+
+
+
     return (
-        <div className=' px-5 py-5 text-gray-500'>
-           
+        <div className='text-gray-500'>
+            {/* Navigation section
+            <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+                <GoHomeFill style={{ width: 12, height: 12, fill: '#d97706' }} />
+                <Link to={'/'}>
+                    <h1 className='font-medium text-gray-500 text-amber-600'>Inicio</h1>
+                </Link>
+                <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
+                <Link to={'/elemento'}>
+                    <h1 className='text-gray-500 text-gray-500'>Elementos</h1>
+                </Link>
+                <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
+                <Link to={'/tablaPpi'}>
+                    <h1 className='text-gray-500 text-gray-500'>PPI</h1>
+                </Link>
+                <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
+                <Link to={'#'}>
+                    <h1 className='font-medium text-amber-600'>Formulario</h1>
+                </Link>
 
-            <div className='flex gap-3 flex-col  mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
-                <div className='flex gap-2 items-center'></div>
-                <div className='border-t-2 w-full p-0 m-0'></div>
-                <div class=" rounded rounded-xl  mt-5">
-                    <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-                        <div className='grid sm:grid-cols-5 grid-cols-1 gap-4'>
-                            {/* Campos de entrada */}
-                            <div className="mb-4">
-                                <label htmlFor="Proyecto" className="block text-gray-700 text-sm font-bold mb-2">Proyecto</label>
-                                <input type="text" id="Proyecto" value={nombreProyecto} onChange={(e) => setNombreProyecto(e.target.value)} 
-                                className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="numeroRegistro" className="block text-gray-700 text-sm font-bold mb-2">Nº de registro</label>
-                                <input type="text" id="numeroRegistro" value={numeroRegistro} onChange={(e) => setNumeroRegistro(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="fecha" className="block text-gray-700 text-sm font-bold mb-2">Fecha</label>
-                                <input type="date" id="fecha" value={fecha} onChange={(e) => setFecha(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="obra" className="block text-gray-700 text-sm font-bold mb-2">Obra</label>
-                                <input type="text" id="obra" value={obra} onChange={(e) => setObra(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="tramo" className="block text-gray-700 text-sm font-bold mb-2">Tramo</label>
-                                <input type="text" id="tramo" value={tramo} onChange={(e) => setTramo(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="ppi" className="block text-gray-700 text-sm font-bold mb-2">PPI</label>
-                                <input type="text" id="ppi" value={localStorage.getItem('ppi'||'')}onChange={(e) => setPpi(e.target.value)} 
-                                className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="plano" className="block text-gray-700 text-sm font-bold mb-2">Plano que aplica</label>
-                                <input type="text" id="plano" value={plano} onChange={(e) => setPlano(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="imagen" className="block text-gray-700 text-sm font-bold mb-2">Seleccionar imagen</label>
-                                <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="imagen" className="block text-gray-700 text-sm font-bold mb-2">Seleccionar imagen</label>
-                                <input onChange={handleImagenChange2} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                            </div>
+            </div> */}
 
-                            <div className="mb-4 sm:col-span-5">
-                                <label htmlFor="observaciones" className="block text-gray-700 text-sm font-bold mb-2">Observaciones</label>
-                                <textarea id="observaciones" value={observaciones} onChange={(e) => setObservaciones(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
-                            </div>
-                        </div>
-                        {/* Campos de trazabilidad */}
-                        <div className="mb-4">
-                            <label className="block text-gray-700 text-sm font-bold mb-5">Trazabilidad</label>
-                            <div className="grid sm:grid-cols-4 grid-cols-1 gap-4">
-                                <div>
-                                    <label htmlFor="sector" className="block text-gray-700 text-sm font-bold mb-2">Sector</label>
-                                    <input
-                                     type="text" id="sector" value={loteInfo?.sectorNombre || ''}  onChange={(e) => setSector(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                </div>
-                                <div>
-                                    <label htmlFor="subSector" className="block text-gray-700 text-sm font-bold mb-2">Sub sector</label>
-                                    <input type="text" id="subSector" value={loteInfo?.subSectorNombre || ''} onChange={(e) => setSubSector(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                </div>
-                                <div>
-                                    <label htmlFor="parte" className="block text-gray-700 text-sm font-bold mb-2">Parte</label>
-                                    <input type="text" id="parte" value={loteInfo?.parteNombre || ''} onChange={(e) => setParte(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                </div>
-                                <div>
-                                    <label htmlFor="elemento" className="block text-gray-700 text-sm font-bold mb-2">Elemento</label>
-                                    <input type="text" id="elemento" value={loteInfo?.elementoNombre || ''} onChange={(e) => setElemento(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                </div>
-                                <div>
-                                    <label htmlFor="lote" className="block text-gray-700 text-sm font-bold mb-2">Lote</label>
-                                    <input type="text" id="lote" value={loteInfo?.nombre || ''} onChange={(e) => setLote(e.target.value)} className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                </div>
-                                <div>
-                                    <label htmlFor="pkInicial" className="block text-gray-700 text-sm font-bold mb-2">Pk inicial</label>
-                                    <input type="text" id="pkInicial" value={loteInfo?.pkInicial || ''}  onChange={(e) => setPkInicial(e.target.value)} className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                </div>
-                                <div>
-                                    <label htmlFor="pkFinal" className="block text-gray-700 text-sm font-bold mb-2">Pk final</label>
-                                    <input type="text" id="pkFinal" value={loteInfo?.pkFinal || ''}  onChange={(e) => setPkFinal(e.target.value)} className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                </div>
-                            </div>
-                        </div>
-                        {/* Botones */}
-                        <div className='flex gap-5'>
-                            <button type="submit" className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Guardar</button>
-                            <button className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center" onClick={generatePDF}><FaFilePdf />Informe </button>
-                        </div>
-                    </form>
+
+            <form className="bg-white text-gray-500  mb-4">
+                <div className='grid sm:grid-cols-1 grid-cols-1 gap-4'>
+
+                    {/* Campos de entrada */}
+                    <div className="mb-4 hidden">
+                        <label htmlFor="Proyecto" className="block text-gray-500 text-sm font-bold mb-2">Proyecto</label>
+                        <input type="text" id="Proyecto" value={nombreProyecto} onChange={(e) => setNombreProyecto(e.target.value)}
+                            className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                    </div>
+                    <div className="mb-4 hidden">
+                        <label htmlFor="numeroRegistro" className="block text-gray-500 text-sm font-bold mb-2">Nº de registro</label>
+                        <input type="text" id="numeroRegistro" value={numeroRegistro} onChange={(e) => setNumeroRegistro(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                    </div>
+                    {/* <div className="mb-4">
+                        <label htmlFor="fecha" className="block text-gray-500 text-sm font-bold mb-2">Fecha</label>
+                        <input type="date" id="fecha" value={fecha} onChange={(e) => setFecha(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                    </div> */}
+                    <div className="mb-4 hidden">
+                        <label htmlFor="obra" className="block text-gray-500 text-sm font-bold mb-2">Obra</label>
+                        <input type="text" id="obra" value={obra} onChange={(e) => setObra(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                    </div>
+                    <div className="mb-4 hidden">
+                        <label htmlFor="tramo" className="block text-gray-500 text-sm font-bold mb-2">Tramo</label>
+                        <input type="text" id="tramo" value={tramo} onChange={(e) => setTramo(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                    </div>
+                    <div className="mb-4 hidden">
+                        <label htmlFor="ppi" className="block text-gray-500 text-sm font-bold mb-2">PPI</label>
+                        <input type="text" id="ppi" value={localStorage.getItem('ppi' || '')} onChange={(e) => setPpi(e.target.value)}
+                            className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                    </div>
+                    <div className="mb-4 hidden">
+                        <label htmlFor="plano" className="block text-gray-500 text-sm font-bold mb-2">Plano que aplica</label>
+                        <input type="text" id="plano" value={plano} onChange={(e) => setPlano(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                    </div>
+                    <div className="mb-4">
+                        <label htmlFor="imagen" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar imagen</label>
+                        <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                    </div>
+                    <div className="mb-4">
+                        <label htmlFor="imagen" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar imagen</label>
+                        <input onChange={handleImagenChange2} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                    </div>
+
+                    <div className="mb-4">
+                        <label htmlFor="comentario" className="block text-gray-500 text-sm font-bold mb-2">Comentarios</label>
+                        <textarea id="comentario" value={comentario} onChange={(e) => setComentario(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                    </div>
                 </div>
-            </div>
+                {/* Campos de trazabilidad */}
+                <div className="mb-4 hidden">
+                    <label className="block text-gray-700 text-sm font-bold mb-5">Trazabilidad</label>
+                    <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
+                        <div>
+                            <label htmlFor="sector" className="block text-gray-700 text-sm font-bold mb-2">Sector</label>
+                            <input
+                                type="text" id="sector" value={loteInfo?.sectorNombre || ''} onChange={(e) => setSector(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                        </div>
+                        <div>
+                            <label htmlFor="subSector" className="block text-gray-700 text-sm font-bold mb-2">Sub sector</label>
+                            <input type="text" id="subSector" value={loteInfo?.subSectorNombre || ''} onChange={(e) => setSubSector(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                        </div>
+                        <div>
+                            <label htmlFor="parte" className="block text-gray-700 text-sm font-bold mb-2">Parte</label>
+                            <input type="text" id="parte" value={loteInfo?.parteNombre || ''} onChange={(e) => setParte(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                        </div>
+                        <div>
+                            <label htmlFor="elemento" className="block text-gray-700 text-sm font-bold mb-2">Elemento</label>
+                            <input type="text" id="elemento" value={loteInfo?.elementoNombre || ''} onChange={(e) => setElemento(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                        </div>
+                        <div>
+                            <label htmlFor="lote" className="block text-gray-700 text-sm font-bold mb-2">Lote</label>
+                            <input type="text" id="lote" value={loteInfo?.nombre || ''} onChange={(e) => setLote(e.target.value)} className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                        </div>
+                        <div>
+                            <label htmlFor="pkInicial" className="block text-gray-700 text-sm font-bold mb-2">Pk inicial</label>
+                            <input type="text" id="pkInicial" value={loteInfo?.pkInicial || ''} onChange={(e) => setPkInicial(e.target.value)} className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                        </div>
+                        <div>
+                            <label htmlFor="pkFinal" className="block text-gray-700 text-sm font-bold mb-2">Pk final</label>
+                            <input type="text" id="pkFinal" value={loteInfo?.pkFinal || ''} onChange={(e) => setPkFinal(e.target.value)} className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                        </div>
+                    </div>
+                </div>
+                {/* Botones */}
+                <div className='flex gap-5'>
+                    <button type="button" onClick={handleSolicitarConfirmacion} className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center"><FaFilePdf /> Guardar</button>
+                    <button type="button" className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center" onClick={handleCloseModal}>Cancelar </button>
+                </div>
+            </form>
+
+            {
+                mostrarConfirmacion && (
+                    <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-900 bg-opacity-90 text-gray-500 fonmt-medium text-center">
+                        <div className="bg-white p-5 rounded-lg shadow-lg">
+                            <h2 className="font-bold text-lg mb-4">Estás seguro de que quieres guardar los datos?</h2>
+                            <p className='flex items-center gap-2'><span className='font-bold text-amber-500 text-2xl'><IoIosWarning/></span>¿No podras modificarlos posteriormente y se creará el informe</p>
+                            <div className="flex justify-center gap-4 mt-4">
+                                <button
+                                    onClick={handleConfirmarEnvio}
+                                    className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                >
+                                    Confirmar
+                                </button>
+                                <button
+                                    onClick={() => setMostrarConfirmacion(false)}
+                                    className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+
         </div>
     )
 }

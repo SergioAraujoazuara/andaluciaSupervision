@@ -31,6 +31,8 @@ function Trazabilidad() {
     const [elementoInput, setElementoInput] = useState('');
     const [selectedElemento, setSelectedElemento] = useState('');
     const [loteInput, setLoteInput] = useState('');
+    const [pkInicialInput, setPkInicialInput] = useState('');
+    const [pkFinalInput, setPkFinalInput] = useState('');
     const [selectedLote, setSelectedLote] = useState('');
 
     const [objetoLote, setObjetoLote] = useState({})
@@ -435,6 +437,18 @@ function Trazabilidad() {
             // Genera un ID único para el nuevo lote
             const loteId = doc(collection(db, 'lotes')).id;
 
+            // Asume que 'ppi' es tu objeto con toda la información del PPI que quieres guardar
+            const ppiSeleccionado = ppis.find(ppi => ppi.id === selectedPpi);
+
+            // Verifica que ppiSeleccionado no sea undefined antes de proceder
+            if (!ppiSeleccionado) {
+                console.error('PPI seleccionado no encontrado.');
+                setAlerta('Error al encontrar el PPI seleccionado.');
+                setTipoAlerta('error');
+                setMostrarModal(true);
+                return;
+            }
+
             // Encuentra los nombres del sector, subsector, parte y elemento
             let sectorNombre = '', subSectorNombre = '', parteNombre = '', elementoNombre = '';
             const sectorSeleccionado = sectores.find(sector => sector.id === selectedSector);
@@ -465,6 +479,7 @@ function Trazabilidad() {
                 setMostrarModal(true);
                 return;
             }
+            
 
             // Prepara el nuevo lote
             const nuevoLote = {
@@ -479,6 +494,9 @@ function Trazabilidad() {
                 subSectorNombre: subSectorNombre,
                 parteNombre: parteNombre,
                 elementoNombre: elementoNombre,
+                pkInicial: pkInicialInput, // Incluir pkInicial
+                pkFinal: pkFinalInput,
+                totalSubactividades: ppiSeleccionado.totalSubactividades || 0,
             };
 
             // Referencia a la subcolección específica y añade el nuevo lote
@@ -489,18 +507,6 @@ function Trazabilidad() {
             const lotePrincipalRef = doc(db, `lotes/${loteId}`);
             await setDoc(lotePrincipalRef, nuevoLote);
 
-            // Asume que 'ppi' es tu objeto con toda la información del PPI que quieres guardar
-            const ppiSeleccionado = ppis.find(ppi => ppi.id === selectedPpi);
-
-            // Verifica que ppiSeleccionado no sea undefined antes de proceder
-            if (!ppiSeleccionado) {
-                console.error('PPI seleccionado no encontrado.');
-                setAlerta('Error al encontrar el PPI seleccionado.');
-                setTipoAlerta('error');
-                setMostrarModal(true);
-                return;
-            }
-
             // Crear la subcolección 'inspecciones' dentro del lote recién creado
             // y agregar el objeto ppiSeleccionado como documento
             const inspeccionRef = doc(collection(db, `lotes/${loteId}/inspecciones`));
@@ -508,6 +514,8 @@ function Trazabilidad() {
             // Limpia los campos y muestra alerta de éxito
             setLoteInput('');
             setSelectedPpi('');
+            setPkFinalInput('');
+            setPkFinalInput('');
             setAlerta('Lote agregado correctamente con PPI asociado.');
             setTipoAlerta('success');
             setMostrarModal(true);
@@ -1159,7 +1167,7 @@ function Trazabilidad() {
                                         <option key={ppi.id} value={ppi.id}>{ppi.nombre}</option>
                                     ))}
                                 </select>
-                                <div className="flex items-start">
+                                <div className="flex flex-col items-start gap-4">
                                     <input
                                         placeholder='Agregar lote: '
                                         type="text"
@@ -1168,11 +1176,27 @@ function Trazabilidad() {
                                         value={loteInput}
                                         onChange={(e) => setLoteInput(e.target.value)}
                                     />
+                                    <input
+                                        placeholder='Agregar pk inicial: '
+                                        type="text"
+                                        id="pkInicial"
+                                        className='border px-3 py-1 rounded-lg'
+                                        value={pkInicialInput}
+                                        onChange={(e) => setPkInicialInput(e.target.value)}
+                                    />
+                                   <input
+                                        placeholder='Agregar pk final: '
+                                        type="text"
+                                        id="pkFinal"
+                                        className='border px-3 py-1 rounded-lg'
+                                        value={pkFinalInput}
+                                        onChange={(e) => setPkFinalInput(e.target.value)}
+                                    />
                                     <button
                                         onClick={() => agregarLote(selectedElemento)} // Función para agregar lote a elemento seleccionado
-                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                        className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded flex gap-2 items-center"
                                     >
-                                        <IoMdAddCircle />
+                                       Guardar 
                                     </button>
                                 </div>
 

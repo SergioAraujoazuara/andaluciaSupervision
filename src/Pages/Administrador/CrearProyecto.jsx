@@ -18,11 +18,8 @@ function CrearProyecto() {
     const [formValues, setFormValues] = useState({
         codigoTpf: '',
         nombre_corto: '',
-        nombre_completo: '',
-        importe_tpf: '',
-        importe_obra: '',
-        contratista: '',
-        cliente: '',
+        obra: '',
+        tramo: '',
         logoURL: '',
     });
 
@@ -65,11 +62,8 @@ function CrearProyecto() {
                     uid: formValues.nombre_corto,  // Asignar el ID automático como el valor del campo 'uid'
                     codigoTpf: formValues.codigoTpf,
                     nombre_corto: formValues.nombre_corto.toLowerCase(),
-                    nombre_completo: formValues.nombre_completo,
-                    importe_tpf: formValues.importe_tpf,
-                    importe_obra: formValues.importe_obra,
-                    contratista: formValues.contratista,
-                    cliente: formValues.cliente,
+                    obra: formValues.obra,
+                    tramo: formValues.tramo,
                     logoURL: logoURL,
                     logoBase64: base64String, // Agregar la cadena base64 al objeto
                 };
@@ -97,11 +91,8 @@ function CrearProyecto() {
             const projectData = {
                 codigoTpf: formValues.codigoTpf,
                 nombre_corto: formValues.nombre_corto.toLowerCase(),
-                nombre_completo: formValues.nombre_completo,
-                importe_tpf: formValues.importe_tpf,
-                importe_obra: formValues.importe_obra,
-                contratista: formValues.contratista,
-                cliente: formValues.cliente,
+                obra: formValues.obra,
+                tramo: formValues.tramo,
                 logo: formValues.logoURL,
                 logoBase64: formValues.logoBase64,
             };
@@ -203,11 +194,11 @@ function CrearProyecto() {
                         </div>
 
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-600">Nombre Completo </label>
+                            <label className="block text-sm font-medium text-gray-600">Obra </label>
                             <input
                                 type="text"
-                                name="nombre_completo"
-                                value={formValues.nombre_completo}
+                                name="obra"
+                                value={formValues.obra}
                                 onChange={handleChange}
                                 className="mt-1 p-2 w-full border rounded-md"
 
@@ -215,52 +206,18 @@ function CrearProyecto() {
                         </div>
 
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-600">Importe TPF </label>
+                            <label className="block text-sm font-medium text-gray-600">Tramo </label>
                             <input
                                 type="text"
-                                name="importe_tpf"
-                                value={formValues.importe_tpf}
+                                name="tramo"
+                                value={formValues.tramo}
                                 onChange={handleChange}
                                 className="mt-1 p-2 w-full border rounded-md"
 
                             />
                         </div>
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-600">Importe Obra</label>
-                            <input
-                                type="text"
-                                name="importe_obra"
-                                value={formValues.importe_obra}
-                                onChange={handleChange}
-                                className="mt-1 p-2 w-full border rounded-md"
-
-                            />
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-600">Contratista </label>
-                            <input
-                                type="text"
-                                name="contratista"
-                                value={formValues.contratista}
-                                onChange={handleChange}
-                                className="mt-1 p-2 w-full border rounded-md"
-
-                            />
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-600">Clientes </label>
-                            <input
-                                type="text"
-                                name="cliente"
-                                value={formValues.cliente}
-                                onChange={handleChange}
-                                className="mt-1 p-2 w-full border rounded-md"
-
-                            />
-                        </div>
+                        
 
                    
 

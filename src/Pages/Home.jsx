@@ -12,11 +12,13 @@ import { Link } from 'react-router-dom';
 function Home() {
   const [proyectos, setProyectos] = useState([])
 
-  
+
 
   const obtenerProyecto = (p) => {
     localStorage.setItem('nombre_proyecto', p.nombre_corto)
     localStorage.setItem('logo_proyecto', p.logo)
+    localStorage.setItem('tramo', p.tramo)
+    localStorage.setItem('obra', p.obra)
   }
   const nombre_proyectoStorage = ''
 
@@ -39,6 +41,8 @@ function Home() {
 
     obtenerProyectos();
   }, []);
+
+ 
   return (
     <div className='min-h-screen px-14 py-5 text-gray-500'>
 
@@ -47,7 +51,7 @@ function Home() {
         <Link to={'/'}>
           <h1 className='font-medium text-gray-500 text-amber-600'>Inicio</h1>
         </Link>
-        
+
       </div>
 
 
@@ -59,16 +63,17 @@ function Home() {
         <div class="w-full rounded rounded-xl">
           <div className='grid sm:grid-cols-8 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-100 rounded rounded-md '>
             <div className='text-left ps-2 font-medium text-gray-600 sm:block hidden'>Logo</div>
-            <div className='sm:col-span-2 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Nombre</div>
-            <div className='sm:col-span-2 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Contrato</div>
-            <div className='sm:col-span-2 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Ubicación</div>
+            <div className='sm:col-span-2 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Proyecto</div>
+            <div className='sm:col-span-2 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Tramo</div>
+            <div className='sm:col-span-2 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Obra</div>
           </div>
 
 
 
           {proyectos.map((p, i) => (
-            <Link to={`/elemento/${p.id}`} onClick={() => obtenerProyecto(p)}>
-              <div className='cursor-pointer grid sm:grid-cols-8 grid-cols-1 items-center justify-start sm:p-5 border-b-2'>
+            <Link to={`/elemento/${p.id}`} onClick={() => {obtenerProyecto(p)}}
+            >
+              <div key={i} className='cursor-pointer grid sm:grid-cols-8 grid-cols-1 items-center justify-start sm:p-5 border-b-2'>
                 <div className='sm:border-r-2 sm:border-b-0 flex items-center'>
                   <img className='sm:max-w-20 sm:max-h-12 max-w-32' src={p.logo} alt="" />
                 </div>
@@ -78,11 +83,11 @@ function Home() {
                 </div>
 
                 <div className='sm:col-span-2 sm:border-r-2 sm:border-b-0 h-10 flex items-center sm:justify-start sm:ps-10 font-medium text-gray-600'>
-                  {p.codigoTpf}
+                  {p.tramo}
                 </div>
 
                 <div className='sm:col-span-2 h-10 flex items-center sm:justify-start sm:ps-10 font-medium text-gray-600'>
-                  {p.nombre_completo}
+                  {p.obra}
 
                 </div>
 
