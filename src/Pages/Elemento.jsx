@@ -10,7 +10,7 @@ function Elemento() {
 
     const [lotes, setLotes] = useState([]);
     const [ppiNombre, setPpiNombre] = useState([]);
-    
+
 
     // Llamar elementos de la base de datos
     useEffect(() => {
@@ -34,7 +34,7 @@ function Elemento() {
         }
     };
 
-   
+
 
 
     const handleCaptrurarTrazabilidad = (l) => {
@@ -71,7 +71,9 @@ function Elemento() {
                 <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
 
 
-
+                    <div className='px-4 py-2 bg-sky-500 text-white rounded-lg '>
+                        <button>Visor BIM</button>
+                    </div>
 
                     <div class="w-full rounded rounded-xl">
                         <div className='grid sm:grid-cols-6 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded rounded-md '>
@@ -110,22 +112,22 @@ function Elemento() {
                                         <p className='text-sky-600 font-medium'>Ppi: {l.ppiNombre}</p>
                                     </div>
 
-                                    <div className=' h-10 flex items-center sm:justify-start  sm:ps-10'>
-                                    {l.actividadesAptas || 'Sin asignar'}/{l.totalSubactividades || 'Sin asignar'}
-  {l.totalSubactividades ? ` (${((l.actividadesAptas / l.totalSubactividades) * 100).toFixed(2)}%)` : ''}
-  <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '100%' }}>
-  <div 
-    style={{ 
-      background: 'green', 
-      height: '100%', 
-      borderRadius: '8px',
-      width: `${l.totalSubactividades ? ((l.actividadesAptas / l.totalSubactividades) * 100) : 0}%`
-    }} 
-  />
-</div>
+                                    <div className=' h-10 flex items-center sm:justify-start gap-5  sm:ps-10'>
+                                        {l.actividadesAptas || '0'}/{l.totalSubactividades || '0'}
+                                        {l.totalSubactividades ? ` (${((l.actividadesAptas / l.totalSubactividades) * 100).toFixed(2)}%)` : ''}
+                                        <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '40%' }}>
+                                            <div
+                                                style={{
+                                                    background: '#0284c7',
+                                                    height: '100%',
+                                                    borderRadius: '8px',
+                                                    width: `${l.totalSubactividades ? ((l.actividadesAptas / l.totalSubactividades) * 100) : 0}%`
+                                                }}
+                                            />
+                                        </div>
 
                                     </div>
-             
+
 
 
                                 </div>

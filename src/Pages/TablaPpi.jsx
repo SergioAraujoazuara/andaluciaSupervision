@@ -377,7 +377,7 @@ function TablaPpi() {
                             <div className="col-span-3 text-center">Comentarios</div>
                             {/* <div className="col-span-2 text-center">Estatus</div> */}
                             <div className="col-span-1 text-center">Inspección</div>
-                            <div className="col-span-2 text-center">Resultado</div>
+                            <div className="col-span-2 text-center">Estado</div>
 
                         </div>
 
