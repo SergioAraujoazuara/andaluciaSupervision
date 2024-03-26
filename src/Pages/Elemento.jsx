@@ -72,7 +72,10 @@ function Elemento() {
 
 
                     <div className='px-4 py-2 bg-sky-500 text-white rounded-lg '>
+                        <Link to={'/bim'}>
                         <button>Visor BIM</button>
+                        </Link>
+                        
                     </div>
 
                     <div class="w-full rounded rounded-xl">

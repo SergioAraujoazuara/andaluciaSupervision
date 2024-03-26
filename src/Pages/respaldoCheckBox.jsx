@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase_config';
-import { getDoc, getDocs, query, collection, where, doc, updateDoc, increment, addDoc } from 'firebase/firestore';
+import { getDoc, getDocs, query, collection, where, doc, updateDoc, increment } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 import { FaArrowRight } from "react-icons/fa";
 import { BsClipboardCheck } from "react-icons/bs";
@@ -9,17 +9,9 @@ import { IoCloseCircle } from "react-icons/io5";
 import { IoWarningOutline } from "react-icons/io5";
 import { PiWarningCircleLight } from "react-icons/pi";
 import { IoMdAddCircle } from "react-icons/io";
-import { SiReacthookform } from "react-icons/si";
-import { FaFilePdf } from "react-icons/fa6";
-import { FaQuestionCircle } from "react-icons/fa";
-import { FaCheckCircle } from "react-icons/fa";
 import FormularioInspeccion from '../Components/FormularioInspeccion'
 
 function TablaPpi() {
-    const [nombreProyecto, setNombreProyecto] = useState(localStorage.getItem('nombre_proyecto') || '');
-    const [obra, setObra] = useState(localStorage.getItem('obra'));
-    const [tramo, setTramo] = useState(localStorage.getItem('tramo'));
-    const [observaciones, setObservaciones] = useState('');
     const { idLote } = useParams();
     const navigate = useNavigate();
     const [ppi, setPpi] = useState(null);
@@ -111,7 +103,6 @@ function TablaPpi() {
     const handleCloseModal = () => {
         setModal(false)
         setModalFormulario(false)
-        setFormulario(false)
 
     };
 
@@ -256,7 +247,7 @@ function TablaPpi() {
         let subactividadSeleccionada = nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex];
 
         // Actualiza los campos con los datos necesarios
-        subactividadSeleccionada.formularioEnviado = formulario;
+        subactividadSeleccionada.formularioEnviado = true;
         subactividadSeleccionada.idRegistroFormulario = idRegistroFormulario;
         subactividadSeleccionada.resultadoInspeccion = resultadoInspeccion;
         subactividadSeleccionada.fecha = fechaHoraActual;
@@ -347,197 +338,11 @@ function TablaPpi() {
         }
     };
 
+    const [modalPdf, setModalPdf] = useState(false)
 
+    const [mostrarFormularioInspeccion, setMostrarFormularioInspeccion] = useState(false);
 
-    const [modalInforme, setModalInforme] = useState(false)
-    const [modalConfirmacionInforme, setModalConfirmacionInforme] = useState(false)
-
-    const confirmarInforme = () => {
-        setModalInforme(true)
-        handleCloseModal()
-    }
-
-    const closeModalConfirmacion = () => {
-        setModalInforme(false)
-        setFormulario(false)
-    }
-
-    const confirmarModalInforme = () => {
-        setModalConfirmacionInforme(true)
-        handleCloseModal()
-        setModalInforme(false)
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-    const [loteInfo, setLoteInfo] = useState(null); // Estado para almacenar los datos del PPI
-    const [sectorInfoLote, setSectorInfoLote] = useState(null); // Estado para almacenar los datos del PPI
-    useEffect(() => {
-        const obtenerLotePorId = async () => {
-            console.log('**********', idLote)
-            if (!idLote) return; // Verifica si idLote está presente
-
-            try {
-                const docRef = doc(db, "lotes", idLote); // Crea una referencia al documento usando el id
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    console.log("Datos del lote:", docSnap.data());
-                    setLoteInfo({ id: docSnap.id, ...docSnap.data() });
-                    console.log({ id: docSnap.id, ...docSnap.data() });
-                } else {
-                    console.log("No se encontró el lote con el ID:", idLote);
-
-                }
-            } catch (error) {
-                console.error("Error al obtener el lote:", error);
-
-            }
-        };
-
-        obtenerLotePorId();
-    }, [idLote]);
-
-    const [formulario, setFormulario] = useState(false)
-
-    const crearVariableFormularioTrue = () => {
-        setFormulario(true)
-    }
-
-    const enviarDatosARegistros = async () => {
-        // Descomponer currentSubactividadId para obtener los índices
-        const [, actividadIndex, subactividadIndex] = currentSubactividadId.split('-').map(Number);
-
-        // Acceder a la subactividad seleccionada
-        const subactividadSeleccionada = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
-
-        // Objeto que representa los datos del formulario
-        const datosFormulario = {
-            nombreProyecto,
-            fechaHoraActual: fechaHoraActual,
-            obra: obra,
-            tramo: tramo,
-            ppiNombre: loteInfo.ppiNombre,
-            observaciones: observaciones,
-            comentario: comentario,
-            sector: loteInfo.sectorNombre,
-            subSector: loteInfo.subSectorNombre,
-            parte: loteInfo.parteNombre,
-            elemento: loteInfo.elementoNombre,
-            lote: loteInfo.nombre,
-            firma: firma,
-            pkInicial: loteInfo.pkInicial,
-            pkFinal: loteInfo.pkFinal,
-            nombreResponsable: nombreResponsable,
-            subactividadNombre: subactividadSeleccionada.nombre, // Nombre de la subactividad seleccionada
-            versionSubactividad: subactividadSeleccionada.version,
-            numeroSubactividad: subactividadSeleccionada.numero,
-            formulario: formulario
-        };
-
-        try {
-            // Referencia a la colección 'registros' en Firestore
-
-            const coleccionRegistros = collection(db, "registros");
-            const docRef = await addDoc(coleccionRegistros, datosFormulario);
-            setMensajeExitoInspeccion('Inspección completada con éxito')
-
-            // Opcionalmente, cierra el modal o limpia el formulario aquí
-            setModalFormulario(false);
-            setResultadoInspeccion('')
-            setObservaciones('')
-            console.log("Documento escrito con ID: ", docRef.id);
-            return docRef.id; // Devolver el ID del documento creado
-
-
-        } catch (e) {
-            console.error("Error al añadir documento: ", e);
-        }
-    };
-
-    const handleConfirmarEnvio = async () => {
-        // Aquí llamarías a la función que realmente envía los datos del formulario
-        await handelEnviarFormulario();
-        setMostrarConfirmacion(false);
-        setModalInforme(false);
-
-        // Esperar un poco antes de mostrar el modal de éxito para asegurar que los modales anteriores se han cerrado
-        setTimeout(() => {
-            setModalExito(true);
-            setFormulario(false)
-        }, 300); // Ajusta el tiempo según sea necesario
-    };
-
-    const handleConfirmarEnvioPdf = async () => {
-        // Aquí llamarías a la función que realmente envía los datos del formulario
-        setMostrarConfirmacion(false);
-        setModalFormulario(false);
-        setModalConfirmacionInforme(false)
-
-
-
-
-        // Esperar un poco antes de mostrar el modal de éxito para asegurar que los modales anteriores se han cerrado
-        setTimeout(() => {
-            setModalExito(true);
-            setFormulario(false)
-        }, 300); // Ajusta el tiempo según sea necesario
-    };
-
-
-
-
-
-
-    const handelEnviarFormulario = async () => {
-        const idRegistroFormulario = await enviarDatosARegistros();
-        if (idRegistroFormulario) {
-            await marcarFormularioComoEnviado(idRegistroFormulario, resultadoInspeccion);
-
-        }
-    };
-
-    const [mensajeExitoInspeccion, setMensajeExitoInspeccion] = useState('')
-    const [modalExito, setModalExito] = useState(false)
-
-    const [documentoFormulario, setDocumentoFormulario] = useState(null)
-
-
-    const handleMostrarIdRegistro = async (subactividadId) => {
-        const [actividadIndex, subactividadIndex] = subactividadId.split('-').slice(1).map(Number);
-        const subactividadSeleccionada = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
-        const idRegistroFormulario = subactividadSeleccionada.idRegistroFormulario;
-        
-        // Asegúrate de que existe un id antes de intentar recuperar el documento
-        if (idRegistroFormulario) {
-            try {
-                // Obtener la referencia del documento en la colección de registros
-                const docRef = doc(db, "registros", idRegistroFormulario);
-                const docSnap = await getDoc(docRef);
-    
-                if (docSnap.exists()) {
-                    setDocumentoFormulario(docSnap.data())
-                    console.log("Datos del documento:", docSnap.data());
-                } else {
-                    console.log("No se encontró el documento con el ID:", idRegistroFormulario);
-                }
-            } catch (error) {
-                console.error("Error al obtener el documento:", error);
-            }
-        } else {
-            console.log("No se proporcionó un idRegistroFormulario válido.");
-        }
-    };
-    
+    const [generarInforme, setGenerarInforme] = useState("no");
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500 text-sm'>
             <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
@@ -574,8 +379,7 @@ function TablaPpi() {
                             <div className="col-span-3 text-center">Comentarios</div>
                             {/* <div className="col-span-2 text-center">Estatus</div> */}
                             {/* <div className="col-span-1 text-center">Inspección</div> */}
-                            <div className="col-span-2 text-center">Estado</div>
-                            <div className="col-span-1 text-center">Informe</div>
+                            <div className="col-span-3 text-center">Estado</div>
 
                         </div>
 
@@ -675,50 +479,36 @@ function TablaPpi() {
                                         </div> */}
 
 
-                                        <div className="col-span-2 px-5 py-5 bg-white flex justify-center cursor-pointer" >
-                                            {subactividad.resultadoInspeccion ? (
+                                        <div className="col-span-3 px-5 py-5 bg-white flex justify-center cursor-pointer" onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}>
+                                            {subactividad.formularioEnviado ? (
                                                 subactividad.resultadoInspeccion === "Apto" ? (
                                                     <span
 
-                                                        className="w-full font-bold text-lg p-2 rounded  text-center text-green-500 cursor-pointer">
+                                                        className="w-full font-bold text-medium p-2 rounded  text-center text-teal-600 cursor-pointer">
                                                         Apto
 
                                                     </span>
                                                 ) : subactividad.resultadoInspeccion === "No apto" ? (
                                                     <span
 
-                                                        className="w-full font-bold text-lg p-2 rounded w-full text-center text-red-600 cursor-pointer">
+                                                        className="w-full font-bold text-medium p-2 rounded w-full text-center text-red-600 cursor-pointer">
                                                         No apto
                                                     </span>
                                                 ) : (
                                                     <span
-                                                        onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
+
                                                         className="w-full font-bold text-medium text-3xl p-2 rounded  w-full flex justify-center cursor-pointer">
                                                         <IoMdAddCircle />
                                                     </span>
                                                 )
                                             ) : (
                                                 <span
-                                                    onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
+
                                                     className="w-full font-bold text-medium text-3xl p-2 rounded  w-full flex justify-center cursor-pointer">
                                                     <IoMdAddCircle />
                                                 </span>
                                             )}
                                         </div>
-
-                                        <div className="col-span-1 px-2 py-5 bg-white flex justify-start cursor-pointer" >
-                                            {subactividad.formularioEnviado ? (
-
-                                                <p
-                                                onClick={() => handleMostrarIdRegistro(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                className='text-2xl'><FaFilePdf /></p>
-                                            ) : null}
-                                        </div>
-
-                                        <div className="col-span-1 px-2 py-5 bg-white flex justify-center cursor-pointer" onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}>
-
-                                        </div>
-
 
 
 
@@ -730,86 +520,13 @@ function TablaPpi() {
                 </div>
             </div>
 
-            {/* {modal && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
-                    <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
-
-                    <div className="mx-auto w-[700px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
-                    >
-                        <button onClick={handleCloseModal} className="text-3xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
-
-
-
-                        <h2 className='font-medium text-xl my-4'>¿Quieres guardar y firmar la inspeccin</h2>
-                        <p className='font-normal my-4 flex items-center gap-2'>
-                            <p className='text-red-600 text-lg'><IoWarningOutline /></p>
-                            Al guardar el resultado de la inspección<strong className='font-medium'>no se puede modificar</strong></p> */}
-
-            {/* <div className='mt-5 flex flex-col gap-2'>
-                            <div>
-                                <input
-                                    type="radio"
-                                    id="apto"
-                                    value="Apto"
-                                    name="evaluacion"
-                                    checked={tempSeleccion === "Apto"}
-                                    onChange={() => setTempSeleccion("Apto")}
-                                />
-                                <label htmlFor="apto" className="ml-2">Apto</label>
-                            </div>
-                            <div>
-                                <input
-                                    type="radio"
-                                    id="noApto"
-                                    value="No apto"
-                                    name="evaluacion"
-                                    checked={tempSeleccion === "No apto"}
-                                    onChange={() => setTempSeleccion("No apto")}
-                                />
-                                <label htmlFor="noApto" className="ml-2">No apto</label>
-                            </div>
-                        </div> */}
-
-
-
-            {/* 
-                        {mostrarConfirmacion ? (
-                            <div className='flex-col mt-6'>
-                                {/* Mensaje de confirmación */}
-
-            {/* <div className='flex flex-row items-center gap-2'>
-                                    <p className='text-red-600 text-lg'><PiWarningCircleLight /></p>
-                                    <p className='my-4'>¿Estás seguro de que quieres guardar esta selección?</p>
-                                </div>
-                                <div className='flex gap-5'>
-                                    <button onClick={handleConfirmarGuardar} className='bg-sky-600 px-6 py-2 text-white font-medium rounded-lg shadow-md'>Confirmar</button>
-                                    <button onClick={() => {
-                                        setMostrarConfirmacion(false);
-                                        handleCloseModal()
-                                    }} className='bg-gray-500 px-4 py-2 text-white font-medium rounded-lg shadow-md'>Cancelar</button>
-                                </div>
-
-                            </div>
-                        ) : (
-                            <div className='mt-6'>
-                                <div className='flex gap-5'>
-                                    <button onClick={handleGuardarTemporal} className='bg-sky-600 px-6 py-2 text-white font-medium rounded-lg shadow-md'>Guardar</button>
-                                    <button onClick={handleCloseModal} className='bg-gray-500 px-4 py-2 text-white font-medium rounded-lg shadow-md '>Cancelar</button>
-
-                                </div>
-
-                            </div>
-                        )} */}
-
-            {/* //         </div> */}
-
 
 
             {modalFormulario && (
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
-                    <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
+                    <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
 
-                    <div className="mx-auto w-[700px] h-[400px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
+                    <div className="mx-auto w-[900px] h-[400px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
                     >
                         <button
                             onClick={handleCloseModal}
@@ -818,8 +535,8 @@ function TablaPpi() {
                         </button>
 
                         <div className="my-6">
-                            <label htmlFor="resultadoInspeccion" className="block text-xl font-bold text-gray-500 mb-4 flex items-center gap-2 mb-2">
-                                <SiReacthookform /> Resultado de la inspección:
+                            <label htmlFor="resultadoInspeccion" className="block text-xl font-bold text-gray-500 mb-4">
+                                Resultado de la inspección:
                             </label>
                             <select
                                 id="resultadoInspeccion"
@@ -834,57 +551,61 @@ function TablaPpi() {
                         </div>
 
                         <div className="mb-4">
-                            <label htmlFor="comentario" className="block text-gray-500 text-sm font-bold mb-2">Comentarios</label>
+                            <label htmlFor="comentario" className="block text-gray-500 text-sm font-bold mb-2">Comentarios inspección</label>
                             <textarea id="comentario" value={comentario} onChange={(e) => setComentario(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
                         </div>
 
 
-
-
-
-                        <div className='flex gap-5 mt-8'>
-                            <button className='bg-sky-600 hover:bg-sky-700 px-4 py-2 text-white font-medium rounded-lg shadow-md' onClick={confirmarInforme}>Guardar</button>
-                            <button className='bg-gray-500 hover:bg-gray-600 px-4 py-2 text-white font-medium rounded-lg shadow-md' onClick={handleCloseModal}>Cancelar</button>
+                        <div className='flex items-center gap-5'>
+                            <span>¿Generar un informe Pdf?</span>
+                            <div>
+                                <label>
+                                    <input
+                                        type="radio"
+                                        name="generarInforme"
+                                        value="si"
+                                        checked={generarInforme === "si"}
+                                        onChange={(e) => setGenerarInforme(e.target.value)}
+                                    />
+                                    Sí
+                                </label>
+                                <label>
+                                    <input
+                                        type="radio"
+                                        name="generarInforme"
+                                        value="no"
+                                        checked={generarInforme === "no"}
+                                        onChange={(e) => setGenerarInforme(e.target.value)}
+                                    />
+                                    No
+                                </label>
+                            </div>
                         </div>
 
 
+                        {generarInforme === "si" && (
+                            <FormularioInspeccion
+                                setModalFormulario={setModalFormulario}
+                                modalFormulario={modalFormulario}
+                                currentSubactividadId={currentSubactividadId}
+                                ppiSelected={ppi}
+                                marcarFormularioComoEnviado={marcarFormularioComoEnviado}
+                                actualizarFormularioEnFirestore={actualizarFormularioEnFirestore}
+                                resultadoInspeccion={resultadoInspeccion}
+                                comentario={comentario}
+                                firma={firma}
+
+                                fechaHoraActual={fechaHoraActual}
+                                handleCloseModal={handleCloseModal}
+                                ppiNombre={ppiNombre}
+                                nombreResponsable={nombreResponsable}
+
+                                setResultadoInspeccion={setResultadoInspeccion}
+
+                            />
+                        )}
 
 
-
-                    </div>
-
-                </div>
-            )}
-
-            {modalInforme && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
-                    <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
-
-                    <div className="mx-auto w-[700px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
-                    >
-                        <button
-                            onClick={closeModalConfirmacion}
-                            className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300 mb-5">
-                            <IoCloseCircle />
-                        </button>
-
-                        <p className='text-xl font-medium flex gap-2 mb-10 items-center'><p className='text-2xl'><FaQuestionCircle /></p> ¿Quieres generar un informe en Pdf?</p>
-
-
-                        <div className='flex items-center gap-5 mt-5'>
-                            <button className='bg-sky-600 hover:bg-sky-700 px-4 py-3 rounded-md shadow-md text-white font-medium flex gap-2 items-center'
-                                onClick={() => {
-                                    confirmarModalInforme()
-                                    crearVariableFormularioTrue()
-                                }}><p className='text-xl'><FaFilePdf /></p>Si, generar informe</button>
-                            <button
-                                onClick={handleConfirmarEnvio}
-                                className="bg-gray-500 hover:bg-gray-600 text-white rounded-md shadow-md font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline"
-                            >
-                                No, realizar únicamente la inspección
-                            </button>
-
-                        </div>
 
 
 
@@ -895,79 +616,7 @@ function TablaPpi() {
                 </div>
             )}
 
-            {modalConfirmacionInforme && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
-                    <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
-
-                    <div className="mx-auto w-[700px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
-                    >
-                        <button
-                            onClick={() => setModalConfirmacionInforme(false)}
-                            className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300">
-                            <IoCloseCircle />
-                        </button>
-
-                        <FormularioInspeccion
-                            setModalFormulario={setModalFormulario}
-                            modalFormulario={modalFormulario}
-                            currentSubactividadId={currentSubactividadId}
-                            ppiSelected={ppi}
-                            marcarFormularioComoEnviado={marcarFormularioComoEnviado}
-                            actualizarFormularioEnFirestore={actualizarFormularioEnFirestore}
-                            resultadoInspeccion={resultadoInspeccion}
-                            comentario={comentario}
-                            firma={firma}
-
-                            fechaHoraActual={fechaHoraActual}
-                            handleCloseModal={handleCloseModal}
-                            ppiNombre={ppiNombre}
-                            nombreResponsable={nombreResponsable}
-
-                            setResultadoInspeccion={setResultadoInspeccion}
-
-
-                            setModalConfirmacionInforme={setModalConfirmacionInforme}
-
-                            handleConfirmarEnvioPdf={handleConfirmarEnvioPdf}
-                            setMensajeExitoInspeccion={setMensajeExitoInspeccion}
-
-                        />
-
-
-
-
-
-                    </div>
-
-                </div>
-            )}
-
-            {modalExito && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
-                    <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
-
-                    <div className="mx-auto w-[400px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8 text-center flex flex-col gap-5 items-center"
-                    >
-                        <button
-                            onClick={() => setModalExito(false)}
-                            className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300">
-                            <IoCloseCircle />
-                        </button>
-
-                        <p className='text-teal-500 font-bold text-5xl'><FaCheckCircle /></p>
-
-                        <p className='text-xl font-bold'>{mensajeExitoInspeccion}</p>
-
-
-
-                    </div>
-
-                </div>
-            )}
-
-
-
-
+            
 
 
         </div>
@@ -977,6 +626,3 @@ function TablaPpi() {
 }
 
 export default TablaPpi;
-
-
-

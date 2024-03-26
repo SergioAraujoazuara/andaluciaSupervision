@@ -9,7 +9,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { db } from '../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 
-function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion }) {
+function RecuperarPdf({documentoFormulario}) {
 
     const { id } = useParams()
     const { idLote } = useParams()
@@ -98,95 +98,8 @@ function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion
 
 
 
-    const handleImagenChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setImagen(reader.result);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
 
-    const handleImagenChange2 = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setImagen2(reader.result);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-
-    const enviarDatosARegistros = async () => {
-        // Objeto que representa los datos del formulario
-        const datosFormulario = {
-            nombreProyecto,
-            fechaHoraActual: fechaHoraActual,
-            obra: obra,
-            tramo: tramo,
-            ppiNombre: loteInfo.ppiNombre,
-            observaciones: observaciones,
-            comentario: comentario,
-            sector: loteInfo.sectorNombre,
-            subSector: loteInfo.subSectorNombre,
-            parte: loteInfo.parteNombre,
-            elemento: loteInfo.elementoNombre,
-            lote: loteInfo.nombre,
-            firma: firma,
-            pkInicial: loteInfo.pkInicial,
-            pkFinal: loteInfo.pkFinal,
-            nombreResponsable: nombreResponsable
-        };
-
-        try {
-            // Referencia a la colección 'registros' en Firestore
-
-            const coleccionRegistros = collection(db, "registros");
-            const docRef = await addDoc(coleccionRegistros, datosFormulario);
-            // Opcionalmente, cierra el modal o limpia el formulario aquí
-            setModalFormulario(false);
-            setResultadoInspeccion('')
-            setObservaciones('')
-            setMensajeExitoInspeccion('Inspección completada con éxito')
-            console.log("Documento escrito con ID: ", docRef.id);
-            return docRef.id; // Devolver el ID del documento creado
-
-
-        } catch (e) {
-            console.error("Error al añadir documento: ", e);
-        }
-    };
-
-    const handleConfirmarEnvio = async () => {
-        // Aquí llamarías a la función que realmente envía los datos del formulario
-        await handelEnviarFormulario();
-        setMostrarConfirmacion(false); // Ocultar el modal de confirmación después de enviar los datos
-    };
-
-    const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
-
-
-    const handelEnviarFormulario = async () => {
-        const idRegistroFormulario = await enviarDatosARegistros();
-        if (idRegistroFormulario) {
-            await marcarFormularioComoEnviado(idRegistroFormulario, resultadoInspeccion);
-            generatePDF(firma, fechaHoraActual, nombreResponsable);
-            handleConfirmarEnvioPdf() // Si también deseas generar el PDF tras enviar el formulario
-        }
-    };
-
-
-    const handleSolicitarConfirmacion = () => {
-        setMostrarConfirmacion(true);
-    };
-
-
-
-
+   
     const generatePDF = () => {
         const doc = new jsPDF();
 
@@ -576,4 +489,4 @@ function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion
     )
 }
 
-export default FormularioInspeccion;
+export default RecuperarPdf;

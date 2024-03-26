@@ -5,6 +5,7 @@ import { collection, getDocs, deleteDoc } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 
 import { Link } from 'react-router-dom';
+import Viewer from '../Viewer';
 
 
 
@@ -98,6 +99,8 @@ function Home() {
 
 
         </div>
+
+        
 
       </div>
 

@@ -22,6 +22,7 @@ import Trazabilidad from './Pages/Administrador/Trazabilidad'
 import AgregarPPi from './Pages/Administrador/AgregarPPi'
 import VerPpis from './Pages/Administrador/VerPpis'
 import EditarPpi from './Pages/Administrador/EditarPpi'
+import Bim from './Bim'
 
 function App() {
 
@@ -39,6 +40,7 @@ function App() {
       <Route path='/trazabilidad/:id' element={<Trazabilidad/>}></Route>
       <Route path='/verPPis' element={<VerPpis/>}></Route>
       <Route path='/agregarPpi' element={<AgregarPPi/>}></Route>
+      <Route path='/bim' element={<Bim/>}></Route>
 
       <Route path='/contacto' element={<Contacto/>}></Route>
       <Route path='/modulos' element={<Modulos/>}></Route>
