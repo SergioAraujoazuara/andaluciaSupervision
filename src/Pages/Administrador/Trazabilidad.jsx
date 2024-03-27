@@ -34,6 +34,8 @@ function Trazabilidad() {
     const [pkInicialInput, setPkInicialInput] = useState('');
     const [pkFinalInput, setPkFinalInput] = useState('');
     const [selectedLote, setSelectedLote] = useState('');
+    const [idBimInput, setIdBimInput] = useState('');
+
 
     const [objetoLote, setObjetoLote] = useState({})
 
@@ -479,7 +481,7 @@ function Trazabilidad() {
                 setMostrarModal(true);
                 return;
             }
-            
+
 
             // Prepara el nuevo lote
             const nuevoLote = {
@@ -496,6 +498,7 @@ function Trazabilidad() {
                 elementoNombre: elementoNombre,
                 pkInicial: pkInicialInput, // Incluir pkInicial
                 pkFinal: pkFinalInput,
+                idBim: idBimInput,
                 totalSubactividades: ppiSeleccionado.totalSubactividades || 0,
             };
 
@@ -516,6 +519,7 @@ function Trazabilidad() {
             setSelectedPpi('');
             setPkFinalInput('');
             setPkFinalInput('');
+            setIdBimInput('');
             setAlerta('Lote agregado correctamente con PPI asociado.');
             setTipoAlerta('success');
             setMostrarModal(true);
@@ -523,7 +527,7 @@ function Trazabilidad() {
             function estimatedDocumentSize(obj) {
                 const stringSize = (s) => new Blob([s]).size;
                 let size = 0;
-            
+
                 const recurse = (obj) => {
                     if (obj !== null && typeof obj === 'object') {
                         Object.entries(obj).forEach(([key, value]) => {
@@ -542,13 +546,13 @@ function Trazabilidad() {
                         size += stringSize(obj);
                     }
                 };
-            
+
                 recurse(obj);
-            
+
                 return size;
             }
-            
-        
+
+
             console.log('Tamaño estimado del documento:', estimatedDocumentSize(ppiSeleccionado), 'bytes');
 
             // Actualización del estado para incluir el nuevo lote sin necesidad de recargar
@@ -594,8 +598,8 @@ function Trazabilidad() {
         }
     };
 
-   
-    
+
+
 
 
 
@@ -1184,7 +1188,7 @@ function Trazabilidad() {
                                         value={pkInicialInput}
                                         onChange={(e) => setPkInicialInput(e.target.value)}
                                     />
-                                   <input
+                                    <input
                                         placeholder='Agregar pk final: '
                                         type="text"
                                         id="pkFinal"
@@ -1192,11 +1196,21 @@ function Trazabilidad() {
                                         value={pkFinalInput}
                                         onChange={(e) => setPkFinalInput(e.target.value)}
                                     />
+                                    <div className="flex items-center">
+                                        <input
+                                            placeholder='ID BIM'
+                                            type="text"
+                                            className='border px-3 py-1 rounded-lg'
+                                            value={idBimInput}
+                                            onChange={(e) => setIdBimInput(e.target.value)}
+                                        />
+                                    </div>
+
                                     <button
                                         onClick={() => agregarLote(selectedElemento)} // Función para agregar lote a elemento seleccionado
                                         className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded flex gap-2 items-center"
                                     >
-                                       Guardar 
+                                        Guardar
                                     </button>
                                 </div>
 

@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { GoHomeFill } from "react-icons/go";
-import { Link, useParams } from 'react-router-dom';
-import { FaArrowRight, FaFilePdf } from "react-icons/fa";
+import { useParams } from 'react-router-dom';
+import { FaFilePdf } from "react-icons/fa";
 import jsPDF from 'jspdf';
 import logo from '../assets/tpf_logo_azul.png'
 import { IoIosWarning } from "react-icons/io";
-import { IoCloseCircle } from "react-icons/io5";
+import imageCompression from 'browser-image-compression';
 import { db } from '../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 
-function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion }) {
+function FormularioInspeccion({ handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion }) {
 
     const { id } = useParams()
     const { idLote } = useParams()
@@ -70,6 +69,9 @@ function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion
 
     const [loteInfo, setLoteInfo] = useState(null); // Estado para almacenar los datos del PPI
     const [sectorInfoLote, setSectorInfoLote] = useState(null); // Estado para almacenar los datos del PPI
+    const [idRegistro, setIdRegistro] = useState(''); // Estado para almacenar los datos del PPI
+
+
     useEffect(() => {
         const obtenerLotePorId = async () => {
             console.log('**********', idLote)
@@ -98,27 +100,49 @@ function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion
 
 
 
-    const handleImagenChange = (e) => {
+    const handleImagenChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setImagen(reader.result);
-            };
-            reader.readAsDataURL(file);
+            try {
+                const options = {
+                    maxSizeMB: .3, // (opcional) Tamaño máximo en MB, por ejemplo, 0.5MB
+                    maxWidthOrHeight: 600, // (opcional) ajusta la imagen al tamaño máximo (manteniendo la relación de aspecto)
+                    useWebWorker: true, // (opcional) Usa un web worker para realizar la compresión en un hilo de fondo
+                };
+                const compressedFile = await imageCompression(file, options);
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setImagen(reader.result); // Almacenar la imagen comprimida en el estado
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (error) {
+                console.error(error);
+            }
         }
     };
 
-    const handleImagenChange2 = (e) => {
+    const handleImagenChange2 = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setImagen2(reader.result);
-            };
-            reader.readAsDataURL(file);
+            try {
+                const options = {
+                    maxSizeMB: .3, // Tamaño máximo en MB, ajustable según necesites
+                    maxWidthOrHeight: 600, // Ajusta la imagen al tamaño máximo (manteniendo la relación de aspecto)
+                    useWebWorker: true, // Utiliza un web worker para realizar la compresión en un hilo de fondo
+                };
+                const compressedFile = await imageCompression(file, options); // Comprimir la imagen
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setImagen2(reader.result); // Almacenar la imagen comprimida en base64 en el estado
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (error) {
+                console.error("Error al comprimir la imagen:", error);
+            }
         }
     };
+
+
 
 
     const enviarDatosARegistros = async () => {
@@ -139,7 +163,10 @@ function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion
             firma: firma,
             pkInicial: loteInfo.pkInicial,
             pkFinal: loteInfo.pkFinal,
-            nombreResponsable: nombreResponsable
+            nombreResponsable: nombreResponsable,
+            resultadoInspeccion: resultadoInspeccion,
+            imagen: imagen, // imagen en base64
+            imagen2: imagen2, // imagen2 en base64
         };
 
         try {
@@ -147,6 +174,20 @@ function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion
 
             const coleccionRegistros = collection(db, "registros");
             const docRef = await addDoc(coleccionRegistros, datosFormulario);
+
+            // Aquí es donde se obtiene el ID del documento recién creado
+            const docId = docRef.id;
+
+
+
+
+            // Ahora, actualizamos el documento para incluir su propio ID
+            await updateDoc(doc(db, "registros", docId), {
+                id: docId // Guarda el ID del documento dentro del mismo documento
+            });
+            // Ahora que tienes el ID y el documento está actualizado, genera el PDF
+            generatePDF(firma, fechaHoraActual, nombreResponsable, docId);
+            setIdRegistro(docId)
             // Opcionalmente, cierra el modal o limpia el formulario aquí
             setModalFormulario(false);
             setResultadoInspeccion('')
@@ -173,11 +214,16 @@ function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion
     const handelEnviarFormulario = async () => {
         const idRegistroFormulario = await enviarDatosARegistros();
         if (idRegistroFormulario) {
+            // La función enviarDatosARegistros ya se encarga de generar el PDF,
+            // así que aquí puedes continuar con cualquier lógica posterior necesaria.
+
             await marcarFormularioComoEnviado(idRegistroFormulario, resultadoInspeccion);
-            generatePDF(firma, fechaHoraActual, nombreResponsable);
-            handleConfirmarEnvioPdf() // Si también deseas generar el PDF tras enviar el formulario
+
+            // Notifica que el proceso ha concluido satisfactoriamente, si es necesario.
+            handleConfirmarEnvioPdf(); // Este paso puede ser opcional dependiendo de lo que haga esta función.
         }
     };
+
 
 
     const handleSolicitarConfirmacion = () => {
@@ -187,7 +233,7 @@ function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion
 
 
 
-    const generatePDF = () => {
+    const generatePDF = (firma, fechaHoraActual, nombreResponsable, docId) => {
         const doc = new jsPDF();
 
 
@@ -261,7 +307,7 @@ function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion
         // Colocar texto dentro del segundo recuadro
         doc.text(`Obra: ${obra}`, 15, 40);
         doc.text(`Tramo: ${tramo}`, 15, 45);
-        doc.text(`Nº de registro: ${numeroRegistro}`, 150, 40);
+        doc.text(`Nº de registro: ${docId}`, 120, 40);
         doc.text(`Fecha: ${fechaHoraActual}`, 150, 45);
 
 
@@ -410,11 +456,14 @@ function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion
         doc.rect(rectX7, rectY7, rectWidth7, rectHeight7);
 
         // Colocar texto dentro del recuadro 7
-        doc.text('Resultado de la inspección', 150, 250);
-        doc.text(resultadoInspeccion, 150, 260);
+        doc.text('Resultado de la inspección', 150, 240);
+        doc.text(resultadoInspeccion, 150, 240);
+        doc.text(`Nombre del responsable ${nombreResponsable}`, 150, 250);
+
         doc.text(`Firmado electronicamente con blockchain`, 15, 250);
-        // Asegúrate de que la firma es una cadena y no está vacía
         doc.text(firma, 15, 260);
+    
+       
 
 
 
@@ -539,7 +588,7 @@ function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion
                 {/* Botones */}
                 <div className='flex gap-5'>
                     <button type="button" onClick={handleSolicitarConfirmacion} className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center"><FaFilePdf /> Guardar</button>
-                    <button type="button" className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center" onClick={()=> setModalConfirmacionInforme(false)}>Cancelar </button>
+                    <button type="button" className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center" onClick={() => setModalConfirmacionInforme(false)}>Cancelar </button>
                 </div>
             </form>
 
@@ -548,10 +597,10 @@ function FormularioInspeccion({handleConfirmarEnvioPdf,setMensajeExitoInspeccion
                     <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-900 bg-opacity-90 text-gray-500 fonmt-medium text-center">
                         <div className="bg-white p-5 rounded-lg shadow-lg">
                             <h2 className="font-bold text-lg mb-4">Estás seguro de que quieres guardar los datos?</h2>
-                            <p className='flex items-center gap-2'><span className='font-bold text-amber-500 text-2xl'><IoIosWarning/></span>¿No podras modificarlos posteriormente y se creará el informe</p>
+                            <p className='flex items-center gap-2'><span className='font-bold text-amber-500 text-2xl'><IoIosWarning /></span>¿No podras modificarlos posteriormente y se creará el informe</p>
                             <div className="flex justify-center gap-4 mt-4">
                                 <button
-                                    onClick={()=> {
+                                    onClick={() => {
                                         handleConfirmarEnvio()
                                         setMostrarConfirmacion(false);
                                     }}

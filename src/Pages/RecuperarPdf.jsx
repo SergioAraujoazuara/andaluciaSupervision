@@ -1,113 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { GoHomeFill } from "react-icons/go";
-import { Link, useParams } from 'react-router-dom';
-import { FaArrowRight, FaFilePdf } from "react-icons/fa";
+import React, { useState } from 'react'
 import jsPDF from 'jspdf';
 import logo from '../assets/tpf_logo_azul.png'
-import { IoIosWarning } from "react-icons/io";
-import { IoCloseCircle } from "react-icons/io5";
-import { db } from '../../firebase_config';
-import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 
 function RecuperarPdf({documentoFormulario}) {
-
-    const { id } = useParams()
-    const { idLote } = useParams()
-    const [nombreProyecto, setNombreProyecto] = useState(localStorage.getItem('nombre_proyecto') || '');
-    const [numeroRegistro, setNumeroRegistro] = useState('');
-    const [fecha, setFecha] = useState('');
-    const [ppi, setPpi] = useState('');
-    const [plano, setPlano] = useState('');
-    // const [observaciones, setObservaciones] = useState('');
-    const [sector, setSector] = useState('');
-    const [subSector, setSubSector] = useState('');
-    const [parte, setParte] = useState('');
-    const [elemento, setElemento] = useState('');
-    const [lote, setLote] = useState('');
-    const [pkInicial, setPkInicial] = useState('');
-    const [pkFinal, setPkFinal] = useState('');
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
-    const [imagen, setImagen] = useState(null);
-    const [imagen2, setImagen2] = useState(null);
+    const [nombreProyecto, setNombreProyecto] = useState(localStorage.getItem('nombre_proyecto') || '');
     const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
     const imagenPath2 = logo
-    const [obra, setObra] = useState(localStorage.getItem('obra'));
-    const [tramo, setTramo] = useState(localStorage.getItem('tramo'));
-    const [observaciones, setObservaciones] = useState('');
 
+    
+    
 
-    useEffect(() => {
-        const obtenerLotesPorPpiId = async () => {
-            try {
-                // Asegúrate de que `id` sea el ID de PPI por el cual quieres filtrar
-                const q = query(collection(db, "lotes"), where("ppiId", "==", id));
-                const querySnapshot = await getDocs(q);
-
-                if (!querySnapshot.empty) {
-                    const lotesData = querySnapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    }));
-
-
-                    setPpi(lotesData);
-                } else {
-
-                    setPpi(null);
-                }
-            } catch (error) {
-
-                setPpi(null);
-            }
-        };
-
-        if (id) {
-            obtenerLotesPorPpiId();
-        }
-    }, [id]); // Asegúrate de que `id` sea una dependencia del efecto
-
-
-
-    const [loteInfo, setLoteInfo] = useState(null); // Estado para almacenar los datos del PPI
-    const [sectorInfoLote, setSectorInfoLote] = useState(null); // Estado para almacenar los datos del PPI
-    useEffect(() => {
-        const obtenerLotePorId = async () => {
-            console.log('**********', idLote)
-            if (!idLote) return; // Verifica si idLote está presente
-
-            try {
-                const docRef = doc(db, "lotes", idLote); // Crea una referencia al documento usando el id
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    console.log("Datos del lote:", docSnap.data());
-                    setLoteInfo({ id: docSnap.id, ...docSnap.data() });
-                    console.log({ id: docSnap.id, ...docSnap.data() });
-                } else {
-                    console.log("No se encontró el lote con el ID:", idLote);
-
-                }
-            } catch (error) {
-                console.error("Error al obtener el lote:", error);
-
-            }
-        };
-
-        obtenerLotePorId();
-    }, [idLote]);
-
-
-
-
-   
     const generatePDF = () => {
         const doc = new jsPDF();
-
-
-
-
-
-
         // Establecer el tamaño de fuente deseado
         const fontSize = 10;
 
@@ -172,10 +77,10 @@ function RecuperarPdf({documentoFormulario}) {
         doc.setFontSize(fontSize);
 
         // Colocar texto dentro del segundo recuadro
-        doc.text(`Obra: ${obra}`, 15, 40);
-        doc.text(`Tramo: ${tramo}`, 15, 45);
-        doc.text(`Nº de registro: ${numeroRegistro}`, 150, 40);
-        doc.text(`Fecha: ${fechaHoraActual}`, 150, 45);
+        doc.text(`Obra: ${documentoFormulario.obra}`, 15, 40);
+        doc.text(`Tramo: ${documentoFormulario.tramo}`, 15, 45);
+        doc.text(`Nº de registro: ${documentoFormulario.numeroRegistro}`, 150, 40);
+        doc.text(`Fecha: ${documentoFormulario.fechaHoraActual}`, 150, 45);
 
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -198,7 +103,7 @@ function RecuperarPdf({documentoFormulario}) {
         doc.setTextColor(0, 0, 0); // Color negro
 
         // Colocar texto dentro del recuadro
-        doc.text(`PPI: ${ppiNombre}`, 15, 60);
+        doc.text(`PPI: ${documentoFormulario.ppiNombre}`, 15, 60);
         doc.text(`Plano que aplica: `, 15, 65);
 
 
@@ -224,7 +129,7 @@ function RecuperarPdf({documentoFormulario}) {
         doc.rect(rectX4, rectY4, rectWidth4, rectHeight4);
 
         // Texto a colocar con salto de línea
-        const textoObservaciones = `Observaciones: ${observaciones}`;
+        const textoObservaciones = `Observaciones: ${documentoFormulario.observaciones}`;
 
         // Dividir el texto en líneas cada vez que exceda 15 palabras
         const words = textoObservaciones.split(' ');
@@ -270,13 +175,13 @@ function RecuperarPdf({documentoFormulario}) {
         doc.rect(rectX5, rectY5, rectWidth5, rectHeight5);
 
         // Colocar texto dentro del recuadro 5
-        doc.text(`Sector: ${loteInfo.sectorNombre}`, 15, 100);
-        doc.text(`Subsector: ${loteInfo.subSectorNombre}`, 15, 110);
-        doc.text(`Parte: ${loteInfo.parteNombre}`, 15, 120);
-        doc.text(`Elemento: ${loteInfo.elementoNombre}`, 15, 130);
-        doc.text(`Lote: ${loteInfo.nombre}`, 15, 140);
-        doc.text(`Pk inicial: ${loteInfo.pkInicial}`, 15, 150);
-        doc.text(`Pk final: ${loteInfo.pkFinal}`, 15, 160);
+        doc.text(`Sector: ${documentoFormulario.sector}`, 15, 100);
+        doc.text(`Subsector: ${documentoFormulario.subSector}`, 15, 110);
+        doc.text(`Parte: ${documentoFormulario.parte}`, 15, 120);
+        doc.text(`Elemento: ${documentoFormulario.elemento}`, 15, 130);
+        doc.text(`Lote: ${documentoFormulario.lote}`, 15, 140);
+        doc.text(`Pk inicial: ${documentoFormulario.pkInicial}`, 15, 150);
+        doc.text(`Pk final: ${documentoFormulario.pkFinal}`, 15, 160);
 
         // Tamaño y posición del recuadro 6
         const rectX6 = 10;
@@ -296,13 +201,13 @@ function RecuperarPdf({documentoFormulario}) {
         // Dibujar el borde del recuadro 6
         doc.rect(rectX6, rectY6, rectWidth6, rectHeight6);
 
-        // Agregar imagen al PDF dentro del recuadro 6
-        if (imagen) {
-            doc.addImage(imagen, 'JPEG', 25, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
-        }
-        if (imagen2) {
-            doc.addImage(imagen2, 'JPEG', 110, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
-        }
+        // // Agregar imagen al PDF dentro del recuadro 6
+        // if (imagen) {
+        //     doc.addImage(imagen, 'JPEG', 25, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
+        // }
+        // if (imagen2) {
+        //     doc.addImage(imagen2, 'JPEG', 110, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
+        // }
 
         // Tamaño y posición del recuadro 7
         const rectX7 = 10;
@@ -324,169 +229,17 @@ function RecuperarPdf({documentoFormulario}) {
 
         // Colocar texto dentro del recuadro 7
         doc.text('Resultado de la inspección', 150, 250);
-        doc.text(resultadoInspeccion, 150, 260);
+        // doc.text(documentoFormulario.resultadoInspeccion, 150, 260);
         doc.text(`Firmado electronicamente con blockchain`, 15, 250);
         // Asegúrate de que la firma es una cadena y no está vacía
-        doc.text(firma, 15, 260);
-
-
-
-
-
-
-
+        doc.text(documentoFormulario.firma, 15, 260);
         doc.save('formulario.pdf');
     };
 
-
-
-
-
-    return (
-        <div className='text-gray-500'>
-            {/* Navigation section
-            <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
-                <GoHomeFill style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'/'}>
-                    <h1 className='font-medium text-gray-500 text-amber-600'>Inicio</h1>
-                </Link>
-                <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'/elemento'}>
-                    <h1 className='text-gray-500 text-gray-500'>Elementos</h1>
-                </Link>
-                <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'/tablaPpi'}>
-                    <h1 className='text-gray-500 text-gray-500'>PPI</h1>
-                </Link>
-                <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-                <Link to={'#'}>
-                    <h1 className='font-medium text-amber-600'>Formulario</h1>
-                </Link>
-
-            </div> */}
-
-
-            <form className="bg-white text-gray-500  mb-4">
-                <div className='grid sm:grid-cols-1 grid-cols-1 gap-4'>
-
-                    {/* Campos de entrada */}
-                    <div className="mb-4 hidden">
-                        <label htmlFor="Proyecto" className="block text-gray-500 text-sm font-bold mb-2">Proyecto</label>
-                        <input type="text" id="Proyecto" value={nombreProyecto} onChange={(e) => setNombreProyecto(e.target.value)}
-                            className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                    </div>
-                    <div className="mb-4 hidden">
-                        <label htmlFor="numeroRegistro" className="block text-gray-500 text-sm font-bold mb-2">Nº de registro</label>
-                        <input type="text" id="numeroRegistro" value={numeroRegistro} onChange={(e) => setNumeroRegistro(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                    </div>
-                    {/* <div className="mb-4">
-                        <label htmlFor="fecha" className="block text-gray-500 text-sm font-bold mb-2">Fecha</label>
-                        <input type="date" id="fecha" value={fecha} onChange={(e) => setFecha(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                    </div> */}
-                    <div className="mb-4 hidden">
-                        <label htmlFor="obra" className="block text-gray-500 text-sm font-bold mb-2">Obra</label>
-                        <input type="text" id="obra" value={obra} onChange={(e) => setObra(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                    </div>
-                    <div className="mb-4 hidden">
-                        <label htmlFor="tramo" className="block text-gray-500 text-sm font-bold mb-2">Tramo</label>
-                        <input type="text" id="tramo" value={tramo} onChange={(e) => setTramo(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                    </div>
-                    <div className="mb-4 hidden">
-                        <label htmlFor="ppi" className="block text-gray-500 text-sm font-bold mb-2">PPI</label>
-                        <input type="text" id="ppi" value={localStorage.getItem('ppi' || '')} onChange={(e) => setPpi(e.target.value)}
-                            className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                    </div>
-                    <div className="mb-4 hidden">
-                        <label htmlFor="plano" className="block text-gray-500 text-sm font-bold mb-2">Plano que aplica</label>
-                        <input type="text" id="plano" value={plano} onChange={(e) => setPlano(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                    </div>
-                    <div className="mb-4">
-                        <label htmlFor="imagen" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar imagen</label>
-                        <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                    </div>
-                    <div className="mb-4">
-                        <label htmlFor="imagen" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar imagen</label>
-                        <input onChange={handleImagenChange2} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                    </div>
-
-                    <div className="mb-4">
-                        <label htmlFor="observaciones" className="block text-gray-500 text-sm font-bold mb-2">Observaciones</label>
-                        <textarea id="observaciones" value={observaciones} onChange={(e) => setObservaciones(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
-                    </div>
-                </div>
-                {/* Campos de trazabilidad */}
-                <div className="mb-4 hidden">
-                    <label className="block text-gray-700 text-sm font-bold mb-5">Trazabilidad</label>
-                    <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
-                        <div>
-                            <label htmlFor="sector" className="block text-gray-700 text-sm font-bold mb-2">Sector</label>
-                            <input
-                                type="text" id="sector" value={loteInfo?.sectorNombre || ''} onChange={(e) => setSector(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                        </div>
-                        <div>
-                            <label htmlFor="subSector" className="block text-gray-700 text-sm font-bold mb-2">Sub sector</label>
-                            <input type="text" id="subSector" value={loteInfo?.subSectorNombre || ''} onChange={(e) => setSubSector(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                        </div>
-                        <div>
-                            <label htmlFor="parte" className="block text-gray-700 text-sm font-bold mb-2">Parte</label>
-                            <input type="text" id="parte" value={loteInfo?.parteNombre || ''} onChange={(e) => setParte(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                        </div>
-                        <div>
-                            <label htmlFor="elemento" className="block text-gray-700 text-sm font-bold mb-2">Elemento</label>
-                            <input type="text" id="elemento" value={loteInfo?.elementoNombre || ''} onChange={(e) => setElemento(e.target.value)} className="bg-gray-200  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                        </div>
-                        <div>
-                            <label htmlFor="lote" className="block text-gray-700 text-sm font-bold mb-2">Lote</label>
-                            <input type="text" id="lote" value={loteInfo?.nombre || ''} onChange={(e) => setLote(e.target.value)} className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                        </div>
-                        <div>
-                            <label htmlFor="pkInicial" className="block text-gray-700 text-sm font-bold mb-2">Pk inicial</label>
-                            <input type="text" id="pkInicial" value={loteInfo?.pkInicial || ''} onChange={(e) => setPkInicial(e.target.value)} className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                        </div>
-                        <div>
-                            <label htmlFor="pkFinal" className="block text-gray-700 text-sm font-bold mb-2">Pk final</label>
-                            <input type="text" id="pkFinal" value={loteInfo?.pkFinal || ''} onChange={(e) => setPkFinal(e.target.value)} className="bg-gray-200 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                        </div>
-                    </div>
-                </div>
-                {/* Botones */}
-                <div className='flex gap-5'>
-                    <button type="button" onClick={handleSolicitarConfirmacion} className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center"><FaFilePdf /> Guardar</button>
-                    <button type="button" className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center" onClick={()=> setModalConfirmacionInforme(false)}>Cancelar </button>
-                </div>
-            </form>
-
-            {
-                mostrarConfirmacion && (
-                    <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-900 bg-opacity-90 text-gray-500 fonmt-medium text-center">
-                        <div className="bg-white p-5 rounded-lg shadow-lg">
-                            <h2 className="font-bold text-lg mb-4">Estás seguro de que quieres guardar los datos?</h2>
-                            <p className='flex items-center gap-2'><span className='font-bold text-amber-500 text-2xl'><IoIosWarning/></span>¿No podras modificarlos posteriormente y se creará el informe</p>
-                            <div className="flex justify-center gap-4 mt-4">
-                                <button
-                                    onClick={()=> {
-                                        handleConfirmarEnvio()
-                                        setMostrarConfirmacion(false);
-                                    }}
-                                    className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                                >
-                                    Confirmar
-                                </button>
-                                <button
-                                    onClick={() => setMostrarConfirmacion(false)}
-                                    className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                                >
-                                    Cancelar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-
-        </div>
-    )
+    
+  return (
+    <div>RecuperarPdf</div>
+  )
 }
 
-export default RecuperarPdf;
+export default RecuperarPdf
