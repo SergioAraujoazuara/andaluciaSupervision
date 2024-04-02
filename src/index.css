@@ -9,3 +9,20 @@ body {
     background-color: #f3f4f6;
  
 }
+
+.item {
+    background-color: #f5f5f5;
+}
+
+#bottom-toolbar-container{
+    background-color: rgb(43, 71, 131);
+    border-radius: 0 0 20px 20px;
+}
+
+#right-toolbar-container{
+    display: none;
+}
+
+#left-toolbar-container{
+    display: none;
+}

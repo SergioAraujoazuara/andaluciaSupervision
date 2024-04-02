@@ -17,7 +17,12 @@ import CrearProyecto from './Pages/Administrador/CrearProyecto'
 import ViewProject from './Pages/Administrador/ViewProject'
 import EditProject from './Pages/Administrador/EditProject'
 import Elemento from './Pages/Elemento'
-import Capitulos from './Pages/Administrador/Capitulos'
+
+import Trazabilidad from './Pages/Administrador/Trazabilidad'
+import AgregarPPi from './Pages/Administrador/AgregarPPi'
+import VerPpis from './Pages/Administrador/VerPpis'
+import EditarPpi from './Pages/Administrador/EditarPpi'
+import Viewer from './Viewer'
 
 function App() {
 
@@ -32,15 +37,21 @@ function App() {
       <Route path='/crearProyecto' element={<CrearProyecto/>}></Route>
       <Route path='/viewProject' element={<ViewProject/>}></Route>
       <Route path='/editProject/:id' element={<EditProject/>}></Route>
-      <Route path='/capitulos/:id' element={<Capitulos/>}></Route>
+      <Route path='/trazabilidad/:id' element={<Trazabilidad/>}></Route>
+      <Route path='/verPPis' element={<VerPpis/>}></Route>
+      <Route path='/agregarPpi' element={<AgregarPPi/>}></Route>
+      <Route path='/viewer' element={<Viewer/>}></Route>
 
       <Route path='/contacto' element={<Contacto/>}></Route>
       <Route path='/modulos' element={<Modulos/>}></Route>
       <Route path='/elemento' element={<Elemento/>}></Route>
+      <Route path='/elemento/:id' element={<Elemento/>}></Route>
       
   
       <Route path='/tablaPpi' element={<TablaPpi/>}></Route>
-      <Route path='/formularioInspeccion' element={<FormularioInspeccion/>}></Route>
+      <Route path='/tablaPpi/:idLote/:ppiNombre' element={<TablaPpi/>}></Route>
+      <Route path='/editarPpi/:id' element={<EditarPpi/>}></Route>
+      <Route path='/formularioInspeccion/:idLote/:id' element={<FormularioInspeccion/>}></Route>
     </Routes>
 
     <Footer/>

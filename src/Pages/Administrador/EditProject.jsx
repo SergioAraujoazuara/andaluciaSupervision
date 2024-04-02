@@ -94,10 +94,7 @@ function EditProject() {
 
             <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
                 <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'/'}>
-                    <h1 className='font-ligth text-gray-500'>Inicio</h1>
-                </Link>
-                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                
                 <Link to={'/admin'}>
                     <h1 className='text-gray-600'>Administración</h1>
                 </Link>
