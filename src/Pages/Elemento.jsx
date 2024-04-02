@@ -79,50 +79,6 @@ function Elemento() {
                     </div>
 
                     <div class="w-full rounded rounded-xl">
-<<<<<<< HEAD
-                        <div className='grid grid-cols-9 sm:px-5 sm:py-2 sm:bg-gray-100 rounded rounded-md '>
-                            <div className='text-left font-medium text-gray-600 sm:block hidden'>Sector</div>
-                            <div className='text-left font-medium text-gray-600 sm:block hidden '>Sub sector</div>
-                            <div className='text-left font-medium text-gray-600 sm:block hidden '>Codigo elemento</div>
-                            <div className='text-left font-medium text-gray-600 sm:block hidden '>Parte</div>
-                            <div className='text-left font-medium text-gray-600 sm:block hidden '>Elemento</div>
-                            <div className='text-left font-medium text-gray-600 sm:block hidden '>Lote</div>
-                            <div className='text-left font-medium text-gray-600 sm:block hidden '>pk inicial</div>
-                            <div className='text-left font-medium text-gray-600 sm:block hidden '>Pk final</div>
-                        </div>
-
-                        <Link to={'/tablaPpi'}>
-                            <div className='grid grid-cols-9 cursor-pointer items-center justify-start sm:p-5 border-b-2 font-normal text-gray-600'>
-                                <div className='flex items-center '>
-                                Estructuras
-                                </div>
-
-                                <div className='h-10 flex items-center sm:justify-start'>
-                                Viaducto de kortazar
-                                </div>
-
-                                <div className='flex items-center'>
-                             	V101
-                                </div>
-
-                                <div className='flex items-center'>
-                             	Pilar 1
-                                </div>
-
-                                <div className='flex items-center'>
-                             	Cimentación
-                                </div>
-
-                                <div className='flex items-center'>
-                             	Excavación
-                                </div>
-
-                                <div className='flex items-center'>
-                             	101+120.22
-                                </div>
-                                <div className='flex items-center'>
-                             	101+120.22
-=======
                         <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded rounded-md '>
                             <div className='text-left font-medium text-gray-600 sm:block hidden'>Sector</div>
                             <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden  col-span-2'>Sub Sector</div>
@@ -183,7 +139,6 @@ function Elemento() {
 
 
 
->>>>>>> trazabilidad
                                 </div>
                             </Link>
                         ))}
