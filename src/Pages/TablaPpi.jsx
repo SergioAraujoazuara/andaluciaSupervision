@@ -776,6 +776,7 @@ function TablaPpi() {
         cerrarModalYLimpiarDatos()
 
     };
+    let mario = 0
 
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500 text-sm'>
