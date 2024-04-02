@@ -73,63 +73,69 @@ function Elemento() {
 
                     <div className='px-4 py-2 bg-sky-500 text-white rounded-lg '>
                         <Link to={'/viewer'}>
-                        <button>Visor BIM</button>
+                            <button>Visor BIM</button>
                         </Link>
-                        
+
                     </div>
 
                     <div class="w-full rounded rounded-xl">
-                        <div className='grid sm:grid-cols-6 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded rounded-md '>
+                        <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded rounded-md '>
                             <div className='text-left font-medium text-gray-600 sm:block hidden'>Sector</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden '>Sub Sector</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden  col-span-2'>Sub Sector</div>
                             <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden '>Parte</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden '>Elemento</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden '>Lote y ppi</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden '>Progreso inspección</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden  col-span-2'>Elemento</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden col-span-4'>Lote y ppi</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden col-span-2'>Progreso inspección</div>
                         </div>
 
 
 
                         {lotes.map((l, i) => (
                             <Link to={`/tablaPpi/${l.id}/${l.ppiNombre}`} onClick={() => handleCaptrurarTrazabilidad(l)}>
-                                <div key={i} className='cursor-pointer grid sm:grid-cols-6 grid-cols-1 items-center justify-start sm:p-5 border-b-2 font-normal text-gray-600 hover:bg-gray-100'>
-                                    <div className='sm:border-r-2 sm:border-b-0 flex items-center '>
+                                <div key={i} className='cursor-pointer grid sm:grid-cols-12 grid-cols-1 items-center justify-start sm:p-5 border-b-2 font-normal text-gray-600 hover:bg-gray-100'>
+                                    <div className='sm:border-r-2 sm:border-b-0 flex items-center sm:pr-10'>
                                         {l.sectorNombre}
                                     </div>
 
-                                    <div className='sm:border-r-2 sm:border-b-0 flex items-center  sm:ps-10'>
+                                    <div className='sm:border-r-2 sm:border-b-0 flex items-center col-span-2  sm:ps-10'>
                                         {l.subSectorNombre}
                                     </div>
 
-                                    <div className='sm:border-r-2 h-10 flex items-center sm:justify-start  sm:ps-10'>
+                                    <div className='sm:border-r-2  flex items-center sm:justify-start  sm:ps-6'>
                                         {l.parteNombre}
                                     </div>
 
-                                    <div className=' sm:border-r-2 h-10 flex items-center sm:justify-start  sm:ps-10'>
+                                    <div className=' sm:border-r-2 flex items-center sm:justify-start col-span-2  sm:ps-10'>
                                         {l.elementoNombre}
                                     </div>
 
 
-                                    <div className='h-10 flex flex-col items-start sm:justify-center sm:ps-10'>
+                                    <div className='h-10 flex flex-col col-span-4 items-start sm:justify-center sm:ps-10'>
                                         <p className='font-medium'>Lote: {l.nombre}</p>
                                         <p className='text-sky-600 font-medium'>Ppi: {l.ppiNombre}</p>
                                     </div>
 
-                                    <div className=' h-10 flex items-center sm:justify-start gap-5  sm:ps-10'>
-                                        {l.actividadesAptas || '0'}/{l.totalSubactividades || '0'}
-                                        {l.totalSubactividades ? ` (${((l.actividadesAptas / l.totalSubactividades) * 100).toFixed(2)}%)` : ''}
-                                        <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '40%' }}>
-                                            <div
-                                                style={{
-                                                    background: '#0284c7',
-                                                    height: '100%',
-                                                    borderRadius: '8px',
-                                                    width: `${l.totalSubactividades ? ((l.actividadesAptas / l.totalSubactividades) * 100) : 0}%`
-                                                }}
-                                            />
-                                        </div>
-
+                                    <div className='h-10 flex items-center sm:justify-start gap-5 col-span-2 sm:ps-10'>
+                                        {
+                                            l.totalSubactividades
+                                                ? <>
+                                                    {l.actividadesAptas || '0'}/{l.totalSubactividades}
+                                                    ({((l.actividadesAptas / l.totalSubactividades) * 100).toFixed(2)}%)
+                                                    <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '40%' }}>
+                                                        <div
+                                                            style={{
+                                                                background: '#0284c7',
+                                                                height: '100%',
+                                                                borderRadius: '8px',
+                                                                width: `${(l.actividadesAptas / l.totalSubactividades) * 100}%`
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </>
+                                                : "Inspección no iniciada"
+                                        }
                                     </div>
+
 
 
 

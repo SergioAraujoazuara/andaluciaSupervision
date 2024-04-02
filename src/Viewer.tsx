@@ -138,7 +138,7 @@ export default function ViewerComponent() {
 
   const viewerContainerStyle: React.CSSProperties = {
     width: "100%",
-    height: "750px",
+    height: "500px",
     position: "relative",
     gridArea: "viewer",
 
@@ -195,7 +195,7 @@ export default function ViewerComponent() {
     const [obra, setObra] = useState(localStorage.getItem('obra'));
     const [tramo, setTramo] = useState(localStorage.getItem('tramo'));
     const [observaciones, setObservaciones] = useState('');
-    const  idLote = 'giwJNwOADU8cyDkWKR3P';
+    const  idLote = '7SFbFIoEH80LyO7njPjX';
     const navigate = useNavigate();
     const [ppi, setPpi] = useState(null);
 
@@ -950,7 +950,7 @@ export default function ViewerComponent() {
 
   return (
     
-    <div className="min-h-screen text-gray-500">
+    <div className="min-h-screen text-gray-500 px-14 py-5">
       <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
                 <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                 <Link to={'/'}>
@@ -969,31 +969,31 @@ export default function ViewerComponent() {
             </div>
 
 
-      <div className='flex '>
+      <div className='flex pt-6'>
 
-        <div className="w-1/2 p-4">
+        <div className="w-1/2 pr-5">
           {selectedLote ? (
-            <div className="p-4 bg-gray-100 rounded-lg">
-              <div className="bg-gray-200 p-2 font-bold mb-4 text-gray-700">Información del Lote</div>
+            <div className="bg-gray-100 rounded-lg">
+              <div className="bg-gray-200 p-2 font-bold text-gray-700 rounded-t-lg">Información del Lote</div>
 
-              <div className='px-2'>
-                <p className=' font-semibold text-sky-700'><strong>Lote: </strong>{selectedLote.nombre}</p>
-                <p className=' font-semibold text-sky-700'><strong>Ppi: </strong>{selectedLote.ppiNombre}</p>
-                <p><strong>Global id Bim: </strong>{selectedGlobalId}</p>
-                <p><strong>Sector: </strong>{selectedLote.sectorNombre}</p>
-                <p><strong>Sub sector: </strong>{selectedLote.subSectorNombre}</p>
-                <p><strong>Parte: </strong>{selectedLote.parteNombre}</p>
-                <p><strong>Elemento: </strong>{selectedLote.elementoNombre}</p>
+              <div className='px-2 py-1 text-sm flex flex-col gap-1 bg-white rounded-lg'>
+                <p className='border-b p-1 font-semibold text-sky-600'><strong>Lote: </strong>{selectedLote.nombre}</p>
+                <p className='border-b p-1  font-semibold text-sky-600'><strong>Ppi: </strong>{selectedLote.ppiNombre}</p>
+                <p className='border-b p-1 '><strong>Global id Bim: </strong>{selectedGlobalId}</p>
+                <p className='border-b p-1 '><strong>Sector: </strong>{selectedLote.sectorNombre}</p>
+                <p className='border-b p-1 '><strong>Sub sector: </strong>{selectedLote.subSectorNombre}</p>
+                <p className='border-b p-1 '><strong>Parte: </strong>{selectedLote.parteNombre}</p>
+                <p className='p-1 '><strong>Elemento: </strong>{selectedLote.elementoNombre}</p>
               </div>
 
-              <div className="bg-gray-300 p-2 font-bold text-gray-700 mt-6">Avance de la inspección</div>
+              <div className="bg-gray-300 p-2 font-bold text-gray-700 mt-6 rounded-t-lg">Avance de la inspección</div>
               <div className=''>
                 {
                   inspecciones.length > 0 && inspecciones.map((inspeccion) => (
                     <div>
                     {ppi && ppi.actividades.map((actividad, indexActividad) => [
                         // Row for activity name
-                        <div key={`actividad-${indexActividad}`} className="bg-gray-200 grid grid-cols-24 items-center px-3 py-3 border-b border-gray-200 text-sm font-medium">
+                        <div key={`actividad-${indexActividad}`} className="bg-gray-200 grid grid-cols-12 items-center p-2 border-b border-gray-200 text-sm font-medium">
                             <div className="col-span-1">
 
                                 (V)
@@ -1004,7 +1004,7 @@ export default function ViewerComponent() {
                                 {actividad.numero}
 
                             </div>
-                            <div className="col-span-22">
+                            <div className="col-span-10">
 
                                 {actividad.actividad}
 
@@ -1013,55 +1013,55 @@ export default function ViewerComponent() {
                         </div>,
                         // Rows for subactividades
                         ...actividad.subactividades.map((subactividad, indexSubactividad) => (
-                            <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-12 items-center border-b border-gray-200 text-sm">
-                                <div className="col-span-1 px-3 py-5 ">
+                            <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-12 p-2 items-center border-b border-gray-200 bg-white rounded-b-lg text-sm">
+                                <div className="col-span-1 p-1 ">
                                     V-{subactividad.version}  {/* Combina el número de actividad y el índice de subactividad */}
                                 </div>
-                                <div className="col-span-1 px-3 py-5 ">
+                                <div className="col-span-1 p-1 ">
                                     {subactividad.numero} {/* Combina el número de actividad y el índice de subactividad */}
                                 </div>
 
-                                <div className="col-span-7 px-3 py-5">
+                                <div className="col-span-7 p-1">
                                     {subactividad.nombre}
                                 </div>
 
-                                <div className="col-span-2 px-5 py-5 bg-white flex justify-center cursor-pointer" >
+                                <div className="col-span-2 p-1 flex justify-center cursor-pointer" >
                                     {subactividad.resultadoInspeccion ? (
                                         subactividad.resultadoInspeccion === "Apto" ? (
                                             <span
 
-                                                className="w-full font-bold text-lg p-2 rounded  text-center text-green-500 cursor-pointer">
+                                                className="w-full font-bold text-xs p-2 rounded  text-center text-green-500 cursor-pointer">
                                                 Apto
 
                                             </span>
                                         ) : subactividad.resultadoInspeccion === "No apto" ? (
                                             <span
 
-                                                className="w-full font-bold text-lg p-2 rounded w-full text-center text-red-600 cursor-pointer">
+                                                className="w-full font-bold text-xs p-2 rounded w-full text-center text-red-600 cursor-pointer">
                                                 No apto
                                             </span>
                                         ) : (
                                             <span
                                                 onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                className="w-full font-bold text-medium text-3xl p-2 rounded  w-full flex justify-center cursor-pointer">
+                                                className="w-full font-bold text-medium text-lg p-2 rounded  w-full flex justify-center cursor-pointer">
                                                 <IoMdAddCircle />
                                             </span>
                                         )
                                     ) : (
                                         <span
                                             onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
-                                            className="w-full font-bold text-medium text-3xl p-2 rounded  w-full flex justify-center cursor-pointer">
+                                            className="w-full font-bold text-medium text-lg p-2 rounded  w-full flex justify-center cursor-pointer">
                                             <IoMdAddCircle />
                                         </span>
                                     )}
                                 </div>
 
-                                <div className="col-span-1 px-2 py-5 bg-white flex justify-start cursor-pointer" >
+                                <div className="col-span-1 p-1 flex justify-start cursor-pointer" >
                                     {subactividad.formularioEnviado ? (
 
                                         <p
                                             onClick={() => handleMostrarIdRegistro(`apto-${indexActividad}-${indexSubactividad}`)}
-                                            className='text-2xl'><FaFilePdf /></p>
+                                            className='text-lg'><FaFilePdf /></p>
                                     ) : null}
                                 </div>
 
