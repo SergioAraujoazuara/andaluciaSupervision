@@ -43,6 +43,7 @@ function Elemento() {
         localStorage.setItem('parte', l.parteNombre || '')
         localStorage.setItem('elemento', l.elementoNombre || '')
         localStorage.setItem('lote', l.nombre || '')
+        localStorage.setItem('loteId', l.id || '')
         localStorage.setItem('ppi', l.ppiNombre || '')
         localStorage.setItem('pkInicial', l.pkInicial || '')
         localStorage.setItem('pkFinal', l.pkFinal || '')
@@ -119,7 +120,7 @@ function Elemento() {
                                         {
                                             l.totalSubactividades
                                                 ? <>
-                                                    {l.actividadesAptas || '0'}/{l.totalSubactividades}
+                                                    {l.actividadesAptas || '0'}/{l.totalSubactividades}&nbsp;
                                                     ({((l.actividadesAptas / l.totalSubactividades) * 100).toFixed(2)}%)
                                                     <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '40%' }}>
                                                         <div

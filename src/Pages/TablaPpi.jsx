@@ -780,31 +780,31 @@ function TablaPpi() {
 
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500 text-sm'>
-            
-            <div className='flex gap-2 items-center justify-start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
-                <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'/'}>
-                    <h1 className=' text-gray-500'>Inicio</h1>
-                </Link>
 
-                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
 
-                <h1 className='cursor-pointer text-gray-500' onClick={regresar}>Elementos</h1>
+                <div className='flex items-center gap-2'>
+                    <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+                    <Link to={'/'}>
+                        <h1 className=' text-gray-500'>Inicio</h1>
+                    </Link>
 
-                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'#'}>
-                    <h1 className='font-medium text-amber-600'>Ppi: {ppiNombre}</h1>
-                </Link>
-                <div className='my-4'>
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
 
+                    <h1 className='cursor-pointer text-gray-500' onClick={regresar}>Elementos</h1>
 
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                    <Link to={'#'}>
+                        <h1 className='font-medium text-amber-600'>Ppi: {ppiNombre}</h1>
+                    </Link>
                 </div>
-                <div>
+                <div className='mr-5'>
                     <Link to={'/viewer'}>
                         <button className='px-4 py-2 bg-sky-500 text-white rounded-lg '>Visor BIM</button>
                     </Link>
                 </div>
             </div>
+
 
 
 

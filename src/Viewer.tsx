@@ -104,17 +104,29 @@ export default function ViewerComponent() {
         setModelCount(fragmentManager.groups.length);
         propertiesProcessor.process(model);
         highlighter.events.select.onHighlight.add((selection) => {
-          const fragmentID = Object.keys(selection)[0];
-          const expressID = Number([...selection[fragmentID]][0]);
-          const properties = propertiesProcessor.getProperties(model, expressID.toString());
-          if (properties) {
-            const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
-            const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
-            setSelectedGlobalId(globalId);
-            const lote = lotes.find(l => l.idBim === globalId);
-            setSelectedLote(lote);
-          }
-        });
+            const fragmentID = Object.keys(selection)[0];
+            const expressID = Number([...selection[fragmentID]][0]);
+            const properties = propertiesProcessor.getProperties(model, expressID.toString());
+            if (properties) {
+              const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
+              const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
+              setSelectedGlobalId(globalId);
+              const lote = lotes.find(l => l.idBim === globalId);
+          
+              if (lote) {
+                setSelectedLote(lote);
+                localStorage.setItem('loteId', lote.docId);
+                obtenerInspecciones(lote.docId);
+              } else {
+                // Aquí se maneja el caso de que no haya un lote correspondiente
+                setSelectedLote(null); // Asegura que no se muestren datos de un lote previo
+                setInspecciones([]); // Limpia las inspecciones previas
+                localStorage.removeItem('loteId'); // Opcional: Limpia el localStorage si es necesario
+              }
+            }
+          });
+          
+          
         highlighter.update();
       });
 
@@ -179,7 +191,7 @@ export default function ViewerComponent() {
   useEffect(() => {
     if (selectedLote) {
       obtenerInspecciones(selectedLote.docId);
-      console.log(ppiNombre)
+     
     }
   }, [selectedLote, ppiNombre]);
 
@@ -195,7 +207,7 @@ export default function ViewerComponent() {
     const [obra, setObra] = useState(localStorage.getItem('obra'));
     const [tramo, setTramo] = useState(localStorage.getItem('tramo'));
     const [observaciones, setObservaciones] = useState('');
-    const  idLote = '7SFbFIoEH80LyO7njPjX';
+    const  idLote = localStorage.getItem('loteId');
     const navigate = useNavigate();
     const [ppi, setPpi] = useState(null);
 
@@ -1082,8 +1094,10 @@ export default function ViewerComponent() {
             </div>
           ) : (
             <div>
-              <p className="text-lg text-gray-600">Haz click en el visor para ver detalles del lote.</p>
-              <p><strong>Global id Bim: </strong>{selectedGlobalId}</p>
+              <p className="text-sm text-gray-600 ">Haz click en el visor para ver detalles del lote.
+              <br />
+              <strong className='text-amber-500 text-sm'>* </strong>Si no puedes visualizar la inspección, primero asigna el global id a un elemento en el modulo administrador</p>
+              <p className='mt-5'><strong>Global id Bim: </strong>{selectedGlobalId}</p>
             </div>
 
           )}

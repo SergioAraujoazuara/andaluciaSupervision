@@ -11,7 +11,7 @@ import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, wr
 function FormularioInspeccion({ handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion }) {
 
     const { id } = useParams()
-    const  idLote  = '7SFbFIoEH80LyO7njPjX';
+    const  idLote = localStorage.getItem('loteId');
     const [nombreProyecto, setNombreProyecto] = useState(localStorage.getItem('nombre_proyecto') || '');
     const [numeroRegistro, setNumeroRegistro] = useState('');
     const [fecha, setFecha] = useState('');
