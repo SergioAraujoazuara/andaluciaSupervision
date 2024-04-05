@@ -83,9 +83,12 @@ function Elemento() {
                         <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded rounded-md '>
                             <div className='text-left font-medium text-gray-600 sm:block hidden'>Sector</div>
                             <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden  col-span-2'>Sub Sector</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden '>Parte</div>
+                            <div className='text-left sm:ps-5 font-medium text-gray-600 sm:block hidden '>Parte</div>
                             <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden  col-span-2'>Elemento</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden col-span-4'>Lote y ppi</div>
+                            <div className='text-left sm:ps-10  font-medium text-gray-600 sm:block hidden col-span-2 '>Pk</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden col-span-2'>Lote y ppi</div>
+                            
+                            
                             <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden col-span-2'>Progreso inspección</div>
                         </div>
 
@@ -111,10 +114,17 @@ function Elemento() {
                                     </div>
 
 
-                                    <div className='h-10 flex flex-col col-span-4 items-start sm:justify-center sm:ps-10'>
+                                    <div className='sm:border-r-2 flex flex-col col-span-2 items-start justify-center text-center sm:ps-8'>
+                                        <div className='col-span-2'><p className='p-2'>Inicial: {l.pkInicial}</p></div>
+                                        <div className='col-span-2'><p className='  p-2'>Final: {l.pkFinal}</p></div>
+                                        
+                                        
+                                    </div>
+                                    <div className='sm:border-r-2 flex flex-col col-span-2 items-start sm:justify-center sm:ps-10 sm:pr-5'>
                                         <p className='font-medium'>Lote: {l.nombre}</p>
                                         <p className='text-sky-600 font-medium'>Ppi: {l.ppiNombre}</p>
                                     </div>
+
 
                                     <div className='h-10 flex items-center sm:justify-start gap-5 col-span-2 sm:ps-10'>
                                         {

@@ -150,7 +150,7 @@ export default function ViewerComponent() {
 
   const viewerContainerStyle: React.CSSProperties = {
     width: "100%",
-    height: "500px",
+    height: "700px",
     position: "relative",
     gridArea: "viewer",
 
@@ -594,12 +594,9 @@ export default function ViewerComponent() {
         obtenerLotePorId();
     }, [idLote]);
 
-    const [formulario, setFormulario] = useState(false)
+    const [formulario, setFormulario] = useState(true)
 
-    const crearVariableFormularioTrue = () => {
-        setFormulario(true)
-    }
-
+  
     const enviarDatosARegistros = async () => {
         // Descomponer currentSubactividadId para obtener los índices
         const [, actividadIndex, subactividadIndex] = currentSubactividadId.split('-').map(Number);
@@ -649,6 +646,19 @@ export default function ViewerComponent() {
         } catch (e) {
             console.error("Error al añadir documento: ", e);
         }
+    };
+
+    const handleConfirmarEnviotablaPpi = async () => {
+        // Aquí llamarías a la función que realmente envía los datos del formulario
+        await handelEnviarFormulario();
+        setMostrarConfirmacion(false);
+        setModalInforme(false);
+
+        // Esperar un poco antes de mostrar el modal de éxito para asegurar que los modales anteriores se han cerrado
+        setTimeout(() => {
+            setModalExito(true);
+            
+        }, 300); // Ajusta el tiempo según sea necesario
     };
 
     const handleConfirmarEnvio = async () => {
@@ -1110,13 +1120,13 @@ export default function ViewerComponent() {
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
-                    <div className="mx-auto w-[700px] h-[400px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
+                    <div className="mx-auto w-[700px] h-[750px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
                     >
-                        {/* <button
+                        <button
                             onClick={handleCloseModal}
                             className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300">
                             <IoCloseCircle />
-                        </button> */}
+                        </button>
 
                         <div className="my-6">
                             <label htmlFor="resultadoInspeccion" className="block text-xl font-bold text-gray-500 mb-4 flex items-center gap-2 mb-2">
@@ -1135,18 +1145,61 @@ export default function ViewerComponent() {
                         </div>
 
                         <div className="mb-4">
-                            <label htmlFor="comentario" className="block text-gray-500 text-sm font-bold mb-2">Comentarios</label>
+                            <label htmlFor="comentario" className="block text-gray-500 text-sm font-bold mb-2">Comentarios de la inspección</label>
                             <textarea id="comentario" value={comentario} onChange={(e) => setComentario(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
                         </div>
 
+                        {/* <div className='my-8'>
+                            <label htmlFor="formularioCheckbox" className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    id="formularioCheckbox"
+                                    checked={formulario}
+                                    onChange={e => setFormulario(e.target.checked)} // Actualizado para usar setFormulario directamente
+                                    className="form-checkbox rounded text-sky-600"
+                                />
+                                <span className='flex gap-2 items-center font-medium'><p className='text-xl ms-2'><FaFilePdf/></p> Crear Informe pdf </span>
+                            </label>
+                        </div> */}
+
+                        <FormularioInspeccion
+                            setModalFormulario={setModalFormulario}
+                            modalFormulario={modalFormulario}
+                            currentSubactividadId={currentSubactividadId}
+                            ppiSelected={ppi}
+                            marcarFormularioComoEnviado={marcarFormularioComoEnviado}
+                            actualizarFormularioEnFirestore={actualizarFormularioEnFirestore}
+                            resultadoInspeccion={resultadoInspeccion}
+                            comentario={comentario}
+                            firma={firma}
+
+                            fechaHoraActual={fechaHoraActual}
+                            handleCloseModal={handleCloseModal}
+                            ppiNombre={ppiNombre}
+                            nombreResponsable={nombreResponsable}
+
+                            setResultadoInspeccion={setResultadoInspeccion}
+
+
+                            setModalConfirmacionInforme={setModalConfirmacionInforme}
+
+                            handleConfirmarEnvioPdf={handleConfirmarEnvioPdf}
+                            setMensajeExitoInspeccion={setMensajeExitoInspeccion}
+                            handleConfirmarEnviotablaPpi={handleConfirmarEnviotablaPpi}
+                            
+
+                        />
 
 
 
 
-                        <div className='flex gap-5 mt-8'>
+
+
+
+                        {/* <div className='flex gap-5 mt-8'>
                             <button className='bg-sky-600 hover:bg-sky-700 px-4 py-2 text-white font-medium rounded-lg shadow-md' onClick={confirmarInforme}>Guardar</button>
                             <button className='bg-gray-500 hover:bg-gray-600 px-4 py-2 text-white font-medium rounded-lg shadow-md' onClick={handleCloseModal}>Cancelar</button>
-                        </div>
+                        </div> */}
 
 
 

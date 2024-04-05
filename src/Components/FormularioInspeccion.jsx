@@ -8,10 +8,10 @@ import imageCompression from 'browser-image-compression';
 import { db } from '../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 
-function FormularioInspeccion({ handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion }) {
+function FormularioInspeccion({ formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion }) {
 
     const { id } = useParams()
-    const  idLote = localStorage.getItem('loteId');
+    const idLote = localStorage.getItem('loteId');
     const [nombreProyecto, setNombreProyecto] = useState(localStorage.getItem('nombre_proyecto') || '');
     const [numeroRegistro, setNumeroRegistro] = useState('');
     const [fecha, setFecha] = useState('');
@@ -186,7 +186,10 @@ function FormularioInspeccion({ handleConfirmarEnvioPdf, setMensajeExitoInspecci
                 id: docId // Guarda el ID del documento dentro del mismo documento
             });
             // Ahora que tienes el ID y el documento está actualizado, genera el PDF
-            generatePDF(firma, fechaHoraActual, nombreResponsable, docId);
+
+            // generatePDF(firma, fechaHoraActual, nombreResponsable, docId);
+
+
             setIdRegistro(docId)
             // Opcionalmente, cierra el modal o limpia el formulario aquí
             setModalFormulario(false);
@@ -202,10 +205,24 @@ function FormularioInspeccion({ handleConfirmarEnvioPdf, setMensajeExitoInspecci
         }
     };
 
-    const handleConfirmarEnvio = async () => {
-        // Aquí llamarías a la función que realmente envía los datos del formulario
-        await handelEnviarFormulario();
-        setMostrarConfirmacion(false); // Ocultar el modal de confirmación después de enviar los datos
+    const handleConfirmarEnvio = () => {
+        setMostrarConfirmacion(false); // Cierra el primer modal
+        setMostrarConfirmacionAdicional(true); // Abre el segundo modal para confirmación adicional
+    };
+
+    // Nueva función: Manejar la confirmación final y envío de datos
+    const handleConfirmacionFinal = async () => {
+        const idRegistroFormulario = await enviarDatosARegistros();
+        if (idRegistroFormulario) {
+            await marcarFormularioComoEnviado(idRegistroFormulario, resultadoInspeccion);
+            handleConfirmarEnvioPdf(); // Si es necesario
+            setMostrarConfirmacionAdicional(false); // Cierra el segundo modal tras la confirmación
+            // Aquí puedes también limpiar el formulario o realizar cualquier otra acción necesaria tras el envío
+            setMensajeExitoInspeccion('Inspección completada con éxito');
+            // Si es necesario, cierra el formulario o limpia los estados
+        } else {
+            // Manejo en caso de que el envío falle o no se complete
+        }
     };
 
     const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -462,8 +479,8 @@ function FormularioInspeccion({ handleConfirmarEnvioPdf, setMensajeExitoInspecci
 
         doc.text(`Firmado electronicamente con blockchain`, 15, 250);
         doc.text(firma, 15, 260);
-    
-       
+
+
 
 
 
@@ -475,6 +492,8 @@ function FormularioInspeccion({ handleConfirmarEnvioPdf, setMensajeExitoInspecci
     };
 
 
+
+    const [mostrarConfirmacionAdicional, setMostrarConfirmacionAdicional] = useState(false);
 
 
 
@@ -588,19 +607,74 @@ function FormularioInspeccion({ handleConfirmarEnvioPdf, setMensajeExitoInspecci
                 {/* Botones */}
                 <div className='flex gap-5'>
                     <button type="button" onClick={handleSolicitarConfirmacion} className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center"><FaFilePdf /> Guardar</button>
-                    <button type="button" className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center" onClick={() => setModalConfirmacionInforme(false)}>Cancelar </button>
+                    <button type="button"className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center" 
+                    onClick={() => {
+                        handleCloseModal()
+                        setModalConfirmacionInforme(false)
+                        }}>Cancelar </button>
                 </div>
             </form>
 
             {
                 mostrarConfirmacion && (
                     <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-900 bg-opacity-90 text-gray-500 fonmt-medium text-center">
-                        <div className="bg-white p-5 rounded-lg shadow-lg">
-                            <h2 className="font-bold text-lg mb-4">Estás seguro de que quieres guardar los datos?</h2>
-                            <p className='flex items-center gap-2'><span className='font-bold text-amber-500 text-2xl'><IoIosWarning /></span>¿No podras modificarlos posteriormente y se creará el informe</p>
-                            <div className="flex justify-center gap-4 mt-4">
+                        <div className="mx-auto w-[700px] h-[780px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8">
+
+                            <div>
+                                {resultadoInspeccion && (
+                                    <>
+                                        <div className='flex flex-col gap-2 justify-center items-center'>
+                                            <p className='font-bold text-yellow-500 text-8xl'><IoIosWarning /></p>
+                                            <p className='text-3xl font-bold'>¡Cuidado! estás por cerrar la inspección</p>
+                                            <p className='text-3xl font-bold'>
+                                                Resultado:{' '}
+                                                <span className={resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}>
+                                                    {resultadoInspeccion}
+                                                </span>
+                                            </p>
+
+
+                                            <h2 className="font-bold text-lg mb-2 mt-6">Revisa los datos y comprueba que todo esta correcto</h2>
+                                        </div>
+
+                                        <div className='flex flex-col gap-1'>
+
+                                            <p><strong> Fecha: </strong>{fechaHoraActual}</p>
+                                            <p><strong> Proyecto: </strong>{nombreProyecto}</p>
+                                            <p><strong> Obra: </strong>{obra}</p>
+                                            <p><strong> Tramo: </strong>{tramo}</p>
+                                            <p><strong> Ppi: </strong>{loteInfo.ppiNombre}</p>
+                                            <p><strong> Observaciones Informe: </strong>{observaciones}</p>
+                                            <p><strong> Sector: </strong>{loteInfo.sectorNombre}</p>
+                                            <p><strong> Sub sector: </strong>{loteInfo.subSectorNombre}</p>
+                                            <p><strong> Parte: </strong>{loteInfo.parteNombre}</p>
+                                            <p><strong> Elemento: </strong>{loteInfo.elementoNombre}</p>
+                                            <p><strong> Lote: </strong>{loteInfo.nombre}</p>
+                                            <p><strong> Pk inicial: </strong>{loteInfo.pkInicial}</p>
+                                            <p><strong> Pk final: </strong>{loteInfo.pkFinal}</p>
+                                            <p><strong> Usuario: </strong>{nombreResponsable}</p>
+                                            <p>
+                                                <strong>Resultado:</strong>{' '}
+                                                <span className={`font-bold ${resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}`}>
+                                                    {resultadoInspeccion}
+                                                </span>
+                                            </p>
+
+
+                                            <p><strong> Comentarios inspección: </strong>{comentario}</p>
+
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+
+
+
+                            <div className="flex justify-center gap-4 mt-8">
                                 <button
                                     onClick={() => {
+
                                         handleConfirmarEnvio()
                                         setMostrarConfirmacion(false);
                                     }}
@@ -608,6 +682,7 @@ function FormularioInspeccion({ handleConfirmarEnvioPdf, setMensajeExitoInspecci
                                 >
                                     Confirmar
                                 </button>
+
                                 <button
                                     onClick={() => setMostrarConfirmacion(false)}
                                     className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -619,6 +694,28 @@ function FormularioInspeccion({ handleConfirmarEnvioPdf, setMensajeExitoInspecci
                     </div>
                 )
             }
+
+            {mostrarConfirmacionAdicional && (
+                <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-900 bg-opacity-90 text-gray-500 font-medium text-center">
+                    <div className="bg-white flex flex-col items-center p-10 rounded-lg shadow-lg">
+                       
+                        <p className='text-3xl font-bold'>
+                                                Resultado:{' '}
+                                                <span className={resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}>
+                                                    {resultadoInspeccion}
+                                                </span>
+                                            </p>
+                        <h2 className="font-bold text-lg mb-2 mt-6">¿Estás seguro de que quieres guardar los datos?</h2>
+                        
+                        <p className='text-xl font-bold text-amber-600'>
+                            ¿No podras modificarlos posteriormente y se guardara el informe</p>
+                        <div className="flex gap-4 justify-center mt-8">
+                            <button onClick={handleConfirmacionFinal} className="bg-sky-600 text-white font-bold py-2 px-4 rounded">Confirmar</button>
+                            <button onClick={() => setMostrarConfirmacionAdicional(false)} className="bg-gray-500 text-white font-bold py-2 px-4 rounded">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
 
         </div>
