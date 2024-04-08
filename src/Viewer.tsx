@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as OBC from "openbim-components";
 import * as THREE from "three";
 import { db } from '../firebase_config';
-import { getDoc, getDocs, query, collection, where, doc, updateDoc, increment, addDoc } from 'firebase/firestore';
+import { getDoc, getDocs, doc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc, deleteDoc } from 'firebase/firestore';
 import { IoMdAddCircle } from 'react-icons/io';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { FaFilePdf } from "react-icons/fa6"; // Importa los íconos para "Apto" y "No apto"
@@ -15,191 +15,193 @@ import jsPDF from 'jspdf';
 import logo from './assets/tpf_logo_azul.png'
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import FormularioInspeccion from './Components/FormularioInspeccion';
+import Trazabilidad from './Pages/Administrador/Trazabilidad'
+import TrazabilidadBim from './Pages/Administrador/TrazabiidadBim';
 
 
 interface Lote {
-  docId: string;
-  nombre: string;
-  idBim: string;
-  sectorNombre: string;
-  subSectorNombre: string;
-  parteNombre: string;
-  elementoNombre: string;
-  loteNombre: string;
-  ppiNombre: string;
+    docId: string;
+    nombre: string;
+    idBim: string;
+    sectorNombre: string;
+    subSectorNombre: string;
+    parteNombre: string;
+    elementoNombre: string;
+    loteNombre: string;
+    ppiNombre: string;
 }
 
 export default function ViewerComponent() {
-  const [modelCount, setModelCount] = useState(0);
-  const [lotes, setLotes] = useState<Lote[]>([]);
-  const [selectedGlobalId, setSelectedGlobalId] = useState<string | null>(null);
-  const [selectedLote, setSelectedLote] = useState<Lote | null>(null);
-  const [inspecciones, setInspecciones] = useState([]);
+    const [modelCount, setModelCount] = useState(0);
+    const [lotes, setLotes] = useState<Lote[]>([]);
+    const [selectedGlobalId, setSelectedGlobalId] = useState<string | null>(null);
+    const [selectedLote, setSelectedLote] = useState<Lote | null>(null);
+    const [inspecciones, setInspecciones] = useState([]);
 
 
-  useEffect(() => {
-    const obtenerLotes = async () => {
-      try {
-        const lotesRef = collection(db, "lotes");
-        const querySnapshot = await getDocs(lotesRef);
-        const lotesData = querySnapshot.docs.map(doc => ({
-          docId: doc.id,
-          ...doc.data(),
-        })) as Lote[];
-        setLotes(lotesData);
-      } catch (error) {
-        console.error('Error al obtener los lotes:', error);
-      }
-    };
-
-    obtenerLotes();
-  }, []);
-
-  useEffect(() => {
-    let viewer;
-    let grid;
-    let fragmentManager;
-    let ifcLoader;
-    let highlighter;
-    let propertiesProcessor;
-    let mainToolbar;
-
-    const initViewer = () => {
-      viewer = new OBC.Components();
-
-      const sceneComponent = new OBC.SimpleScene(viewer);
-      sceneComponent.setup();
-      viewer.scene = sceneComponent;
-
-      const viewerContainer = document.getElementById("viewerContainer") as HTMLDivElement;
-      const rendererComponent = new OBC.PostproductionRenderer(viewer, viewerContainer);
-      viewer.renderer = rendererComponent;
-
-      const cameraComponent = new OBC.OrthoPerspectiveCamera(viewer);
-      viewer.camera = cameraComponent;
-
-      const raycasterComponent = new OBC.SimpleRaycaster(viewer);
-      viewer.raycaster = raycasterComponent;
-
-      viewer.init();
-      cameraComponent.updateAspect();
-      rendererComponent.postproduction.enabled = true;
-
-      grid = new OBC.SimpleGrid(viewer, new THREE.Color(0x666666));
-      rendererComponent.postproduction.customEffects.excludedMeshes.push(grid.get());
-
-      fragmentManager = new OBC.FragmentManager(viewer);
-      ifcLoader = new OBC.FragmentIfcLoader(viewer);
-
-      highlighter = new OBC.FragmentHighlighter(viewer);
-      highlighter.setup();
-
-      propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
-      highlighter.events.select.onClear.add(() => {
-        propertiesProcessor.cleanPropertiesList();
-        setSelectedGlobalId(null);
-      });
-      
-      ifcLoader.onIfcLoaded.add(model => {
-        setModelCount(fragmentManager.groups.length);
-        propertiesProcessor.process(model);
-        highlighter.events.select.onHighlight.add((selection) => {
-            const fragmentID = Object.keys(selection)[0];
-            const expressID = Number([...selection[fragmentID]][0]);
-            const properties = propertiesProcessor.getProperties(model, expressID.toString());
-            if (properties) {
-              const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
-              const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
-              setSelectedGlobalId(globalId);
-              const lote = lotes.find(l => l.idBim === globalId);
-          
-              if (lote) {
-                setSelectedLote(lote);
-                localStorage.setItem('loteId', lote.docId);
-                obtenerInspecciones(lote.docId);
-              } else {
-                // Aquí se maneja el caso de que no haya un lote correspondiente
-                setSelectedLote(null); // Asegura que no se muestren datos de un lote previo
-                setInspecciones([]); // Limpia las inspecciones previas
-                localStorage.removeItem('loteId'); // Opcional: Limpia el localStorage si es necesario
-              }
+    useEffect(() => {
+        const obtenerLotes = async () => {
+            try {
+                const lotesRef = collection(db, "lotes");
+                const querySnapshot = await getDocs(lotesRef);
+                const lotesData = querySnapshot.docs.map(doc => ({
+                    docId: doc.id,
+                    ...doc.data(),
+                })) as Lote[];
+                setLotes(lotesData);
+            } catch (error) {
+                console.error('Error al obtener los lotes:', error);
             }
-          });
-          
-          
-        highlighter.update();
-      });
+        };
 
-      mainToolbar = new OBC.Toolbar(viewer);
-      mainToolbar.addChild(
-        ifcLoader.uiElement.get("main"),
-        propertiesProcessor.uiElement.get("main")
-      );
-      viewer.ui.addToolbar(mainToolbar);
+        obtenerLotes();
+    }, []);
+
+    useEffect(() => {
+        let viewer;
+        let grid;
+        let fragmentManager;
+        let ifcLoader;
+        let highlighter;
+        let propertiesProcessor;
+        let mainToolbar;
+
+        const initViewer = () => {
+            viewer = new OBC.Components();
+
+            const sceneComponent = new OBC.SimpleScene(viewer);
+            sceneComponent.setup();
+            viewer.scene = sceneComponent;
+
+            const viewerContainer = document.getElementById("viewerContainer") as HTMLDivElement;
+            const rendererComponent = new OBC.PostproductionRenderer(viewer, viewerContainer);
+            viewer.renderer = rendererComponent;
+
+            const cameraComponent = new OBC.OrthoPerspectiveCamera(viewer);
+            viewer.camera = cameraComponent;
+
+            const raycasterComponent = new OBC.SimpleRaycaster(viewer);
+            viewer.raycaster = raycasterComponent;
+
+            viewer.init();
+            cameraComponent.updateAspect();
+            rendererComponent.postproduction.enabled = true;
+
+            grid = new OBC.SimpleGrid(viewer, new THREE.Color(0x666666));
+            rendererComponent.postproduction.customEffects.excludedMeshes.push(grid.get());
+
+            fragmentManager = new OBC.FragmentManager(viewer);
+            ifcLoader = new OBC.FragmentIfcLoader(viewer);
+
+            highlighter = new OBC.FragmentHighlighter(viewer);
+            highlighter.setup();
+
+            propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
+            highlighter.events.select.onClear.add(() => {
+                propertiesProcessor.cleanPropertiesList();
+                setSelectedGlobalId(null);
+            });
+
+            ifcLoader.onIfcLoaded.add(model => {
+                setModelCount(fragmentManager.groups.length);
+                propertiesProcessor.process(model);
+                highlighter.events.select.onHighlight.add((selection) => {
+                    const fragmentID = Object.keys(selection)[0];
+                    const expressID = Number([...selection[fragmentID]][0]);
+                    const properties = propertiesProcessor.getProperties(model, expressID.toString());
+                    if (properties) {
+                        const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
+                        const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
+                        setSelectedGlobalId(globalId);
+                        const lote = lotes.find(l => l.idBim === globalId);
+
+                        if (lote) {
+                            setSelectedLote(lote);
+                            localStorage.setItem('loteId', lote.docId);
+                            obtenerInspecciones(lote.docId);
+                        } else {
+                            // Aquí se maneja el caso de que no haya un lote correspondiente
+                            setSelectedLote(null); // Asegura que no se muestren datos de un lote previo
+                            setInspecciones([]); // Limpia las inspecciones previas
+                            localStorage.removeItem('loteId'); // Opcional: Limpia el localStorage si es necesario
+                        }
+                    }
+                });
+
+
+                highlighter.update();
+            });
+
+            mainToolbar = new OBC.Toolbar(viewer);
+            mainToolbar.addChild(
+                ifcLoader.uiElement.get("main"),
+                propertiesProcessor.uiElement.get("main")
+            );
+            viewer.ui.addToolbar(mainToolbar);
+        };
+
+        initViewer();
+
+        return () => {
+            if (viewer) {
+                viewer.dispose();
+            }
+        };
+    }, [lotes]);
+
+
+    const viewerContainerStyle: React.CSSProperties = {
+        width: "100%",
+        height: "700px",
+        position: "relative",
+        gridArea: "viewer",
+
+    }
+
+    const titleStyle: React.CSSProperties = {
+        position: "absolute",
+        top: "15px",
+        left: "15px"
+    }
+
+    const imagesContainerStyle: React.CSSProperties = {
+        position: 'absolute',
+        top: '60px',
+        left: '15px'
     };
 
-    initViewer();
 
-    return () => {
-      if (viewer) {
-        viewer.dispose();
-      }
+
+    // Función para obtener las inspecciones de un lote
+    // Asegúrate de llamar a esta función cuando se seleccione un lote
+    const obtenerInspecciones = async (loteId) => {
+        try {
+            const inspeccionesRef = collection(db, 'lotes', loteId, 'inspecciones');
+            const querySnapshot = await getDocs(inspeccionesRef);
+            const inspeccionesData = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            setInspecciones(inspeccionesData); // Actualiza el estado con las inspecciones obtenidas
+        } catch (error) {
+            console.error('Error al obtener las inspecciones:', error);
+        }
     };
-  }, [lotes]);
 
+    const [ppiNombre, setPpiNombre] = useState('');
+    // Manejar el cambio de lote seleccionado
+    useEffect(() => {
+        if (selectedLote) {
+            obtenerInspecciones(selectedLote.docId);
 
-  const viewerContainerStyle: React.CSSProperties = {
-    width: "100%",
-    height: "700px",
-    position: "relative",
-    gridArea: "viewer",
-
-  }
-
-  const titleStyle: React.CSSProperties = {
-    position: "absolute",
-    top: "15px",
-    left: "15px"
-  }
-
-  const imagesContainerStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '60px',
-    left: '15px'
-  };
+        }
+    }, [selectedLote, ppiNombre]);
 
 
 
-  // Función para obtener las inspecciones de un lote
-  // Asegúrate de llamar a esta función cuando se seleccione un lote
-  const obtenerInspecciones = async (loteId) => {
-    try {
-      const inspeccionesRef = collection(db, 'lotes', loteId, 'inspecciones');
-      const querySnapshot = await getDocs(inspeccionesRef);
-      const inspeccionesData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setInspecciones(inspeccionesData); // Actualiza el estado con las inspecciones obtenidas
-    } catch (error) {
-      console.error('Error al obtener las inspecciones:', error);
-    }
-  };
+    // componente copiado
 
-  const [ppiNombre, setPpiNombre] = useState('');
-  // Manejar el cambio de lote seleccionado
-  useEffect(() => {
-    if (selectedLote) {
-      obtenerInspecciones(selectedLote.docId);
-     
-    }
-  }, [selectedLote, ppiNombre]);
-
-
-
-  // componente copiado
-
-  const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
+    const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
 
     const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
     const imagenPath2 = logo
@@ -207,7 +209,7 @@ export default function ViewerComponent() {
     const [obra, setObra] = useState(localStorage.getItem('obra'));
     const [tramo, setTramo] = useState(localStorage.getItem('tramo'));
     const [observaciones, setObservaciones] = useState('');
-    const  idLote = localStorage.getItem('loteId');
+    const idLote = localStorage.getItem('loteId');
     const navigate = useNavigate();
     const [ppi, setPpi] = useState(null);
 
@@ -282,16 +284,21 @@ export default function ViewerComponent() {
         setModal(true);
     };
 
+
+
     const handleOpenModalFormulario = (subactividadId) => {
-
-
         setCurrentSubactividadId(subactividadId);
-        console.log(subactividadId)
+
         // Inicializar la selección temporal con el valor actual si existe
         const valorActual = seleccionApto[subactividadId]?.resultadoInspeccion;
         setTempSeleccion(valorActual);
+        // Añadir aquí el reseteo de los estados necesarios
+        setComentario(''); // Resetear el comentario a un string vacío
+        setObservaciones(''); // Si también necesitas resetear observaciones o cualquier otro estado, hazlo aquí
         setModalFormulario(true);
     };
+
+
 
 
 
@@ -299,6 +306,8 @@ export default function ViewerComponent() {
         setModal(false)
         setModalFormulario(false)
         setFormulario(false)
+        setResultadoInspeccion('Apto')
+
 
     };
 
@@ -418,7 +427,7 @@ export default function ViewerComponent() {
     // agregar cometarios
     const [comentario, setComentario] = useState("");
 
-    const [resultadoInspeccion, setResultadoInspeccion] = useState("");
+    const [resultadoInspeccion, setResultadoInspeccion] = useState('Apto');
 
     // Define la fecha, el responsable y genera la firma aquí
     const fechaHoraActual = new Date().toLocaleString('es-ES', {
@@ -596,7 +605,7 @@ export default function ViewerComponent() {
 
     const [formulario, setFormulario] = useState(true)
 
-  
+
     const enviarDatosARegistros = async () => {
         // Descomponer currentSubactividadId para obtener los índices
         const [, actividadIndex, subactividadIndex] = currentSubactividadId.split('-').map(Number);
@@ -657,7 +666,7 @@ export default function ViewerComponent() {
         // Esperar un poco antes de mostrar el modal de éxito para asegurar que los modales anteriores se han cerrado
         setTimeout(() => {
             setModalExito(true);
-            
+
         }, 300); // Ajusta el tiempo según sea necesario
     };
 
@@ -747,28 +756,28 @@ export default function ViewerComponent() {
         const doc = new jsPDF();
         // Establecer el tamaño de fuente deseado
         const fontSize = 10;
-    
+
         // Tamaño y posición del recuadro
         const rectX = 10;
         const rectY = 10;
         const rectWidth = 190; // Ancho del recuadro
         const rectHeight = 20; // Altura del recuadro
-    
+
         // Establecer el tamaño de fuente
         doc.setFontSize(fontSize);
-    
+
         doc.setFillColor(230, 230, 230); // Gris muy claro casi blanco
-    
+
         // Dibujar el recuadro con fondo gris
         doc.rect(rectX, rectY, rectWidth, rectHeight, 'F'); // 'F' indica que se debe rellenar el rectángulo
-    
+
         // Establecer el color de texto
         doc.setTextColor(0, 0, 0); // Color negro
-    
+
         // Colocar texto dentro del recuadro
         doc.text(titulo, 75, 18); // Ajusta las coordenadas según tu diseño
         doc.text(nombreProyecto, 75, 22); // Ajusta las coordenadas según tu diseño
-    
+
         if (imagenPath2) {
             const imgData = imagenPath2;
             doc.addImage(imgData, 'JPEG', 12, 12, 30, 15); // Ajusta las coordenadas y dimensiones según tu diseño
@@ -777,98 +786,98 @@ export default function ViewerComponent() {
             const imgData = imagenPath;
             doc.addImage(imgData, 'JPEG', 45, 15, 20, 10); // Ajusta las coordenadas y dimensiones según tu diseño
         }
-    
+
         // Dibujar el borde después de agregar las imágenes
         doc.setDrawColor(0); // Color negro
         doc.rect(rectX, rectY, rectWidth, rectHeight); // Dibujar el borde del rectángulo
-    
-    
+
+
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
         // Tamaño y posición del segundo recuadro
         const rectX2 = 10;
         const rectY2 = 30;
         const rectWidth2 = 190; // Ancho del recuadro
         const rectHeight2 = 20; // Altura del recuadro
-    
+
         // Establecer el ancho de la línea del borde
         const borderWidth = 0.5; // Ancho del borde en puntos
-    
+
         // Establecer el color de la línea del borde
         doc.setDrawColor(0); // Color negro
-    
+
         // Dibujar el borde del segundo recuadro
         doc.rect(rectX2, rectY2, rectWidth2, rectHeight2);
-    
+
         // Establecer el color de fondo para el segundo recuadro
         doc.setFillColor(240, 240, 240); // Gris muy claro casi blanco
-    
+
         // Dibujar el segundo recuadro con fondo gris claro y borde en todos los lados
         doc.rect(rectX2, rectY2, rectWidth2, rectHeight2, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde en todos los lados
-    
+
         // Establecer el tamaño de fuente
         doc.setFontSize(fontSize);
-    
+
         // Colocar texto dentro del segundo recuadro
         doc.text(`Obra: ${documentoFormulario.obra}`, 15, 40);
         doc.text(`Tramo: ${documentoFormulario.tramo}`, 15, 45);
         doc.text(`Nº de registro: ${documentoFormulario.id}`, 130, 40);
         doc.text(`Fecha: ${documentoFormulario.fechaHoraActual}`, 130, 45);
-    
-    
+
+
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
         // Tamaño y posición del recuadro
         const rectX3 = 10;
         const rectY3 = 50;
         const rectWidth3 = 190; // Ancho del recuadro
         const rectHeight3 = 20; // Altura del recuadro
-    
+
         // Establecer el tamaño de fuente
         doc.setFontSize(fontSize);
-    
+
         // Establecer el color de fondo para el recuadro
         doc.setFillColor(240, 240, 240); // Gris muy claro casi blanco
-    
+
         // Dibujar el recuadro con fondo gris claro
         doc.rect(rectX3, rectY3, rectWidth3, rectHeight3, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
-    
+
         // Establecer el color de texto
         doc.setTextColor(0, 0, 0); // Color negro
-    
+
         // Colocar texto dentro del recuadro
         doc.text(`PPI: ${documentoFormulario.ppiNombre}`, 15, 60);
         doc.text(`Plano que aplica: `, 15, 65);
-    
-    
+
+
         // Tamaño y posición del recuadro
         const rectX4 = 10;
         const rectY4 = 70;
         const rectWidth4 = 190; // Ancho del recuadro
         const rectHeight4 = 20; // Altura del recuadro
-    
+
         // Establecer el tamaño de fuente
         doc.setFontSize(fontSize);
-    
+
         // Establecer el color de fondo para el recuadro
         doc.setFillColor(240, 240, 240); // Gris claro casi blanco
-    
+
         // Dibujar el recuadro con fondo gris claro
         doc.rect(rectX4, rectY4, rectWidth4, rectHeight4, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
-    
+
         // Establecer el color de texto
         doc.setTextColor(0, 0, 0); // Color negro
-    
+
         // Dibujar el borde del rectángulo
         doc.rect(rectX4, rectY4, rectWidth4, rectHeight4);
-    
+
         // Texto a colocar con salto de línea
         const textoObservaciones = `Observaciones: ${documentoFormulario.observaciones}`;
-    
+
         // Dividir el texto en líneas cada vez que exceda 15 palabras
         const words = textoObservaciones.split(' ');
         const maxWordsPerLine = 15;
         const lines = [];
         let currentLine = '';
-    
+
         for (let i = 0; i < words.length; i++) {
             currentLine += words[i] + ' ';
             if ((i + 1) % maxWordsPerLine === 0 || i === words.length - 1) {
@@ -876,7 +885,7 @@ export default function ViewerComponent() {
                 currentLine = '';
             }
         }
-    
+
         // Colocar texto en el PDF
         let yPosition = rectY4 + fontSize + 2; // Iniciar la posición dentro del recuadro
         let xPosition = rectX4 + 5; // Ajustar posición x para evitar que el texto toque el borde del rectángulo
@@ -884,28 +893,28 @@ export default function ViewerComponent() {
             doc.text(line, xPosition, yPosition, { maxWidth: rectWidth4 - 4 }); // Ajustar maxWidth para evitar que el texto exceda el ancho del rectángulo
             yPosition += fontSize + 2; // Aumentar la posición para la siguiente línea
         });
-    
+
         // Tamaño y posición del recuadro 5
         const rectX5 = 10;
         const rectY5 = 90;
         const rectWidth5 = 190; // Ancho del recuadro
         const rectHeight5 = 80; // Altura del recuadro
-    
+
         // Establecer el tamaño de fuente
         doc.setFontSize(fontSize);
-    
+
         // Establecer el color de fondo para el recuadro 5
         doc.setFillColor(240, 240, 240); // Gris claro casi blanco
-    
+
         // Dibujar el recuadro 5 con fondo gris claro
         doc.rect(rectX5, rectY5, rectWidth5, rectHeight5, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
-    
+
         // Establecer el color de texto
         doc.setTextColor(0, 0, 0); // Color negro
-    
+
         // Dibujar el borde del recuadro 5
         doc.rect(rectX5, rectY5, rectWidth5, rectHeight5);
-    
+
         // Colocar texto dentro del recuadro 5
         doc.text(`Sector: ${documentoFormulario.sector}`, 15, 100);
         doc.text(`Subsector: ${documentoFormulario.subSector}`, 15, 110);
@@ -914,25 +923,25 @@ export default function ViewerComponent() {
         doc.text(`Lote: ${documentoFormulario.lote}`, 15, 140);
         doc.text(`Pk inicial: ${documentoFormulario.pkInicial}`, 15, 150);
         doc.text(`Pk final: ${documentoFormulario.pkFinal}`, 15, 160);
-    
+
         // Tamaño y posición del recuadro 6
         const rectX6 = 10;
         const rectY6 = 170;
         const rectWidth6 = 190; // Ancho del recuadro
         const rectHeight6 = 70; // Altura del recuadro
-    
+
         // Establecer el tamaño de fuente
         doc.setFontSize(fontSize);
-    
+
         // Establecer el color de fondo para el recuadro 6
         doc.setFillColor(240, 240, 240); // Gris claro casi blanco
-    
+
         // Dibujar el recuadro 6 con fondo gris claro
         doc.rect(rectX6, rectY6, rectWidth6, rectHeight6, 'FD');
-    
+
         // Dibujar el borde del recuadro 6
         doc.rect(rectX6, rectY6, rectWidth6, rectHeight6);
-    
+
         // Agregar imagen al PDF dentro del recuadro 6
         if (documentoFormulario.imagen) {
             doc.addImage(documentoFormulario.imagen, 'JPEG', 25, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
@@ -940,25 +949,25 @@ export default function ViewerComponent() {
         if (documentoFormulario.imagen2) {
             doc.addImage(documentoFormulario.imagen2, 'JPEG', 110, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
         }
-    
+
         // Tamaño y posición del recuadro 7
         const rectX7 = 10;
         const rectY7 = 240;
         const rectWidth7 = 190; // Ancho del recuadro
         const rectHeight7 = 28; // Altura del recuadro
-    
+
         // Establecer el tamaño de fuente
         doc.setFontSize(fontSize);
-    
+
         // Establecer el color de fondo para el recuadro 7
         doc.setFillColor(240, 240, 240); // Gris claro casi blanco
-    
+
         // Dibujar el recuadro 7 con fondo gris claro
         doc.rect(rectX7, rectY7, rectWidth7, rectHeight7, 'FD');
-    
+
         // Dibujar el borde del recuadro 7
         doc.rect(rectX7, rectY7, rectWidth7, rectHeight7);
-    
+
         // Colocar texto dentro del recuadro 7
         doc.text('Resultado de la inspección', 150, 250);
         doc.text(documentoFormulario.resultadoInspeccion, 150, 260);
@@ -967,13 +976,20 @@ export default function ViewerComponent() {
         doc.text(documentoFormulario.firma, 15, 260);
         doc.save('formulario.pdf');
         cerrarModalYLimpiarDatos()
-        
+
     };
 
-  return (
-    
-    <div className="min-h-screen text-gray-500 px-14 py-5">
-      <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+
+
+    const capturarGlobalId = () => {
+        localStorage.setItem('globalId', selectedGlobalId)
+
+    }
+
+    return (
+
+        <div className="min-h-screen text-gray-500 px-14 py-5">
+            <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
                 <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                 <Link to={'/'}>
                     <h1 className=' text-gray-500'>Inicio</h1>
@@ -991,132 +1007,140 @@ export default function ViewerComponent() {
             </div>
 
 
-      <div className='flex pt-6'>
+            <div className='flex pt-6'>
 
-        <div className="w-1/2 pr-5">
-          {selectedLote ? (
-            <div className="bg-gray-100 rounded-lg">
-              <div className="bg-gray-200 p-2 font-bold text-gray-700 rounded-t-lg">Información del Lote</div>
+                <div className="w-1/2 pr-5">
+                    {selectedLote ? (
+                        <div className="bg-gray-100 rounded-lg">
+                            <div className="bg-gray-200 p-2 font-bold text-gray-700 rounded-t-lg">Información del Lote</div>
 
-              <div className='px-2 py-1 text-sm flex flex-col gap-1 bg-white rounded-lg'>
-                <p className='border-b p-1 font-semibold text-sky-600'><strong>Lote: </strong>{selectedLote.nombre}</p>
-                <p className='border-b p-1  font-semibold text-sky-600'><strong>Ppi: </strong>{selectedLote.ppiNombre}</p>
-                <p className='border-b p-1 '><strong>Global id Bim: </strong>{selectedGlobalId}</p>
-                <p className='border-b p-1 '><strong>Sector: </strong>{selectedLote.sectorNombre}</p>
-                <p className='border-b p-1 '><strong>Sub sector: </strong>{selectedLote.subSectorNombre}</p>
-                <p className='border-b p-1 '><strong>Parte: </strong>{selectedLote.parteNombre}</p>
-                <p className='p-1 '><strong>Elemento: </strong>{selectedLote.elementoNombre}</p>
-              </div>
+                            <div className='px-2 py-1 text-sm flex flex-col gap-1 bg-white rounded-lg'>
+                                <p className='border-b p-1 font-semibold text-sky-600'><strong>Lote: </strong>{selectedLote.nombre}</p>
+                                <p className='border-b p-1  font-semibold text-sky-600'><strong>Ppi: </strong>{selectedLote.ppiNombre}</p>
+                                <p className='border-b p-1 '><strong>Global id Bim: </strong>{selectedGlobalId}</p>
+                                <p className='border-b p-1 '><strong>Sector: </strong>{selectedLote.sectorNombre}</p>
+                                <p className='border-b p-1 '><strong>Sub sector: </strong>{selectedLote.subSectorNombre}</p>
+                                <p className='border-b p-1 '><strong>Parte: </strong>{selectedLote.parteNombre}</p>
+                                <p className='p-1 '><strong>Elemento: </strong>{selectedLote.elementoNombre}</p>
+                            </div>
 
-              <div className="bg-gray-300 p-2 font-bold text-gray-700 mt-6 rounded-t-lg">Avance de la inspección</div>
-              <div className=''>
-                {
-                  inspecciones.length > 0 && inspecciones.map((inspeccion) => (
-                    <div>
-                    {ppi && ppi.actividades.map((actividad, indexActividad) => [
-                        // Row for activity name
-                        <div key={`actividad-${indexActividad}`} className="bg-gray-200 grid grid-cols-12 items-center p-2 border-b border-gray-200 text-sm font-medium">
-                            <div className="col-span-1">
+                            <div className="bg-gray-300 p-2 font-bold text-gray-700 mt-6 rounded-t-lg">Avance de la inspección</div>
+                            <div className=''>
+                                {
+                                    inspecciones.length > 0 && inspecciones.map((inspeccion) => (
+                                        <div>
+                                            {ppi && ppi.actividades.map((actividad, indexActividad) => [
+                                                // Row for activity name
+                                                <div key={`actividad-${indexActividad}`} className="bg-gray-200 grid grid-cols-12 items-center p-2 border-b border-gray-200 text-sm font-medium">
+                                                    <div className="col-span-1">
 
-                                (V)
+                                                        (V)
+
+                                                    </div>
+                                                    <div className="col-span-1">
+
+                                                        {actividad.numero}
+
+                                                    </div>
+                                                    <div className="col-span-10">
+
+                                                        {actividad.actividad}
+
+                                                    </div>
+
+                                                </div>,
+                                                // Rows for subactividades
+                                                ...actividad.subactividades.map((subactividad, indexSubactividad) => (
+                                                    <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-12 p-2 items-center border-b border-gray-200 bg-white rounded-b-lg text-sm">
+                                                        <div className="col-span-1 p-1 ">
+                                                            V-{subactividad.version}  {/* Combina el número de actividad y el índice de subactividad */}
+                                                        </div>
+                                                        <div className="col-span-1 p-1 ">
+                                                            {subactividad.numero} {/* Combina el número de actividad y el índice de subactividad */}
+                                                        </div>
+
+                                                        <div className="col-span-7 p-1">
+                                                            {subactividad.nombre}
+                                                        </div>
+
+                                                        <div className="col-span-2 p-1 flex justify-center cursor-pointer" >
+                                                            {subactividad.resultadoInspeccion ? (
+                                                                subactividad.resultadoInspeccion === "Apto" ? (
+                                                                    <span
+
+                                                                        className="w-full font-bold text-xs p-2 rounded  text-center text-green-500 cursor-pointer">
+                                                                        Apto
+
+                                                                    </span>
+                                                                ) : subactividad.resultadoInspeccion === "No apto" ? (
+                                                                    <span
+
+                                                                        className="w-full font-bold text-xs p-2 rounded w-full text-center text-red-600 cursor-pointer">
+                                                                        No apto
+                                                                    </span>
+                                                                ) : (
+                                                                    <span
+                                                                        onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                                        className="w-full font-bold text-medium text-lg p-2 rounded  w-full flex justify-center cursor-pointer">
+                                                                        <IoMdAddCircle />
+                                                                    </span>
+                                                                )
+                                                            ) : (
+                                                                <span
+                                                                    onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                                    className="w-full font-bold text-medium text-lg p-2 rounded  w-full flex justify-center cursor-pointer">
+                                                                    <IoMdAddCircle />
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="col-span-1 p-1 flex justify-start cursor-pointer" >
+                                                            {subactividad.formularioEnviado ? (
+
+                                                                <p
+                                                                    onClick={() => handleMostrarIdRegistro(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                                    className='text-lg'><FaFilePdf /></p>
+                                                            ) : null}
+                                                        </div>
+
+
+
+
+
+
+                                                    </div>
+                                                ))
+                                            ])}
+                                        </div>
+                                    ))
+                                }
 
                             </div>
-                            <div className="col-span-1">
 
-                                {actividad.numero}
-
+                        </div>
+                    ) : (
+                        <div>
+                           
+                            <div className="bg-gray-200  px-5 py-3 font-medium text-gray-700 rounded-t-lg text-gray-500">
+                                
+                               <p>No encontrado</p>
+                               <p>Global Id: <strong className='text-amber-500'>{selectedGlobalId}</strong></p>
                             </div>
-                            <div className="col-span-10">
-
-                                {actividad.actividad}
-
-                            </div>
-                         
-                        </div>,
-                        // Rows for subactividades
-                        ...actividad.subactividades.map((subactividad, indexSubactividad) => (
-                            <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-12 p-2 items-center border-b border-gray-200 bg-white rounded-b-lg text-sm">
-                                <div className="col-span-1 p-1 ">
-                                    V-{subactividad.version}  {/* Combina el número de actividad y el índice de subactividad */}
-                                </div>
-                                <div className="col-span-1 p-1 ">
-                                    {subactividad.numero} {/* Combina el número de actividad y el índice de subactividad */}
-                                </div>
-
-                                <div className="col-span-7 p-1">
-                                    {subactividad.nombre}
-                                </div>
-
-                                <div className="col-span-2 p-1 flex justify-center cursor-pointer" >
-                                    {subactividad.resultadoInspeccion ? (
-                                        subactividad.resultadoInspeccion === "Apto" ? (
-                                            <span
-
-                                                className="w-full font-bold text-xs p-2 rounded  text-center text-green-500 cursor-pointer">
-                                                Apto
-
-                                            </span>
-                                        ) : subactividad.resultadoInspeccion === "No apto" ? (
-                                            <span
-
-                                                className="w-full font-bold text-xs p-2 rounded w-full text-center text-red-600 cursor-pointer">
-                                                No apto
-                                            </span>
-                                        ) : (
-                                            <span
-                                                onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                className="w-full font-bold text-medium text-lg p-2 rounded  w-full flex justify-center cursor-pointer">
-                                                <IoMdAddCircle />
-                                            </span>
-                                        )
-                                    ) : (
-                                        <span
-                                            onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
-                                            className="w-full font-bold text-medium text-lg p-2 rounded  w-full flex justify-center cursor-pointer">
-                                            <IoMdAddCircle />
-                                        </span>
-                                    )}
-                                </div>
-
-                                <div className="col-span-1 p-1 flex justify-start cursor-pointer" >
-                                    {subactividad.formularioEnviado ? (
-
-                                        <p
-                                            onClick={() => handleMostrarIdRegistro(`apto-${indexActividad}-${indexSubactividad}`)}
-                                            className='text-lg'><FaFilePdf /></p>
-                                    ) : null}
-                                </div>
-
                             
+                                <TrazabilidadBim selectedGlobalId ={selectedGlobalId}/>
+                            
+                            <p className='mt-5'><strong>Global id Bim: </strong>{selectedGlobalId}</p>
 
 
+                        </div>
 
-
-                            </div>
-                        ))
-                    ])}
+                    )}
                 </div>
-                  ))
-                }
-
-              </div>
+                <div className='w-1/2' id="viewerContainer" style={viewerContainerStyle}></div>
 
             </div>
-          ) : (
-            <div>
-              <p className="text-sm text-gray-600 ">Haz click en el visor para ver detalles del lote.
-              <br />
-              <strong className='text-amber-500 text-sm'>* </strong>Si no puedes visualizar la inspección, primero asigna el global id a un elemento en el modulo administrador</p>
-              <p className='mt-5'><strong>Global id Bim: </strong>{selectedGlobalId}</p>
-            </div>
 
-          )}
-        </div>
-        <div className='w-1/2' id="viewerContainer" style={viewerContainerStyle}></div>
-
-      </div>
-
-      {modalFormulario && (
+            {modalFormulario && (
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
@@ -1129,19 +1153,39 @@ export default function ViewerComponent() {
                         </button>
 
                         <div className="my-6">
-                            <label htmlFor="resultadoInspeccion" className="block text-xl font-bold text-gray-500 mb-4 flex items-center gap-2 mb-2">
-                                <SiReacthookform /> Resultado de la inspección:
+                            <label htmlFor="resultadoInspeccion" className="block text-2xl font-bold text-gray-500 mb-4 flex items-center gap-2">
+                                <span className='text-3xl'><SiReacthookform /></span> Resultado de la inspección:
                             </label>
-                            <select
-                                id="resultadoInspeccion"
-                                value={resultadoInspeccion}
-                                onChange={(e) => setResultadoInspeccion(e.target.value)}
-                                className="block w-full py-2 text-base border p-2 border-gray-300 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
-                            >
-                                <option value="">Selecciona una opción del desplegable...</option>
-                                <option value="Apto">Apto</option>
-                                <option value="No apto">No apto</option>
-                            </select>
+                            <div className="block w-full py-2 text-base p-2 border-gray-300 focus:outline-none focus:ring-gray-500  sm:text-sm rounded-md">
+                                {/* Opción Apto */}
+                                <div>
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            name="resultadoInspeccion"
+                                            value="Apto"
+                                            checked={resultadoInspeccion === "Apto"}
+                                            onChange={(e) => setResultadoInspeccion(e.target.value)}
+                                            className="form-radio"
+                                        />
+                                        <span className="ml-2">Apto</span>
+                                    </label>
+                                </div>
+                                {/* Opción No apto */}
+                                <div>
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            name="resultadoInspeccion"
+                                            value="No apto"
+                                            checked={resultadoInspeccion === "No apto"}
+                                            onChange={(e) => setResultadoInspeccion(e.target.value)}
+                                            className="form-radio"
+                                        />
+                                        <span className="ml-2">No apto</span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="mb-4">
@@ -1186,7 +1230,7 @@ export default function ViewerComponent() {
                             handleConfirmarEnvioPdf={handleConfirmarEnvioPdf}
                             setMensajeExitoInspeccion={setMensajeExitoInspeccion}
                             handleConfirmarEnviotablaPpi={handleConfirmarEnviotablaPpi}
-                            
+
 
                         />
 
@@ -1210,7 +1254,7 @@ export default function ViewerComponent() {
                 </div>
             )}
 
-{modalInforme && (
+            {modalInforme && (
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
@@ -1319,11 +1363,11 @@ export default function ViewerComponent() {
                 </div>
             )}
 
-{modalRecuperarFormulario && (
+            {modalRecuperarFormulario && (
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
-                    <div className="mx-auto w-[400px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8 text-center flex flex-col gap-5 items-center"
+                    <div className="mx-auto w-[400px] modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8 text-center flex flex-col gap-5 items-center"
                     >
                         <button
                             onClick={cerrarModalYLimpiarDatos}
@@ -1336,13 +1380,13 @@ export default function ViewerComponent() {
                         <p className='text-gray-500 font-bold text-xl'>¿Imprimir el informe?</p>
                         <div className='flex gap-5'>
                             <button className='bg-sky-600 hover:bg-sky-700 px-4 py-3 rounded-md shadow-md text-white font-medium flex gap-2 items-center' onClick={generatePDF}>Si</button>
-                            <button className='bg-gray-500 hover:bg-gray-600 px-4 py-3 rounded-md shadow-md text-white font-medium flex gap-2 items-center'  onClick={cerrarModalYLimpiarDatos}>Cancelar</button>
+                            <button className='bg-gray-500 hover:bg-gray-600 px-4 py-3 rounded-md shadow-md text-white font-medium flex gap-2 items-center' onClick={cerrarModalYLimpiarDatos}>Cancelar</button>
                         </div>
                     </div>
 
                 </div>
             )}
 
-    </div>
-  );
+        </div>
+    );
 }

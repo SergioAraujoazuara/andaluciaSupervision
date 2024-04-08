@@ -8,7 +8,7 @@ import imageCompression from 'browser-image-compression';
 import { db } from '../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 
-function FormularioInspeccion({ formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion }) {
+function FormularioInspeccion({formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion }) {
 
     const { id } = useParams()
     const idLote = localStorage.getItem('loteId');
@@ -193,8 +193,11 @@ function FormularioInspeccion({ formulario, crearVariableFormularioTrue, handleC
             setIdRegistro(docId)
             // Opcionalmente, cierra el modal o limpia el formulario aquí
             setModalFormulario(false);
-            setResultadoInspeccion('')
-            setObservaciones('')
+            
+           
+            
+           
+            
             setMensajeExitoInspeccion('Inspección completada con éxito')
             console.log("Documento escrito con ID: ", docRef.id);
             return docRef.id; // Devolver el ID del documento creado
@@ -219,6 +222,8 @@ function FormularioInspeccion({ formulario, crearVariableFormularioTrue, handleC
             setMostrarConfirmacionAdicional(false); // Cierra el segundo modal tras la confirmación
             // Aquí puedes también limpiar el formulario o realizar cualquier otra acción necesaria tras el envío
             setMensajeExitoInspeccion('Inspección completada con éxito');
+            
+            setObservaciones('')
             // Si es necesario, cierra el formulario o limpia los estados
         } else {
             // Manejo en caso de que el envío falle o no se complete
@@ -618,7 +623,7 @@ function FormularioInspeccion({ formulario, crearVariableFormularioTrue, handleC
             {
                 mostrarConfirmacion && (
                     <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-900 bg-opacity-90 text-gray-500 fonmt-medium text-center">
-                        <div className="mx-auto w-[700px] h-[780px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8">
+                        <div className="mx-auto w-[720px] h-800px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8">
 
                             <div>
                                 {resultadoInspeccion && (

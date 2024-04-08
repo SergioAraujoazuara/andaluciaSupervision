@@ -99,23 +99,28 @@ function TablaPpi() {
         setModal(true);
     };
 
+    
     const handleOpenModalFormulario = (subactividadId) => {
-
-
         setCurrentSubactividadId(subactividadId);
-        console.log(subactividadId)
+        console.log(subactividadId);
         // Inicializar la selección temporal con el valor actual si existe
         const valorActual = seleccionApto[subactividadId]?.resultadoInspeccion;
         setTempSeleccion(valorActual);
+        // Añadir aquí el reseteo de los estados necesarios
+        setComentario(''); // Resetear el comentario a un string vacío
+        setObservaciones(''); // Si también necesitas resetear observaciones o cualquier otro estado, hazlo aquí
         setModalFormulario(true);
     };
+    
 
 
 
     const handleCloseModal = () => {
         setModal(false)
         setModalFormulario(false)
-       
+        setComentario('')
+        setResultadoInspeccion('Apto')
+
 
     };
 
@@ -235,7 +240,7 @@ function TablaPpi() {
     // agregar cometarios
     const [comentario, setComentario] = useState("");
 
-    const [resultadoInspeccion, setResultadoInspeccion] = useState("");
+    const [resultadoInspeccion, setResultadoInspeccion] = useState("Apto");
 
     // Define la fecha, el responsable y genera la firma aquí
     const fechaHoraActual = new Date().toLocaleString('es-ES', {
@@ -363,7 +368,7 @@ function TablaPpi() {
 
     const closeModalConfirmacion = () => {
         setModalInforme(false)
-        
+
     }
 
     const confirmarModalInforme = () => {
@@ -457,8 +462,9 @@ function TablaPpi() {
 
             // Opcionalmente, cierra el modal o limpia el formulario aquí
             setModalFormulario(false);
-            setResultadoInspeccion('')
+            
             setObservaciones('')
+            setComentario('')
             console.log("Documento escrito con ID: ", docRef.id);
             return docRef.id; // Devolver el ID del documento creado
 
@@ -473,11 +479,13 @@ function TablaPpi() {
         await handelEnviarFormulario();
         setMostrarConfirmacion(false);
         setModalInforme(false);
-
+        
+        setComentario('')
         // Esperar un poco antes de mostrar el modal de éxito para asegurar que los modales anteriores se han cerrado
         setTimeout(() => {
             setModalExito(true);
             
+
         }, 300); // Ajusta el tiempo según sea necesario
     };
 
@@ -493,7 +501,7 @@ function TablaPpi() {
         // Esperar un poco antes de mostrar el modal de éxito para asegurar que los modales anteriores se han cerrado
         setTimeout(() => {
             setModalExito(true);
-            
+
         }, 300); // Ajusta el tiempo según sea necesario
     };
 
@@ -953,7 +961,7 @@ function TablaPpi() {
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
-                    <div className="mx-auto w-[700px] h-[780px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
+                    <div className="mx-auto w-[720px] h-[780px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
                     >
                         <button
                             onClick={handleCloseModal}
@@ -962,21 +970,40 @@ function TablaPpi() {
                         </button>
 
                         <div className="my-6">
-                            <label htmlFor="resultadoInspeccion" className="block text-xl font-bold text-gray-500 mb-4 flex items-center gap-2 mb-2">
-                                <SiReacthookform /> Resultado de la inspección:
+                            <label htmlFor="resultadoInspeccion" className="block text-2xl font-bold text-gray-500 mb-4 flex items-center gap-2">
+                                <span className='text-3xl'><SiReacthookform /></span> Resultado de la inspección:
                             </label>
-                            <select
-                                id="resultadoInspeccion"
-                                value={resultadoInspeccion}
-                                onChange={(e) => setResultadoInspeccion(e.target.value)}
-                                className="block w-full py-2 text-base border p-2 border-gray-300 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
-                            >
-                                <option value="">Selecciona una opción del desplegable...</option>
-                                <option value="Apto">Apto</option>
-                                <option value="No apto">No apto</option>
-                            </select>
+                            <div className="block w-full py-2 text-base p-2 border-gray-300 focus:outline-none focus:ring-gray-500  sm:text-sm rounded-md">
+                                {/* Opción Apto */}
+                                <div>
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            name="resultadoInspeccion"
+                                            value="Apto"
+                                            checked={resultadoInspeccion === "Apto"}
+                                            onChange={(e) => setResultadoInspeccion(e.target.value)}
+                                            className="form-radio"
+                                        />
+                                        <span className="ml-2">Apto</span>
+                                    </label>
+                                </div>
+                                {/* Opción No apto */}
+                                <div>
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            name="resultadoInspeccion"
+                                            value="No apto"
+                                            checked={resultadoInspeccion === "No apto"}
+                                            onChange={(e) => setResultadoInspeccion(e.target.value)}
+                                            className="form-radio"
+                                        />
+                                        <span className="ml-2">No apto</span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-
                         <div className="mb-4">
                             <label htmlFor="comentario" className="block text-gray-500 text-sm font-bold mb-2">Comentarios de la inspección</label>
                             <textarea id="comentario" value={comentario} onChange={(e) => setComentario(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
@@ -1019,8 +1046,8 @@ function TablaPpi() {
                             handleConfirmarEnvioPdf={handleConfirmarEnvioPdf}
                             setMensajeExitoInspeccion={setMensajeExitoInspeccion}
                             handleConfirmarEnviotablaPpi={handleConfirmarEnviotablaPpi}
-                          
-                            
+
+
 
                         />
 
@@ -1118,7 +1145,8 @@ function TablaPpi() {
 
                             handleConfirmarEnvioPdf={handleConfirmarEnvioPdf}
                             setMensajeExitoInspeccion={setMensajeExitoInspeccion}
-                            formulario= {formulario}
+                            formulario={formulario}
+                            setComentario={setComentario}
 
                         />
 

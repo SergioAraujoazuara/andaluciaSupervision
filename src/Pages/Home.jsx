@@ -20,6 +20,7 @@ function Home() {
     localStorage.setItem('logo_proyecto', p.logo)
     localStorage.setItem('tramo', p.tramo)
     localStorage.setItem('obra', p.obra)
+    localStorage.setItem('idProyecto', p.id)
   }
   const nombre_proyectoStorage = ''
 
