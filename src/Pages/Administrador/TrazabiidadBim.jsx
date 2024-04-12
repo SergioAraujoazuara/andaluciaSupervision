@@ -14,7 +14,7 @@ import { FaEdit } from "react-icons/fa";
 import { RiDeleteBinLine } from "react-icons/ri";
 
 
-function TrazabilidadBim({ selectedGlobalId }) {
+function TrazabilidadBim({ selectedGlobalId, obtenerLotesBim, actualizarLotesDesdeHijo, obtenerInspecciones }) {
     const  id  = localStorage.getItem('idProyecto');
 
     // Variables de estado
@@ -35,6 +35,7 @@ function TrazabilidadBim({ selectedGlobalId }) {
     const [pkFinalInput, setPkFinalInput] = useState('');
     const [selectedLote, setSelectedLote] = useState('');
     const [idBimInput, setIdBimInput] = useState('');
+    const [lotes, setLotes] = useState([]);
 
 
     const [objetoLote, setObjetoLote] = useState({})
@@ -47,11 +48,7 @@ function TrazabilidadBim({ selectedGlobalId }) {
 
     const handleCloseAlert = () => {
         setMostrarModal(false)
-        setMostrarModalEliminarSector(false)
-        setMostrarModalEliminarSubSector(false)
-        setMostrarModalEliminarParte(false)
-        setMostrarModalEliminarElemento(false)
-        setMostrarModalEliminarLote(false)
+     
 
     }
 
@@ -80,7 +77,7 @@ function TrazabilidadBim({ selectedGlobalId }) {
 
             if (proyectoSnapshot.exists()) {
                 setProyecto({ id: proyectoSnapshot.id, ...proyectoSnapshot.data() });
-                console.log({ id: proyectoSnapshot.id, ...proyectoSnapshot.data() });
+                
             } else {
                 console.log('No se encontró ningún proyecto con el ID:', id);
             }
@@ -439,6 +436,9 @@ function TrazabilidadBim({ selectedGlobalId }) {
 
             // Genera un ID único para el nuevo lote
             const loteId = doc(collection(db, 'lotes')).id;
+            localStorage.setItem('loteId', loteId)
+            
+
 
             // Asume que 'ppi' es tu objeto con toda la información del PPI que quieres guardar
             const ppiSeleccionado = ppis.find(ppi => ppi.id === selectedPpi);
@@ -502,6 +502,8 @@ function TrazabilidadBim({ selectedGlobalId }) {
                 idBim: selectedGlobalId,
                 totalSubactividades: ppiSeleccionado.totalSubactividades || 0,
             };
+            
+            
 
             // Referencia a la subcolección específica y añade el nuevo lote
             const loteSubColeccionRef = doc(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${selectedParte}/elemento/${elementoId}/lote/${loteId}`);
@@ -515,6 +517,15 @@ function TrazabilidadBim({ selectedGlobalId }) {
             // y agregar el objeto ppiSeleccionado como documento
             const inspeccionRef = doc(collection(db, `lotes/${loteId}/inspecciones`));
             await setDoc(inspeccionRef, ppiSeleccionado);
+
+            
+            actualizarLotesDesdeHijo(nuevoLote);
+           
+            
+           
+            obtenerInspecciones(loteId);
+                
+             
             // Limpia los campos y muestra alerta de éxito
             setLoteInput('');
             setSelectedPpi('');
@@ -524,6 +535,12 @@ function TrazabilidadBim({ selectedGlobalId }) {
             setAlerta('Lote agregado correctamente con PPI asociado.');
             setTipoAlerta('success');
             setMostrarModal(true);
+            
+
+          
+                
+             // Establece un tiempo de espera de 2 segundos
+          
 
             function estimatedDocumentSize(obj) {
                 const stringSize = (s) => new Blob([s]).size;
@@ -556,41 +573,6 @@ function TrazabilidadBim({ selectedGlobalId }) {
 
             console.log('Tamaño estimado del documento:', estimatedDocumentSize(ppiSeleccionado), 'bytes');
 
-            // Actualización del estado para incluir el nuevo lote sin necesidad de recargar
-            // (Asegúrate de que esta parte se adapta correctamente a cómo gestionas el estado de 'sectores')
-            const sectoresActualizados = sectores.map(sector => {
-                if (sector.id === selectedSector) {
-                    return {
-                        ...sector,
-                        subsectores: sector.subsectores.map(subsector => {
-                            if (subsector.id === selectedSubSector) {
-                                return {
-                                    ...subsector,
-                                    partes: subsector.partes.map(parte => {
-                                        if (parte.id === selectedParte) {
-                                            return {
-                                                ...parte,
-                                                elementos: parte.elementos.map(elemento => {
-                                                    if (elemento.id === elementoId) {
-                                                        const nuevosLotes = elemento.lotes ? [...elemento.lotes, { ...nuevoLote, id: loteId }] : [{ ...nuevoLote, id: loteId }];
-                                                        return { ...elemento, lotes: nuevosLotes };
-                                                    }
-                                                    return elemento;
-                                                })
-                                            };
-                                        }
-                                        return parte;
-                                    })
-                                };
-                            }
-                            return subsector;
-                        })
-                    };
-                }
-                return sector;
-            });
-
-            setSectores(sectoresActualizados);
         } catch (error) {
             console.error('Error al agregar el lote:', error);
             setAlerta('Error al agregar el lote.');
@@ -665,310 +647,9 @@ function TrazabilidadBim({ selectedGlobalId }) {
 
 
 
-    //Eliminar sub sector
-    const eliminarSubsector = async () => {
-        try {
-            const subsectorRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector`, subsectorIdAEliminar);
-            await deleteDoc(subsectorRef);
 
-            // Actualizar el estado para excluir el subsector eliminado
-            const sectoresActualizados = sectores.map(sector => {
-                if (sector.id === sectorIdAEliminar) {
-                    const subsectoresActualizados = sector.subsectores.filter(subsector => subsector.id !== subsectorIdAEliminar);
-                    return { ...sector, subsectores: subsectoresActualizados };
-                }
-                return sector;
-            });
-            setSectores(sectoresActualizados);
+ 
 
-            setAlerta('Subsector eliminado correctamente.');
-            setTipoAlerta('success');
-            setMostrarModal(true);
-        } catch (error) {
-            console.error('Error al eliminar el subsector:', error);
-            setAlerta('Error al eliminar el subsector.');
-            setTipoAlerta('error');
-            setMostrarModal(true);
-        }
-        setMostrarModalEliminarSubSector(false);
-    };
-
-
-    // Elminar lote
-    const [mostrarModalEliminarLote, setMostrarModalEliminarLote] = useState(false);
-    const [loteIdAEliminar, setLoteIdAEliminar] = useState(null);
-
-    const confirmarDeleteLote = (sectorId, subsectorId, parteId, elementoId, loteId) => {
-        setSectorIdAEliminar(sectorId);
-        setSubsectorIdAEliminar(subsectorId);
-        setParteIdAEliminar(parteId);
-        setElementoIdAEliminar(elementoId);
-        setLoteIdAEliminar(loteId);
-        setMostrarModalEliminarLote(true);
-    };
-
-    const eliminarLote = async () => {
-        try {
-            // Paso 1: Eliminar el lote de la subcolección específica en Firestore
-            const loteRefSubcoleccion = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento/${elementoIdAEliminar}/lote/${loteIdAEliminar}`);
-            await deleteDoc(loteRefSubcoleccion);
-
-            // Paso 1.1: Eliminar el lote de la colección principal 'lotes'
-            const loteRefPrincipal = doc(db, `lotes/${loteIdAEliminar}`);
-            await deleteDoc(loteRefPrincipal);
-
-            // Paso 2: Actualizar el estado para reflejar la eliminación del lote
-            setSectores(prevSectores => prevSectores.map(sector => {
-                if (sector.id === sectorIdAEliminar) {
-                    return {
-                        ...sector,
-                        subsectores: sector.subsectores.map(subsector => {
-                            if (subsector.id === subsectorIdAEliminar) {
-                                return {
-                                    ...subsector,
-                                    partes: subsector.partes.map(parte => {
-                                        if (parte.id === parteIdAEliminar) {
-                                            return {
-                                                ...parte,
-                                                elementos: parte.elementos.map(elemento => {
-                                                    if (elemento.id === elementoIdAEliminar) {
-                                                        // Filtrar el lote eliminado
-                                                        const lotesActualizados = elemento.lotes.filter(lote => lote.id !== loteIdAEliminar);
-                                                        return {
-                                                            ...elemento,
-                                                            lotes: lotesActualizados
-                                                        };
-                                                    }
-                                                    return elemento;
-                                                })
-                                            };
-                                        }
-                                        return parte;
-                                    })
-                                };
-                            }
-                            return subsector;
-                        })
-                    };
-                }
-                return sector;
-            }));
-
-            // Paso 3: Mostrar mensaje de éxito y cerrar el modal de confirmación
-            setAlerta('Lote eliminado correctamente.');
-            setTipoAlerta('success');
-            setMostrarModal(true);
-        } catch (error) {
-            // En caso de error, mostrar mensaje de error y cerrar el modal de confirmación
-            console.error('Error al eliminar el lote:', error);
-            setAlerta('Error al eliminar el lote.');
-            setTipoAlerta('error');
-            setMostrarModal(true);
-        }
-
-        // Restablece el estado de las variables relacionadas con la eliminación
-        setMostrarModalEliminarLote(false);
-        setSectorIdAEliminar(null);
-        setSubsectorIdAEliminar(null);
-        setParteIdAEliminar(null);
-        setElementoIdAEliminar(null);
-        setLoteIdAEliminar(null);
-    };
-
-
-
-
-
-
-    const confirmarDeleteSubSector = (sectorId, subsectorId) => {
-        setSectorIdAEliminar(sectorId);
-        setSubsectorIdAEliminar(subsectorId);
-        setMostrarModalEliminarSubSector(true);
-    };
-
-
-    // Eliminar sector
-    const [mostrarModalEliminarSector, setMostrarModalEliminarSector] = useState(false)
-
-    const solicitarEliminarSector = (sectorId) => {
-        setSectorIdAEliminar(sectorId);
-        setMostrarModalEliminarSector(true);
-    };
-
-    const eliminarSector = async () => {
-        try {
-            // Referencia al documento del sector a eliminar
-            const sectorRef = doc(db, `proyectos/${id}/sector`, sectorIdAEliminar);
-            await deleteDoc(sectorRef);
-
-            // Filtrar el estado actual para excluir el sector eliminado
-            const sectoresActualizados = sectores.filter(sector => sector.id !== sectorIdAEliminar);
-            setSectores(sectoresActualizados);
-
-            setAlerta('Sector eliminado correctamente.');
-            setTipoAlerta('success');
-            setMostrarModal(true);
-        } catch (error) {
-            console.error('Error al eliminar el sector:', error);
-            setAlerta('Error al eliminar el sector.');
-            setTipoAlerta('error');
-            setMostrarModal(true);
-        }
-
-        // Ocultar el modal de confirmación
-        setMostrarModalEliminarSector(false);
-    };
-
-    const [parteIdAEliminar, setParteIdAEliminar] = useState(null);
-    const [mostrarModalEliminarParte, setMostrarModalEliminarParte] = useState(false)
-
-    const confirmarDeleteParte = (sectorId, subsectorId, parteId) => {
-        setSectorIdAEliminar(sectorId); // Asegúrate de tener este estado si necesitas referenciar al sector para la eliminación
-        setSubsectorIdAEliminar(subsectorId); // Similarmente, si necesitas el ID del subsector, asegúrate de tener un estado para ello
-        setParteIdAEliminar(parteId);
-        setMostrarModalEliminarParte(true);
-    };
-
-    const eliminarParte = async () => {
-        try {
-            const parteRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte`, parteIdAEliminar);
-            await deleteDoc(parteRef);
-
-            // Actualizar el estado de 'sectores' para reflejar la eliminación de la parte
-            const sectoresActualizados = sectores.map(sector => {
-                if (sector.id === sectorIdAEliminar) {
-                    return {
-                        ...sector,
-                        subsectores: sector.subsectores.map(subsector => {
-                            if (subsector.id === subsectorIdAEliminar) {
-                                return {
-                                    ...subsector,
-                                    partes: subsector.partes.filter(parte => parte.id !== parteIdAEliminar),
-                                };
-                            }
-                            return subsector;
-                        }),
-                    };
-                }
-                return sector;
-            });
-
-            setSectores(sectoresActualizados);
-            setAlerta('Parte eliminada correctamente.');
-            setTipoAlerta('success');
-            setMostrarModal(true);
-        } catch (error) {
-            console.error('Error al eliminar la parte:', error);
-            setAlerta('Error al eliminar la parte.');
-            setTipoAlerta('error');
-            setMostrarModal(true);
-        }
-
-        setMostrarModalEliminarParte(false);
-    };
-
-
-    // Eliminar elemento
-    const [mostrarModalEliminarElemento, setMostrarModalEliminarElemento] = useState(false);
-    const [elementoIdAEliminar, setElementoIdAEliminar] = useState(null);
-
-    const confirmarDeleteElemento = (sectorId, subsectorId, parteId, elementoId) => {
-        setSectorIdAEliminar(sectorId);
-        setSubsectorIdAEliminar(subsectorId);
-        setParteIdAEliminar(parteId);
-        setElementoIdAEliminar(elementoId);
-        setMostrarModalEliminarElemento(true);
-    };
-
-    const eliminarElemento = async () => {
-        try {
-            const elementoRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento`, elementoIdAEliminar);
-            await deleteDoc(elementoRef);
-
-            // Actualizar el estado para reflejar la eliminación del elemento
-            const sectoresActualizados = sectores.map(sector => {
-                if (sector.id === sectorIdAEliminar) {
-                    return {
-                        ...sector,
-                        subsectores: sector.subsectores.map(subsector => {
-                            if (subsector.id === subsectorIdAEliminar) {
-                                return {
-                                    ...subsector,
-                                    partes: subsector.partes.map(parte => {
-                                        if (parte.id === parteIdAEliminar) {
-                                            return {
-                                                ...parte,
-                                                elementos: parte.elementos.filter(elemento => elemento.id !== elementoIdAEliminar)
-                                            };
-                                        }
-                                        return parte;
-                                    })
-                                };
-                            }
-                            return subsector;
-                        })
-                    };
-                }
-                return sector;
-            });
-            setSectores(sectoresActualizados);
-
-            setAlerta('Elemento eliminado correctamente.');
-            setTipoAlerta('success');
-            setMostrarModal(true);
-        } catch (error) {
-            console.error('Error al eliminar el elemento:', error);
-            setAlerta('Error al eliminar el elemento.');
-            setTipoAlerta('error');
-            setMostrarModal(true);
-        }
-        setMostrarModalEliminarElemento(false);
-    };
-
-
-
-
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Editar
-
-    // const [mostrarModalEditarSector, setMostrarModalEditarSector] = useState(false);
-    // const [sectorIdAEditar, setSectorIdAEditar] = useState(null);
-    // const [nuevoNombreSector, setNuevoNombreSector] = useState('');
-
-    // const solicitarEditarSector = (sectorId, nombreActual) => {
-    //     setSectorIdAEditar(sectorId);
-    //     setNuevoNombreSector(nombreActual); // Pre-populate the input with the current name
-    //     setMostrarModalEditarSector(true);
-    // };
-    // const guardarEdicionSector = async () => {
-    //     if (!nuevoNombreSector.trim()) {
-    //         setAlerta('El nombre del sector no puede estar vacío.');
-    //         setTipoAlerta('error');
-    //         setMostrarModal(true);
-    //         return;
-    //     }
-    //     try {
-    //         const sectorRef = doc(db, `proyectos/${id}/sector`, sectorIdAEditar);
-    //         await updateDoc(sectorRef, { nombre: nuevoNombreSector });
-
-    //         const sectoresActualizados = sectores.map(sector =>
-    //             sector.id === sectorIdAEditar ? { ...sector, nombre: nuevoNombreSector } : sector
-    //         );
-    //         setSectores(sectoresActualizados);
-
-    //         setAlerta('Sector actualizado correctamente.');
-    //         setTipoAlerta('success');
-    //         setMostrarModal(true);
-    //     } catch (error) {
-    //         console.error('Error al actualizar el sector:', error);
-    //         setAlerta('Error al actualizar el sector.');
-    //         setTipoAlerta('error');
-    //         setMostrarModal(true);
-    //     }
-    //     setMostrarModalEditarSector(false);
-    // };
 
 
     return (
@@ -1220,123 +901,12 @@ function TrazabilidadBim({ selectedGlobalId }) {
 
 
 
-                {mostrarModalEliminarSubSector && (
-                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
-                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+               
+               
 
-                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
-
-                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
-                            <div>
-                                <p>¿Estas seguro de eliminar?</p>
-                                <p className='text-amber-700 text-sm mt-2'>* Se eliminara el elemento seleccionado con sus datos asociados</p>
-                            </div>
-
-                            <div className='flex justify-center gap-5 mt-3'>
-                                <button
-                                    onClick={eliminarSubsector}
-                                    className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'>Eliminar</button>
-                                <button
-                                    onClick={handleCloseAlert}
-                                    className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'>Cancelar</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {mostrarModalEliminarSector && (
-                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
-                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
-
-                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
-
-                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
-                            <div>
-                                <p>¿Estas seguro de eliminar?</p>
-                                <p className='text-amber-700 text-sm mt-2'>* Se eliminara el elemento seleccionado con sus datos asociados</p>
-                            </div>
-
-                            <div className='flex justify-center gap-5 mt-3'>
-                                <button
-                                    onClick={eliminarSector}
-                                    className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'>Eliminar</button>
-                                <button
-                                    onClick={handleCloseAlert}
-                                    className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'>Cancelar</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {mostrarModalEliminarParte && (
-                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
-                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
-
-                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
-
-                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
-                            <div>
-                                <p>¿Estas seguro de eliminar?</p>
-                                <p className='text-amber-700 text-sm mt-2'>* Se eliminara el elemento seleccionado con sus datos asociados</p>
-                            </div>
-
-                            <div className='flex justify-center gap-5 mt-3'>
-                                <button
-                                    onClick={eliminarParte}
-                                    className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'>Eliminar</button>
-                                <button
-                                    onClick={handleCloseAlert}
-                                    className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'>Cancelar</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {mostrarModalEliminarElemento && (
-                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
-                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
-
-                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
-
-                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
-                            <div>
-                                <p>¿Estas seguro de eliminar?</p>
-                                <p className='text-amber-700 text-sm mt-2'>* Se eliminara el elemento seleccionado con sus datos asociados</p>
-                            </div>
-
-                            <div className='flex justify-center gap-5 mt-3'>
-                                <button
-                                    onClick={eliminarElemento}
-                                    className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'>Eliminar</button>
-                                <button
-                                    onClick={handleCloseAlert}
-                                    className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'>Cancelar</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {mostrarModalEliminarLote && (
-                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
-                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
-
-                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
-
-                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
-                            <div>
-                                <p>¿Estas seguro de eliminar?</p>
-                                <p className='text-amber-700 text-sm mt-2'>* Se eliminara el elemento seleccionado con sus datos asociados</p>
-                            </div>
-
-                            <div className='flex justify-center gap-5 mt-3'>
-                                <button
-                                    onClick={eliminarLote}
-                                    className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'>Eliminar</button>
-                                <button
-                                    onClick={handleCloseAlert}
-                                    className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'>Cancelar</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                
+               
+                
 
 
 
