@@ -23,6 +23,7 @@ import AgregarPPi from './Pages/Administrador/AgregarPPi'
 import VerPpis from './Pages/Administrador/VerPpis'
 import EditarPpi from './Pages/Administrador/EditarPpi'
 import Viewer from './Viewer'
+import VisorPrueba from './VisorPrueba'
 
 function App() {
 
@@ -52,6 +53,9 @@ function App() {
       <Route path='/tablaPpi/:idLote/:ppiNombre' element={<TablaPpi/>}></Route>
       <Route path='/editarPpi/:id' element={<EditarPpi/>}></Route>
       <Route path='/formularioInspeccion/:idLote/:id' element={<FormularioInspeccion/>}></Route>
+
+
+      <Route path='/visorPrueba' element={<VisorPrueba/>}></Route>
     </Routes>
 
     <Footer/>

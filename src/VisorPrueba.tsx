@@ -31,7 +31,7 @@ interface Lote {
     ppiNombre: string;
 }
 
-export default function ViewerComponent() {
+export default function VisorPrueba() {
     const [modelCount, setModelCount] = useState(0);
     const [lotes, setLotes] = useState<Lote[]>([]);
     const [selectedGlobalId, setSelectedGlobalId] = useState<string | null>(null);
@@ -561,7 +561,7 @@ useEffect(() => {
             }
         };
 
-        // Función para cargar los fragmentos de modelo desde un archivo, usualmente al iniciar.
+        //* Función para cargar los fragmentos de modelo desde un archivo, usualmente al iniciar.
         const loadFragments = async (fragments) => {
            
             if (fragments.groups.length) return;
