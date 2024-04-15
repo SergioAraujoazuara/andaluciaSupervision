@@ -22,8 +22,9 @@ import Trazabilidad from './Pages/Administrador/Trazabilidad'
 import AgregarPPi from './Pages/Administrador/AgregarPPi'
 import VerPpis from './Pages/Administrador/VerPpis'
 import EditarPpi from './Pages/Administrador/EditarPpi'
-import Viewer from './Viewer'
-import VisorPrueba from './VisorPrueba'
+
+import Viewer_inspeccion from './Viewer_inspeccion_copy'
+import Viewer_admin from './Viewer_admin'
 
 function App() {
 
@@ -41,7 +42,9 @@ function App() {
       <Route path='/trazabilidad/:id' element={<Trazabilidad/>}></Route>
       <Route path='/verPPis' element={<VerPpis/>}></Route>
       <Route path='/agregarPpi' element={<AgregarPPi/>}></Route>
-      <Route path='/viewer' element={<Viewer/>}></Route>
+    
+      <Route path='/visorInspeccion' element={<Viewer_inspeccion/>}></Route>
+      <Route path='/visorAdmin' element={<Viewer_admin/>}></Route>
 
       <Route path='/contacto' element={<Contacto/>}></Route>
       <Route path='/modulos' element={<Modulos/>}></Route>
@@ -55,7 +58,6 @@ function App() {
       <Route path='/formularioInspeccion/:idLote/:id' element={<FormularioInspeccion/>}></Route>
 
 
-      <Route path='/visorPrueba' element={<VisorPrueba/>}></Route>
     </Routes>
 
     <Footer/>

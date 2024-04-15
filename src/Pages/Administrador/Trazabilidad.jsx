@@ -973,20 +973,29 @@ function Trazabilidad() {
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500'>
             {/* Encabezado */}
-            <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
-                <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+           
 
-                <Link to={'/admin'}>
-                    <h1 className='text-gray-600'>Administración</h1>
-                </Link>
-                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'/viewProject'}>
-                    <h1 className=' text-gray-600'>Ver proyectos</h1>
-                </Link>
-                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'#'}>
-                    <h1 className='font-medium text-amber-600'>Trazabilidad </h1>
-                </Link>
+
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+
+                <div className='flex items-center gap-2'>
+                    <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+
+                    <Link to={'/admin'}>
+                        <h1 className='text-gray-600'>Administración</h1>
+                    </Link>
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                    <Link to={'/viewProject'}>
+                        <h1 className=' text-gray-600'>Ver proyectos</h1>
+                    </Link>
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                    <Link to={'#'}>
+                        <h1 className='font-medium text-amber-600'>Trazabilidad </h1>
+                    </Link>
+                </div>
+                <div className='mr-5'>
+                <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-500 text-white rounded-lg '>Visor BIM</button></Link>
+                </div>
             </div>
 
 
@@ -1008,7 +1017,7 @@ function Trazabilidad() {
                 <div className="mt-4 flex flex-col ">
 
 
-                    <div className='grid grid-cols-1 text-sm'>
+                    <div className='grid grid-cols-5 text-sm'>
                         {/* Sector */}
                         <div className="flex flex-col items-start gap-3 border-r-2 p-5">
                             <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sector</p>

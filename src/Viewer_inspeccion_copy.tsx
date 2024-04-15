@@ -1,21 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { db } from '../../firebase_config';
-import { getDoc, getDocs, query, collection, where, doc, updateDoc, increment, addDoc } from 'firebase/firestore';
+import * as OBC from "openbim-components";
+import * as THREE from "three";
+import { db } from '../firebase_config';
+import { getDoc, getDocs, doc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc, deleteDoc } from 'firebase/firestore';
+import { IoMdAddCircle } from 'react-icons/io';
+import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaFilePdf } from "react-icons/fa6"; // Importa los íconos para "Apto" y "No apto"
 import { GoHomeFill } from "react-icons/go";
 import { FaArrowRight } from "react-icons/fa";
 import { IoCloseCircle } from "react-icons/io5";
-import { IoMdAddCircle } from "react-icons/io";
 import { SiReacthookform } from "react-icons/si";
-import { FaFilePdf } from "react-icons/fa6";
 import { FaQuestionCircle } from "react-icons/fa";
-import { FaCheckCircle } from "react-icons/fa";
-import FormularioInspeccion from '../Components/FormularioInspeccion'
-import RecuperarPdf from './RecuperarPdf';
 import jsPDF from 'jspdf';
-import logo from '../assets/tpf_logo_azul.png'
+import logo from './assets/tpf_logo_azul.png'
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import FormularioInspeccion from './Components/FormularioInspeccion';
+import Trazabilidad from './Pages/Administrador/Trazabilidad'
+import TrazabilidadBim from './Pages/Administrador/TrazabiidadBim';
 
-function TablaPpi() {
+
+interface Lote {
+    docId: string;
+    nombre: string;
+    idBim: string;
+    sectorNombre: string;
+    subSectorNombre: string;
+    parteNombre: string;
+    elementoNombre: string;
+    loteNombre: string;
+    ppiNombre: string;
+}
+
+export default function ViewerInspeccion() {
+    const [modelCount, setModelCount] = useState(0);
+    const [lotes, setLotes] = useState<Lote[]>([]);
+    const [selectedGlobalId, setSelectedGlobalId] = useState<string | null>(null);
+    const [selectedLote, setSelectedLote] = useState<Lote | null>(null);
+    const [inspecciones, setInspecciones] = useState([]);
+
+
+
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
 
     const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
@@ -24,16 +48,823 @@ function TablaPpi() {
     const [obra, setObra] = useState(localStorage.getItem('obra'));
     const [tramo, setTramo] = useState(localStorage.getItem('tramo'));
     const [observaciones, setObservaciones] = useState('');
-    const { idLote } = useParams();
+    const idLote = localStorage.getItem('loteId');
+
     const navigate = useNavigate();
     const [ppi, setPpi] = useState(null);
 
 
+    // En ViewerComponent
+    const actualizarLotesDesdeHijo = (nuevoLote) => {
+        console.log(nuevoLote, 'nuevo lote******')
+        setLotes((lotesActuales) => [...lotesActuales, nuevoLote]);
+        setSelectedLote(nuevoLote)
+
+    };
+
+    // En el componente padre
+    const actualizarLotes = (nuevoLote) => {
+        // Asumiendo que 'lotes' es el estado que contiene todos los lotes
+        setLotes(lotesActuales => [...lotesActuales, nuevoLote]);
+    };
+    useEffect(() => {
+        console.log(lotes, 'lotes actualizados')
+    }, [lotes]);
+
+
+
 
     useEffect(() => {
+        obtenerLotes();
+    }, []);
+
+    const obtenerLotes = async () => {
+        try {
+            const lotesRef = collection(db, "lotes");
+            const querySnapshot = await getDocs(lotesRef);
+            const lotesData = querySnapshot.docs.map(doc => ({
+                docId: doc.id,
+                ...doc.data(),
+            })) as Lote[];
+            setLotes(lotesData);
+            console.log(lotesData, 'lotes revisar*********')
+        } catch (error) {
+            console.error('Error al obtener los lotes:', error);
+        }
+    };
+
+
+
+   // Visor correcto con auto carga y con escene /////////////////////////////////////////////////////////////////////////////////////     
+
+    // useEffect(() => {
+    //     let viewer;  // Almacena la instancia principal del visor de modelos 3D.
+    //     let grid;    // Referencia a la cuadrícula visual que aparece en el plano de fondo.
+    //     let fragmentManager; // Gestor para manejar y organizar los fragmentos de modelos cargados.
+    //     let ifcLoader;       // Cargador específico para modelos IFC (Industry Foundation Classes).
+    //     let highlighter;     // Herramienta para resaltar elementos seleccionados en el visor.
+    //     let propertiesProcessor; // Procesador para extraer propiedades de elementos IFC.
+    //     let mainToolbar;
+    //     // Procesador para extraer propiedades de elementos IFC.
+
+    //     // Función principal para inicializar el visor.
+    //     const initViewer = async () => {
+    //         console.log("Iniciando el visor...");
+
+    //         // Inicializa los componentes básicos del visor.
+    //         viewer = new OBC.Components();
+    //         console.log("Componentes del visor creados.");
+
+    //         // Configura la escena básica donde se visualizarán los modelos.
+    //         const sceneComponent = new OBC.SimpleScene(viewer);
+    //         sceneComponent.setup();
+    //         viewer.scene = sceneComponent;
+    //         const scene = sceneComponent.get();
+    //         console.log("Componente de escena configurado.");
+
+    //         // Prepara el contenedor del visor en el DOM y el componente de renderizado.
+    //         const viewerContainer = document.getElementById("viewerContainer");
+    //         const rendererComponent = new OBC.PostproductionRenderer(viewer, viewerContainer);
+    //         viewer.renderer = rendererComponent;
+    //         console.log("Componente de renderizado configurado.");
+
+    //         // Establece la cámara con perspectiva y ortográfica combinada.
+    //         const cameraComponent = new OBC.OrthoPerspectiveCamera(viewer);
+    //         viewer.camera = cameraComponent;
+    //         console.log("Componente de cámara configurado.");
+
+    //         // Configura el raycaster para manejar la selección de elementos mediante el cursor.
+    //         const raycasterComponent = new OBC.SimpleRaycaster(viewer);
+    //         viewer.raycaster = raycasterComponent;
+
+    //         // Inicializa el visor, actualiza aspecto de la cámara y habilita el postprocesamiento.
+    //         viewer.init();
+    //         cameraComponent.updateAspect();
+    //         rendererComponent.postproduction.enabled = true;
+
+    //         // Configura y agrega una cuadrícula de suelo al visor para mejorar la orientación espacial.
+    //         grid = new OBC.SimpleGrid(viewer, new THREE.Color(0x666666));
+    //         rendererComponent.postproduction.customEffects.excludedMeshes.push(grid.get());
+
+    //         let fragments = new OBC.FragmentManager(viewer);
+    //         let fragmentIfcLoader = new OBC.FragmentIfcLoader(viewer);
+
+    //         // Inicializa el gestor de fragmentos y el cargador de IFC para cargar modelos.
+    //         fragmentManager = new OBC.FragmentManager(viewer);
+
+
+    //         // Configura el sistema de resaltado para enfocar y diferenciar elementos seleccionados.
+    //         highlighter = new OBC.FragmentHighlighter(viewer);
+    //         highlighter.setup();
+
+    //         // Inicia el procesador de propiedades para obtener datos de elementos IFC al seleccionarlos.
+    //         propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
+
+    //         // Define una función callback para cuando un elemento es seleccionado.
+    //         highlighter.events.select.onHighlight.add((selection) => {
+    //             console.log(selection)
+    //         });
+
+            
+
+    //         loadIfcAsFragments();
+    //         // Carga inicial de fragmentos desde un archivo externo.
+    //         // loadFragments(fragmentManager);
+
+    //         propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
+    //         highlighter.events.select.onClear.add(() => {
+    //             propertiesProcessor.cleanPropertiesList();
+    //             setSelectedGlobalId(null);
+    //         });
+
+    //         async function loadIfcAsFragments() {
+    //             const file = await fetch('../modelos/Clinic_Architectural.ifc');
+    //             const data = await file.arrayBuffer();
+    //             const buffer = new Uint8Array(data);
+    //             const model = await fragmentIfcLoader.load(buffer, "example");
+    //             scene.add(model);
+    //         }
+
+
+    //     };
+
+    //     // Inicializa el visor cuando el componente se monta.
+    //     initViewer();
+
+    //     mainToolbar = new OBC.Toolbar(viewer);
+    //     mainToolbar.addChild(
+
+    //         propertiesProcessor.uiElement.get("main")
+    //     );
+    //     viewer.ui.addToolbar(mainToolbar);
+
+    //     // Función de limpieza: se llama cuando el componente se va a desmontar.
+    //     return () => {
+    //         if (viewer) {
+    //             console.log("Disposing viewer...");
+    //             viewer.dispose();
+    //         }
+    //     };
+    // }, [lotes]);
+
+
+
+
+
+
+
+
+
+
+
+
+    // useEffect(() => {
+    //     let viewer;
+    //     let grid;
+    //     let fragmentManager;
+    //     let ifcLoader;
+    //     let highlighter;
+    //     let propertiesProcessor;
+    //     let mainToolbar;
+
+    //     const initViewer = async () => {
+    //         console.log("Iniciando el visor...");
+
+    //         viewer = new OBC.Components();
+    //         console.log("Componentes del visor creados.");
+
+    //         const sceneComponent = new OBC.SimpleScene(viewer);
+    //         sceneComponent.setup();
+    //         viewer.scene = sceneComponent;
+    //         console.log("Componente de escena configurado.");
+
+    //         const viewerContainer = document.getElementById("viewerContainer");
+    //         const rendererComponent = new OBC.PostproductionRenderer(viewer, viewerContainer);
+    //         viewer.renderer = rendererComponent;
+    //         console.log("Componente de renderizado configurado.");
+
+    //         const cameraComponent = new OBC.OrthoPerspectiveCamera(viewer);
+    //         viewer.camera = cameraComponent;
+    //         console.log("Componente de cámara configurado.");
+
+    //         const raycasterComponent = new OBC.SimpleRaycaster(viewer);
+    //         viewer.raycaster = raycasterComponent;
+
+    //         viewer.init();
+    //         cameraComponent.updateAspect();
+    //         rendererComponent.postproduction.enabled = true;
+
+    //         grid = new OBC.SimpleGrid(viewer, new THREE.Color(0x666666));
+    //         rendererComponent.postproduction.customEffects.excludedMeshes.push(grid.get());
+
+    //         fragmentManager = new OBC.FragmentManager(viewer);
+    //         ifcLoader = new OBC.FragmentIfcLoader(viewer);
+
+    //         highlighter = new OBC.FragmentHighlighter(viewer);
+    //         highlighter.setup();
+
+    //         propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
+
+    //         highlighter.events.select.onHighlight.add((selection) => {
+    //             const fragmentID = Object.keys(selection)[0];
+    //             const expressID = Number([...selection[fragmentID]][0]);
+    //             const properties = propertiesProcessor.getProperties(fragmentID, expressID.toString());
+    //             if (properties) {
+    //                 const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
+    //                 const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
+    //                 setSelectedGlobalId(globalId);
+    //                 const lote = lotes.find(l => l.idBim === globalId);
+
+    //                 if (lote) {
+    //                     setSelectedLote(lote);
+    //                     localStorage.setItem('loteId', lote.docId);
+    //                     obtenerInspecciones(lote.docId);
+    //                 } else {
+    //                     setSelectedLote(null);
+    //                     setInspecciones([]);
+    //                     localStorage.removeItem('loteId');
+    //                 }
+    //             }
+    //         });
+
+    //         const loadIfcAsFragments = async () => {
+    //             console.log("Cargando archivo IFC...");
+    //             const file = await fetch('/modelos/Clinic_Architectural.ifc');
+    //             const data = await file.arrayBuffer();
+    //             const buffer = new Uint8Array(data);
+    //             const model = await ifcLoader.load(buffer, "example");
+    //             console.log("Archivo IFC cargado.");
+
+    //             if (typeof viewer.scene.add === 'function') {
+    //                 viewer.scene.add(model);  // Añade el modelo al escenario
+    //             } else {
+    //                 console.error("El método 'add' no está disponible en 'viewer.scene'");
+    //             }
+
+    //             setModelCount(fragmentManager.groups.length);
+    //             propertiesProcessor.process(model);
+    //             highlighter.update();
+    //         };
+
+    //         loadIfcAsFragments();
+
+    //         mainToolbar = new OBC.Toolbar(viewer);
+    //         mainToolbar.addChild(
+    //             ifcLoader.uiElement.get("main"),
+    //             propertiesProcessor.uiElement.get("main")
+    //         );
+    //         viewer.ui.addToolbar(mainToolbar);
+    //         console.log("Visor completamente inicializado.");
+    //     };
+
+    //     initViewer();
+
+    //     return () => {
+    //         if (viewer) {
+    //             console.log("Disposing viewer...");
+    //             viewer.dispose();
+    //         }
+    //     };
+    // }, [lotes]); 
+
+
+    // carga solo Srrgio
+    // useEffect(() => {
+    //     let viewer;
+    //     let grid;
+    //     let fragmentManager;
+    //     let ifcLoader;
+    //     let highlighter;
+    //     let propertiesProcessor;
+    //     let mainToolbar;
+
+    //     const initViewer = async () => {
+    //         viewer = new OBC.Components();
+
+    //         const sceneComponent = new OBC.SimpleScene(viewer);
+    //         sceneComponent.setup();
+    //         viewer.scene = sceneComponent;
+
+    //         const viewerContainer = document.getElementById("viewerContainer");
+    //         const rendererComponent = new OBC.PostproductionRenderer(viewer, viewerContainer);
+    //         viewer.renderer = rendererComponent;
+
+    //         const cameraComponent = new OBC.OrthoPerspectiveCamera(viewer);
+    //         viewer.camera = cameraComponent;
+
+    //         const raycasterComponent = new OBC.SimpleRaycaster(viewer);
+    //         viewer.raycaster = raycasterComponent;
+
+    //         viewer.init();
+    //         cameraComponent.updateAspect();
+    //         rendererComponent.postproduction.enabled = true;
+
+    //         grid = new OBC.SimpleGrid(viewer, new THREE.Color(0x666666));
+    //         rendererComponent.postproduction.customEffects.excludedMeshes.push(grid.get());
+
+    //         fragmentManager = new OBC.FragmentManager(viewer);
+    //         ifcLoader = new OBC.FragmentIfcLoader(viewer);
+    //         propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
+
+    //         await loadFragments();
+
+    //         highlighter = new OBC.FragmentHighlighter(viewer, fragmentManager);
+    //         setupHighlightMaterial();
+    //         setupHighlighting();
+
+    //         mainToolbar = new OBC.Toolbar(viewer);
+    //         mainToolbar.addChild(
+    //             ifcLoader.uiElement.get("main"),
+    //             propertiesProcessor.uiElement.get("main")
+    //         );
+    //         viewer.ui.addToolbar(mainToolbar);
+    //     };
+
+    //     const loadFragments = async () => {
+    //         const file = await fetch("../Clinic_Architectural.frag");
+    //         const data = await file.arrayBuffer();
+    //         const buffer = new Uint8Array(data);
+    //         await fragmentManager.load(buffer);
+    //         highlighter.updateHighlight();
+    //     };
+
+    //     const setupHighlightMaterial = () => {
+    //         const highlightMaterial = new THREE.MeshBasicMaterial({
+    //             color: '#BCF124',
+    //             depthTest: false,
+    //             opacity: 0.8,
+    //             transparent: true
+    //         });
+    //         highlighter.add('default', highlightMaterial);
+    //         highlighter.outlineMaterial.color.set(0xf0ff7a);
+    //     };
+
+    //     const setupHighlighting = () => {
+    //         const container = document.getElementById("viewerContainer");
+    //         container.addEventListener('click', async (event) => {
+    //             const result = await highlighter.highlight('default', { value: true });
+    //             if (result) {
+    //                 console.log("Fragments selected:", result.fragments.map(f => f.id));
+    //             }
+    //         });
+    //     };
+
+    //     initViewer();
+
+    //     return () => {
+    //         if (viewer) {
+    //             viewer.dispose();
+    //         }
+    //     };
+    // }, [lotes]); // Dependencias del useEffect
+    //  // Include other dependencies if there are any
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ///// respaldos ////////////////////////////////////////////////////////////////
+
+
+
+    // visor sencillo cubo
+    // useEffect(() => {
+    //     const container = document.getElementById('viewerContainer');
+    //     if (!container) {
+    //         console.error('Viewer container not found');
+    //         return;
+    //     }
+    //     // Escena
+    //     const components = new OBC.Components();
+    //     components.scene = new OBC.SimpleScene(components);
+    //     components.renderer = new OBC.SimpleRenderer(components, container);
+    //     components.camera = new OBC.SimpleCamera(components);
+    //     components.raycaster = new OBC.SimpleRaycaster(components);
+    //     components.init();
+
+
+    //     const scene = components.scene.get();
+    //     components.camera.controls.setLookAt(10, 10, 10, 0, 0, 0);
+    //     const grid = new OBC.SimpleGrid(components);
+    //     scene.add(grid.get());
+
+
+    //     // cubo
+    //     const boxMaterial = new THREE.MeshStandardMaterial({ color: '#6528D7' });
+    //     const boxGeometry = new THREE.BoxGeometry(3, 3, 3);
+    //     const cube = new THREE.Mesh(boxGeometry, boxMaterial);
+    //     cube.position.set(0, 1.5, 0);
+    //     // scene.add(cube);
+
+    //     components.scene.setup();
+
+    //     // fragments
+    //     let fragments = new OBC.FragmentManager(components);
+    //     const toolbar = new OBC.Toolbar(components);
+    //     components.ui.addToolbar(toolbar);
+
+    //     async function loadFragments() {
+    //         if (fragments.groups.length) return;
+    //         const file = await fetch("../Clinic_Architectural.frag");
+    //         console.log(file)
+    //         const data = await file.arrayBuffer();
+    //         const buffer = new Uint8Array(data);
+    //         const group = await fragments.load(buffer);
+    //         console.log(group)
+    //         // const scene = components.scene.get();
+    //         // scene.add(model);
+    //     }
+    //     const loadButton = new OBC.Button(components);
+    //     loadButton.materialIcon = "download";
+    //     loadButton.tooltip = "Load model";
+    //     toolbar.addChild(loadButton);
+    //     loadButton.onClick.add(() => loadFragments());
+
+
+    //     function exportFragments() {
+    //         if (!fragments.groups.length) return;
+    //         const group = fragments.groups[0];
+    //         const data = fragments.export(group);
+    //         const blob = new Blob([data]);
+    //         const file = new File([blob], "small.frag");
+    //         download(file);
+    //     }
+    //     const exportButton = new OBC.Button(components);
+    //     exportButton.materialIcon = "exit_to_app";
+    //     exportButton.tooltip = "Export model";
+    //     toolbar.addChild(exportButton);
+    //     exportButton.onClick.add(() => exportFragments());
+
+    //     function download(file) {
+    //         const link = document.createElement("a");
+    //         link.href = URL.createObjectURL(file);
+    //         link.download = file.name;
+    //         document.body.appendChild(link);
+    //         link.click();
+    //         link.remove();
+    //     }
+
+    //     function disposeFragments() {
+    //         fragments.dispose();
+    //     }
+    //     const disposeButton = new OBC.Button(components);
+    //     disposeButton.materialIcon = "delete";
+    //     disposeButton.tooltip = "Delete model";
+    //     toolbar.addChild(disposeButton);
+    //     disposeButton.onClick.add(() => disposeFragments());
+
+    //     function importExternalFragment() {
+    //         if (fragments.groups.length) return;
+    //         const input = document.createElement("input");
+    //         input.type = "file";
+    //         input.onchange = async () => {
+    //             const file = input.files[0];
+    //             if (file.name.includes(".frag")) {
+    //                 const url = URL.createObjectURL(file);
+    //                 const result = await fetch(url);
+    //                 const data = await result.arrayBuffer();
+    //                 const buffer = new Uint8Array(data);
+    //                 fragments.load(buffer);
+    //             }
+    //             input.remove();
+    //         }
+    //         input.click();
+    //     }
+    //     const openButton = new OBC.Button(components);
+    //     openButton.materialIcon = "folder_open";
+    //     openButton.tooltip = "Import model";
+    //     toolbar.addChild(openButton);
+    //     openButton.onClick.add(() => importExternalFragment());
+
+    //     return () => {
+    //         // Cleanup function to remove the scene and other components when the component unmounts
+    //         components.dispose();
+    //     };
+    // }, []);
+
+
+    ////////////////////////////////////////////////////////////////////////////// visor auto carga////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // useEffect(() => {
+    //     let viewer;  // Almacena la instancia principal del visor de modelos 3D.
+    //     let grid;    // Referencia a la cuadrícula visual que aparece en el plano de fondo.
+    //     let fragmentManager; // Gestor para manejar y organizar los fragmentos de modelos cargados.
+    //     let ifcLoader;       // Cargador específico para modelos IFC (Industry Foundation Classes).
+    //     let highlighter;     // Herramienta para resaltar elementos seleccionados en el visor.
+    //     let propertiesProcessor; // Procesador para extraer propiedades de elementos IFC.
+
+    //     // Función principal para inicializar el visor.
+    //     const initViewer = async () => {
+    //         console.log("Iniciando el visor...");
+
+    //         // Inicializa los componentes básicos del visor.
+    //         viewer = new OBC.Components();
+    //         console.log("Componentes del visor creados.");
+
+    //         // Configura la escena básica donde se visualizarán los modelos.
+    //         const sceneComponent = new OBC.SimpleScene(viewer);
+    //         sceneComponent.setup();
+    //         viewer.scene = sceneComponent;
+    //         console.log("Componente de escena configurado.");
+
+    //         // Prepara el contenedor del visor en el DOM y el componente de renderizado.
+    //         const viewerContainer = document.getElementById("viewerContainer");
+    //         const rendererComponent = new OBC.PostproductionRenderer(viewer, viewerContainer);
+    //         viewer.renderer = rendererComponent;
+    //         console.log("Componente de renderizado configurado.");
+
+    //         // Establece la cámara con perspectiva y ortográfica combinada.
+    //         const cameraComponent = new OBC.OrthoPerspectiveCamera(viewer);
+    //         viewer.camera = cameraComponent;
+    //         console.log("Componente de cámara configurado.");
+
+    //         // Configura el raycaster para manejar la selección de elementos mediante el cursor.
+    //         const raycasterComponent = new OBC.SimpleRaycaster(viewer);
+    //         viewer.raycaster = raycasterComponent;
+
+    //         // Inicializa el visor, actualiza aspecto de la cámara y habilita el postprocesamiento.
+    //         viewer.init();
+    //         cameraComponent.updateAspect();
+    //         rendererComponent.postproduction.enabled = true;
+
+    //         // Configura y agrega una cuadrícula de suelo al visor para mejorar la orientación espacial.
+    //         grid = new OBC.SimpleGrid(viewer, new THREE.Color(0x666666));
+    //         rendererComponent.postproduction.customEffects.excludedMeshes.push(grid.get());
+
+    //         // Inicializa el gestor de fragmentos y el cargador de IFC para cargar modelos.
+    //         fragmentManager = new OBC.FragmentManager(viewer);
+    //         ifcLoader = new OBC.FragmentIfcLoader(viewer);
+
+    //         await fragmentIfcLoader.setup()
+    //         /* If you want to the path to unpkg manually, then you can skip the line 
+    //         above and set them manually as below:
+    //         fragmentIfcLoader.settings.wasm = {
+    //         path: "https://unpkg.com/web-ifc@0.0.50/",
+    //         absolute: true
+    //         } */
+
+    //         // Configura el sistema de resaltado para enfocar y diferenciar elementos seleccionados.
+    //         highlighter = new OBC.FragmentHighlighter(viewer);
+    //         highlighter.setup();
+
+
+    //         // Inicia el procesador de propiedades para obtener datos de elementos IFC al seleccionarlos.
+    //         propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
+
+    //         // Define una función callback para cuando un elemento es seleccionado.
+    //         highlighter.events.select.onHighlight.add((selection) => {
+    //             handleSelection(selection);
+    //         });
+
+    //         // Carga inicial de fragmentos desde un archivo externo.
+    //         loadFragments();
+    //     };
+
+    //     // Maneja la selección de un elemento, obtiene y actualiza las propiedades relevantes.
+    //     const handleSelection = (selection) => {
+    //         const fragmentID = Object.keys(selection)[0];
+    //         const expressID = Number([...selection[fragmentID]][0]);
+    //         const properties = propertiesProcessor.getProperties(fragmentID, expressID.toString());
+    //         if (properties) {
+    //             updateSelection(properties);
+    //         }
+    //     };
+
+    //     // Actualiza el estado con las propiedades del elemento seleccionado y maneja la lógica relacionada.
+    //     const updateSelection = (properties) => {
+    //         const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
+    //         const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
+    //         setSelectedGlobalId(globalId);
+    //         const lote = lotes.find(l => l.idBim === globalId);
+
+    //         if (lote) {
+    //             setSelectedLote(lote);
+    //             localStorage.setItem('loteId', lote.docId);
+    //             obtenerInspecciones(lote.docId);
+    //         } else {
+    //             setSelectedLote(null);
+    //             setInspecciones([]);
+    //             localStorage.removeItem('loteId');
+    //         }
+    //     };
+
+    //     // Función para cargar los fragmentos de modelo desde un archivo, usualmente al iniciar.
+    //     const loadFragments = async () => {
+    //         const fragments = new OBC.FragmentManager(viewer);
+    //         if (fragments.groups.length) return;
+    //         const file = await fetch("../Clinic_Architectural.frag");
+    //         const data = await file.arrayBuffer();
+    //         const buffer = new Uint8Array(data);
+    //         const group = await fragments.load(buffer);
+    //     };
+
+    //     // Inicializa el visor cuando el componente se monta.
+    //     initViewer();
+
+    //     // Función de limpieza: se llama cuando el componente se va a desmontar.
+    //     return () => {
+    //         if (viewer) {
+    //             console.log("Disposing viewer...");
+    //             viewer.dispose();
+    //         }
+    //     };
+    // }, [lotes]);
+
+
+
+    ////////////////////////////////////////////////////////////////////////////// Visor correcto actualizar inspeccion////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+   
+    useEffect(() => {
+        let viewer = new OBC.Components();
+
+        const viewerContainer = document.getElementById("viewerContainer");
+        if (!viewerContainer) {
+            console.error("Viewer container not found.");
+            return;
+        }
+
+        const sceneComponent = new OBC.SimpleScene(viewer);
+        sceneComponent.setup();
+        viewer.scene = sceneComponent;
+
+        const rendererComponent = new OBC.PostproductionRenderer(viewer, viewerContainer);
+        viewer.renderer = rendererComponent;
+
+        const cameraComponent = new OBC.OrthoPerspectiveCamera(viewer);
+        viewer.camera = cameraComponent;
+
+        const raycasterComponent = new OBC.SimpleRaycaster(viewer);
+        viewer.raycaster = raycasterComponent;
+
+        viewer.init();
+        cameraComponent.updateAspect();
+        rendererComponent.postproduction.enabled = true;
+
+        const grid = new OBC.SimpleGrid(viewer, new THREE.Color(0x666666));
+        rendererComponent.postproduction.customEffects.excludedMeshes.push(grid.get());
+
+        const fragmentManager = new OBC.FragmentManager(viewer);
+        const ifcLoader = new OBC.FragmentIfcLoader(viewer);
+
+        const highlighter = new OBC.FragmentHighlighter(viewer);
+        highlighter.setup();
+
+        const propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
+        highlighter.events.select.onClear.add(() => {
+            propertiesProcessor.cleanPropertiesList();
+            setSelectedGlobalId(null);
+        });
+
+        ifcLoader.onIfcLoaded.add(model => {
+            setModelCount(fragmentManager.groups.length);
+            propertiesProcessor.process(model);
+            highlighter.events.select.onHighlight.add((selection) => {
+                const fragmentID = Object.keys(selection)[0];
+                const expressID = Number([...selection[fragmentID]][0]);
+                const properties = propertiesProcessor.getProperties(model, expressID.toString());
+                if (properties) {
+                    const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
+                    const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
+                    setSelectedGlobalId(globalId);
+                    const lote = lotes.find(l => l.idBim === globalId);
+
+                    if (lote) {
+                        setSelectedLote(lote);
+                        localStorage.setItem('loteId', lote.docId);
+                        obtenerInspecciones(lote.docId); // Asumiendo que esta función es asincrónica y está definida en otro lugar
+                    } else {
+                        setSelectedLote(null);
+                        setInspecciones([]);
+                        localStorage.removeItem('loteId');
+                    }
+                }
+            });
+            highlighter.update();
+        });
+
+        const mainToolbar = new OBC.Toolbar(viewer);
+        mainToolbar.addChild(
+            ifcLoader.uiElement.get("main"),
+            propertiesProcessor.uiElement.get("main")
+        );
+        viewer.ui.addToolbar(mainToolbar);
+
+        return () => {
+            if (viewer) {
+                viewer.dispose();
+            }
+        };
+    }, [lotes]); 
+
+
+    const viewerContainerStyle: React.CSSProperties = {
+        width: "100%",
+        height: "700px",
+        position: "relative",
+        gridArea: "viewer",
+
+    }
+
+    const titleStyle: React.CSSProperties = {
+        position: "absolute",
+        top: "15px",
+        left: "15px"
+    }
+
+    const imagesContainerStyle: React.CSSProperties = {
+        position: 'absolute',
+        top: '60px',
+        left: '15px'
+    };
+
+
+
+    // Función para obtener las inspecciones de un lote
+    // Asegúrate de llamar a esta función cuando se seleccione un lote
+    const obtenerInspecciones = async (loteId) => {
+        try {
+            const inspeccionesRef = collection(db, 'lotes', loteId, 'inspecciones');
+            const querySnapshot = await getDocs(inspeccionesRef);
+            const inspeccionesData = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            setInspecciones(inspeccionesData);
+            console.log(inspeccionesData, 'inspecciones') // Actualiza el estado con las inspecciones obtenidas
+        } catch (error) {
+            console.error('Error al obtener las inspecciones:', error);
+        }
+    };
+
+    const [ppiNombre, setPpiNombre] = useState('');
+    // Manejar el cambio de lote seleccionado
+    useEffect(() => {
+        if (selectedLote) {
+            obtenerInspecciones(selectedLote.docId);
+
+        }
+    }, [selectedLote, ppiNombre]);
+
+
+
+    // componente copiado
+
+
+
+
+
+    useEffect(() => {
+
         const obtenerInspecciones = async () => {
             try {
                 const inspeccionesRef = collection(db, "lotes", idLote, "inspecciones");
+                console.log(idLote)
                 const querySnapshot = await getDocs(inspeccionesRef);
 
                 const inspeccionesData = querySnapshot.docs.map(doc => ({
@@ -45,6 +876,7 @@ function TablaPpi() {
                 if (inspeccionesData.length > 0) {
                     setPpi(inspeccionesData[0]);
                     setPpiNombre(inspeccionesData[0].nombre) // O maneja múltiples inspecciones según sea necesario
+                    console.log(inspeccionesData[0].nombre) // O maneja múltiples inspecciones según sea necesario
                 } else {
                     console.log('No se encontraron inspecciones para el lote con el ID:', idLote);
                     setPpi(null);
@@ -57,13 +889,10 @@ function TablaPpi() {
 
 
         obtenerInspecciones();
-        console.log(ppi)
+
     }, [idLote]); // Dependencia del efecto basada en idLote
 
-    useEffect(() => {
 
-        console.log(ppi)
-    }, []);
 
 
 
@@ -83,7 +912,7 @@ function TablaPpi() {
     const [modalFormulario, setModalFormulario] = useState(false);
     const [currentSubactividadId, setCurrentSubactividadId] = useState(null);
 
-    const [ppiNombre, setPpiNombre] = useState('');
+
 
 
 
@@ -92,17 +921,18 @@ function TablaPpi() {
 
     const handleOpenModal = (subactividadId) => {
         setCurrentSubactividadId(subactividadId);
-        console.log(subactividadId)
+
         // Inicializar la selección temporal con el valor actual si existe
         const valorActual = seleccionApto[subactividadId]?.resultadoInspeccion;
         setTempSeleccion(valorActual);
         setModal(true);
     };
 
-    
+
+
     const handleOpenModalFormulario = (subactividadId) => {
         setCurrentSubactividadId(subactividadId);
-        console.log(subactividadId);
+
         // Inicializar la selección temporal con el valor actual si existe
         const valorActual = seleccionApto[subactividadId]?.resultadoInspeccion;
         setTempSeleccion(valorActual);
@@ -111,14 +941,15 @@ function TablaPpi() {
         setObservaciones(''); // Si también necesitas resetear observaciones o cualquier otro estado, hazlo aquí
         setModalFormulario(true);
     };
-    
+
+
 
 
 
     const handleCloseModal = () => {
         setModal(false)
         setModalFormulario(false)
-        setComentario('')
+        setFormulario(false)
         setResultadoInspeccion('Apto')
 
 
@@ -230,7 +1061,7 @@ function TablaPpi() {
             // Realiza la actualización en Firestore.
             await updateDoc(ppiRef, updatedData);
 
-            console.log("PPI actualizado con éxito en Firestore.");
+
         } catch (error) {
             console.error("Error al actualizar PPI en Firestore:", error);
         }
@@ -240,7 +1071,7 @@ function TablaPpi() {
     // agregar cometarios
     const [comentario, setComentario] = useState("");
 
-    const [resultadoInspeccion, setResultadoInspeccion] = useState("Apto");
+    const [resultadoInspeccion, setResultadoInspeccion] = useState('Apto');
 
     // Define la fecha, el responsable y genera la firma aquí
     const fechaHoraActual = new Date().toLocaleString('es-ES', {
@@ -350,7 +1181,7 @@ function TablaPpi() {
             // Realiza la actualización en Firestore.
             await updateDoc(ppiRef, updatedData);
 
-            console.log("PPI actualizado con éxito en Firestore.");
+
         } catch (error) {
             console.error("Error al actualizar PPI en Firestore:", error);
         }
@@ -368,7 +1199,7 @@ function TablaPpi() {
 
     const closeModalConfirmacion = () => {
         setModalInforme(false)
-
+        setFormulario(false)
     }
 
     const confirmarModalInforme = () => {
@@ -392,7 +1223,7 @@ function TablaPpi() {
     const [sectorInfoLote, setSectorInfoLote] = useState(null); // Estado para almacenar los datos del PPI
     useEffect(() => {
         const obtenerLotePorId = async () => {
-            console.log('**********', idLote)
+            console.log('********** id lote', idLote)
             if (!idLote) return; // Verifica si idLote está presente
 
             try {
@@ -400,9 +1231,9 @@ function TablaPpi() {
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    console.log("Datos del lote:", docSnap.data());
+
                     setLoteInfo({ id: docSnap.id, ...docSnap.data() });
-                    console.log({ id: docSnap.id, ...docSnap.data() });
+
                 } else {
                     console.log("No se encontró el lote con el ID:", idLote);
 
@@ -418,9 +1249,6 @@ function TablaPpi() {
 
     const [formulario, setFormulario] = useState(true)
 
-    // const crearVariableFormularioTrue = () => {
-    //     setFormulario(true)
-    // }
 
     const enviarDatosARegistros = async () => {
         // Descomponer currentSubactividadId para obtener los índices
@@ -462,10 +1290,9 @@ function TablaPpi() {
 
             // Opcionalmente, cierra el modal o limpia el formulario aquí
             setModalFormulario(false);
-            
+            setResultadoInspeccion('')
             setObservaciones('')
-            setComentario('')
-            console.log("Documento escrito con ID: ", docRef.id);
+
             return docRef.id; // Devolver el ID del documento creado
 
 
@@ -479,13 +1306,24 @@ function TablaPpi() {
         await handelEnviarFormulario();
         setMostrarConfirmacion(false);
         setModalInforme(false);
-        
-        setComentario('')
+
         // Esperar un poco antes de mostrar el modal de éxito para asegurar que los modales anteriores se han cerrado
         setTimeout(() => {
             setModalExito(true);
-            
 
+        }, 300); // Ajusta el tiempo según sea necesario
+    };
+
+    const handleConfirmarEnvio = async () => {
+        // Aquí llamarías a la función que realmente envía los datos del formulario
+        await handelEnviarFormulario();
+        setMostrarConfirmacion(false);
+        setModalInforme(false);
+
+        // Esperar un poco antes de mostrar el modal de éxito para asegurar que los modales anteriores se han cerrado
+        setTimeout(() => {
+            setModalExito(true);
+            setFormulario(false)
         }, 300); // Ajusta el tiempo según sea necesario
     };
 
@@ -501,7 +1339,7 @@ function TablaPpi() {
         // Esperar un poco antes de mostrar el modal de éxito para asegurar que los modales anteriores se han cerrado
         setTimeout(() => {
             setModalExito(true);
-
+            setFormulario(false)
         }, 300); // Ajusta el tiempo según sea necesario
     };
 
@@ -539,7 +1377,7 @@ function TablaPpi() {
                 if (docSnap.exists()) {
                     setDocumentoFormulario(docSnap.data())
                     setModalRecuperarFormulario(true)
-                    console.log("Datos del documento:", docSnap.data());
+
                 } else {
                     console.log("No se encontró el documento con el ID:", idRegistroFormulario);
                 }
@@ -784,184 +1622,77 @@ function TablaPpi() {
         cerrarModalYLimpiarDatos()
 
     };
-    let mario = 0
+
 
     return (
-        <div className='min-h-screen px-14 py-5 text-gray-500 text-sm'>
 
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+        <div className="min-h-screen text-gray-500 px-14 py-5">
+            <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+                <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+                <Link to={'/'}>
+                    <h1 className=' text-gray-500'>Inicio</h1>
+                </Link>
 
-                <div className='flex items-center gap-2'>
-                    <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-                    <Link to={'/'}>
-                        <h1 className=' text-gray-500'>Inicio</h1>
-                    </Link>
+                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
 
-                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                <h1 className='cursor-pointer text-gray-500' onClick={regresar}>Elementos</h1>
 
-                    <h1 className='cursor-pointer text-gray-500' onClick={regresar}>Elementos</h1>
+                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                <Link to={'#'}>
+                    <h1 className='font-medium text-amber-600'>Ppi: {ppiNombre}</h1>
+                </Link>
+                <p>inspeccion</p>
 
-                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                    <Link to={'#'}>
-                        <h1 className='font-medium text-amber-600'>Ppi: {ppiNombre}</h1>
-                    </Link>
-                </div>
-                <div className='mr-5'>
-                    <Link to={'/viewerInspeccion'}>
-                        <button className='px-4 py-2 bg-sky-500 text-white rounded-lg '>Visor BIM</button>
-                    </Link>
-                </div>
             </div>
 
 
+            <div className='flex pt-6'>
 
+                <div className="w-1/2 pr-5">
+                    {selectedLote ? (
+                        <div className="bg-gray-100 rounded-lg">
+                            <div className="bg-gray-200 p-2 font-bold text-gray-700 rounded-t-lg">Información del Lote</div>
 
-            <div className='flex gap-3 flex-col mt-5 bg-white p-8 rounded-xl shadow-md'>
-                <div className="w-full rounded-xl overflow-x-auto">
-                    <div>
-                        <div className="w-full bg-gray-300 text-gray-600 text-sm font-medium py-3 px-3 grid grid-cols-24">
-                            <div className='col-span-1'>Versión</div>
-                            <div className='col-span-1'>Nº</div>
+                            <div className='px-2 py-1 text-sm flex flex-col gap-1 bg-white rounded-lg'>
+                                <p className='border-b p-1 font-semibold text-sky-600'><strong>Lote: </strong>{selectedLote.nombre}</p>
+                                <p className='border-b p-1  font-semibold text-sky-600'><strong>Ppi: </strong>{selectedLote.ppiNombre}</p>
+                                <p className='border-b p-1 '><strong>Global id Bim: </strong>{selectedGlobalId}</p>
+                                <p className='border-b p-1 '><strong>Sector: </strong>{selectedLote.sectorNombre}</p>
+                                <p className='border-b p-1 '><strong>Sub sector: </strong>{selectedLote.subSectorNombre}</p>
+                                <p className='border-b p-1 '><strong>Parte: </strong>{selectedLote.parteNombre}</p>
+                                <p className='p-1 '><strong>Elemento: </strong>{selectedLote.elementoNombre}</p>
+                            </div>
 
-                            <div className="col-span-3">Actividad</div>
-                            <div className="col-span-4">Criterio de aceptación</div>
-                            <div className="col-span-2 text-center">Documentación de referencia</div>
-                            <div className="col-span-2 text-center">Tipo de inspección</div>
-                            <div className="col-span-1 text-center">Punto</div>
-                            <div className="col-span-2 text-center">Responsable</div>
-                            <div className="col-span-2 text-center">Fecha</div>
-                            <div className="col-span-3 text-center">Comentarios</div>
-                            {/* <div className="col-span-2 text-center">Estatus</div> */}
-                            {/* <div className="col-span-1 text-center">Inspección</div> */}
-                            <div className="col-span-2 text-center">Estado</div>
-                            <div className="col-span-1 text-center">Informe</div>
+                         
 
                         </div>
-
-
+                    ) : (
                         <div>
-                            {ppi && ppi.actividades.map((actividad, indexActividad) => [
-                                // Row for activity name
-                                <div key={`actividad-${indexActividad}`} className="bg-gray-200 grid grid-cols-24 items-center px-3 py-3 border-b border-gray-200 text-sm font-medium">
-                                    <div className="col-span-1">
 
-                                        (V)
+                            <div className="bg-gray-200  px-5 py-3 font-medium text-gray-700 rounded-t-lg text-gray-500">
 
-                                    </div>
-                                    <div className="col-span-1">
+                                <p>No encontrado</p>
+                                <p>Global Id: <strong className='text-amber-500'>{selectedGlobalId}</strong></p>
+                            </div>
 
-                                        {actividad.numero}
+                            <TrazabilidadBim actualizarLotesDesdeHijo={actualizarLotesDesdeHijo} selectedGlobalId={selectedGlobalId} obtenerLotesBim={obtenerLotes} obtenerInspecciones={obtenerInspecciones} actualizarLotes={actualizarLotes} />
 
-                                    </div>
-                                    <div className="col-span-22">
-
-                                        {actividad.actividad}
-
-                                    </div>
-
-                                </div>,
-                                // Rows for subactividades
-                                ...actividad.subactividades.map((subactividad, indexSubactividad) => (
-                                    <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-24 items-center border-b border-gray-200 text-sm">
-                                        <div className="col-span-1 px-3 py-5 ">
-                                            V-{subactividad.version}  {/* Combina el número de actividad y el índice de subactividad */}
-                                        </div>
-                                        <div className="col-span-1 px-3 py-5 ">
-                                            {subactividad.numero} {/* Combina el número de actividad y el índice de subactividad */}
-                                        </div>
-
-                                        <div className="col-span-3 px-3 py-5">
-                                            {subactividad.nombre}
-                                        </div>
-
-                                        <div className="col-span-4 px-3 py-5">
-                                            {subactividad.criterio_aceptacion}
-                                        </div>
-                                        <div className="col-span-2 px-3 py-5 text-center">
-                                            {subactividad.documentacion_referencia}
-                                        </div>
-                                        <div className="col-span-2 px-3 py-5 text-center">
-                                            {subactividad.tipo_inspeccion}
-                                        </div>
-                                        <div className="col-span-1 px-3 py-5 text-center">
-                                            {subactividad.punto}
-                                        </div>
+                            <p className='mt-5'><strong>Global id Bim: </strong>{selectedGlobalId}</p>
 
 
-
-
-                                        <div className="col-span-2 px-3 py-5 text-center">
-                                            {subactividad.responsable || ''}
-                                        </div>
-                                        <div className="col-span-2 px-5 py-5 text-center">
-                                            {/* Aquí asumo que quieres mostrar la fecha en esta columna, ajusta según sea necesario */}
-                                            {subactividad.fecha || ''}
-                                        </div>
-                                        <div className="col-span-3 px-5 py-5 text-center">
-                                            {subactividad.comentario || ''}
-                                        </div>
-
-
-
-                                        <div className="col-span-2 px-5 py-5 bg-white flex justify-center cursor-pointer" >
-                                            {subactividad.resultadoInspeccion ? (
-                                                subactividad.resultadoInspeccion === "Apto" ? (
-                                                    <span
-
-                                                        className="w-full font-bold text-lg p-2 rounded  text-center text-green-500 cursor-pointer">
-                                                        Apto
-
-                                                    </span>
-                                                ) : subactividad.resultadoInspeccion === "No apto" ? (
-                                                    <span
-
-                                                        className="w-full font-bold text-lg p-2 rounded w-full text-center text-red-600 cursor-pointer">
-                                                        No apto
-                                                    </span>
-                                                ) : (
-                                                    <span
-                                                        onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                        className="w-full font-bold text-medium text-3xl p-2 rounded  w-full flex justify-center cursor-pointer">
-                                                        <IoMdAddCircle />
-                                                    </span>
-                                                )
-                                            ) : (
-                                                <span
-                                                    onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                    className="w-full font-bold text-medium text-3xl p-2 rounded  w-full flex justify-center cursor-pointer">
-                                                    <IoMdAddCircle />
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-1 px-2 py-5 bg-white flex justify-start cursor-pointer" >
-                                            {subactividad.formularioEnviado ? (
-
-                                                <p
-                                                    onClick={() => handleMostrarIdRegistro(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                    className='text-2xl'><FaFilePdf /></p>
-                                            ) : null}
-                                        </div>
-
-
-
-
-
-
-                                    </div>
-                                ))
-                            ])}
                         </div>
-                    </div>
-                </div>
-            </div>
 
+                    )}
+                </div>
+                <div className='w-1/2' id="viewerContainer" style={viewerContainerStyle}></div>
+
+            </div>
 
             {modalFormulario && (
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
-                    <div className="mx-auto w-[720px] h-[780px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
+                    <div className="mx-auto w-[700px] h-[750px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
                     >
                         <button
                             onClick={handleCloseModal}
@@ -1004,6 +1735,7 @@ function TablaPpi() {
                                 </div>
                             </div>
                         </div>
+
                         <div className="mb-4">
                             <label htmlFor="comentario" className="block text-gray-500 text-sm font-bold mb-2">Comentarios de la inspección</label>
                             <textarea id="comentario" value={comentario} onChange={(e) => setComentario(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
@@ -1046,7 +1778,6 @@ function TablaPpi() {
                             handleConfirmarEnvioPdf={handleConfirmarEnvioPdf}
                             setMensajeExitoInspeccion={setMensajeExitoInspeccion}
                             handleConfirmarEnviotablaPpi={handleConfirmarEnviotablaPpi}
-
 
 
                         />
@@ -1093,7 +1824,7 @@ function TablaPpi() {
                                     crearVariableFormularioTrue()
                                 }}><p className='text-xl'><FaFilePdf /></p>Si, generar informe</button>
                             <button
-                                onClick={handleConfirmarEnviotablaPpi}
+                                onClick={handleConfirmarEnvio}
                                 className="bg-gray-500 hover:bg-gray-600 text-white rounded-md shadow-md font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline"
                             >
                                 No, realizar únicamente la inspección
@@ -1145,8 +1876,6 @@ function TablaPpi() {
 
                             handleConfirmarEnvioPdf={handleConfirmarEnvioPdf}
                             setMensajeExitoInspeccion={setMensajeExitoInspeccion}
-                            formulario={formulario}
-                            setComentario={setComentario}
 
                         />
 
@@ -1186,7 +1915,7 @@ function TablaPpi() {
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
-                    <div className="mx-auto w-[400px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8 text-center flex flex-col gap-5 items-center"
+                    <div className="mx-auto w-[400px] modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8 text-center flex flex-col gap-5 items-center"
                     >
                         <button
                             onClick={cerrarModalYLimpiarDatos}
@@ -1206,20 +1935,6 @@ function TablaPpi() {
                 </div>
             )}
 
-
-
-
-
-
         </div>
-
-
     );
 }
-
-export default TablaPpi;
-
-
-
-
-
