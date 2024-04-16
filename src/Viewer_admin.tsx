@@ -67,15 +67,15 @@ export default function ViewerAdmin() {
     useEffect(() => {
         obtenerLotes();
     }, []); // Asegúrate de que se carga una vez
-    
+
     useEffect(() => {
         if (selectedGlobalId) {
             const lote = lotes.find(l => l.globalId === selectedGlobalId);
             setSelectedLote(lote || null);
         }
     }, [selectedGlobalId, lotes]); // Reactiva a cambios en selectedGlobalId y lotes
-    
-  
+
+
 
     const obtenerLotes = async () => {
         try {
@@ -90,111 +90,6 @@ export default function ViewerAdmin() {
             console.error('Error al obtener los lotes:', error);
         }
     };
-    
-
-
-    // useEffect(() => {
-    //     let viewer = new OBC.Components();
-
-    //     const viewerContainer = document.getElementById("viewerContainer");
-    //     if (!viewerContainer) {
-    //         console.error("Viewer container not found.");
-    //         return;
-    //     }
-
-    //     const sceneComponent = new OBC.SimpleScene(viewer);
-    //     sceneComponent.setup();
-    //     viewer.scene = sceneComponent;
-
-    //     const rendererComponent = new OBC.PostproductionRenderer(viewer, viewerContainer);
-    //     viewer.renderer = rendererComponent;
-
-    //     const cameraComponent = new OBC.OrthoPerspectiveCamera(viewer);
-    //     viewer.camera = cameraComponent;
-
-    //     const raycasterComponent = new OBC.SimpleRaycaster(viewer);
-    //     viewer.raycaster = raycasterComponent;
-
-    //     viewer.init();
-    //     cameraComponent.updateAspect();
-    //     rendererComponent.postproduction.enabled = true;
-
-    //     const grid = new OBC.SimpleGrid(viewer, new THREE.Color(0x666666));
-    //     rendererComponent.postproduction.customEffects.excludedMeshes.push(grid.get());
-
-    //     const fragmentManager = new OBC.FragmentManager(viewer);
-    //     const ifcLoader = new OBC.FragmentIfcLoader(viewer);
-
-    //     const highlighter = new OBC.FragmentHighlighter(viewer);
-    //     highlighter.setup();
-
-    //     const propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
-    //     highlighter.events.select.onClear.add(() => {
-    //         propertiesProcessor.cleanPropertiesList();
-    //         setSelectedGlobalId(null);
-    //     });
-
-    //     ifcLoader.onIfcLoaded.add(model => {
-    //         setModelCount(fragmentManager.groups.length);
-    //         propertiesProcessor.process(model);
-    //         highlighter.events.select.onHighlight.add((selection) => {
-    //             const fragmentID = Object.keys(selection)[0];
-    //             const expressID = Number([...selection[fragmentID]][0]);
-    //             const properties = propertiesProcessor.getProperties(model, expressID.toString());
-    //             if (properties) {
-    //                 const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
-    //                 const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
-    //                 setSelectedGlobalId(globalId);
-    //                 const lote = lotes.find(l => l.globalId === globalId);
-
-    //                 if (lote) {
-    //                     setSelectedLote(lote);
-    //                     localStorage.setItem('loteId', lote.docId);
-    //                     // Asumiendo que esta función es asincrónica y está definida en otro lugar
-    //                 } else {
-    //                     setSelectedLote(null);
-    //                     setInspecciones([]);
-    //                     localStorage.removeItem('loteId');
-    //                 }
-    //             }
-    //         });
-    //         highlighter.update();
-    //     });
-
-    //     const mainToolbar = new OBC.Toolbar(viewer);
-    //     mainToolbar.addChild(
-    //         ifcLoader.uiElement.get("main"),
-    //         propertiesProcessor.uiElement.get("main")
-    //     );
-    //     viewer.ui.addToolbar(mainToolbar);
-
-    //     return () => {
-    //         if (viewer) {
-    //             viewer.dispose();
-    //         }
-    //     };
-    // }, [lotes]);
-
-
-    // const viewerContainerStyle: React.CSSProperties = {
-    //     width: "100%",
-    //     height: "400px",
-    //     position: "relative",
-    //     gridArea: "viewer",
-
-    // }
-
-    // const titleStyle: React.CSSProperties = {
-    //     position: "absolute",
-    //     top: "15px",
-    //     left: "15px"
-    // }
-
-    // const imagesContainerStyle: React.CSSProperties = {
-    //     position: 'absolute',
-    //     top: '60px',
-    //     left: '15px'
-    // };
 
 
 
@@ -227,7 +122,7 @@ export default function ViewerAdmin() {
     const handleCloseModal = () => {
         setModal(false)
         setModalFormulario(false)
-     
+
 
 
 
@@ -317,12 +212,12 @@ export default function ViewerAdmin() {
             // Actualizar el estado del lote seleccionado inmediatamente
             const updatedLote = { ...selectedLote, globalId: globalId };
             setSelectedLote(updatedLote);
-            
+
             // Actualizar la lista de lotes
             const updatedLotes = lotes.map(lote => lote.docId === loteId ? { ...lote, globalId: globalId } : lote);
             setLotes(updatedLotes);
-    
-            setSuccessMessage("Global ID agregado correctamente al lote.");
+
+            setSuccessMessage("Global ID agregado correctamente");
             setShowSuccessModal(true);
         } catch (error) {
             console.error("Error actualizando el lote con GlobalId:", error);
@@ -330,38 +225,58 @@ export default function ViewerAdmin() {
             setShowSuccessModal(true);
         }
     };
-    
-    
+
+
 
     const handleSelectLote = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const loteId = e.target.value;
         const lote = lotes.find(l => l.docId === loteId);
         setSelectedLote(lote || null);
     };
- 
+
 
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-const [successMessage, setSuccessMessage] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
+
+    const [filtro, setFiltro] = useState("todos"); // 'todos', 'asignados', 'noAsignados'
+
+
+
+    const handleFiltroChange = (event) => {
+        setFiltro(event.target.value);
+    };
+
+    const lotesFiltrados = lotes.filter((lote) => {
+        if (filtro === "todos") return true;
+        if (filtro === "asignados") return lote.globalId;
+        if (filtro === "noAsignados") return !lote.globalId;
+    });
 
     return (
 
         <div className="min-h-screen text-gray-500 px-14 py-5">
-            <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
-                <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'/'}>
-                    <h1 className=' text-gray-500'>Inicio</h1>
-                </Link>
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
 
-                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                <div className='flex items-center gap-2'>
+                    <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
 
-                <h1 className='cursor-pointer text-gray-500' onClick={regresar}>Elementos</h1>
-
-                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'#'}>
-                    <h1 className='font-medium text-amber-600'>Ppi: </h1>
-                </Link>
-                <p>admin</p>
-
+                    <Link to={'/admin'}>
+                        <h1 className='text-gray-600'>Administración</h1>
+                    </Link>
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                    <Link to={'/viewProject'}>
+                        <h1 className=' text-gray-600'>Ver proyectos</h1>
+                    </Link>
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                    <Link to={'/trazabilidad'}>
+                        <h1 className='font-medium text-gray-500'>Trazabilidad </h1>
+                    </Link>
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                    <Link to={'#'}>
+                        <h1 className='font-medium text-amber-600'>Bim </h1>
+                    </Link>
+                </div>
+               
             </div>
 
 
@@ -381,21 +296,29 @@ const [successMessage, setSuccessMessage] = useState("");
 
                     <div className="bg-white rounded-lg mb-4">
                         <div className="bg-gray-200 px-4 py-2 font-bold text-gray-500 rounded-t-lg">Lotes disponibles</div>
-                        <div className='text-sm px-4 py-3'>
-                            <select onChange={handleSelectLote} value={selectedLote?.docId || ""}
-                                className="block w-full mt-1 p-2 bg-gray-100 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
-                                <option value="">Seleccione un lote</option>
-                                {lotes.map((lote) => (
-                                    <option key={lote.docId} value={lote.docId}
-                                        className={`${!lote.globalId ? 'bg-amber-600 text-white' : 'bg-white text-black'}`}>
-                                        {lote.nombre}
-                                    </option>
-                                ))}
-                            </select>
-
+                        <div className="flex justify-between items-center px-4 py-3">
+                            <div className="flex-grow pr-2">
+                                <select onChange={handleSelectLote} value={selectedLote}
+                                    className="block w-full mt-1 p-2 bg-gray-100 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Seleccione un lote</option>
+                                    {lotesFiltrados.map((lote) => (
+                                        <option key={lote.docId} value={lote.docId}
+                                            className={`${!lote.globalId ? 'bg-amber-600 text-white' : 'bg-white text-black'}`}>
+                                            {lote.nombre}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <select onChange={handleFiltroChange} value={filtro}
+                                    className="block w-full mt-1 p-2 bg-gray-100 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+                                    <option value="todos">Todos</option>
+                                    <option value="asignados">Asignados</option>
+                                    <option value="noAsignados">No Asignados</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-
 
 
 
@@ -408,18 +331,24 @@ const [successMessage, setSuccessMessage] = useState("");
                                     <div className="bg-gray-200 px-4 py-2 font-bold text-gray-500 rounded-t-lg">Información del Lote</div>
                                     <div className='text-sm px-4 py-2'>
                                         <div className="flex items-center justify-between">
-                                            <p className={`font-medium ${selectedLote?.globalId ? 'text-green-600' : 'text-gray-500'}`}>
-                                                <strong>Global ID Bim:</strong> {selectedLote?.globalId || "Sin asignar"}
+                                            <p className={`font-medium ps-1 ${selectedLote?.globalId ? 'text-green-600' : 'text-amber-600'}`}>
+                                                <strong>Global ID Bim:</strong> {selectedLote?.globalId || ''}
                                             </p>
                                             {selectedLote?.globalId ? (
                                                 <button className="px-4 py-2 rounded-lg text-green-600 font-bold">ID Asignado</button>
                                             ) : (
-                                                <button
-                                                    onClick={() => selectedLote && selectedGlobalId && actualizarLoteConGlobalId(selectedLote.docId, selectedGlobalId)}
-                                                    className={`px-4 py-2 rounded text-white ${selectedGlobalId ? 'bg-amber-600 hover:bg-amber-700' : 'bg-gray-500 cursor-not-allowed'}`}
-                                                    disabled={!selectedLote || !selectedGlobalId}>
-                                                    Agregar Global ID
-                                                </button>
+                                                <div className='flex items-center gap-3 font-bold text-amber-600'>
+
+
+                                                    <p>Sin asignar</p>
+                                                    <button
+                                                        onClick={() => selectedLote && selectedGlobalId && actualizarLoteConGlobalId(selectedLote.docId, selectedGlobalId)}
+                                                        className={`px-4 py-2 rounded text-white ${selectedGlobalId ? 'bg-amber-600 hover:bg-amber-700' : 'bg-gray-500 cursor-not-allowed'}`}
+                                                        disabled={!selectedLote || !selectedGlobalId}>
+                                                        +
+                                                    </button>
+                                                </div>
+
                                             )}
                                         </div>
                                         <p className='border-b p-1 font-semibold text-sky-600'><strong>Lote:</strong> {selectedLote.nombre}</p>
@@ -435,7 +364,8 @@ const [successMessage, setSuccessMessage] = useState("");
                             </>
                         ) : (
                             <div className="p-5">
-                                <p className="text-gray-700">Selecciona un lote para ver o asignar un Global ID.</p>
+                                <p className=" font-medium flex items-center gap-2 text-amber-600"> <strong className='text-3xl text-amber-500'>*</strong>Global id sin asignar</p>
+                                <p className="text-gray-500 font-medium flex items-center gap-2 ps-5">Selecciona un lote para ver o asignar un Global ID.</p>
                             </div>
                         )}
                     </div>
@@ -443,7 +373,7 @@ const [successMessage, setSuccessMessage] = useState("");
 
 
                 <div>
-                <ViewerComponent onModelLoad={setSelectedGlobalId}/>
+                    <ViewerComponent onModelLoad={setSelectedGlobalId} />
                 </div>
 
 
@@ -495,7 +425,7 @@ const [successMessage, setSuccessMessage] = useState("");
                         <div className="p-8 flex flex-col items-center">
                             <FaCheckCircle size="60" className="text-green-500 mb-5" />
                             <p className="text-center text-gray-800 text-xl font-medium mt-3">{successMessage}</p>
-                           
+
                         </div>
                     </div>
                 </div>

@@ -22,7 +22,7 @@ import TrazabilidadBim from './Pages/Administrador/TrazabiidadBim';
 interface Lote {
     docId: string;
     nombre: string;
-    idBim: string;
+    globalId: string;
     sectorNombre: string;
     subSectorNombre: string;
     parteNombre: string;
@@ -31,7 +31,7 @@ interface Lote {
     ppiNombre: string;
 }
 
-export default function ViewerInspeccion() {
+export default function Viewer_inspeccion_copy() {
     const [modelCount, setModelCount] = useState(0);
     const [lotes, setLotes] = useState<Lote[]>([]);
     const [selectedGlobalId, setSelectedGlobalId] = useState<string | null>(null);
@@ -273,7 +273,7 @@ export default function ViewerInspeccion() {
     //                 const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
     //                 const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
     //                 setSelectedGlobalId(globalId);
-    //                 const lote = lotes.find(l => l.idBim === globalId);
+    //                 const lote = lotes.find(l => l.globalId === globalId);
 
     //                 if (lote) {
     //                     setSelectedLote(lote);
@@ -678,7 +678,7 @@ export default function ViewerInspeccion() {
     //         const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
     //         const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
     //         setSelectedGlobalId(globalId);
-    //         const lote = lotes.find(l => l.idBim === globalId);
+    //         const lote = lotes.find(l => l.globalId === globalId);
 
     //         if (lote) {
     //             setSelectedLote(lote);
@@ -772,7 +772,7 @@ export default function ViewerInspeccion() {
                     const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
                     const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
                     setSelectedGlobalId(globalId);
-                    const lote = lotes.find(l => l.idBim === globalId);
+                    const lote = lotes.find(l => l.globalId === globalId);
 
                     if (lote) {
                         setSelectedLote(lote);

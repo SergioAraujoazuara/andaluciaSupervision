@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as OBC from "openbim-components";
 import * as THREE from "three";
 import { db } from '../firebase_config';
-import { getDoc, getDocs, doc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc, deleteDoc } from 'firebase/firestore';
+import { getDoc, getDocs, doc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc, deleteDoc, increment } from 'firebase/firestore';
 import { IoMdAddCircle } from 'react-icons/io';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { FaFilePdf } from "react-icons/fa6"; // Importa los íconos para "Apto" y "No apto"
@@ -23,7 +23,7 @@ import TrazabilidadBim from './Pages/Administrador/TrazabiidadBim';
 interface Lote {
     docId: string;
     nombre: string;
-    idBim: string;
+    globalId: string;
     sectorNombre: string;
     subSectorNombre: string;
     parteNombre: string;
@@ -96,121 +96,7 @@ export default function ViewerInspeccion() {
 
 
 
-    // Visor correcto con auto carga y con escene /////////////////////////////////////////////////////////////////////////////////////     
-
-    // useEffect(() => {
-    //     let viewer;  // Almacena la instancia principal del visor de modelos 3D.
-    //     let grid;    // Referencia a la cuadrícula visual que aparece en el plano de fondo.
-    //     let fragmentManager; // Gestor para manejar y organizar los fragmentos de modelos cargados.
-    //     let ifcLoader;       // Cargador específico para modelos IFC (Industry Foundation Classes).
-    //     let highlighter;     // Herramienta para resaltar elementos seleccionados en el visor.
-    //     let propertiesProcessor; // Procesador para extraer propiedades de elementos IFC.
-    //     let mainToolbar;
-    //     // Procesador para extraer propiedades de elementos IFC.
-
-    //     // Función principal para inicializar el visor.
-    //     const initViewer = async () => {
-    //         console.log("Iniciando el visor...");
-
-    //         // Inicializa los componentes básicos del visor.
-    //         viewer = new OBC.Components();
-    //         console.log("Componentes del visor creados.");
-
-    //         // Configura la escena básica donde se visualizarán los modelos.
-    //         const sceneComponent = new OBC.SimpleScene(viewer);
-    //         sceneComponent.setup();
-    //         viewer.scene = sceneComponent;
-    //         const scene = sceneComponent.get();
-    //         console.log("Componente de escena configurado.");
-
-    //         // Prepara el contenedor del visor en el DOM y el componente de renderizado.
-    //         const viewerContainer = document.getElementById("viewerContainer");
-    //         const rendererComponent = new OBC.PostproductionRenderer(viewer, viewerContainer);
-    //         viewer.renderer = rendererComponent;
-    //         console.log("Componente de renderizado configurado.");
-
-    //         // Establece la cámara con perspectiva y ortográfica combinada.
-    //         const cameraComponent = new OBC.OrthoPerspectiveCamera(viewer);
-    //         viewer.camera = cameraComponent;
-    //         console.log("Componente de cámara configurado.");
-
-    //         // Configura el raycaster para manejar la selección de elementos mediante el cursor.
-    //         const raycasterComponent = new OBC.SimpleRaycaster(viewer);
-    //         viewer.raycaster = raycasterComponent;
-
-    //         // Inicializa el visor, actualiza aspecto de la cámara y habilita el postprocesamiento.
-    //         viewer.init();
-    //         cameraComponent.updateAspect();
-    //         rendererComponent.postproduction.enabled = true;
-
-    //         // Configura y agrega una cuadrícula de suelo al visor para mejorar la orientación espacial.
-    //         grid = new OBC.SimpleGrid(viewer, new THREE.Color(0x666666));
-    //         rendererComponent.postproduction.customEffects.excludedMeshes.push(grid.get());
-
-    //         let fragments = new OBC.FragmentManager(viewer);
-    //         let fragmentIfcLoader = new OBC.FragmentIfcLoader(viewer);
-
-    //         // Inicializa el gestor de fragmentos y el cargador de IFC para cargar modelos.
-    //         fragmentManager = new OBC.FragmentManager(viewer);
-
-
-    //         // Configura el sistema de resaltado para enfocar y diferenciar elementos seleccionados.
-    //         highlighter = new OBC.FragmentHighlighter(viewer);
-    //         highlighter.setup();
-
-    //         // Inicia el procesador de propiedades para obtener datos de elementos IFC al seleccionarlos.
-    //         propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
-
-    //         // Define una función callback para cuando un elemento es seleccionado.
-    //         highlighter.events.select.onHighlight.add((selection) => {
-    //             console.log(selection)
-    //         });
-
-
-
-    //         loadIfcAsFragments();
-    //         // Carga inicial de fragmentos desde un archivo externo.
-    //         // loadFragments(fragmentManager);
-
-    //         propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
-    //         highlighter.events.select.onClear.add(() => {
-    //             propertiesProcessor.cleanPropertiesList();
-    //             setSelectedGlobalId(null);
-    //         });
-
-    //         async function loadIfcAsFragments() {
-    //             const file = await fetch('../modelos/Clinic_Architectural.ifc');
-    //             const data = await file.arrayBuffer();
-    //             const buffer = new Uint8Array(data);
-    //             const model = await fragmentIfcLoader.load(buffer, "example");
-    //             scene.add(model);
-    //         }
-
-
-    //     };
-
-    //     // Inicializa el visor cuando el componente se monta.
-    //     initViewer();
-
-    //     mainToolbar = new OBC.Toolbar(viewer);
-    //     mainToolbar.addChild(
-
-    //         propertiesProcessor.uiElement.get("main")
-    //     );
-    //     viewer.ui.addToolbar(mainToolbar);
-
-    //     // Función de limpieza: se llama cuando el componente se va a desmontar.
-    //     return () => {
-    //         if (viewer) {
-    //             console.log("Disposing viewer...");
-    //             viewer.dispose();
-    //         }
-    //     };
-    // }, [lotes]);
-
-
-
-
+    
 
 
 
@@ -274,7 +160,7 @@ export default function ViewerInspeccion() {
     //                 const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
     //                 const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
     //                 setSelectedGlobalId(globalId);
-    //                 const lote = lotes.find(l => l.idBim === globalId);
+    //                 const lote = lotes.find(l => l.globalId === globalId);
 
     //                 if (lote) {
     //                     setSelectedLote(lote);
@@ -679,7 +565,7 @@ export default function ViewerInspeccion() {
     //         const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
     //         const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
     //         setSelectedGlobalId(globalId);
-    //         const lote = lotes.find(l => l.idBim === globalId);
+    //         const lote = lotes.find(l => l.globalId === globalId);
 
     //         if (lote) {
     //             setSelectedLote(lote);
@@ -717,9 +603,89 @@ export default function ViewerInspeccion() {
 
 
     ////////////////////////////////////////////////////////////////////////////// Visor correcto actualizar inspeccion////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// * respaldo visor correcto y funciona bien /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // useEffect(() => {
+    //     let viewer = new OBC.Components();
 
+    //     const viewerContainer = document.getElementById("viewerContainer");
+    //     if (!viewerContainer) {
+    //         console.error("Viewer container not found.");
+    //         return;
+    //     }
 
+    //     const sceneComponent = new OBC.SimpleScene(viewer);
+    //     sceneComponent.setup();
+    //     viewer.scene = sceneComponent;
 
+    //     const rendererComponent = new OBC.PostproductionRenderer(viewer, viewerContainer);
+    //     viewer.renderer = rendererComponent;
+
+    //     const cameraComponent = new OBC.OrthoPerspectiveCamera(viewer);
+    //     viewer.camera = cameraComponent;
+
+    //     const raycasterComponent = new OBC.SimpleRaycaster(viewer);
+    //     viewer.raycaster = raycasterComponent;
+
+    //     viewer.init();
+    //     cameraComponent.updateAspect();
+    //     rendererComponent.postproduction.enabled = true;
+
+    //     const grid = new OBC.SimpleGrid(viewer, new THREE.Color(0x666666));
+    //     rendererComponent.postproduction.customEffects.excludedMeshes.push(grid.get());
+
+    //     const fragmentManager = new OBC.FragmentManager(viewer);
+    //     const ifcLoader = new OBC.FragmentIfcLoader(viewer);
+
+    //     const highlighter = new OBC.FragmentHighlighter(viewer);
+    //     highlighter.setup();
+
+    //     const propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
+    //     highlighter.events.select.onClear.add(() => {
+    //         propertiesProcessor.cleanPropertiesList();
+    //         setSelectedGlobalId(null);
+    //     });
+
+    //     ifcLoader.onIfcLoaded.add(model => {
+    //         setModelCount(fragmentManager.groups.length);
+    //         propertiesProcessor.process(model);
+    //         highlighter.events.select.onHighlight.add((selection) => {
+    //             const fragmentID = Object.keys(selection)[0];
+    //             const expressID = Number([...selection[fragmentID]][0]);
+    //             const properties = propertiesProcessor.getProperties(model, expressID.toString());
+    //             if (properties) {
+    //                 const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
+    //                 const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
+    //                 setSelectedGlobalId(globalId);
+    //                 const lote = lotes.find(l => l.globalId === globalId);
+
+    //                 if (lote) {
+    //                     setSelectedLote(lote);
+    //                     localStorage.setItem('loteId', lote.docId);
+    //                     obtenerInspecciones(lote.docId); // Asumiendo que esta función es asincrónica y está definida en otro lugar
+    //                 } else {
+    //                     setSelectedLote(null);
+    //                     setInspecciones([]);
+    //                     localStorage.removeItem('loteId');
+    //                 }
+    //             }
+    //         });
+    //         highlighter.update();
+    //     });
+
+    //     const mainToolbar = new OBC.Toolbar(viewer);
+    //     mainToolbar.addChild(
+    //         ifcLoader.uiElement.get("main"),
+    //         propertiesProcessor.uiElement.get("main")
+    //     );
+    //     viewer.ui.addToolbar(mainToolbar);
+
+    //     return () => {
+    //         if (viewer) {
+    //             viewer.dispose();
+    //         }
+    //     };
+    // }, [lotes]);
+// * /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     useEffect(() => {
         let viewer = new OBC.Components();
@@ -733,6 +699,7 @@ export default function ViewerInspeccion() {
         const sceneComponent = new OBC.SimpleScene(viewer);
         sceneComponent.setup();
         viewer.scene = sceneComponent;
+        const scene = sceneComponent.get();
 
         const rendererComponent = new OBC.PostproductionRenderer(viewer, viewerContainer);
         viewer.renderer = rendererComponent;
@@ -752,7 +719,8 @@ export default function ViewerInspeccion() {
 
         const fragmentManager = new OBC.FragmentManager(viewer);
         const ifcLoader = new OBC.FragmentIfcLoader(viewer);
-
+   
+    
         const highlighter = new OBC.FragmentHighlighter(viewer);
         highlighter.setup();
 
@@ -761,6 +729,17 @@ export default function ViewerInspeccion() {
             propertiesProcessor.cleanPropertiesList();
             setSelectedGlobalId(null);
         });
+        async function loadIfcAsFragments() {
+            const file = await fetch('../modelos/Viaducto_cortazar.ifc');
+            const data = await file.arrayBuffer();
+            const buffer = new Uint8Array(data);
+            const model = await ifcLoader.load(buffer, "example");
+            scene.add(model);
+        }
+        loadIfcAsFragments();
+                // Carga inicial de fragmentos desde un archivo externo.
+                // loadFragments(fragmentManager);
+               
 
         ifcLoader.onIfcLoaded.add(model => {
             setModelCount(fragmentManager.groups.length);
@@ -773,7 +752,7 @@ export default function ViewerInspeccion() {
                     const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
                     const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
                     setSelectedGlobalId(globalId);
-                    const lote = lotes.find(l => l.idBim === globalId);
+                    const lote = lotes.find(l => l.globalId === globalId);
 
                     if (lote) {
                         setSelectedLote(lote);
@@ -791,7 +770,7 @@ export default function ViewerInspeccion() {
 
         const mainToolbar = new OBC.Toolbar(viewer);
         mainToolbar.addChild(
-            ifcLoader.uiElement.get("main"),
+            
             propertiesProcessor.uiElement.get("main")
         );
         viewer.ui.addToolbar(mainToolbar);
@@ -802,6 +781,125 @@ export default function ViewerInspeccion() {
             }
         };
     }, [lotes]);
+
+
+
+
+    // Visor correcto con auto carga y con escene /////////////////////////////////////////////////////////////////////////////////////     
+
+    // useEffect(() => {
+    //     let viewer;  // Almacena la instancia principal del visor de modelos 3D.
+    //     let grid;    // Referencia a la cuadrícula visual que aparece en el plano de fondo.
+    //     let fragmentManager; // Gestor para manejar y organizar los fragmentos de modelos cargados.
+    //     let ifcLoader;       // Cargador específico para modelos IFC (Industry Foundation Classes).
+    //     let highlighter;     // Herramienta para resaltar elementos seleccionados en el visor.
+    //     let propertiesProcessor; // Procesador para extraer propiedades de elementos IFC.
+    //     let mainToolbar;
+    //     // Procesador para extraer propiedades de elementos IFC.
+
+    //     // Función principal para inicializar el visor.
+    //     const initViewer = async () => {
+    //         console.log("Iniciando el visor...");
+
+    //         // Inicializa los componentes básicos del visor.
+    //         viewer = new OBC.Components();
+    //         console.log("Componentes del visor creados.");
+
+    //         // Configura la escena básica donde se visualizarán los modelos.
+    //         const sceneComponent = new OBC.SimpleScene(viewer);
+    //         sceneComponent.setup();
+    //         viewer.scene = sceneComponent;
+    //         const scene = sceneComponent.get();
+    //         console.log("Componente de escena configurado.");
+
+    //         // Prepara el contenedor del visor en el DOM y el componente de renderizado.
+    //         const viewerContainer = document.getElementById("viewerContainer");
+    //         const rendererComponent = new OBC.PostproductionRenderer(viewer, viewerContainer);
+    //         viewer.renderer = rendererComponent;
+    //         console.log("Componente de renderizado configurado.");
+
+    //         // Establece la cámara con perspectiva y ortográfica combinada.
+    //         const cameraComponent = new OBC.OrthoPerspectiveCamera(viewer);
+    //         viewer.camera = cameraComponent;
+    //         console.log("Componente de cámara configurado.");
+
+    //         // Configura el raycaster para manejar la selección de elementos mediante el cursor.
+    //         const raycasterComponent = new OBC.SimpleRaycaster(viewer);
+    //         viewer.raycaster = raycasterComponent;
+
+    //         // Inicializa el visor, actualiza aspecto de la cámara y habilita el postprocesamiento.
+    //         viewer.init();
+    //         cameraComponent.updateAspect();
+    //         rendererComponent.postproduction.enabled = true;
+
+    //         // Configura y agrega una cuadrícula de suelo al visor para mejorar la orientación espacial.
+    //         grid = new OBC.SimpleGrid(viewer, new THREE.Color(0x666666));
+    //         rendererComponent.postproduction.customEffects.excludedMeshes.push(grid.get());
+
+    //         let fragments = new OBC.FragmentManager(viewer);
+    //         let fragmentIfcLoader = new OBC.FragmentIfcLoader(viewer);
+
+    //         // Inicializa el gestor de fragmentos y el cargador de IFC para cargar modelos.
+    //         fragmentManager = new OBC.FragmentManager(viewer);
+
+
+    //         // Configura el sistema de resaltado para enfocar y diferenciar elementos seleccionados.
+    //         highlighter = new OBC.FragmentHighlighter(viewer);
+    //         highlighter.setup();
+
+    //         // Inicia el procesador de propiedades para obtener datos de elementos IFC al seleccionarlos.
+    //         propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
+
+    //         // Define una función callback para cuando un elemento es seleccionado.
+    //         highlighter.events.select.onHighlight.add((selection) => {
+    //             console.log(selection)
+    //         });
+
+
+
+    //         loadIfcAsFragments();
+    //         // Carga inicial de fragmentos desde un archivo externo.
+    //         // loadFragments(fragmentManager);
+
+    //         propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer);
+    //         highlighter.events.select.onClear.add(() => {
+    //             propertiesProcessor.cleanPropertiesList();
+    //             setSelectedGlobalId(null);
+    //         });
+
+    //         async function loadIfcAsFragments() {
+    //             const file = await fetch('../modelos/Clinic_Architectural.ifc');
+    //             const data = await file.arrayBuffer();
+    //             const buffer = new Uint8Array(data);
+    //             const model = await fragmentIfcLoader.load(buffer, "example");
+    //             scene.add(model);
+    //         }
+
+
+    //     };
+
+    //     // Inicializa el visor cuando el componente se monta.
+    //     initViewer();
+
+    //     mainToolbar = new OBC.Toolbar(viewer);
+    //     mainToolbar.addChild(
+
+    //         propertiesProcessor.uiElement.get("main")
+    //     );
+    //     viewer.ui.addToolbar(mainToolbar);
+
+    //     // Función de limpieza: se llama cuando el componente se va a desmontar.
+    //     return () => {
+    //         if (viewer) {
+    //             console.log("Disposing viewer...");
+    //             viewer.dispose();
+    //         }
+    //     };
+    // }, [lotes]);
+
+
+
+
 
 
     const viewerContainerStyle: React.CSSProperties = {

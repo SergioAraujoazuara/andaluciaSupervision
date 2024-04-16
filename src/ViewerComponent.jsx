@@ -57,12 +57,25 @@ const ViewerComponent = React.memo(({ onModelLoad }) => {
                 const fragmentID = Object.keys(selection)[0];
                 const expressID = Number([...selection[fragmentID]][0]);
                 const properties = propertiesProcessor.getProperties(model, expressID.toString());
+                console.log(properties); // Esto debería mostrarte todas las propiedades del objeto seleccionado.
+                
                 if (properties) {
+                    // Encuentra la propiedad 'GlobalId'
                     const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
                     const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
-                    onModelLoad(globalId);  // Callback to set the selected global ID
+                    
+                    // Encuentra la propiedad 'Name'
+                    const nameProperty = properties.find(prop => prop.Name === 'Name');
+                    const nameElement = nameProperty ? nameProperty.NominalValue.value : 'No disponible'; // Asumiendo que el nombre está en 'NominalValue.value'
+                    
+                    console.log(globalId); // Esto debería mostrarte el GlobalId
+                    console.log(nameElement); // Esto debería mostrarte el Name
+                    
+                    // Aquí llamarías a cualquier función de callback o manejo con globalId y nameElement
+                    onModelLoad(globalId, nameElement); // Asumiendo que onModelLoad puede tomar globalId y nameElement
                 }
             });
+            
             highlighter.update();
         });
 

@@ -5,6 +5,7 @@ import logo from '../assets/logo_solo.png';
 import { FaArrowRight } from "react-icons/fa";
 import { GoHomeFill } from "react-icons/go";
 import { Link } from 'react-router-dom';
+import { SiBim } from "react-icons/si";
 
 function Elemento() {
 
@@ -73,9 +74,12 @@ function Elemento() {
 
 
                     <div className='px-4 py-2 bg-sky-500 text-white rounded-lg '>
-                        <Link to={'/visorInspeccion'}>
-                            <button>Visor BIM</button>
+                        <Link to={'/visor_inspeccion'}>
+                            <button className='text-white flex items-center gap-3'>
+                            Version <SiBim/> 
+                            </button>
                         </Link>
+
 
                     </div>
 
@@ -87,8 +91,8 @@ function Elemento() {
                             <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden  col-span-2'>Elemento</div>
                             <div className='text-left sm:ps-10  font-medium text-gray-600 sm:block hidden col-span-2 '>Pk</div>
                             <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden col-span-2'>Lote y ppi</div>
-                            
-                            
+
+
                             <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden col-span-2'>Progreso inspección</div>
                         </div>
 
@@ -117,8 +121,8 @@ function Elemento() {
                                     <div className='sm:border-r-2 flex flex-col col-span-2 items-start justify-center text-center sm:ps-8'>
                                         <div className='col-span-2'><p className='p-2'>Inicial: {l.pkInicial}</p></div>
                                         <div className='col-span-2'><p className='  p-2'>Final: {l.pkFinal}</p></div>
-                                        
-                                        
+
+
                                     </div>
                                     <div className='sm:border-r-2 flex flex-col col-span-2 items-start sm:justify-center sm:ps-10 sm:pr-5'>
                                         <p className='font-medium'>Lote: {l.nombre}</p>
