@@ -49,10 +49,10 @@ const Navbar = () => {
   return (
     <nav className="bg-white shadow">
       <div className="px-20">
-        <div className="flex justify-between h-26">
+        <div className="flex justify-between h-30">
           <div className="flex gap-10">
             <div className="flex-shrink-0 flex items-center">
-              <img className="h-auto" src={Imagen} width={190} alt="logo" />
+              <img className="h-auto" src={Imagen} width={220} alt="logo" />
             </div>
             {user && (
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">

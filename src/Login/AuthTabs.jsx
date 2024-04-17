@@ -41,11 +41,17 @@ const AuthTabs = () => {
         
         
 
-      <div className='ps-5'>
-      {activeTab === 'login' ? <Login /> : <Register />}
+      {/* Contenido de la pestaña */}
+    
+        <div className={`transition-opacity duration-500 ps-5 ${activeTab === 'login' ? 'opacity-100' : 'opacity-0'}`}>
+          {activeTab === 'login' && <Login />}
+        </div>
+        <div className={`transition-opacity duration-500 ps-5 ${activeTab === 'register' ? 'opacity-100' : 'opacity-0'}`}>
+          {activeTab === 'register' && <Register />}
+        </div>
       </div>
       
-    </div>
+  
   );
 };
 

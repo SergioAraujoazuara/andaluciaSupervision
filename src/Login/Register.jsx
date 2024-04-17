@@ -64,21 +64,14 @@ const Register = () => {
 
   return (
     <div className="flex h-screen bg-gray-200">
-      <div className="w-full max-w-4xl mx-auto  mb-56 bg-white rounded-2xl shadow-xl overflow-hidden flex">
-        
-      <div className="md:w-1/2 bg-sky-600 text-white flex flex-col justify-center px-10">
-          <h2 className="text-4xl font-bold mb-2">Tpf ingeniería</h2>
-          <p className="mb-4">Building the world, better</p>
-          <button onClick={() => navigate('/signin')} className="flex items-center gap-3 text-sky-500 font-semibold bg-white w-full py-2 px-4 rounded-full shadow-md">
-           <span className='text-amber-500'><FaArrowAltCircleRight/></span> 
-            Área inspección
-          </button>
-        </div>
-        
+      <div className="w-full h-2/3 max-w-4xl mx-auto  mb-56 bg-white rounded-2xl shadow-xl overflow-hidden flex">
+
+       
+
         <div className="md:w-1/2 p-10 flex flex-col justify-center">
           <div className="text-center mb-5">
-            <img src={Logo_solo} width={200} alt="logo" className="mx-auto" />
-            <h1 className="text-3xl font-semibold text-gray-700 my-4">Register</h1>
+            
+            <h1 className="text-3xl font-semibold text-gray-700 my-4">Registro</h1>
           </div>
           <form onSubmit={handleSubmit} className="max-w-xl mx-auto">
             <div className="flex flex-col mb-4">
@@ -141,7 +134,26 @@ const Register = () => {
           </form>
           {showModal && <AlertaRegister message={error} closeModal={closeModal} />}
         </div>
-        
+
+        <div className="md:w-1/2 bg-sky-600 text-white flex flex-col justify-center px-10 pb-10">
+          
+          <div className='flex justify-center'>
+          <img src={Logo_solo} width={150} alt="logo" className="mb-5" />
+          </div>
+          
+          <h2 className="text-5xl font-bold text-center">Tpf ingeniería</h2>
+          
+         
+          <p className="mb-4 text-center text-xl my-6">Building the world, better</p>
+          <div className='flex justify-center mt-2'>
+          <button onClick={() => navigate('/signin')} className="flex items-center gap-3 text-sky-600 font-semibold bg-white py-2 px-4 rounded-full shadow-md">
+            <span className='text-amber-500'><FaArrowAltCircleRight /></span>
+            Área inspección
+          </button>
+          </div>
+          
+        </div>
+
       </div>
     </div>
   );

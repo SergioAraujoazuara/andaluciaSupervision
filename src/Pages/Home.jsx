@@ -3,7 +3,7 @@ import { db } from '../../firebase_config';
 import { collection, getDocs, deleteDoc } from 'firebase/firestore';
 
 import { GoHomeFill } from "react-icons/go";
-
+import { FaArrowAltCircleRight } from "react-icons/fa";
 import { Link } from 'react-router-dom';
 
 
@@ -44,25 +44,48 @@ function Home() {
     obtenerProyectos();
   }, []);
 
- 
+
   return (
     <div className='min-h-screen px-14 py-5 text-gray-500'>
 
-      <div className='flex gap-2 items-center justify-start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
-        <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+      <div className='flex gap-2 items-center justify-start bg-white px-12 py-5 rounded rounded-xl shadow-md text-base'>
+        <GoHomeFill style={{ width: 20, height: 20, fill: '#d97706' }} />
         <Link to={'/'}>
-          <h1 className='font-medium text-gray-500 text-amber-600'>Inicio</h1>
+          <h1 className='font-medium text-lg text-gray-500 text-amber-600'>Área inspección</h1>
         </Link>
 
       </div>
 
 
 
-      <div className='flex gap-3 flex-col  mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
+      <div className='flex gap-3 flex-col  mt-5 bg-white rounded rounded-xl shadow-md'>
 
+        {proyectos.map((p, i) => (
+          <Link to={`/elemento/${p.id}`} onClick={() => { obtenerProyecto(p) }}>
+            <div className="relative">
+              <img src='https://maldita.es/uploads/images/2022/07/62c6f70f2549cadif-copy-jpg.jpg' alt="Sustainable Building" className="w-full  h-[750px] rounded-2xl" />
+              <div className="absolute inset-0 bg-black bg-opacity-45 rounded-xl"></div>
+              <div className="absolute inset-0 flex flex-col items-start justify-start">
+                {/* <div>
+              <h2 className="text-xl font-bold text-white">Building the world, better</h2>
+              <p className="text-md text-gray-300 mt-2">BREEAM Excellent certified buildings</p>
+            </div> */}
+                <div className=' text-white mt-10  w-[800px]  px-16 py-6 rounded-xl'>
+                  <div className="text-8xl font-bold text-white mb-2"> {p.nombre_corto}</div>
+                  <p className="text-2xl mt-4"> {p.obra}</p>
+                  <p className="text-2xl mt-1"> {p.tramo}</p>
+                  <button onClick={() => navigate('/signin')} className="mt-8 flex items-center gap-3 text-lg text-gray-600 font-semibold bg-white py-2 px-6 rounded-full shadow-md">
+                    <span className='text-amber-500 text-xl'><FaArrowAltCircleRight /></span>
+                    Comenzar
+                  </button>
+                  
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
 
-
-        <div class="w-full rounded rounded-xl">
+        {/* <div class="w-full rounded rounded-xl">
           <div className='grid sm:grid-cols-8 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-100 rounded rounded-md '>
             <div className='text-left ps-2 font-medium text-gray-600 sm:block hidden'>Logo</div>
             <div className='sm:col-span-2 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Proyecto</div>
@@ -73,7 +96,7 @@ function Home() {
 
 
           {proyectos.map((p, i) => (
-            <Link to={`/elemento/${p.id}`} onClick={() => {obtenerProyecto(p)}}
+            <Link to={`/elemento/${p.id}`} onClick={() => { obtenerProyecto(p) }}
             >
               <div key={i} className='cursor-pointer grid sm:grid-cols-8 grid-cols-1 items-center justify-start sm:p-5 border-b-2'>
                 <div className='sm:border-r-2 sm:border-b-0 flex items-center'>
@@ -99,9 +122,9 @@ function Home() {
 
 
 
-        </div>
+        </div> */}
 
-        
+
 
       </div>
 
