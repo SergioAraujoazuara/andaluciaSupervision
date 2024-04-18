@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
 import { getDoc, doc } from 'firebase/firestore';
 import Imagen from '../assets/tpflogo.png';  // Asegúrate de que la ruta de la imagen está correcta
 import { db } from '../../firebase_config';
 
 import { FaUserAlt, FaDoorOpen } from "react-icons/fa";
+import { ImExit } from "react-icons/im";
 import { IoIosSettings } from "react-icons/io";
 
 const Navbar = () => {
+  const navigate = useNavigate()
   const { user, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -41,6 +43,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout();
+    navigate('/authTabs')
     setShowLogoutConfirmation(false);
     setShowProfileDropdown(false);
     setShowMenu(false);
@@ -73,22 +76,22 @@ const Navbar = () => {
           </div>
           {user && (
             <div className='flex items-center font-medium text-gray-500 pr-5 gap-12 text-base'>
-              <div className='flex gap-3 items-center text-lg text-sky-700 font-bold'>
+              <div className='flex gap-3 items-center text-lg text-gray-500 font-bold'>
                 <FaUserAlt />
                 <p>{userNombre || 'Usuario'}</p>
               </div>
-              <div className="relative bg-gray-500 text-white px-4 py-2 rounded-lg">
-                <button className="flex gap-4 items-center text-lg font-bold" onClick={toggleProfileDropdown}>
-                  <p>Salir</p>
-                  {showProfileDropdown ? <span className='text-xl'><IoIosSettings /></span> : <span className='text-xl'><FaDoorOpen /></span>}
+              <div className="relative bg-sky-600 text-white px-4 py-2 rounded-lg">
+                <button className="flex gap-4 items-center text-lg font-bold" onClick={toggleLogoutConfirmation}>
+                  <p>Cerrar sesión</p>
+                  {showProfileDropdown ? <span className='text-xl flex items-center'><IoIosSettings /></span> : <span className='text-xl'><ImExit /></span>}
                 </button>
-                {showProfileDropdown && (
+                {/* {showProfileDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-md">
                     <button className="px-4 py-2 text-gray-800 hover:bg-gray-300 w-full" onClick={toggleLogoutConfirmation}>
                       Cerrar Sesión
                     </button>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
           )}

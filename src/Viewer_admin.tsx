@@ -37,6 +37,7 @@ export default function ViewerAdmin() {
     const [modelCount, setModelCount] = useState(0);
     const [lotes, setLotes] = useState<Lote[]>([]);
     const [selectedGlobalId, setSelectedGlobalId] = useState<string | null>(null);
+    const [selectedNameBim, setSelectedNameBim] = useState<string | null>(null);
     const [selectedLote, setSelectedLote] = useState<Lote | null>(null);
     const [inspecciones, setInspecciones] = useState([]);
 
@@ -286,9 +287,11 @@ export default function ViewerAdmin() {
 
                 <div className=''>
                     <div className="bg-white rounded-lg mb-4">
-                        <div className="bg-gray-200 px-4 py-2 font-bold text-gray-500 rounded-t-lg">Global id seleccionado</div>
+                        <div className="bg-gray-200 px-4 py-2 font-bold text-gray-500 rounded-t-lg">Elemento seleccionado</div>
                         <div className='text-sm px-4 py-3'>
-                            <span className='text-amber-600 font-medium'>{selectedGlobalId}</span>
+                            <p><strong className='text-gray-500'>Global id:</strong> <span className='text-amber-600 font-medium'>{selectedGlobalId}</span></p>
+                            
+                            <p><strong className='text-gray-500'>Nombre del elemento:</strong> <span className='text-amber-600 font-medium'>{selectedNameBim}</span></p>
 
                         </div>
                     </div>
@@ -373,7 +376,7 @@ export default function ViewerAdmin() {
 
 
                 <div>
-                    <ViewerComponent onModelLoad={setSelectedGlobalId} />
+                    <ViewerComponent setSelectedGlobalId={setSelectedGlobalId} setSelectedNameBim={setSelectedNameBim} />
                 </div>
 
 

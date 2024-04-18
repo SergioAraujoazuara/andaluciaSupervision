@@ -64,7 +64,7 @@ const Register = () => {
 
   return (
     <div className="flex h-screen bg-gray-200">
-      <div className="w-full h-2/3 max-w-4xl mx-auto  mb-56 bg-white rounded-2xl shadow-xl overflow-hidden flex">
+      <div className="w-full h-2/3 max-w-4xl mx-auto  mb-56 bg-white rounded-2xl shadow-2xl overflow-hidden flex">
 
        
 

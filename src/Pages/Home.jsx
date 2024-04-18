@@ -46,39 +46,45 @@ function Home() {
 
 
   return (
-    <div className='min-h-screen px-14 py-5 text-gray-500'>
+    <div className='min-h-screen text-gray-500'>
 
-      <div className='flex gap-2 items-center justify-start bg-white px-12 py-5 rounded rounded-xl shadow-md text-base'>
+      {/* <div className='flex gap-2 items-center justify-start bg-white px-12 py-5 rounded rounded-xl shadow-md text-base'>
         <GoHomeFill style={{ width: 20, height: 20, fill: '#d97706' }} />
         <Link to={'/'}>
           <h1 className='font-medium text-lg text-gray-500 text-amber-600'>Área inspección</h1>
         </Link>
 
-      </div>
+      </div> */}
 
 
 
-      <div className='flex gap-3 flex-col  mt-5 bg-white rounded rounded-xl shadow-md'>
+      <div className='flex gap-3 flex-col'>
 
         {proyectos.map((p, i) => (
           <Link to={`/elemento/${p.id}`} onClick={() => { obtenerProyecto(p) }}>
             <div className="relative">
-              <img src='https://maldita.es/uploads/images/2022/07/62c6f70f2549cadif-copy-jpg.jpg' alt="Sustainable Building" className="w-full  h-[750px] rounded-2xl" />
-              <div className="absolute inset-0 bg-black bg-opacity-45 rounded-xl"></div>
+              <img src='https://maldita.es/uploads/images/2022/07/62c6f70f2549cadif-copy-jpg.jpg' alt="Sustainable Building" className="w-full  h-screen" />
+              <div className="absolute inset-0 bg-black bg-opacity-45"></div>
+
               <div className="absolute inset-0 flex flex-col items-start justify-start">
-                {/* <div>
-              <h2 className="text-xl font-bold text-white">Building the world, better</h2>
-              <p className="text-md text-gray-300 mt-2">BREEAM Excellent certified buildings</p>
-            </div> */}
-                <div className=' text-white mt-10  w-[800px]  px-16 py-6 rounded-xl'>
-                  <div className="text-8xl font-bold text-white mb-2"> {p.nombre_corto}</div>
+
+                {/* <div className=' text-white mt-10  w-[800px]  px-16 py-6 rounded-xl'>
+                  <h2 className="text-xl font-bold text-white">Building the world, better</h2>
+                  <p className="text-md text-gray-300 mt-2">BREEAM Excellent certified buildings</p>
+                </div> */}
+
+                <div className=' text-white bg-sky-600 bg-opacity-70 mt-20 ml-20 rounded-2xl shadow-xl  w-[700px]  px-16 py-6'>
+                  <div className="text-6xl font-bold text-white mb-2"> {p.nombre_corto}</div>
                   <p className="text-2xl mt-4"> {p.obra}</p>
                   <p className="text-2xl mt-1"> {p.tramo}</p>
-                  <button onClick={() => navigate('/signin')} className="mt-8 flex items-center gap-3 text-lg text-gray-600 font-semibold bg-white py-2 px-6 rounded-full shadow-md">
-                    <span className='text-amber-500 text-xl'><FaArrowAltCircleRight /></span>
+                  <button
+                    onClick={() => navigate('/signin')}
+                    className="text-gray-500 mt-8 flex items-center gap-3 text-lg font-semibold bg-white py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out hover:bg-gray-100 hover:shadow-lg hover:-translate-y-1"
+                  >
+                    <span className='text-amber-500 text-xl transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
                     Comenzar
                   </button>
-                  
+
                 </div>
               </div>
             </div>

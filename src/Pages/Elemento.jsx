@@ -76,7 +76,7 @@ function Elemento() {
                     <div className='px-4 py-2 bg-sky-500 text-white rounded-lg '>
                         <Link to={'/visor_inspeccion'}>
                             <button className='text-white flex items-center gap-3'>
-                            Version <SiBim/> 
+                            Version <span className='text-2xl'><SiBim/> </span>
                             </button>
                         </Link>
 

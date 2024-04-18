@@ -36,6 +36,7 @@ export default function ViewerInspeccion() {
     const [modelCount, setModelCount] = useState(0);
     const [lotes, setLotes] = useState<Lote[]>([]);
     const [selectedGlobalId, setSelectedGlobalId] = useState<string | null>(null);
+    const [selectedNameBim, setSelectedNameBim] = useState<string | null>(null);
     const [selectedLote, setSelectedLote] = useState<Lote | null>(null);
     const [inspecciones, setInspecciones] = useState([]);
 
@@ -96,7 +97,7 @@ export default function ViewerInspeccion() {
 
 
 
-    
+
 
 
 
@@ -603,7 +604,7 @@ export default function ViewerInspeccion() {
 
 
     ////////////////////////////////////////////////////////////////////////////// Visor correcto actualizar inspeccion////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// * respaldo visor correcto y funciona bien /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // * respaldo visor correcto y funciona bien /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // useEffect(() => {
     //     let viewer = new OBC.Components();
 
@@ -685,7 +686,7 @@ export default function ViewerInspeccion() {
     //         }
     //     };
     // }, [lotes]);
-// * /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // * /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     useEffect(() => {
         let viewer = new OBC.Components();
@@ -719,8 +720,8 @@ export default function ViewerInspeccion() {
 
         const fragmentManager = new OBC.FragmentManager(viewer);
         const ifcLoader = new OBC.FragmentIfcLoader(viewer);
-   
-    
+
+
         const highlighter = new OBC.FragmentHighlighter(viewer);
         highlighter.setup();
 
@@ -737,9 +738,9 @@ export default function ViewerInspeccion() {
             scene.add(model);
         }
         loadIfcAsFragments();
-                // Carga inicial de fragmentos desde un archivo externo.
-                // loadFragments(fragmentManager);
-               
+        // Carga inicial de fragmentos desde un archivo externo.
+        // loadFragments(fragmentManager);
+
 
         ifcLoader.onIfcLoaded.add(model => {
             setModelCount(fragmentManager.groups.length);
@@ -752,6 +753,11 @@ export default function ViewerInspeccion() {
                     const globalIdProperty = properties.find(prop => prop.Name === 'GlobalId' || (prop.GlobalId && prop.GlobalId.value));
                     const globalId = globalIdProperty ? globalIdProperty.GlobalId.value : 'No disponible';
                     setSelectedGlobalId(globalId);
+                    const namedProperty = properties.find(prop => prop.Name === 'Name' || (prop.Name && prop.Name.value));
+                    const name = namedProperty ? namedProperty.Name.value : 'No disponible';
+                    setSelectedNameBim(name);
+
+
                     const lote = lotes.find(l => l.globalId === globalId);
 
                     if (lote) {
@@ -770,7 +776,7 @@ export default function ViewerInspeccion() {
 
         const mainToolbar = new OBC.Toolbar(viewer);
         mainToolbar.addChild(
-            
+
             propertiesProcessor.uiElement.get("main")
         );
         viewer.ui.addToolbar(mainToolbar);
@@ -1726,7 +1732,7 @@ export default function ViewerInspeccion() {
     return (
 
         <div className="min-h-screen text-gray-500 px-14 py-5">
-            <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+            <div className='flex gap-2 items-center justify start bg-white px-5 py-5 rounded rounded-xl shadow-md text-lg'>
                 <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                 <Link to={'/'}>
                     <h1 className=' text-gray-500'>Inicio</h1>
@@ -1749,12 +1755,15 @@ export default function ViewerInspeccion() {
                 <div className="w-1/2 pr-5">
                     {selectedLote ? (
                         <div className="bg-gray-100 rounded-lg">
-                            <div className="bg-gray-200 p-2 font-bold text-gray-700 rounded-t-lg">Información del Lote</div>
+                            <div className="bg-sky-600 p-2 font-bold text-white rounded-t-lg">Información del Lote</div>
 
                             <div className='px-2 py-1 text-sm flex flex-col gap-1 bg-white rounded-lg'>
-                                <p className='border-b p-1 font-semibold text-sky-600'><strong>Lote: </strong>{selectedLote.nombre}</p>
-                                <p className='border-b p-1  font-semibold text-sky-600'><strong>Ppi: </strong>{selectedLote.ppiNombre}</p>
-                                <p className='border-b p-1 '><strong>Global id Bim: </strong>{selectedGlobalId}</p>
+                            <p className='border-b p-1 text-amber-600 font-semibold'><strong>Nombre: </strong>{selectedNameBim}</p>
+                            <p className='border-b p-1 text-amber-600 font-semibold'><strong>Global id Bim: </strong>{selectedGlobalId}</p>
+                                
+                                <p className='border-b p-1 font-semibold text-sky-500'><strong>Lote: </strong>{selectedLote.nombre}</p>
+                                <p className='border-b p-1  font-semibold text-sky-500'><strong>Ppi: </strong>{selectedLote.ppiNombre}</p>
+                                
                                 <p className='border-b p-1 '><strong>Sector: </strong>{selectedLote.sectorNombre}</p>
                                 <p className='border-b p-1 '><strong>Sub sector: </strong>{selectedLote.subSectorNombre}</p>
                                 <p className='border-b p-1 '><strong>Parte: </strong>{selectedLote.parteNombre}</p>
@@ -1858,15 +1867,24 @@ export default function ViewerInspeccion() {
                     ) : (
                         <div>
 
-                            <div className="bg-gray-200  px-5 py-3 font-medium text-gray-700 rounded-t-lg text-gray-500">
+                            <div className="bg-sky-600 font-medium px-5 py-2 rounded-t-lg text-lg  text-white">
+                                Elemento seleccionado
+                            </div>
 
-                                <p>Global Id: <strong className='text-amber-500'>{selectedGlobalId}</strong></p>
+                            <div className='bg-white px-5 py-4 text-white rounded-b-lg shadow-xl'>
+                                <p> {selectedGlobalId ?
+                                    <p className='font-medium bg-white text-gray-500'>Global id: <strong className='ms-1 bg-gray-500 font-medium text-sm text-white px-3 py-1 rounded-lg'>{selectedGlobalId}</strong></p> :
+                                    <p className='text-gray-500 font-bold'>Global id: <strong className='ms-1 bg-sky-600 font-medium text-white px-3 py-1 rounded-lg'>Sin seleccionar</strong></p>
+                                }</p>
+
+                                <p className='mt-3'> {selectedNameBim ?
+                                    <p className='font-medium text-gray-500'>Nombre: <strong className='ms-1 bg-amber-600 font-medium text-white text-sm px-3 py-1 rounded-lg'>{selectedNameBim}</strong></p> :
+                                    <p className='text-gray-500 font-bold'>Nombre: <span className='ms-1 bg-amber-600 font-medium text-white px-3 py-1 rounded-lg'>Sin seleccionar</span></p>
+                                }</p>
                             </div>
 
 
                             <div className=' px-5 py-3 mt-5'>
-                                <p className='text-medium flex gap-2 items-center'><span className='text-red-500'><VscError /></span> Elemento no encontrado</p>
-
                                 <p >Para visualizar el elemento, debes asignar el global id a la trazabilidad en el modulo administrador</p>
 
                             </div>

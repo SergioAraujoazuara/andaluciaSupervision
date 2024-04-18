@@ -806,11 +806,7 @@ function TablaPpi() {
                         <h1 className='font-medium text-amber-600'>Ppi: {ppiNombre}</h1>
                     </Link>
                 </div>
-                <div className='mr-5'>
-                    <Link to={'/viewerInspeccion'}>
-                        <button className='px-4 py-2 bg-sky-500 text-white rounded-lg '>Visor BIM</button>
-                    </Link>
-                </div>
+                
             </div>
 
 

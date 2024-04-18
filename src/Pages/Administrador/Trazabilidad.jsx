@@ -973,7 +973,7 @@ function Trazabilidad() {
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500'>
             {/* Encabezado */}
-           
+
 
 
             <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
@@ -993,9 +993,7 @@ function Trazabilidad() {
                         <h1 className='font-medium text-amber-600'>Trazabilidad </h1>
                     </Link>
                 </div>
-                <div className='mr-5'>
-                <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-500 text-white rounded-lg '>Visor BIM</button></Link>
-                </div>
+
             </div>
 
 
@@ -1004,12 +1002,23 @@ function Trazabilidad() {
             <div className='flex gap-3 flex-col mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
                 {/* Datos del proyecto */}
                 <div className='flex gap-5'>
-                    <img src={proyecto.logo} alt="logo" className='sm:w-52' />
-                    <div className='text-lg font-medium text-gray-500'>
+                    <img src={proyecto.logo} alt="logo" className='w-[350px]' />
+                    <div className=' font-medium text-gray-500 flex justify-between'>
+
+                        <div>
                         <p>{proyecto.nombre_corto}</p>
-                        <p>{proyecto.nombre_completo}</p>
+                        <p>{proyecto.obra}</p>
+                        <p>{proyecto.tramo}</p>
+                        </div>
+                      
+                        <div className='ps-20'>
+                           
+                            <p><strong className='text-amber-600 mb-5'>*</strong> (Crea un lote con su trazabilidad y puedes agregarlo posteriormente al visor)</p>
+                            <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-500 text-white rounded-lg mt-2'>Visor BIM</button></Link>
+                        </div>
                     </div>
                 </div>
+
 
                 <div className='w-full border border-b-2'></div>
 
