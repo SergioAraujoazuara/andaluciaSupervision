@@ -1755,19 +1755,17 @@ export default function ViewerInspeccion() {
                 <div className="w-1/2 pr-5">
                     {selectedLote ? (
                         <div className="bg-whiterounded-lg">
-                            <div className="bg-sky-600 px-3 py-3 font-bold text-white rounded-t-lg">Información del Lote</div>
+                            <div className="bg-sky-600 px-5 py-2 font-bold text-white text-lg rounded-t-lg">Información del Lote</div>
 
-                            <div className='px-2 py-1 text-sm flex flex-col gap-1 bg-white rounded-lg'>
-                                <p className='font-medium text-gray-500 mt-3 ps-1'>Nombre: <strong className='ms-1 bg-gray-400 font-medium text-white text-sm px-3 py-1 rounded-lg'>{selectedNameBim}</strong></p>
-                                <p className='font-medium bg-white text-gray-500 mt-3 ps-1'>Global id: <strong className='ms-1 bg-gray-400 font-medium text-white px-3 py-1 rounded-lg'>{selectedGlobalId}</strong></p>
-                                <p className='font-medium bg-white text-gray-500 mt-3 ps-1'>Nombre: <strong className='ms-1 bg-gray-400 font-medium text-white px-3 py-1 rounded-lg'>{selectedLote.nombre}</strong></p>
-                                <p className='font-medium bg-white text-gray-500 mt-3 ps-1'>Ppi: <strong className='ms-1 bg-gray-400 font-medium text-white px-3 py-1 rounded-lg'>{selectedLote.ppiNombre}</strong></p>
-                                
-
-                                <p className='border-b p-1 '><strong>Sector: </strong>{selectedLote.sectorNombre}</p>
-                                <p className='border-b p-1 '><strong>Sub sector: </strong>{selectedLote.subSectorNombre}</p>
-                                <p className='border-b p-1 '><strong>Parte: </strong>{selectedLote.parteNombre}</p>
-                                <p className='p-1 '><strong>Elemento: </strong>{selectedLote.elementoNombre}</p>
+                            <div className='px-5 py-5 text-sm flex flex-col gap-2 bg-white rounded-lg  text-gray-500'>
+                                <p className=' px-1 py-1  font-medium text-gray-500 ps-1'><strong>Nombre: </strong><span className='ms-1 bg-gray-500 text-white text-sm px-3 py-1 rounded-lg'>{selectedNameBim}</span></p>
+                                <p className=' px-1 py-1 font-medium bg-white text-gray-500 ps-1'><strong>Global id: </strong> <span className='ms-1 bg-gray-500 text-white px-3 py-1 rounded-lg'>{selectedGlobalId}</span></p>
+                                <p className=' p-1 '><strong>Sector: </strong>{selectedLote.sectorNombre}</p>
+                                <p className=' p-1 '><strong>Sub sector: </strong>{selectedLote.subSectorNombre}</p>
+                                <p className=' p-1 '><strong>Parte: </strong>{selectedLote.parteNombre}</p>
+                                <p className=' px-1 py-1 '><strong>Elemento: </strong><span className='ms-1 bg-gray-400 text-white px-3 py-1 rounded-lg'>{selectedLote.elementoNombre}</span></p>
+                                <p className=' px-1 py-1 font-medium bg-white text-gray-500 ps-1'><strong> Lote: </strong><span className='ms-1 bg-gray-400 text-white px-3 py-1 rounded-lg'>{selectedLote.nombre}</span></p>
+                                <p className=' bg-white text-gray-500 ps-1'><strong> PPI: </strong> {selectedLote.ppiNombre}</p>
                             </div>
 
                             <div className="bg-gray-300 p-2 font-bold text-gray-700 mt-6 rounded-t-lg">Avance de la inspección</div>
@@ -1867,25 +1865,25 @@ export default function ViewerInspeccion() {
                     ) : (
                         <div>
 
-                            <div className="bg-gray-300 font-medium px-5 py-2 rounded-t-lg text-lg  text-gray-500">
+                            <div className="bg-sky-600 font-medium px-5 py-2 rounded-t-lg text-lg  text-white">
                                 Elemento seleccionado
                             </div>
 
                             <div className='bg-white px-5 py-4 text-white rounded-b-lg shadow-xl'>
                                 <p> {selectedGlobalId ?
-                                    <p className='font-medium bg-white text-gray-500'>Global id: <strong className='ms-1 bg-sky-600 font-medium text-white px-3 py-1 rounded-lg'>{selectedGlobalId}</strong></p> :
-                                    <p className='text-gray-500 font-bold'>Global id: <strong className='ms-1 bg-sky-600 font-medium text-white px-3 py-1 rounded-lgd-lg'>Sin seleccionar</strong></p>
+                                    <p className='font-medium bg-white text-gray-500'>Global id: <strong className='ms-1 bg-gray-400 font-medium text-white text-sm px-3 py-1 rounded-lg'>{selectedGlobalId}</strong></p> :
+                                    <p className='text-gray-500 font-bold'>Global id: <strong className='ms-1 bg-gray-400 font-medium text-white text-sm px-3 py-1 rounded-lg'>Sin seleccionar</strong></p>
                                 }</p>
 
                                 <p className='mt-3'> {selectedNameBim ?
-                                    <p className='font-medium text-gray-500'>Nombre: <strong className='ms-1 bg-amber-600 font-medium text-white text-sm px-3 py-1 rounded-lg'>{selectedNameBim}</strong></p> :
-                                    <p className='text-gray-500 font-bold'>Nombre: <span className='ms-1 bg-amber-600 font-medium text-white px-3 py-1 rounded-lg'>Sin seleccionar</span></p>
+                                    <p className='font-medium text-gray-500'>Nombre: <strong className='ms-1 bg-gray-400 font-medium text-white text-sm px-3 py-1 rounded-lg'>{selectedNameBim}</strong></p> :
+                                    <p className='text-gray-500 font-bold'>Nombre: <span className='ms-1 bg-gray-400 font-medium text-white text-sm px-3 py-1 rounded-lg'>Sin seleccionar</span></p>
                                 }</p>
                             </div>
 
 
                             <div className=' px-5 py-3 mt-5'>
-                                <p >Para visualizar el elemento, debes asignar el global id a la trazabilidad en el modulo administrador</p>
+                                <p className='font-medium'>Para visualizar el elemento, debes asignar el global id a la trazabilidad en el modulo administrador</p>
 
                             </div>
 

@@ -994,7 +994,7 @@ function Trazabilidad() {
                 <div className='font-medium text-gray-500 gap-2'>
                           
                             <p>{proyecto.obra}</p>
-                           
+                            <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-500 text-white rounded-lg mt-2'>Visor BIM</button></Link>
                         </div>
 
             </div>
@@ -1003,24 +1003,7 @@ function Trazabilidad() {
 
             {/* Contenido */}
             <div className='flex gap-3 flex-col mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
-                {/* Datos del proyecto */}
-                {/* <div className='flex gap-5'>
-                    <img src={proyecto.logo} alt="logo" className='w-[350px]' />
-                    <div className=' font-medium text-gray-500 flex justify-between'>
-
-                        <div>
-                            <p>{proyecto.nombre_corto}</p>
-                            <p>{proyecto.obra}</p>
-                            <p>{proyecto.tramo}</p>
-                        </div>
-
-                        <div className='ps-20'>
-
-                            <p><strong className='text-amber-600 mb-5'>*</strong> (Crea un lote con su trazabilidad y puedes agregarlo posteriormente al visor)</p>
-                            <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-500 text-white rounded-lg mt-2'>Visor BIM</button></Link>
-                        </div>
-                    </div>
-                </div> */}
+         
 
 
                 {/* <div className='w-full border border-b-2'></div> */}
@@ -1029,9 +1012,9 @@ function Trazabilidad() {
                 <div className="flex flex-col ">
 
 
-                    <div className='grid grid-cols-24 text-sm '>
+                    <div className='grid grid-cols-24 text-sm'>
 
-                        <div className='flex flex-col col-span-5 '>
+                        <div className='flex flex-col col-span-5'>
                             {/* Sector */}
                             <div className="flex flex-col col-span-4 items-start gap-3 border-r-2 px-5 py-3 ">
                                 <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sector</p>
@@ -1055,7 +1038,7 @@ function Trazabilidad() {
                             {/* Sub Sector */}
                             <div className="flex flex-col col-span-4 items-start gap-3 border-r-2 px-5 py-3">
                                 <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sub sector</p>
-                                <div className="flex flex-col items-start gap-3">
+                                <div className="flex flex-col items-start gap-3 w-full">
                                     <label htmlFor="sectores"><strong className='text-amber-600 '>*</strong> Para agregar información selecciona el sector: </label>
                                     <select
                                         id="sectores"
@@ -1070,7 +1053,7 @@ function Trazabilidad() {
                                     </select>
                                 </div>
 
-                                <div className="flex items-center">
+                                <div className="flex items-center w-full">
 
                                     <input
                                         placeholder='Agregar sub sector: '
@@ -1094,7 +1077,7 @@ function Trazabilidad() {
 
                         <div className="flex flex-col col-span-5 items-start gap-3 border-r-2 p-5">
                             <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Parte</p>
-                            <div className="flex flex-col items-start gap-3">
+                            <div className="flex flex-col items-start gap-3 w-full">
                                 <label htmlFor="subsectores"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el sub sector: </label>
                                 <select
                                     id="subsectores"
@@ -1108,7 +1091,7 @@ function Trazabilidad() {
                                     ))}
                                 </select>
                             </div>
-                            <div className="flex items-center">
+                            <div className="flex items-center w-full">
 
                                 <input
                                     placeholder='Agregar parte: '
@@ -1131,7 +1114,7 @@ function Trazabilidad() {
 
                         <div className="flex flex-col col-span-5 items-start gap-3 border-r-2 p-5">
                             <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Elemento</p>
-                            <div className="flex flex-col items-start gap-3">
+                            <div className="flex flex-col items-start gap-3 w-full">
                                 <label htmlFor="partes"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el parte: </label>
                                 <select
                                     id="partes"
@@ -1145,7 +1128,7 @@ function Trazabilidad() {
                                     ))}
                                 </select>
                             </div>
-                            <div className="flex items-center">
+                            <div className="flex items-center w-full">
 
                                 <input
                                     placeholder='Agregar elemento: '
@@ -1168,16 +1151,16 @@ function Trazabilidad() {
                         </div>
 
 
-                        <div className="flex flex-col col-span-9 items-start gap-3 p-5 ps-16">
+                        <div className="flex flex-col col-span-9 items-start gap-3 p-5 ps-20">
                             <div className='text-center'>
                                 <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Lote y ppi</p>
                                 <p htmlFor="elementos"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el elemento: </p>
                             </div>
 
-                            <div className='grid grid-cols-2 gap-6'>
+                            <div className='grid grid-cols-2 gap-3'>
 
 
-                                <div className='flex flex-col gap-3 w-full'>
+                                <div className='flex flex-col gap-3'>
 
                                     <div className="flex flex-col items-start gap-3 w-full">
 
