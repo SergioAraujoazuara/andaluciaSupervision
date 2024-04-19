@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 
 
 function AdminHome() {
-    const proyectoNombre = localStorage.getItem('proyectoNombre')
+    const idProyecto = localStorage.getItem('proyecto')
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500'>
 
@@ -38,7 +38,7 @@ function AdminHome() {
                         <div className='cursor-pointer flex gap-20 items-center justify-start p-5
      '>
 
-                            <Link to={'/crearProyecto'}>
+                            {/* <Link to={'/crearProyecto'}>
                                 <div className='flex gap-3'>
                                 <div className='h-10 flex items-center text-gray-600'>
                                     <IoMdAddCircleOutline style={{ width: 40, height: 40 }} />
@@ -48,15 +48,15 @@ function AdminHome() {
                                 </div>
                                 </div>
                                 
-                            </Link>
+                            </Link> */}
 
-                            <Link to={'/viewProject'}>
+                            <Link to={`/trazabilidad/${idProyecto}`}>
                                 <div className='flex gap-3'>
                                 <div className='h-10 flex items-center text-gray-600'>
                                     <IoCreateOutline style={{ width: 40, height: 40 }} />
                                 </div>
                                 <div className='sm:col-span-9 h-10 flex items-center sm:justify-start text-base font-medium'>
-                                    Ver proyectos
+                                    Administrar proyecto
                                 </div>
                                 </div>
                                 
@@ -68,7 +68,7 @@ function AdminHome() {
                                     <MdOutlineEditLocation style={{ width: 30, height: 30 }} />
                                 </div>
                                 <div className='sm:col-span-9 h-10 flex items-center sm:justify-start text-base font-medium'>
-                                Plantillas Ppi
+                                Plantillas PPI
                                 </div>
                                 </div>
                                 

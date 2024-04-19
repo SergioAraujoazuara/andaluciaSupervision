@@ -976,7 +976,7 @@ function Trazabilidad() {
 
 
 
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+            <div className='flex gap-2 items-center justify-between bg-white px-10 py-5 rounded rounded-xl shadow-md text-lg'>
 
                 <div className='flex items-center gap-2'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
@@ -984,15 +984,18 @@ function Trazabilidad() {
                     <Link to={'/admin'}>
                         <h1 className='text-gray-600'>Administración</h1>
                     </Link>
-                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                    <Link to={'/viewProject'}>
-                        <h1 className=' text-gray-600'>Ver proyectos</h1>
-                    </Link>
+
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'#'}>
                         <h1 className='font-medium text-amber-600'>Trazabilidad </h1>
                     </Link>
                 </div>
+
+                <div className='font-medium text-gray-500 gap-2'>
+                          
+                            <p>{proyecto.obra}</p>
+                           
+                        </div>
 
             </div>
 
@@ -1001,97 +1004,101 @@ function Trazabilidad() {
             {/* Contenido */}
             <div className='flex gap-3 flex-col mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
                 {/* Datos del proyecto */}
-                <div className='flex gap-5'>
+                {/* <div className='flex gap-5'>
                     <img src={proyecto.logo} alt="logo" className='w-[350px]' />
                     <div className=' font-medium text-gray-500 flex justify-between'>
 
                         <div>
-                        <p>{proyecto.nombre_corto}</p>
-                        <p>{proyecto.obra}</p>
-                        <p>{proyecto.tramo}</p>
+                            <p>{proyecto.nombre_corto}</p>
+                            <p>{proyecto.obra}</p>
+                            <p>{proyecto.tramo}</p>
                         </div>
-                      
+
                         <div className='ps-20'>
-                           
+
                             <p><strong className='text-amber-600 mb-5'>*</strong> (Crea un lote con su trazabilidad y puedes agregarlo posteriormente al visor)</p>
                             <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-500 text-white rounded-lg mt-2'>Visor BIM</button></Link>
                         </div>
                     </div>
-                </div>
+                </div> */}
 
 
-                <div className='w-full border border-b-2'></div>
+                {/* <div className='w-full border border-b-2'></div> */}
 
                 {/* Formulario de trazabilidad */}
-                <div className="mt-4 flex flex-col ">
+                <div className="flex flex-col ">
 
 
-                    <div className='grid grid-cols-5 text-sm'>
-                        {/* Sector */}
-                        <div className="flex flex-col items-start gap-3 border-r-2 p-5">
-                            <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sector</p>
-                            <div className="flex items-center">
-                                <input
-                                    placeholder='Agregar sector'
-                                    type="text"
-                                    className='border px-3 py-1 rounded-lg'
-                                    value={sectorInput}
-                                    onChange={(e) => setSectorInput(e.target.value)}
-                                />
-                                <button
-                                    onClick={agregarSector}
-                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
-                                >
-                                    <IoMdAddCircle />
-                                </button>
+                    <div className='grid grid-cols-24 text-sm'>
+
+                        <div className='flex flex-col col-span-5'>
+                            {/* Sector */}
+                            <div className="flex flex-col col-span-4 items-start gap-3 border-r-2 px-5 py-3 ">
+                                <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sector</p>
+                                <div className="flex items-center">
+                                    <input
+                                        placeholder='Agregar sector'
+                                        type="text"
+                                        className='border px-3 py-1 rounded-lg w-[250px]'
+                                        value={sectorInput}
+                                        onChange={(e) => setSectorInput(e.target.value)}
+                                    />
+                                    <button
+                                        onClick={agregarSector}
+                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                    >
+                                        <IoMdAddCircle />
+                                    </button>
+                                </div>
+
+                            </div>
+                            {/* Sub Sector */}
+                            <div className="flex flex-col col-span-4 items-start gap-3 border-r-2 px-5 py-3">
+                                <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sub sector</p>
+                                <div className="flex flex-col items-start gap-3">
+                                    <label htmlFor="sectores"><strong className='text-amber-600 '>*</strong> Para agregar información selecciona el sector: </label>
+                                    <select
+                                        id="sectores"
+                                        className="border px-3 py-1 rounded-lg w-[250px]"
+                                        value={selectedSector}
+                                        onChange={handleSectorChange}
+                                    >
+                                        <option value="">Seleccione un sector</option>
+                                        {sectores.map((sector) => (
+                                            <option key={sector.id} value={sector.id}>{sector.nombre}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="flex items-center">
+
+                                    <input
+                                        placeholder='Agregar sub sector: '
+                                        type="text"
+                                        id="subsector"
+                                        className='border px-3 py-1 rounded-lg w-[250px]'
+                                        value={subSectorInput}
+                                        onChange={(e) => setSubSectorInput(e.target.value)}
+                                    />
+                                    <button
+                                        onClick={() => agregarSubsector(selectedSector)}
+                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                    >
+                                        <IoMdAddCircle />
+                                    </button>
+                                </div>
+
                             </div>
 
                         </div>
-                        {/* Sub Sector */}
-                        <div className="flex flex-col items-start gap-3 border-r-2 p-5">
-                            <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sub sector</p>
-                            <div className="flex flex-col items-start gap-3">
-                                <label htmlFor="sectores"><strong className='text-amber-600 '>*</strong> Para agregar información selecciona el sector: </label>
-                                <select
-                                    id="sectores"
-                                    className="border px-3 py-1 rounded-lg"
-                                    value={selectedSector}
-                                    onChange={handleSectorChange}
-                                >
-                                    <option value="">Seleccione un sector</option>
-                                    {sectores.map((sector) => (
-                                        <option key={sector.id} value={sector.id}>{sector.nombre}</option>
-                                    ))}
-                                </select>
-                            </div>
 
-                            <div className="flex items-center">
-
-                                <input
-                                    placeholder='Agregar sub sector: '
-                                    type="text"
-                                    id="subsector"
-                                    className='border px-3 py-1 rounded-lg'
-                                    value={subSectorInput}
-                                    onChange={(e) => setSubSectorInput(e.target.value)}
-                                />
-                                <button
-                                    onClick={() => agregarSubsector(selectedSector)}
-                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
-                                >
-                                    <IoMdAddCircle />
-                                </button>
-                            </div>
-
-                        </div>
-
-                        <div className="flex flex-col items-start gap-3 border-r-2 p-5">
+                        <div className="flex flex-col col-span-5 items-start gap-3 border-r-2 p-5">
                             <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Parte</p>
                             <div className="flex flex-col items-start gap-3">
                                 <label htmlFor="subsectores"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el sub sector: </label>
                                 <select
                                     id="subsectores"
-                                    className="border px-3 py-1 rounded-lg"
+                                    className="border px-3 py-1 rounded-lg w-[250px]"
                                     value={selectedSubSector}
                                     onChange={handleSubSectorChange}
                                 >
@@ -1107,7 +1114,7 @@ function Trazabilidad() {
                                     placeholder='Agregar parte: '
                                     type="text"
                                     id="parte"
-                                    className='border px-3 py-1 rounded-lg'
+                                    className='border px-3 py-1 rounded-lg w-[250px]'
                                     value={parteInput}
                                     onChange={(e) => setParteInput(e.target.value)}
                                 />
@@ -1122,13 +1129,13 @@ function Trazabilidad() {
 
                         </div>
 
-                        <div className="flex flex-col items-start gap-3 border-r-2 p-5">
+                        <div className="flex flex-col col-span-5 items-start gap-3 border-r-2 p-5">
                             <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Elemento</p>
                             <div className="flex flex-col items-start gap-3">
                                 <label htmlFor="partes"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el parte: </label>
                                 <select
                                     id="partes"
-                                    className="border px-3 py-1 rounded-lg"
+                                    className="border px-3 py-1 rounded-lg w-[250px]"
                                     value={selectedParte}
                                     onChange={handleParteChange}
                                 >
@@ -1144,7 +1151,7 @@ function Trazabilidad() {
                                     placeholder='Agregar elemento: '
                                     type="text"
                                     id="elemento"
-                                    className='border px-3 py-1 rounded-lg'
+                                    className='border px-3 py-1 rounded-lg w-[250px]'
                                     value={elementoInput}
                                     onChange={(e) => setElementoInput(e.target.value)}
                                 />
@@ -1161,48 +1168,61 @@ function Trazabilidad() {
                         </div>
 
 
-                        <div className="flex flex-col items-start gap-3 p-5">
-                            <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Lote y ppi</p>
-                            <div className="flex flex-col items-start gap-3">
-                                <label htmlFor="elementos"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el elemento: </label>
-                                <select
-                                    id="elementos"
-                                    className="border px-3 py-1 rounded-lg"
-                                    value={selectedElemento}
-                                    onChange={(e) => setSelectedElemento(e.target.value)}
-                                >
-                                    <option value="">Seleccione un elemento</option>
-                                    {/* Asumiendo que tienes una manera de obtener los elementos del estado para el subsector y parte seleccionados */}
-                                    {sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes.find(parte => parte.id === selectedParte)?.elementos.map((elemento) => (
-                                        <option key={elemento.id} value={elemento.id}>{elemento.nombre}</option>
-                                    ))}
-                                </select>
+                        <div className="flex flex-col col-span-9 items-start gap-3 p-5 ps-16">
+                            <div className='text-center'>
+                                <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Lote y ppi</p>
+                                <p htmlFor="elementos"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el elemento: </p>
                             </div>
-                            <div className="flex flex-col items-start gap-3">
-                                <select
-                                    value={selectedPpi}
-                                    onChange={(e) => setSelectedPpi(e.target.value)}
-                                    className="border px-3 py-1 rounded-lg"
-                                >
-                                    <option value="">Seleccione un PPI</option>
-                                    {ppis.map(ppi => (
-                                        <option key={ppi.id} value={ppi.id}>{ppi.nombre}</option>
-                                    ))}
-                                </select>
-                                <div className="flex flex-col items-start gap-4">
+
+                            <div className='grid grid-cols-2 gap-6'>
+
+
+                                <div className='flex flex-col gap-3'>
+
+                                    <div className="flex flex-col items-start gap-3">
+
+                                        <select
+                                            id="elementos"
+                                            className="border px-3 py-1 rounded-lg w-[250px]"
+                                            value={selectedElemento}
+                                            onChange={(e) => setSelectedElemento(e.target.value)}
+                                        >
+                                            <option value="">Seleccione un elemento</option>
+                                            {/* Asumiendo que tienes una manera de obtener los elementos del estado para el subsector y parte seleccionados */}
+                                            {sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes.find(parte => parte.id === selectedParte)?.elementos.map((elemento) => (
+                                                <option key={elemento.id} value={elemento.id}>{elemento.nombre}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
                                     <input
                                         placeholder='Agregar lote: '
                                         type="text"
                                         id="lote"
-                                        className='border px-3 py-1 rounded-lg'
+                                        className='border px-3 py-1 rounded-lg w-[250px]'
                                         value={loteInput}
                                         onChange={(e) => setLoteInput(e.target.value)}
                                     />
+
+                                    <select
+                                        value={selectedPpi}
+                                        onChange={(e) => setSelectedPpi(e.target.value)}
+                                        className="border px-3 py-1 rounded-lg w-[250px]"
+                                    >
+                                        <option value="">Seleccione un PPI</option>
+                                        {ppis.map(ppi => (
+                                            <option key={ppi.id} value={ppi.id}>{ppi.nombre}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+
+                                <div className='flex flex-col gap-3'>
                                     <input
                                         placeholder='Agregar pk inicial: '
                                         type="text"
                                         id="pkInicial"
-                                        className='border px-3 py-1 rounded-lg'
+                                        className='border px-3 py-1 rounded-lg w-[250px]'
                                         value={pkInicialInput}
                                         onChange={(e) => setPkInicialInput(e.target.value)}
                                     />
@@ -1210,15 +1230,15 @@ function Trazabilidad() {
                                         placeholder='Agregar pk final: '
                                         type="text"
                                         id="pkFinal"
-                                        className='border px-3 py-1 rounded-lg'
+                                        className='border px-3 py-1 rounded-lg w-[250px]'
                                         value={pkFinalInput}
                                         onChange={(e) => setPkFinalInput(e.target.value)}
                                     />
                                     <div className="flex items-center">
                                         <input
-                                            placeholder='ID BIM'
+                                            placeholder='GlobalID'
                                             type="text"
-                                            className='border px-3 py-1 rounded-lg'
+                                            className='border px-3 py-1 rounded-lg w-[250px]'
                                             value={idBimInput}
                                             onChange={(e) => setIdBimInput(e.target.value)}
                                         />
@@ -1226,11 +1246,14 @@ function Trazabilidad() {
 
                                     <button
                                         onClick={() => agregarLote(selectedElemento)} // Función para agregar lote a elemento seleccionado
-                                        className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded flex gap-2 items-center"
+                                        className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded flex gap-2 items-center w-[250px]"
                                     >
                                         Guardar
                                     </button>
                                 </div>
+
+
+
 
                             </div>
 
