@@ -1029,17 +1029,17 @@ function Trazabilidad() {
                 <div className="flex flex-col ">
 
 
-                    <div className='grid grid-cols-24 text-sm'>
+                    <div className='grid grid-cols-24 text-sm '>
 
-                        <div className='flex flex-col col-span-5'>
+                        <div className='flex flex-col col-span-5 '>
                             {/* Sector */}
                             <div className="flex flex-col col-span-4 items-start gap-3 border-r-2 px-5 py-3 ">
                                 <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sector</p>
-                                <div className="flex items-center">
+                                <div className="flex items-center w-full">
                                     <input
                                         placeholder='Agregar sector'
                                         type="text"
-                                        className='border px-3 py-1 rounded-lg w-[250px]'
+                                        className='border px-3 py-1 rounded-lg w-full'
                                         value={sectorInput}
                                         onChange={(e) => setSectorInput(e.target.value)}
                                     />
@@ -1059,7 +1059,7 @@ function Trazabilidad() {
                                     <label htmlFor="sectores"><strong className='text-amber-600 '>*</strong> Para agregar información selecciona el sector: </label>
                                     <select
                                         id="sectores"
-                                        className="border px-3 py-1 rounded-lg w-[250px]"
+                                        className="border px-3 py-1 rounded-lg w-full"
                                         value={selectedSector}
                                         onChange={handleSectorChange}
                                     >
@@ -1076,7 +1076,7 @@ function Trazabilidad() {
                                         placeholder='Agregar sub sector: '
                                         type="text"
                                         id="subsector"
-                                        className='border px-3 py-1 rounded-lg w-[250px]'
+                                        className='border px-3 py-1 rounded-lg w-full'
                                         value={subSectorInput}
                                         onChange={(e) => setSubSectorInput(e.target.value)}
                                     />
@@ -1098,7 +1098,7 @@ function Trazabilidad() {
                                 <label htmlFor="subsectores"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el sub sector: </label>
                                 <select
                                     id="subsectores"
-                                    className="border px-3 py-1 rounded-lg w-[250px]"
+                                    className="border px-3 py-1 rounded-lg w-full"
                                     value={selectedSubSector}
                                     onChange={handleSubSectorChange}
                                 >
@@ -1114,7 +1114,7 @@ function Trazabilidad() {
                                     placeholder='Agregar parte: '
                                     type="text"
                                     id="parte"
-                                    className='border px-3 py-1 rounded-lg w-[250px]'
+                                    className='border px-3 py-1 rounded-lg w-full'
                                     value={parteInput}
                                     onChange={(e) => setParteInput(e.target.value)}
                                 />
@@ -1135,7 +1135,7 @@ function Trazabilidad() {
                                 <label htmlFor="partes"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el parte: </label>
                                 <select
                                     id="partes"
-                                    className="border px-3 py-1 rounded-lg w-[250px]"
+                                    className="border px-3 py-1 rounded-lg w-full"
                                     value={selectedParte}
                                     onChange={handleParteChange}
                                 >
@@ -1151,7 +1151,7 @@ function Trazabilidad() {
                                     placeholder='Agregar elemento: '
                                     type="text"
                                     id="elemento"
-                                    className='border px-3 py-1 rounded-lg w-[250px]'
+                                    className='border px-3 py-1 rounded-lg w-full'
                                     value={elementoInput}
                                     onChange={(e) => setElementoInput(e.target.value)}
                                 />
@@ -1177,13 +1177,13 @@ function Trazabilidad() {
                             <div className='grid grid-cols-2 gap-6'>
 
 
-                                <div className='flex flex-col gap-3'>
+                                <div className='flex flex-col gap-3 w-full'>
 
-                                    <div className="flex flex-col items-start gap-3">
+                                    <div className="flex flex-col items-start gap-3 w-full">
 
                                         <select
                                             id="elementos"
-                                            className="border px-3 py-1 rounded-lg w-[250px]"
+                                            className="border px-3 py-1 rounded-lg w-full"
                                             value={selectedElemento}
                                             onChange={(e) => setSelectedElemento(e.target.value)}
                                         >
@@ -1199,7 +1199,7 @@ function Trazabilidad() {
                                         placeholder='Agregar lote: '
                                         type="text"
                                         id="lote"
-                                        className='border px-3 py-1 rounded-lg w-[250px]'
+                                        className='border px-3 py-1 rounded-lg w-full'
                                         value={loteInput}
                                         onChange={(e) => setLoteInput(e.target.value)}
                                     />
@@ -1207,7 +1207,7 @@ function Trazabilidad() {
                                     <select
                                         value={selectedPpi}
                                         onChange={(e) => setSelectedPpi(e.target.value)}
-                                        className="border px-3 py-1 rounded-lg w-[250px]"
+                                        className="border px-3 py-1 rounded-lg w-full"
                                     >
                                         <option value="">Seleccione un PPI</option>
                                         {ppis.map(ppi => (
@@ -1222,7 +1222,7 @@ function Trazabilidad() {
                                         placeholder='Agregar pk inicial: '
                                         type="text"
                                         id="pkInicial"
-                                        className='border px-3 py-1 rounded-lg w-[250px]'
+                                        className='border px-3 py-1 rounded-lg w-full'
                                         value={pkInicialInput}
                                         onChange={(e) => setPkInicialInput(e.target.value)}
                                     />
@@ -1230,7 +1230,7 @@ function Trazabilidad() {
                                         placeholder='Agregar pk final: '
                                         type="text"
                                         id="pkFinal"
-                                        className='border px-3 py-1 rounded-lg w-[250px]'
+                                        className='border px-3 py-1 rounded-lg w-full'
                                         value={pkFinalInput}
                                         onChange={(e) => setPkFinalInput(e.target.value)}
                                     />
@@ -1238,7 +1238,7 @@ function Trazabilidad() {
                                         <input
                                             placeholder='GlobalID'
                                             type="text"
-                                            className='border px-3 py-1 rounded-lg w-[250px]'
+                                            className='border px-3 py-1 rounded-lg w-full'
                                             value={idBimInput}
                                             onChange={(e) => setIdBimInput(e.target.value)}
                                         />
@@ -1246,7 +1246,7 @@ function Trazabilidad() {
 
                                     <button
                                         onClick={() => agregarLote(selectedElemento)} // Función para agregar lote a elemento seleccionado
-                                        className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded flex gap-2 items-center w-[250px]"
+                                        className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded flex gap-2 items-center w-full"
                                     >
                                         Guardar
                                     </button>
