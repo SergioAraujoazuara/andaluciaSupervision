@@ -60,6 +60,7 @@ function Elemento() {
                 <Link to={'/'}>
                     <h1 className=' text-gray-500'>Home</h1>
                 </Link>
+                
 
                 <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                 <Link to={'#'}>
