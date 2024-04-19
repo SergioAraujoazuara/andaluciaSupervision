@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
 import { getDoc, doc } from 'firebase/firestore';
-import Imagen from '../assets/tpflogo.png';  // Asegúrate de que la ruta de la imagen está correcta
+import Imagen from '../assets/tpf_marca.png';  // Asegúrate de que la ruta de la imagen está correcta
 import { db } from '../../firebase_config';
 
 import { FaUserAlt, FaDoorOpen } from "react-icons/fa";
@@ -17,6 +17,7 @@ const Navbar = () => {
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [userNombre, setUserNombre] = useState('');
   const location = useLocation();
+  const idProyecto = localStorage.getItem('idProyecto')
 
   useEffect(() => {
     if (user) {
@@ -61,7 +62,13 @@ const Navbar = () => {
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 <NavLink
                   to="/"
-                  linkName="Inicio"
+                  linkName="Home"
+                  activeLink={activeLink}
+                  handleLinkClick={handleLinkClick}
+                />
+                <NavLink
+                  to="/elemento/proyecto"
+                  linkName="Inspección"
                   activeLink={activeLink}
                   handleLinkClick={handleLinkClick}
                 />

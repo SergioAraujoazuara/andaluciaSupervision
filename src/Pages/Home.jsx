@@ -22,7 +22,7 @@ function Home() {
     localStorage.setItem('obra', p.obra)
     localStorage.setItem('idProyecto', p.id)
   }
-  const nombre_proyectoStorage = ''
+ 
 
   // Obtener proyectos
   useEffect(() => {
@@ -36,6 +36,9 @@ function Home() {
           ...doc.data(),
         }));
         setProyectos(proyectosData)
+        console.log(proyectosData[0].id)
+        localStorage.setItem('proyecto', proyectosData[0].id)
+       
       } catch (error) {
         console.error('Error al obtener la lista de proyectos:', error);
       }

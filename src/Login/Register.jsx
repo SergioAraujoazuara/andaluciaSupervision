@@ -146,10 +146,10 @@ const Register = () => {
          
           <p className="mb-4 text-center text-xl my-6">Building the world, better</p>
           <div className='flex justify-center mt-2'>
-          <button onClick={() => navigate('/signin')} className="flex items-center gap-3 text-sky-600 font-semibold bg-white py-2 px-4 rounded-full shadow-md">
+          {/* <button onClick={() => navigate('/signin')} className="flex items-center gap-3 text-sky-600 font-semibold bg-white py-2 px-4 rounded-full shadow-md">
             <span className='text-amber-500'><FaArrowAltCircleRight /></span>
             Área inspección
-          </button>
+          </button> */}
           </div>
           
         </div>
