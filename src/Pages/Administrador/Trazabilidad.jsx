@@ -991,11 +991,10 @@ function Trazabilidad() {
                     </Link>
                 </div>
 
-                <div className='font-medium text-gray-500 gap-2'>
-                          
-                            <p>{proyecto.obra}</p>
-                            <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-500 text-white rounded-lg mt-2'>Visor BIM</button></Link>
-                        </div>
+                <div className='font-medium text-gray-500 flex items-center gap-3'>
+                    
+                    <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-600 text-white text-sm rounded-lg'>Visor BIM</button></Link>
+                </div>
 
             </div>
 
@@ -1003,7 +1002,7 @@ function Trazabilidad() {
 
             {/* Contenido */}
             <div className='flex gap-3 flex-col mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
-         
+
 
 
                 {/* <div className='w-full border border-b-2'></div> */}
@@ -1288,7 +1287,11 @@ function Trazabilidad() {
                                     <ul className="divide-y divide-gray-200 w-full md:w-4/5">
                                         {sector.subsectores.map((subsector) => (
                                             subsector.partes && subsector.partes.length > 0 ? (
-                                                subsector.partes.map((parte) => (
+                                                
+                                                subsector.partes.sort((a, b) => a.nombre.localeCompare(b.nombre))
+                                                
+                                                .map((parte) => (
+                                                    
                                                     parte.elementos && parte.elementos.length > 0 ? (
                                                         parte.elementos.map((elemento) => (
                                                             elemento.lotes && elemento.lotes.length > 0 ? (

@@ -1758,13 +1758,13 @@ export default function ViewerInspeccion() {
                             <div className="bg-sky-600 px-5 py-2 font-bold text-white text-lg rounded-t-lg">Información del Lote</div>
 
                             <div className='px-5 py-5 text-sm flex flex-col gap-2 bg-white rounded-lg  text-gray-500'>
-                                <p className=' px-1 py-1  font-medium text-gray-500 ps-1'><strong>Nombre: </strong><span className='ms-1 bg-gray-500 text-white text-sm px-3 py-1 rounded-lg'>{selectedNameBim}</span></p>
-                                <p className=' px-1 py-1 font-medium bg-white text-gray-500 ps-1'><strong>Global id: </strong> <span className='ms-1 bg-gray-500 text-white px-3 py-1 rounded-lg'>{selectedGlobalId}</span></p>
+                                <p className=' px-1 py-1  font-medium text-gray-500 ps-1'><strong>Nombre: </strong><span className='ms-1 bg-gray-500 text-white font-normal text-sm px-3 py-1 rounded-lg'>{selectedNameBim}</span></p>
+                                <p className=' px-1 py-1 font-medium bg-white text-gray-500 ps-1'><strong>Global id: </strong> <span className='ms-1 bg-gray-500 text-white font-normal px-3 py-1 rounded-lg'>{selectedGlobalId}</span></p>
                                 <p className=' p-1 '><strong>Sector: </strong>{selectedLote.sectorNombre}</p>
                                 <p className=' p-1 '><strong>Sub sector: </strong>{selectedLote.subSectorNombre}</p>
                                 <p className=' p-1 '><strong>Parte: </strong>{selectedLote.parteNombre}</p>
-                                <p className=' px-1 py-1 '><strong>Elemento: </strong><span className='ms-1 bg-gray-400 text-white px-3 py-1 rounded-lg'>{selectedLote.elementoNombre}</span></p>
-                                <p className=' px-1 py-1 font-medium bg-white text-gray-500 ps-1'><strong> Lote: </strong><span className='ms-1 bg-gray-400 text-white px-3 py-1 rounded-lg'>{selectedLote.nombre}</span></p>
+                                <p className=' px-1 py-1 '><strong>Elemento: </strong><span className='ms-1 bg-gray-400 text-white font-normal px-3 py-1 rounded-lg'>{selectedLote.elementoNombre}</span></p>
+                                <p className=' px-1 py-1 font-medium bg-white text-gray-500 ps-1'><strong> Lote: </strong><span className='ms-1 bg-gray-400 text-white font-normal px-3 py-1 rounded-lg'>{selectedLote.nombre}</span></p>
                                 <p className=' bg-white text-gray-500 ps-1'><strong> PPI: </strong> {selectedLote.ppiNombre}</p>
                             </div>
 
@@ -1871,13 +1871,13 @@ export default function ViewerInspeccion() {
 
                             <div className='bg-white px-5 py-4 text-white rounded-b-lg shadow-xl'>
                                 <p> {selectedGlobalId ?
-                                    <p className='font-medium bg-white text-gray-500'>Global id: <strong className='ms-1 bg-gray-400 font-medium text-white text-sm px-3 py-1 rounded-lg'>{selectedGlobalId}</strong></p> :
-                                    <p className='text-gray-500 font-bold'>Global id: <strong className='ms-1 bg-gray-400 font-medium text-white text-sm px-3 py-1 rounded-lg'>Sin seleccionar</strong></p>
+                                    <p className='font-medium bg-white text-gray-500'>Global id: <strong className='ms-1 bg-gray-400 text-white font-normal text-sm px-3 py-1 rounded-lg'>{selectedGlobalId}</strong></p> :
+                                    <p className='text-gray-500 font-bold'>Global id: <strong className='ms-1 bg-gray-400 text-white text-sm font-normal px-3 py-1 rounded-lg'>Sin seleccionar</strong></p>
                                 }</p>
 
                                 <p className='mt-3'> {selectedNameBim ?
-                                    <p className='font-medium text-gray-500'>Nombre: <strong className='ms-1 bg-gray-400 font-medium text-white text-sm px-3 py-1 rounded-lg'>{selectedNameBim}</strong></p> :
-                                    <p className='text-gray-500 font-bold'>Nombre: <span className='ms-1 bg-gray-400 font-medium text-white text-sm px-3 py-1 rounded-lg'>Sin seleccionar</span></p>
+                                    <p className='font-medium text-gray-500'>Nombre: <strong className='ms-1 bg-gray-400 text-white font-normal text-sm px-3 py-1 rounded-lg'>{selectedNameBim}</strong></p> :
+                                    <p className='text-gray-500 font-bold'>Nombre: <span className='ms-1 bg-gray-400 font-normal text-white text-sm px-3 py-1 rounded-lg'>Sin seleccionar</span></p>
                                 }</p>
                             </div>
 

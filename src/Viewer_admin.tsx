@@ -33,13 +33,14 @@ interface Lote {
     globalId: string;
 }
 
-export default function ViewerAdmin() {
+export default function Viewer_admin() {
     const [modelCount, setModelCount] = useState(0);
     const [lotes, setLotes] = useState<Lote[]>([]);
     const [selectedGlobalId, setSelectedGlobalId] = useState<string | null>(null);
     const [selectedNameBim, setSelectedNameBim] = useState<string | null>(null);
     const [selectedLote, setSelectedLote] = useState<Lote | null>(null);
     const [inspecciones, setInspecciones] = useState([]);
+    const idProyecto = localStorage.getItem('proyecto')
 
 
 
@@ -262,22 +263,19 @@ export default function ViewerAdmin() {
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
 
                     <Link to={'/admin'}>
-                        <h1 className='text-gray-600'>Administración</h1>
+                        <h1 className='text-gray-600 cursor-pointer'>Administración</h1>
                     </Link>
+
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                    <Link to={'/viewProject'}>
-                        <h1 className=' text-gray-600'>Ver proyectos</h1>
-                    </Link>
-                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                    <Link to={'/trazabilidad'}>
-                        <h1 className='font-medium text-gray-500'>Trazabilidad </h1>
+                    <Link to={`/trazabilidad/${idProyecto}`}>
+                        <h1 className='font-medium text-gray-500 cursor-pointer'>Trazabilidad </h1>
                     </Link>
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'#'}>
-                        <h1 className='font-medium text-amber-600'>Bim </h1>
+                        <h1 className='font-medium text-amber-600'>BIM </h1>
                     </Link>
                 </div>
-               
+
             </div>
 
 
@@ -287,11 +285,12 @@ export default function ViewerAdmin() {
 
                 <div className=''>
                     <div className="bg-white rounded-lg mb-4">
-                        <div className="bg-gray-200 px-4 py-2 font-bold text-gray-500 rounded-t-lg">Elemento seleccionado</div>
-                        <div className='text-sm px-4 py-3'>
-                            <p><strong className='text-gray-500'>Global id:</strong> <span className='text-amber-600 font-medium'>{selectedGlobalId}</span></p>
-                            
-                            <p><strong className='text-gray-500'>Nombre del elemento:</strong> <span className='text-amber-600 font-medium'>{selectedNameBim}</span></p>
+                        <div className="bg-sky-600 text-white px-4 py-2 font-bold text-gray-500 rounded-t-lg">Elemento seleccionado</div>
+                        <div className='text-sm px-4 py-3 flex flex-col gap-3'>
+                            <p><strong className='text-gray-500'>Global id:</strong> <span className='font-normal bg-gray-400 rounded-lg px-4 py-1 text-white'>{selectedGlobalId || 'Sin seleccionar'}</span></p>
+
+
+                            <p><strong className='text-gray-500'>Nombre del elemento:</strong> <span className='font-normal bg-gray-400 rounded-lg px-4 py-1 text-white'>{selectedNameBim || 'Sin seleccionar'}</span></p>
 
                         </div>
                     </div>
@@ -304,12 +303,16 @@ export default function ViewerAdmin() {
                                 <select onChange={handleSelectLote} value={selectedLote}
                                     className="block w-full mt-1 p-2 bg-gray-100 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
                                     <option value="">Seleccione un lote</option>
-                                    {lotesFiltrados.map((lote) => (
-                                        <option key={lote.docId} value={lote.docId}
-                                            className={`${!lote.globalId ? 'bg-amber-600 text-white' : 'bg-white text-black'}`}>
-                                            {lote.nombre}
-                                        </option>
-                                    ))}
+                                    {lotesFiltrados
+                                        .sort((a, b) => a.parteNombre.localeCompare(b.parteNombre))  // Ordenando alfabéticamente por 'parteNombre'
+                                        .map((lote) => (
+                                            <option key={lote.docId} value={lote.docId}
+                                                className={`${!lote.globalId ? 'bg-amber-600 font-light text-white' : 'bg-white text-black'}`}>
+                                                {lote.nombre} - {lote.elementoNombre} - {lote.parteNombre}
+                                            </option>
+                                        ))
+                                    }
+
                                 </select>
                             </div>
                             <div>

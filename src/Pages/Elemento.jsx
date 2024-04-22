@@ -55,34 +55,37 @@ function Elemento() {
     return (
         <div className='min-h-screen px-14 py-5'>
 
-            <div className='flex gap-2 items-center justify start bg-white px-10 py-5 rounded rounded-xl shadow-md text-lg'>
+            <div className='flex gap-2 items-center justify-between bg-white px-10 py-5 rounded rounded-xl shadow-md text-lg'>
+                <div className='flex gap-2 items-center'>
+
+                
                 <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                 <Link to={'/'}>
                     <h1 className=' text-gray-500'>Home</h1>
                 </Link>
-                
+
 
                 <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                 <Link to={'#'}>
                     <h1 className='font-medium text-amber-600'>Inspección</h1>
                 </Link>
+                </div>
 
-
+                <div className='px-4 py-2 bg-sky-500 text-white rounded-lg '>
+                    <Link to={'/visor_inspeccion'}>
+                        <button className='text-white flex items-center gap-3'>
+                            Version <span className='text-2xl'><SiBim /> </span>
+                        </button>
+                    </Link>
+                </div>
             </div>
+
+
 
             <div>
                 <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
 
 
-                    <div className='px-4 py-2 bg-sky-500 text-white rounded-lg '>
-                        <Link to={'/visor_inspeccion'}>
-                            <button className='text-white flex items-center gap-3'>
-                            Version <span className='text-2xl'><SiBim/> </span>
-                            </button>
-                        </Link>
-
-
-                    </div>
 
                     <div class="w-full rounded rounded-xl">
                         <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded rounded-md '>
@@ -132,24 +135,24 @@ function Elemento() {
 
 
                                     <div className='h-10 flex items-center sm:justify-start gap-5 col-span-2 sm:ps-10'>
-                                    {
-    l.totalSubactividades > 0 ? (
-        <>
-            {`${l.actividadesAptas || 0}/${l.totalSubactividades} `}
-            ({((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%)
-            <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '100%' }}>
-                <div
-                    style={{
-                        background: '#0284c7',
-                        height: '100%',
-                        borderRadius: '8px',
-                        width: `${((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%`
-                    }}
-                />
-            </div>
-        </>
-    ) : "Inspección no iniciada"
-}
+                                        {
+                                            l.totalSubactividades > 0 ? (
+                                                <>
+                                                    {`${l.actividadesAptas || 0}/${l.totalSubactividades} `}
+                                                    ({((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%)
+                                                    <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '100%' }}>
+                                                        <div
+                                                            style={{
+                                                                background: '#0284c7',
+                                                                height: '100%',
+                                                                borderRadius: '8px',
+                                                                width: `${((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%`
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </>
+                                            ) : "Inspección no iniciada"
+                                        }
 
 
                                     </div>

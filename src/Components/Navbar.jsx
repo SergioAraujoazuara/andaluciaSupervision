@@ -82,15 +82,15 @@ const Navbar = () => {
             )}
           </div>
           {user && (
-            <div className='flex items-center font-medium text-gray-500 pr-5 gap-12 text-base'>
+            <div className='flex items-center font-medium text-gray-500 pr-5 gap-3 text-base'>
               <div className='flex gap-3 items-center text-lg text-gray-500 font-bold'>
                 <FaUserAlt />
                 <p>{userNombre || 'Usuario'}</p>
               </div>
               <div className="relative bg-sky-600 text-white px-4 py-2 rounded-lg">
-                <button className="flex gap-4 items-center text-lg font-bold" onClick={toggleLogoutConfirmation}>
-                  <p>Cerrar sesión</p>
-                  {showProfileDropdown ? <span className='text-xl flex items-center'><IoIosSettings /></span> : <span className='text-xl'><ImExit /></span>}
+                <button className="flex gap-2 items-center text-lg font-bold" onClick={toggleLogoutConfirmation}>
+                
+                  {showProfileDropdown ? <span className='text-sm flex items-center'><IoIosSettings /></span> : <span className='text-sm'><ImExit /></span>}
                 </button>
                 {/* {showProfileDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-md">
