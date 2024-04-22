@@ -26,3 +26,7 @@ body {
 #left-toolbar-container{
     display: none;
 }
+
+#bottom-toolbar-container {
+    display: none;
+}

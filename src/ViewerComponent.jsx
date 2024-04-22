@@ -6,7 +6,7 @@ const ViewerComponent = React.memo(({ setSelectedGlobalId, setSelectedNameBim })
     const [modelCount, setModelCount] = useState(0);
     const viewerContainerStyle = {
         width: "100%",
-        height: "400px",
+        height: "500px",
         position: "relative",
         gridArea: "viewer",
     };
