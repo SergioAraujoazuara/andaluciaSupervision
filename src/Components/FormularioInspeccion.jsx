@@ -327,7 +327,7 @@ function FormularioInspeccion({formulario, crearVariableFormularioTrue, handleCo
         doc.setFontSize(fontSize);
 
         // Colocar texto dentro del segundo recuadro
-        doc.text(`Obra: ${obra}`, 15, 40);
+        doc.text(`Obra: ${obra} test de obra *******`, 15, 40);
         doc.text(`Tramo: ${tramo}`, 15, 45);
         doc.text(`Nº de registro: ${docId}`, 120, 40);
         doc.text(`Fecha: ${fechaHoraActual}`, 150, 45);
@@ -493,7 +493,7 @@ function FormularioInspeccion({formulario, crearVariableFormularioTrue, handleCo
 
 
 
-        doc.save('formulario.pdf');
+        doc.save('formularioWeb.pdf');
     };
 
 
