@@ -8,7 +8,7 @@ import imageCompression from 'browser-image-compression';
 import { db } from '../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 
-function FormularioInspeccion({formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion }) {
+function FormularioInspeccion({formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros }) {
 
     const { id } = useParams()
     const idLote = localStorage.getItem('loteId');
@@ -145,68 +145,7 @@ function FormularioInspeccion({formulario, crearVariableFormularioTrue, handleCo
 
 
 
-    const enviarDatosARegistros = async () => {
-        // Objeto que representa los datos del formulario
-        const datosFormulario = {
-            nombreProyecto,
-            fechaHoraActual: fechaHoraActual,
-            obra: obra,
-            tramo: tramo,
-            ppiNombre: loteInfo.ppiNombre,
-            observaciones: observaciones,
-            comentario: comentario,
-            sector: loteInfo.sectorNombre,
-            subSector: loteInfo.subSectorNombre,
-            parte: loteInfo.parteNombre,
-            elemento: loteInfo.elementoNombre,
-            lote: loteInfo.nombre,
-            firma: firma,
-            pkInicial: loteInfo.pkInicial,
-            pkFinal: loteInfo.pkFinal,
-            nombreResponsable: nombreResponsable,
-            resultadoInspeccion: resultadoInspeccion,
-            imagen: imagen, // imagen en base64
-            imagen2: imagen2, // imagen2 en base64
-        };
-
-        try {
-            // Referencia a la colección 'registros' en Firestore
-
-            const coleccionRegistros = collection(db, "registros");
-            const docRef = await addDoc(coleccionRegistros, datosFormulario);
-
-            // Aquí es donde se obtiene el ID del documento recién creado
-            const docId = docRef.id;
-
-
-
-
-            // Ahora, actualizamos el documento para incluir su propio ID
-            await updateDoc(doc(db, "registros", docId), {
-                id: docId // Guarda el ID del documento dentro del mismo documento
-            });
-            // Ahora que tienes el ID y el documento está actualizado, genera el PDF
-
-            // generatePDF(firma, fechaHoraActual, nombreResponsable, docId);
-
-
-            setIdRegistro(docId)
-            // Opcionalmente, cierra el modal o limpia el formulario aquí
-            setModalFormulario(false);
-            
-           
-            
-           
-            
-            setMensajeExitoInspeccion('Inspección completada con éxito')
-            console.log("Documento escrito con ID: ", docRef.id);
-            return docRef.id; // Devolver el ID del documento creado
-
-
-        } catch (e) {
-            console.error("Error al añadir documento: ", e);
-        }
-    };
+   
 
     const handleConfirmarEnvio = () => {
         setMostrarConfirmacion(false); // Cierra el primer modal

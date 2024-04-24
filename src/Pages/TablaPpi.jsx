@@ -100,7 +100,7 @@ function TablaPpi() {
         setModal(true);
     };
 
-    
+
     const handleOpenModalFormulario = (subactividadId) => {
         setCurrentSubactividadId(subactividadId);
         console.log(subactividadId);
@@ -112,7 +112,7 @@ function TablaPpi() {
         setObservaciones(''); // Si también necesitas resetear observaciones o cualquier otro estado, hazlo aquí
         setModalFormulario(true);
     };
-    
+
 
 
 
@@ -428,12 +428,12 @@ function TablaPpi() {
         const [, actividadIndex, subactividadIndex] = currentSubactividadId.split('-').map(Number);
 
         // Acceder a la subactividad seleccionada
+        const actividadSeleccionada = ppi.actividades[actividadIndex];
         const subactividadSeleccionada = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
 
         // Objeto que representa los datos del formulario
         const datosFormulario = {
             nombreProyecto,
-            fechaHoraActual: fechaHoraActual,
             obra: obra,
             tramo: tramo,
             ppiNombre: loteInfo.ppiNombre,
@@ -447,10 +447,19 @@ function TablaPpi() {
             firma: firma,
             pkInicial: loteInfo.pkInicial,
             pkFinal: loteInfo.pkFinal,
-            nombreResponsable: nombreResponsable,
-            subactividadNombre: subactividadSeleccionada.nombre, // Nombre de la subactividad seleccionada
-            versionSubactividad: subactividadSeleccionada.version,
-            numeroSubactividad: subactividadSeleccionada.numero,
+            actividad: actividadSeleccionada.actividad,
+            version_subactividad: subactividadSeleccionada.version,
+            numero_subactividad: subactividadSeleccionada.numero,
+            subactividad: subactividadSeleccionada.nombre, // Nombre de la subactividad seleccionada
+            criterio_aceptacion: subactividadSeleccionada.criterio_aceptacion,
+            documentacion_referencia: subactividadSeleccionada.documentacion_referencia,
+            tipo_inspeccion: subactividadSeleccionada.tipo_inspeccion,
+            punto: subactividadSeleccionada.punto,
+            nombre_responsable: nombreResponsable,
+            fechaHoraActual: fechaHoraActual,
+            globalId: loteInfo.globalId,
+            nombreGlobalId: loteInfo.nameBim,
+
             formulario: formulario
         };
 
@@ -463,7 +472,7 @@ function TablaPpi() {
 
             // Opcionalmente, cierra el modal o limpia el formulario aquí
             setModalFormulario(false);
-            
+
             setObservaciones('')
             setComentario('')
             console.log("Documento escrito con ID: ", docRef.id);
@@ -480,12 +489,12 @@ function TablaPpi() {
         await handelEnviarFormulario();
         setMostrarConfirmacion(false);
         setModalInforme(false);
-        
+
         setComentario('')
         // Esperar un poco antes de mostrar el modal de éxito para asegurar que los modales anteriores se han cerrado
         setTimeout(() => {
             setModalExito(true);
-            
+
 
         }, 300); // Ajusta el tiempo según sea necesario
     };
@@ -565,10 +574,10 @@ function TablaPpi() {
         // Crear un nuevo documento PDF
         const pdfDoc = await PDFDocument.create();
         const page = pdfDoc.addPage([600, 680]); // Tamaño de la página
-    
+
         // Añadir contenido al PDF
         const { width, height } = page.getSize();
- 
+
         // Función para agregar texto al PDF
         const addText = (text, x, y, fontSize) => {
             page.drawText(text, {
@@ -577,27 +586,153 @@ function TablaPpi() {
                 size: fontSize,
             });
         };
-    
+
+        // Función para agregar una línea horizontal
+        const addHorizontalLine = (x1, y, x2, lineWidth) => {
+            page.drawLine({
+                start: { x: x1, y },
+                end: { x: x2, y },
+                thickness: lineWidth,
+                color: rgb(0, 0, 0), // Color negro
+            });
+        };
+
+        // Función para agregar imágenes al PDF
+        const embedImage = async (imagePath, x, y, width, height) => {
+            const imageBytes = await fetch(imagePath).then(res => res.arrayBuffer());
+            const image = await pdfDoc.embedPng(imageBytes);
+            page.drawImage(image, {
+                x,
+                y,
+                width,
+                height,
+            });
+        };
+
         // Definir coordenadas y tamaños de los rectángulos
         const rectangles = [
             { x: 10, y: 10, width: 190, height: 20, color: [230, 230, 230], borderWidth: 0.5 },
             // Define tus otros rectángulos aquí...
         ];
-    
-    
+
         // Agregar texto al PDF
-        addText(titulo, 75, height - 20, 10);
-        addText(nombreProyecto, 75, height - 35, 10);
-        addText(documentoFormulario.obra, 75, height - 50, 10);
-        addText(documentoFormulario.tramo, 75, height - 65, 10);
-        
-    
+        addText(titulo, 75, height - 35, 10);
+        addText(nombreProyecto, 75, height - 50, 10);
+
+        // Agregar imágenes al lado del nombre del proyecto
+        await embedImage(imagenPath2, 400, height - 58, 75, 45); // Ajusta las coordenadas y dimensiones según sea necesario
+        await embedImage(imagenPath, 480, height - 55, 40, 30); // Ajusta las coordenadas y dimensiones según sea necesario
+
+        // Agregar una línea horizontal debajo del nombre del proyecto
+        addHorizontalLine(75, height - 60, 525, 1); // Ajusta las coordenadas y el grosor según sea necesario
+
+
+        //* Datos *******************************************************************************************************************
+
+        addText(documentoFormulario.obra, 75, height - 80, 10);
+        addText(documentoFormulario.tramo, 75, height - 95, 10);
+
+
+
+
+        // Función para agregar una línea horizontal con un color específico
+        const addColoredHorizontalLine = (x1, y, x2, lineWidth, color) => {
+            page.drawLine({
+                start: { x: x1, y },
+                end: { x: x2, y },
+                thickness: lineWidth,
+                color: rgb(color[0], color[1], color[2]), // Convertir los valores de color al rango correcto
+            });
+        };
+
+        // Función para convertir un color hexadecimal a RGB
+        const hexToRgb = (hex) => {
+            // Eliminar el '#' del inicio si está presente
+            hex = hex.replace(/^#/, '');
+
+            // Convertir el color hexadecimal a RGB
+            const bigint = parseInt(hex, 16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+
+            return [r / 255, g / 255, b / 255];
+        };
+
+        // Función para dividir y agregar texto en múltiples líneas
+        const addTextInLines = (text, x, start_y, fontSize, lineGap, maxWordsPerLine = 12) => {
+            const words = text.split(' ');
+            let currentLine = '';
+            let y = start_y;
+
+            words.forEach((word, index) => {
+                currentLine += word + ' ';
+                // Si alcanza el máximo de palabras por línea o es la última palabra
+                if ((index + 1) % maxWordsPerLine === 0 || index === words.length - 1) {
+                    addText(currentLine, x, y, fontSize);
+                    y -= lineGap; // Moverse hacia abajo para la siguiente línea
+                    currentLine = ''; // Resetear la línea actual
+                }
+            });
+        };
+
+        // Llamada a la función para convertir el color hexadecimal a RGB
+        const color = hexToRgb('#f3f4f6');
+        // Llamada a la función para agregar la línea horizontal con el color especificado
+        addColoredHorizontalLine(75, height - 130, 525, 30, color); // Azul
+
+        addText('Trazabilidad', 90, height - 135, 10);
+
+
+        addText(`GlobalID: ${loteInfo.globalId}`, 90, height - 170, 10);
+        addText(`Nombre GlobalID: ${loteInfo.nameBim}`, 90, height - 185, 10);
+        addText(`Sector: ${documentoFormulario.sector}`, 90, height - 200, 10);
+        addText(`Sub sector: ${documentoFormulario.subSector}`, 90, height - 215, 10);
+
+        addText(`Parte: ${documentoFormulario.parte}`, 280, height - 170, 10);
+        addText(`Elemento: ${documentoFormulario.elemento}`, 280, height - 185, 10);
+        addText(`Lote: ${documentoFormulario.lote}`, 280, height - 200, 10);
+        addText(`Pk inicial: ${documentoFormulario.pkInicial}`, 280, height - 215, 10);
+        addText(`Pk final: ${documentoFormulario.pkFinal}`, 280, height - 230, 10);
+
+
+
+
+
+        addText('PPI', 90, height - 290, 10);
+
+
+        addText(`Nombre PPI: ${documentoFormulario.ppiNombre}`, 90, height - 300, 10);
+
+        addText(`Actividades previas: ${documentoFormulario.actividad}`, 90, height - 315, 10);
+        addText(`Doc. ref: ${documentoFormulario.documentacion_referencia}`, 90, height - 330, 10);
+        addText(`Tipo inspección: ${documentoFormulario.documentacion_referencia}`, 90, height - 345, 10);
+        addText(`Version: ${documentoFormulario.version_subactividad}`, 90, height - 360, 10);
+        const subActividadText = `Sub actividad: ${documentoFormulario.subactividad}`;
+        addTextInLines(subActividadText, 90, height - 375, 10, 15, 10);
+
+
+
+
+        // Ejemplo de uso:
+        const criterioAceptacionText = `Criterio de aceptación: ${documentoFormulario.criterio_aceptacion}`;
+        addTextInLines(criterioAceptacionText, 90, height - 415, 10, 15);
+
+
+
+
+
+
+
+
+
+
         // Guardar el PDF en un archivo
         const pdfBytes = await pdfDoc.save();
-        
+
         // Convierte los bytes del PDF en un Blob
         const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-    
+
         // Descarga el PDF
         const pdfUrl = URL.createObjectURL(pdfBlob);
         const link = document.createElement('a');
@@ -605,11 +740,12 @@ function TablaPpi() {
         link.download = 'formulario.pdf';
         link.click();
         URL.revokeObjectURL(pdfUrl);
-    
+
         cerrarModalYLimpiarDatos();
     };
-    
-    
+
+
+
 
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500 text-sm'>
@@ -631,7 +767,7 @@ function TablaPpi() {
                         <h1 className='font-medium text-amber-600'>Ppi: {ppiNombre}</h1>
                     </Link>
                 </div>
-                
+
             </div>
 
 
@@ -860,7 +996,7 @@ function TablaPpi() {
                             nombreResponsable={nombreResponsable}
 
                             setResultadoInspeccion={setResultadoInspeccion}
-
+                            enviarDatosARegistros={enviarDatosARegistros}
 
                             setModalConfirmacionInforme={setModalConfirmacionInforme}
 

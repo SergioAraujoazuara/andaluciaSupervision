@@ -207,26 +207,31 @@ export default function Viewer_admin() {
 
 
 
-    const actualizarLoteConGlobalId = async (loteId, globalId) => {
+    const actualizarLoteConGlobalId = async (loteId, globalId, nameBim) => {
         const loteRef = doc(db, "lotes", loteId);
         try {
-            await updateDoc(loteRef, { globalId: globalId });
+            await updateDoc(loteRef, { 
+                globalId: globalId, 
+                nameBim: nameBim  // Agregar nameBim a la base de datos.
+            });
             // Actualizar el estado del lote seleccionado inmediatamente
-            const updatedLote = { ...selectedLote, globalId: globalId };
+            const updatedLote = { ...selectedLote, globalId: globalId, nameBim: nameBim };
             setSelectedLote(updatedLote);
-
+    
             // Actualizar la lista de lotes
-            const updatedLotes = lotes.map(lote => lote.docId === loteId ? { ...lote, globalId: globalId } : lote);
+            const updatedLotes = lotes.map(lote => lote.docId === loteId ? { ...lote, globalId: globalId, nameBim: nameBim } : lote);
             setLotes(updatedLotes);
-
-            setSuccessMessage("Global ID agregado correctamente");
+    
+            setSuccessMessage("Global ID y Nombre BIM agregados correctamente");
             setShowSuccessModal(true);
         } catch (error) {
-            console.error("Error actualizando el lote con GlobalId:", error);
-            setSuccessMessage("Error al agregar Global ID.");
+            console.error("Error actualizando el lote con GlobalId y NameBim:", error);
+            setSuccessMessage("Error al agregar Global ID y Nombre BIM.");
             setShowSuccessModal(true);
         }
     };
+    
+
 
 
 
@@ -348,7 +353,7 @@ export default function Viewer_admin() {
 
                                                     <p>Sin asignar</p>
                                                     <button
-                                                        onClick={() => selectedLote && selectedGlobalId && actualizarLoteConGlobalId(selectedLote.docId, selectedGlobalId)}
+                                                        onClick={() => selectedLote && selectedGlobalId && actualizarLoteConGlobalId(selectedLote.docId, selectedGlobalId, selectedNameBim)}
                                                         className={`px-4 py-2 rounded text-white ${selectedGlobalId ? 'bg-amber-600 hover:bg-amber-700' : 'bg-gray-500 cursor-not-allowed'}`}
                                                         disabled={!selectedLote || !selectedGlobalId}>
                                                         +
