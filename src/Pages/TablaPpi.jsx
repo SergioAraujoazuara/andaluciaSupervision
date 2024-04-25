@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase_config';
-import { getDoc, getDocs, query, collection, where, doc, updateDoc, increment, addDoc } from 'firebase/firestore';
+import { getDoc, getDocs, query, collection, where, doc, updateDoc, increment, addDoc, or } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 import { FaArrowRight } from "react-icons/fa";
 import { IoCloseCircle } from "react-icons/io5";
@@ -14,7 +14,7 @@ import FormularioInspeccion from '../Components/FormularioInspeccion'
 import RecuperarPdf from './RecuperarPdf';
 import jsPDF from 'jspdf';
 import logo from '../assets/tpf_logo_azul.png'
-import { PDFDocument, rgb } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 function TablaPpi() {
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
@@ -29,6 +29,11 @@ function TablaPpi() {
     const navigate = useNavigate();
     const [ppi, setPpi] = useState(null);
 
+ 
+
+    const handleObservaciones = (nuevasObservaciones) => {
+        setObservaciones(nuevasObservaciones);
+    };
 
 
     useEffect(() => {
@@ -403,7 +408,7 @@ function TablaPpi() {
                 if (docSnap.exists()) {
                     console.log("Datos del lote:", docSnap.data());
                     setLoteInfo({ id: docSnap.id, ...docSnap.data() });
-                    console.log({ id: docSnap.id, ...docSnap.data() });
+                    console.log({ id: docSnap.id, ...docSnap.data() }, 'lote info****loteinfo');
                 } else {
                     console.log("No se encontró el lote con el ID:", idLote);
 
@@ -423,6 +428,7 @@ function TablaPpi() {
     //     setFormulario(true)
     // }
 
+   
     const enviarDatosARegistros = async () => {
         // Descomponer currentSubactividadId para obtener los índices
         const [, actividadIndex, subactividadIndex] = currentSubactividadId.split('-').map(Number);
@@ -448,6 +454,7 @@ function TablaPpi() {
             pkInicial: loteInfo.pkInicial,
             pkFinal: loteInfo.pkFinal,
             actividad: actividadSeleccionada.actividad,
+            num_actividad: actividadSeleccionada.numero,
             version_subactividad: subactividadSeleccionada.version,
             numero_subactividad: subactividadSeleccionada.numero,
             subactividad: subactividadSeleccionada.nombre, // Nombre de la subactividad seleccionada
@@ -459,7 +466,7 @@ function TablaPpi() {
             fechaHoraActual: fechaHoraActual,
             globalId: loteInfo.globalId,
             nombreGlobalId: loteInfo.nameBim,
-
+            resultadoInspeccion: resultadoInspeccion,
             formulario: formulario
         };
 
@@ -573,19 +580,29 @@ function TablaPpi() {
     const generatePDF = async () => {
         // Crear un nuevo documento PDF
         const pdfDoc = await PDFDocument.create();
-        const page = pdfDoc.addPage([600, 680]); // Tamaño de la página
+        const page = pdfDoc.addPage([595, 842]); // Tamaño de la página para A4 en puntos
+
+
+        const imageOk = 'https://cdn-icons-png.freepik.com/256/7778/7778643.png?semt=ais_hybrid'
+        const imageNotOk = 'https://cdn-icons-png.flaticon.com/512/1304/1304038.png'
 
         // Añadir contenido al PDF
         const { width, height } = page.getSize();
+        // Cargar las fuentes regular y en negrita
+        const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-        // Función para agregar texto al PDF
-        const addText = (text, x, y, fontSize) => {
+        const addText = (text, x, y, fontSize, font, color = rgb(0, 0, 0)) => { // Color negro por defecto
             page.drawText(text, {
                 x,
                 y,
                 size: fontSize,
+                font: font,
+                color: color,
             });
         };
+
+
 
         // Función para agregar una línea horizontal
         const addHorizontalLine = (x1, y, x2, lineWidth) => {
@@ -616,21 +633,42 @@ function TablaPpi() {
         ];
 
         // Agregar texto al PDF
-        addText(titulo, 75, height - 35, 10);
-        addText(nombreProyecto, 75, height - 50, 10);
+        addText(titulo, 40, height - 35, 12, boldFont);
+        addText(nombreProyecto, 40, height - 50, 12, boldFont);
 
+        const greenColor = rgb(0, 0.5, 0);  // Verde oscuro
+        const redColor = rgb(1, 0, 0);      // Rojo
+
+        // Condición para elegir el color del texto basado en el resultado de la inspección
+        const textColor = documentoFormulario.resultadoInspeccion === 'Apto' ? greenColor : redColor;
+
+        // Añadir texto con el color condicional
+        addText(documentoFormulario.resultadoInspeccion || '', 500, height - 90, 12, boldFont, textColor);
+
+        // Condicional para mostrar la imagen correspondiente basado en el resultado
+        // Primero, verifica si el resultado de la inspección es 'Apto'
+        if (documentoFormulario.resultadoInspeccion === 'Apto') {
+            // Mostrar la imagen "Ok" si el resultado es "Apto"
+            await embedImage(imageOk, 475, height - 95, 20, 20);
+        } else if (documentoFormulario.resultadoInspeccion === 'No apto') {
+            // Mostrar la imagen "Not Ok" si el resultado es "No apto"
+            await embedImage(imageNotOk, 475, height - 95, 20, 20);
+        } else {
+            // No hacer nada si el resultado es undefined, null, o cualquier otro valor no manejado
+            // No se muestra ninguna imagen.
+        }
         // Agregar imágenes al lado del nombre del proyecto
-        await embedImage(imagenPath2, 400, height - 58, 75, 45); // Ajusta las coordenadas y dimensiones según sea necesario
-        await embedImage(imagenPath, 480, height - 55, 40, 30); // Ajusta las coordenadas y dimensiones según sea necesario
+        await embedImage(imagenPath2, 380, height - 58, 80, 45); // Ajusta las coordenadas y dimensiones según sea necesario
+        await embedImage(imagenPath, 490, height - 55, 70, 35); // Ajusta las coordenadas y dimensiones según sea necesario
 
         // Agregar una línea horizontal debajo del nombre del proyecto
-        addHorizontalLine(75, height - 60, 525, 1); // Ajusta las coordenadas y el grosor según sea necesario
+        addHorizontalLine(40, height - 65, 555, 1); // Ajusta las coordenadas y el grosor según sea necesario
 
 
         //* Datos *******************************************************************************************************************
 
-        addText(documentoFormulario.obra, 75, height - 80, 10);
-        addText(documentoFormulario.tramo, 75, height - 95, 10);
+        addText(documentoFormulario.obra, 40, height - 80, 10);
+        addText(documentoFormulario.tramo, 40, height - 95, 10);
 
 
 
@@ -659,7 +697,7 @@ function TablaPpi() {
             return [r / 255, g / 255, b / 255];
         };
 
-        // Función para dividir y agregar texto en múltiples líneas
+        // Función para agregar texto en múltiples líneas
         const addTextInLines = (text, x, start_y, fontSize, lineGap, maxWordsPerLine = 12) => {
             const words = text.split(' ');
             let currentLine = '';
@@ -667,64 +705,129 @@ function TablaPpi() {
 
             words.forEach((word, index) => {
                 currentLine += word + ' ';
-                // Si alcanza el máximo de palabras por línea o es la última palabra
                 if ((index + 1) % maxWordsPerLine === 0 || index === words.length - 1) {
                     addText(currentLine, x, y, fontSize);
                     y -= lineGap; // Moverse hacia abajo para la siguiente línea
                     currentLine = ''; // Resetear la línea actual
                 }
             });
+            return y; // Retornar la posición y final
         };
 
         // Llamada a la función para convertir el color hexadecimal a RGB
-        const color = hexToRgb('#f3f4f6');
+        const color = hexToRgb('#e5e7eb');
         // Llamada a la función para agregar la línea horizontal con el color especificado
-        addColoredHorizontalLine(75, height - 130, 525, 30, color); // Azul
+        addColoredHorizontalLine(40, height - 118, 555, 20, color); // Azul
 
-        addText('Trazabilidad', 90, height - 135, 10);
+        //! Columna trazabilidad
+
+        addText('Trazabilidad', 50, height - 122, 10, boldFont);
+
+            //* Columna 1
+            addText(`Pk inicial: `, 50, height - 145, 10, boldFont);
+            addText(loteInfo.pkInicial, 100, height - 145, 10, regularFont);
+            addText(`Pk final: `, 50, height - 160, 10, boldFont);
+            addText(loteInfo.pkFinal, 90, height - 160, 10, regularFont);
+            addText(`Sector: `, 50, height - 175, 10, boldFont);
+            addText(documentoFormulario.sector, 88, height - 175, 10, regularFont);
+            addText(`Sub Sector: `, 50, height - 190, 10, boldFont);
+            addText(documentoFormulario.subSector, 110, height - 190, 10, regularFont);
+            addText(`Parte:`, 50, height - 205, 10, boldFont);
+            addText(documentoFormulario.parte, 80, height - 205, 10, regularFont);
+    
+            //* Columna 2     
+            addText(`Elemento:`, 320, height - 145, 10, boldFont);
+            addText(documentoFormulario.elemento, 370, height - 145, 10, regularFont);
+            addText(`Lote:`, 320, height - 160, 10, boldFont);
+            addText(documentoFormulario.lote, 350, height - 160, 10, regularFont);
+            addText(`Nombre modelo: `, 320, height - 175, 10, boldFont);
+            addText(documentoFormulario.nombreGlobalId, 405, height - 175, 10, regularFont);
+            addText(`GlobalId modelo: `, 320, height - 190, 10, boldFont);
+            addText(documentoFormulario.globalId, 410, height - 190, 10, regularFont);
+
+        //! Columna PPI
+        // Llamada a la función para agregar la línea horizontal con el color especificado
+        addColoredHorizontalLine(40, height - 230, 555, 20, color); // Azul
+        addText('PPI', 50, height - 235, 10, boldFont);
+
+        addText(`Nombre PPI:`, 50, height - 260, 10, boldFont);
+        addText(documentoFormulario.ppiNombre, 115, height - 260, 10, regularFont);
+        addText(`Actividad: `, 50, height - 275, 10, boldFont);
+        addText(`${documentoFormulario.num_actividad}. ${documentoFormulario.actividad}`, 105, height - 275, 10, regularFont);
+        // Añadir 'Sub actividad'
+        addText(`Sub actividad: `, 50, height - 290, 10, boldFont);
+        let newY = addTextInLines(
+            `(V-${documentoFormulario.version_subactividad}) ${documentoFormulario.numero_subactividad}. ${documentoFormulario.subactividad}`,
+            50, // x inicial
+            height - 305, // y inicial
+            10, // tamaño de fuente
+            15, // espacio entre líneas
+            13, // máximas palabras por línea
+            regularFont // fuente
+        );
+
+        // Asegúrate de dejar un espacio después de 'Sub actividad' si es necesario
+        newY -= 2; // Ajusta este valor según sea necesario para el espacio deseado
+
+        // Añadir 'Criterio de aceptación' usando la nueva posición 'y' debajo de 'Sub actividad'
+        addText(`Criterio de aceptación: `, 50, newY, 10, boldFont);
+        let newY2 = addTextInLines(
+            `${documentoFormulario.criterio_aceptacion}`,
+            50, // x inicial
+            newY - 15, // comienza un poco más abajo de donde terminó 'Sub actividad'
+            10, // tamaño de fuente
+            15, // espacio entre líneas
+            13, // máximas palabras por línea
+            regularFont // fuente
+        );
+
+        // Añadir 'Doc. ref' dividido en título y contenido
+        newY2 -= 2; // Espacio entre 'Criterio de aceptación' y 'Doc. ref'
+        addText(`Doc. ref:`, 50, newY2, 10, boldFont); // Título en negritas
+        addText(documentoFormulario.documentacion_referencia, 95, newY2, 10, regularFont); // Contenido en fuente normal
+
+        // Añadir 'Tipo inspección' dividido en título y contenido
+        newY2 -= 15; // Espacio entre 'Doc. ref' y 'Tipo inspección'
+        addText(`Tipo inspección:`, 50, newY2, 10, boldFont); // Título en negritas
+        addText(documentoFormulario.tipo_inspeccion, 132, newY2, 10, regularFont); // Contenido en fuente normal
 
 
-        addText(`GlobalID: ${loteInfo.globalId}`, 90, height - 170, 10);
-        addText(`Nombre GlobalID: ${loteInfo.nameBim}`, 90, height - 185, 10);
-        addText(`Sector: ${documentoFormulario.sector}`, 90, height - 200, 10);
-        addText(`Sub sector: ${documentoFormulario.subSector}`, 90, height - 215, 10);
+        //! Columna Resultado inspeccion
+        // Llamada a la función para agregar la línea horizontal con el color especificado
+        addColoredHorizontalLine(40, height - 430, 525, 20, color); // Azul
+        addText('Inspección', 50, height - 433, 10, boldFont);
 
-        addText(`Parte: ${documentoFormulario.parte}`, 280, height - 170, 10);
-        addText(`Elemento: ${documentoFormulario.elemento}`, 280, height - 185, 10);
-        addText(`Lote: ${documentoFormulario.lote}`, 280, height - 200, 10);
-        addText(`Pk inicial: ${documentoFormulario.pkInicial}`, 280, height - 215, 10);
-        addText(`Pk final: ${documentoFormulario.pkFinal}`, 280, height - 230, 10);
+        // Añade texto en verde
+        addText(`Resultado: `, 50, height - 460, 10, boldFont);
+       
+        // Añadir texto con el color condicional
+        addText(documentoFormulario.resultadoInspeccion || '', 125, height - 460, 10, boldFont, textColor);
 
-
-
-
-
-        addText('PPI', 90, height - 290, 10);
-
-
-        addText(`Nombre PPI: ${documentoFormulario.ppiNombre}`, 90, height - 300, 10);
-
-        addText(`Actividades previas: ${documentoFormulario.actividad}`, 90, height - 315, 10);
-        addText(`Doc. ref: ${documentoFormulario.documentacion_referencia}`, 90, height - 330, 10);
-        addText(`Tipo inspección: ${documentoFormulario.documentacion_referencia}`, 90, height - 345, 10);
-        addText(`Version: ${documentoFormulario.version_subactividad}`, 90, height - 360, 10);
-        const subActividadText = `Sub actividad: ${documentoFormulario.subactividad}`;
-        addTextInLines(subActividadText, 90, height - 375, 10, 15, 10);
+        // Condicional para mostrar la imagen correspondiente basado en el resultado
+        // Primero, verifica si el resultado de la inspección es 'Apto'
+        if (documentoFormulario.resultadoInspeccion === 'Apto') {
+            // Mostrar la imagen "Ok" si el resultado es "Apto"
+            await embedImage(imageOk, 105, height - 463, 15, 15);
+        } else if (documentoFormulario.resultadoInspeccion === 'No apto') {
+            // Mostrar la imagen "Not Ok" si el resultado es "No apto"
+            await embedImage(imageNotOk, 105, height - 463, 15, 15);
+        } else {
+            // No hacer nada si el resultado es undefined, null, o cualquier otro valor no manejado
+            // No se muestra ninguna imagen.
+        }
 
 
+        addText('Fecha y hora inicial: ', 50, height - 475, 10, boldFont);
+        addText(documentoFormulario.fechaHoraActual || '', 150, height - 475, 10);
+        addText('Fecha y hora final: ', 50, height - 490, 10, boldFont);
+        addText(documentoFormulario.fechaHoraActual || '', 150, height - 490, 10);
+        addText('Número de inspecciones realizadas: ', 50, height - 505, 10, boldFont);
+        addText('1' || '', 225, height - 505, 10);
 
-
-        // Ejemplo de uso:
-        const criterioAceptacionText = `Criterio de aceptación: ${documentoFormulario.criterio_aceptacion}`;
-        addTextInLines(criterioAceptacionText, 90, height - 415, 10, 15);
-
-
-
-
-
-
-
-
+        // Llamada a la función para agregar la línea horizontal con el color especificado
+        addColoredHorizontalLine(40, height - 530, 555, 20, color); // Azul
+        addText('Observaciones', 50, height - 533, 10, boldFont);
+        addText(documentoFormulario.observaciones , 90, height - 560, 10);
 
 
         // Guardar el PDF en un archivo
@@ -1003,7 +1106,7 @@ function TablaPpi() {
                             handleConfirmarEnvioPdf={handleConfirmarEnvioPdf}
                             setMensajeExitoInspeccion={setMensajeExitoInspeccion}
                             handleConfirmarEnviotablaPpi={handleConfirmarEnviotablaPpi}
-
+                            onObservaciones={handleObservaciones}
 
 
                         />

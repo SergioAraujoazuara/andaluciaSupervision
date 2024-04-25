@@ -8,7 +8,7 @@ import imageCompression from 'browser-image-compression';
 import { db } from '../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 
-function FormularioInspeccion({formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros }) {
+function FormularioInspeccion({onObservaciones , formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros }) {
 
     const { id } = useParams()
     const idLote = localStorage.getItem('loteId');
@@ -189,6 +189,7 @@ function FormularioInspeccion({formulario, crearVariableFormularioTrue, handleCo
 
     const handleSolicitarConfirmacion = () => {
         setMostrarConfirmacion(true);
+        enviarObservaciones()
     };
 
 
@@ -439,7 +440,11 @@ function FormularioInspeccion({formulario, crearVariableFormularioTrue, handleCo
 
     const [mostrarConfirmacionAdicional, setMostrarConfirmacionAdicional] = useState(false);
 
+    const [localObservaciones, setLocalObservaciones] = useState('');
 
+    const enviarObservaciones = () => {
+        onObservaciones(localObservaciones); // Envía las observaciones al componente padre
+    };
 
     return (
         <div className='text-gray-500'>
@@ -510,7 +515,7 @@ function FormularioInspeccion({formulario, crearVariableFormularioTrue, handleCo
 
                     <div className="mb-4">
                         <label htmlFor="observaciones" className="block text-gray-500 text-sm font-bold mb-2">Observaciones</label>
-                        <textarea id="observaciones" value={observaciones} onChange={(e) => setObservaciones(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                        <textarea id="observaciones" value={localObservaciones} onChange={(e) => setLocalObservaciones(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
                     </div>
                 </div>
                 {/* Campos de trazabilidad */}
