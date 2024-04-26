@@ -791,8 +791,35 @@ function TablaPpi() {
         // Agregar el texto con el color determinado
         result = addText(documentoFormulario.resultadoInspeccion, 105, currentY, 10, boldFont, currentPage, color);
 
+        addHorizontalLine(40, currentY - 30, 555, 30, "#e2e8f0", currentPage);
 
+        result = addText("Inspección: ", 50, currentY - 34, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
 
+        result = addText("Actividad: ", 50, currentY - 30, 10, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.num_actividad}. ${documentoFormulario.actividad}`, 100, currentY, 10, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Sub Actividad: ", 50, currentY - 15, 10, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`(V-${documentoFormulario.version_subactividad}) ${documentoFormulario.numero_subactividad}. ${documentoFormulario.subactividad}`, 125, currentY, 10, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Criterio aceptación: ", 50, currentY - 15, 10, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.criterio_aceptacion}`, 150, currentY, 10, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
 
 
 
