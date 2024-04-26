@@ -12,6 +12,529 @@ import { IoMdAddCircle } from "react-icons/io";
 import FormularioInspeccion from '../Components/FormularioInspeccion'
 
 function TablaPpi() {
+    const generatePDF = async () => {
+
+        //! Configuracion del pdf ///////////////////////////////////////////////////////////////////////////////////
+
+        // Variables globales
+        const pdfDoc = await PDFDocument.create();
+        const page = pdfDoc.addPage([595, 842]); // Tamaño de la página para A4 en puntos
+        const imageOk = 'https://cdn-icons-png.freepik.com/256/7778/7778643.png?semt=ais_hybrid'
+        const imageNotOk = 'https://cdn-icons-png.flaticon.com/512/1304/1304038.png'
+        const greenColor = rgb(0, 0.5, 0);  // Verde oscuro
+        const redColor = rgb(1, 0, 0);      // Rojo
+
+        // Añadir contenido al PDF
+        const { width, height } = page.getSize();
+
+        // Cargar las fuentes regular y en negrita
+        const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+        // Funcion configuracion texto
+        const addText = (text, x, y, fontSize, font, color = rgb(0, 0, 0)) => { // Color negro por defecto
+            page.drawText(text, {
+                x,
+                y,
+                size: fontSize,
+                font: font,
+                color: color,
+            });
+        };
+
+        // Función para agregar una línea horizontal
+        const addHorizontalLine = (x1, y, x2, lineWidth) => {
+            page.drawLine({
+                start: { x: x1, y },
+                end: { x: x2, y },
+                thickness: lineWidth,
+                color: rgb(0, 0, 0), // Color negro
+            });
+        };
+
+        // Función para agregar imágenes al PDF
+        const embedImage = async (imagePath, x, y, width, height) => {
+            const imageBytes = await fetch(imagePath).then(res => res.arrayBuffer());
+            const image = await pdfDoc.embedPng(imageBytes);
+            page.drawImage(image, {
+                x,
+                y,
+                width,
+                height,
+            });
+        };
+
+        //! Diseño pdf ////////////////////////////////////////////////////////////////////////////////////////
+
+        //* Encabezado **********
+
+        addText(titulo, 40, height - 35, 12, boldFont);
+        addText(nombreProyecto, 40, height - 50, 12, boldFont);
+
+        // Condición para elegir el color del texto basado en el resultado de la inspección
+        const textColor = documentoFormulario.resultadoInspeccion === 'Apto' ? greenColor : redColor;
+
+        // Añadir texto con el color condicional
+        addText(documentoFormulario.resultadoInspeccion || '', 500, height - 90, 12, boldFont, textColor);
+
+        // Condicional para mostrar la imagen correspondiente basado en el resultado
+        // Primero, verifica si el resultado de la inspección es 'Apto'
+        if (documentoFormulario.resultadoInspeccion === 'Apto') {
+            // Mostrar la imagen "Ok" si el resultado es "Apto"
+            await embedImage(imageOk, 475, height - 95, 20, 20);
+        } else if (documentoFormulario.resultadoInspeccion === 'No apto') {
+            // Mostrar la imagen "Not Ok" si el resultado es "No apto"
+            await embedImage(imageNotOk, 475, height - 95, 20, 20);
+        } else {
+            // No hacer nada si el resultado es undefined, null, o cualquier otro valor no manejado
+            // No se muestra ninguna imagen.
+        }
+        // Agregar imágenes al lado del nombre del proyecto
+        await embedImage(imagenPath2, 380, height - 58, 80, 45); // Ajusta las coordenadas y dimensiones según sea necesario
+        await embedImage(imagenPath, 490, height - 55, 70, 35); // Ajusta las coordenadas y dimensiones según sea necesario
+
+        // Agregar una línea horizontal debajo del nombre del proyecto
+        addHorizontalLine(40, height - 65, 555, 1); // Ajusta las coordenadas y el grosor según sea necesario
+
+
+        //* Datos *******************************************************************************************************************
+
+        addText(documentoFormulario.obra, 40, height - 80, 10);
+        addText(documentoFormulario.tramo, 40, height - 95, 10);
+
+
+
+
+        // Función para agregar una línea horizontal con un color específico
+        const addColoredHorizontalLine = (x1, y, x2, lineWidth, color) => {
+            page.drawLine({
+                start: { x: x1, y },
+                end: { x: x2, y },
+                thickness: lineWidth,
+                color: rgb(color[0], color[1], color[2]), // Convertir los valores de color al rango correcto
+            });
+        };
+
+        // Función para convertir un color hexadecimal a RGB
+        const hexToRgb = (hex) => {
+            // Eliminar el '#' del inicio si está presente
+            hex = hex.replace(/^#/, '');
+
+            // Convertir el color hexadecimal a RGB
+            const bigint = parseInt(hex, 16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+
+            return [r / 255, g / 255, b / 255];
+        };
+
+        // Función para agregar texto en múltiples líneas
+        const addTextInLines = (text, x, start_y, fontSize, lineGap, maxWordsPerLine = 12) => {
+            const words = text.split(' ');
+            let currentLine = '';
+            let y = start_y;
+
+            words.forEach((word, index) => {
+                currentLine += word + ' ';
+                if ((index + 1) % maxWordsPerLine === 0 || index === words.length - 1) {
+                    addText(currentLine, x, y, fontSize);
+                    y -= lineGap; // Moverse hacia abajo para la siguiente línea
+                    currentLine = ''; // Resetear la línea actual
+                }
+            });
+            return y; // Retornar la posición y final
+        };
+
+        // Llamada a la función para convertir el color hexadecimal a RGB
+        const color = hexToRgb('#e5e7eb');
+        // Llamada a la función para agregar la línea horizontal con el color especificado
+        addColoredHorizontalLine(40, height - 118, 555, 20, color); // Azul
+
+        //! Columna trazabilidad
+
+        addText('Trazabilidad', 50, height - 122, 10, boldFont);
+
+        //* Columna 1
+        addText(`Pk inicial: `, 50, height - 145, 10, boldFont);
+        addText(loteInfo.pkInicial, 100, height - 145, 10, regularFont);
+        addText(`Pk final: `, 50, height - 160, 10, boldFont);
+        addText(loteInfo.pkFinal, 90, height - 160, 10, regularFont);
+        addText(`Sector: `, 50, height - 175, 10, boldFont);
+        addText(documentoFormulario.sector, 88, height - 175, 10, regularFont);
+        addText(`Sub Sector: `, 50, height - 190, 10, boldFont);
+        addText(documentoFormulario.subSector, 110, height - 190, 10, regularFont);
+        addText(`Parte:`, 50, height - 205, 10, boldFont);
+        addText(documentoFormulario.parte, 80, height - 205, 10, regularFont);
+
+        //* Columna 2     
+        addText(`Elemento:`, 320, height - 145, 10, boldFont);
+        addText(documentoFormulario.elemento, 370, height - 145, 10, regularFont);
+        addText(`Lote:`, 320, height - 160, 10, boldFont);
+        addText(documentoFormulario.lote, 350, height - 160, 10, regularFont);
+        addText(`Nombre modelo: `, 320, height - 175, 10, boldFont);
+        addText(documentoFormulario.nombreGlobalId, 405, height - 175, 10, regularFont);
+        addText(`GlobalId modelo: `, 320, height - 190, 10, boldFont);
+        addText(documentoFormulario.globalId, 410, height - 190, 10, regularFont);
+
+        //! Columna PPI
+        // Llamada a la función para agregar la línea horizontal con el color especificado
+        addColoredHorizontalLine(40, height - 230, 555, 20, color); // Azul
+        addText('PPI', 50, height - 235, 10, boldFont);
+
+        addText(`Nombre PPI:`, 50, height - 260, 10, boldFont);
+        addText(documentoFormulario.ppiNombre, 115, height - 260, 10, regularFont);
+        addText(`Actividad: `, 50, height - 275, 10, boldFont);
+        addText(`${documentoFormulario.num_actividad}. ${documentoFormulario.actividad}`, 105, height - 275, 10, regularFont);
+        // Añadir 'Sub actividad'
+        addText(`Sub actividad: `, 50, height - 290, 10, boldFont);
+        let newY = addTextInLines(
+            `(V-${documentoFormulario.version_subactividad}) ${documentoFormulario.numero_subactividad}. ${documentoFormulario.subactividad}`,
+            50, // x inicial
+            height - 305, // y inicial
+            10, // tamaño de fuente
+            15, // espacio entre líneas
+            13, // máximas palabras por línea
+            regularFont // fuente
+        );
+
+        // Asegúrate de dejar un espacio después de 'Sub actividad' si es necesario
+        newY -= 2; // Ajusta este valor según sea necesario para el espacio deseado
+
+        // Añadir 'Criterio de aceptación' usando la nueva posición 'y' debajo de 'Sub actividad'
+        addText(`Criterio de aceptación: `, 50, newY, 10, boldFont);
+        let newY2 = addTextInLines(
+            `${documentoFormulario.criterio_aceptacion}`,
+            50, // x inicial
+            newY - 15, // comienza un poco más abajo de donde terminó 'Sub actividad'
+            10, // tamaño de fuente
+            15, // espacio entre líneas
+            13, // máximas palabras por línea
+            regularFont // fuente
+        );
+
+        // Añadir 'Doc. ref' dividido en título y contenido
+        newY2 -= 2; // Espacio entre 'Criterio de aceptación' y 'Doc. ref'
+        addText(`Doc. ref:`, 50, newY2, 10, boldFont); // Título en negritas
+        addText(documentoFormulario.documentacion_referencia, 95, newY2, 10, regularFont); // Contenido en fuente normal
+
+        // Añadir 'Tipo inspección' dividido en título y contenido
+        newY2 -= 15; // Espacio entre 'Doc. ref' y 'Tipo inspección'
+        addText(`Tipo inspección:`, 50, newY2, 10, boldFont); // Título en negritas
+        addText(documentoFormulario.tipo_inspeccion, 132, newY2, 10, regularFont); // Contenido en fuente normal
+
+
+        //! Columna Resultado inspeccion
+        // Llamada a la función para agregar la línea horizontal con el color especificado
+        addColoredHorizontalLine(40, height - 430, 525, 20, color); // Azul
+        addText('Inspección', 50, height - 433, 10, boldFont);
+
+        // Añade texto en verde
+        addText(`Resultado: `, 50, height - 460, 10, boldFont);
+
+        // Añadir texto con el color condicional
+        addText(documentoFormulario.resultadoInspeccion || '', 125, height - 460, 10, boldFont, textColor);
+
+        // Condicional para mostrar la imagen correspondiente basado en el resultado
+        // Primero, verifica si el resultado de la inspección es 'Apto'
+        if (documentoFormulario.resultadoInspeccion === 'Apto') {
+            // Mostrar la imagen "Ok" si el resultado es "Apto"
+            await embedImage(imageOk, 105, height - 463, 15, 15);
+        } else if (documentoFormulario.resultadoInspeccion === 'No apto') {
+            // Mostrar la imagen "Not Ok" si el resultado es "No apto"
+            await embedImage(imageNotOk, 105, height - 463, 15, 15);
+        } else {
+            // No hacer nada si el resultado es undefined, null, o cualquier otro valor no manejado
+            // No se muestra ninguna imagen.
+        }
+
+
+        addText('Fecha y hora inicial: ', 50, height - 475, 10, boldFont);
+        addText(documentoFormulario.fechaHoraActual || '', 150, height - 475, 10);
+        addText('Fecha y hora final: ', 50, height - 490, 10, boldFont);
+        addText(documentoFormulario.fechaHoraActual || '', 150, height - 490, 10);
+        addText('Número de inspecciones realizadas: ', 50, height - 505, 10, boldFont);
+        addText('1' || '', 225, height - 505, 10);
+
+        // Llamada a la función para agregar la línea horizontal con el color especificado
+        addColoredHorizontalLine(40, height - 530, 555, 20, color); // Azul
+        addText('Observaciones', 50, height - 533, 10, boldFont);
+        addText(documentoFormulario.observaciones, 90, height - 560, 10);
+
+
+        // Guardar el PDF en un archivo
+        const pdfBytes = await pdfDoc.save();
+
+        // Convierte los bytes del PDF en un Blob
+        const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+        // Descarga el PDF
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = 'formulario.pdf';
+        link.click();
+        URL.revokeObjectURL(pdfUrl);
+
+        cerrarModalYLimpiarDatos();
+    };
+
+
+
+
+
+    const generatePDF = async () => {
+        const pdfDoc = await PDFDocument.create();
+        let currentPage = pdfDoc.addPage([595, 842]); // Tamaño de página A4
+        let { height } = currentPage.getSize();
+        let currentY = height - 950; // Establecer la posición Y inicial
+        const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        const blackColor = rgb(0, 0, 0); // Color negro
+    
+        const addText = async (text, fontSize, font, maxWidth = 555) => {
+            const words = text.split(' ');
+            let currentLine = '';
+            let spaceLeft = currentY; // Espacio vertical restante en la página
+    
+            for (const word of words) {
+                let testLine = currentLine + word + ' ';
+                let testWidth = font.widthOfTextAtSize(testLine, fontSize);
+    
+                if (testWidth > maxWidth && maxWidth !== 0) {
+                    if (currentLine !== '') {
+                        currentPage.drawText(currentLine, { x: 40, y: currentY, size: fontSize, font, color: blackColor });
+                        spaceLeft -= fontSize * 1.4;
+                        if (spaceLeft < fontSize * 1.4) {
+                            currentPage = pdfDoc.addPage([595, 842]); // Agregar una nueva página
+                            currentY = height - 50; // Restablecer la posición Y
+                            spaceLeft = currentY;
+                        }
+                        currentLine = '';
+                        currentY -= fontSize * 1.4;
+                    }
+                    currentLine = word + ' ';
+                } else {
+                    currentLine = testLine;
+                }
+            }
+    
+            if (currentLine !== '') {
+                currentPage.drawText(currentLine, { x: 40, y: currentY, size: fontSize, font, color: blackColor });
+                spaceLeft -= fontSize * 1.4;
+                if (spaceLeft < fontSize * 1.4) {
+                    currentPage = pdfDoc.addPage([595, 842]); // Agregar una nueva página
+                    currentY = height - 50; // Restablecer la posición Y
+                }
+            }
+            currentY -= fontSize * 1.4; // Ajustar la posición Y para el siguiente texto
+        };
+    
+        // Llama a la función addText con tu texto y el tamaño de fuente deseado
+        await addText('Texto largo aquí Texto largo aquí Texto largo aquíTexto largo aquí Texto largo aquí Texto largo aquí Texto largo aquí Texto largo aquí', 12, boldFont);
+    
+        // Guardar y descargar PDF
+        const pdfBytes = await pdfDoc.save();
+        const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = 'documento.pdf';
+        link.click();
+        URL.revokeObjectURL(pdfUrl);
+    
+        // Función para cerrar modal y limpiar datos si es necesario
+        cerrarModalYLimpiarDatos();
+    };
+
+
+
+
+
+    const generatePDF = async () => {
+        const pdfDoc = await PDFDocument.create();
+        let currentPage = pdfDoc.addPage([595, 842]); // Inicializa la primera página
+        let currentY = currentPage.getSize().height; // Inicializa la coordenada Y actual
+
+        const { height } = currentPage.getSize();
+
+        // Funciones auxiliares
+        const blackColor = rgb(0, 0, 0); // Color negro
+        const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+        // Función para añadir texto y calcular el espacio vertical usado
+        const addText = (text, x, y, fontSize, font, currentPage, color = blackColor, maxWidth = 555) => {
+            const words = text.split(' ');
+            let currentLine = '';
+            let currentY = y;
+
+            words.forEach(word => {
+                let testLine = currentLine + word + " ";
+                let testWidth = font.widthOfTextAtSize(testLine, fontSize);
+
+                if (testWidth > maxWidth && maxWidth !== 0) {
+                    if (currentLine !== '') {
+                        currentPage.drawText(currentLine, { x, y: currentY, size: fontSize, font, color });
+                        currentLine = '';
+                        currentY -= fontSize * 1.4; // Ajuste para la siguiente línea
+                    }
+                    if (currentY < fontSize * 1.4) {
+                        currentPage = pdfDoc.addPage([595, 842]);
+                        currentY = currentPage.getSize().height - fontSize * 1.4;
+                    }
+                    currentLine = word + ' ';
+                } else {
+                    currentLine = testLine;
+                }
+            });
+
+            if (currentLine !== '') {
+                currentPage.drawText(currentLine, { x, y: currentY, size: fontSize, font, color });
+            }
+
+            return { lastY: currentY, page: currentPage };
+        };
+
+        function hexToRgb(hex) {
+            // Asegurarse de que el hex tiene el formato correcto
+            hex = hex.replace("#", "");
+            if (hex.length === 3) {
+                hex = hex.split('').map((hex) => {
+                    return hex + hex;
+                }).join('');
+            }
+
+            // Convertir hex a rgb
+            const r = parseInt(hex.substring(0, 2), 16) / 255;
+            const g = parseInt(hex.substring(2, 4), 16) / 255;
+            const b = parseInt(hex.substring(4, 6), 16) / 255;
+
+            return rgb(r, g, b);
+        }
+
+        const addHorizontalLine = (x1, y, x2, thickness, hexColor = "#000000") => {
+            const color = hexToRgb(hexColor);
+            currentPage.drawLine({
+                start: { x: x1, y },
+                end: { x: x2, y },
+                thickness: thickness,
+                color: color,
+            });
+        };
+
+
+        // Función para agregar imágenes al PDF
+        const embedImage = async (imagePath, x, y, width, height) => {
+            const imageBytes = await fetch(imagePath).then(res => res.arrayBuffer());
+            const image = await pdfDoc.embedPng(imageBytes);
+            currentPage.drawImage(image, {
+                x,
+                y,
+                width,
+                height,
+            });
+        };
+
+        const textoLargo = 'Estlíneasnecesitar múltiples líneas';
+
+        // Agregar imágenes al lado del nombre del proyecto
+        await embedImage(imagenPath2, 380, height - 58, 80, 45); // Ajusta las coordenadas y dimensiones según sea necesario
+        await embedImage(imagenPath, 490, height - 55, 70, 35); // Ajusta las coordenadas y dimensiones según sea necesario
+
+
+          // Primero, asegurémonos de que todos los elementos anteriores estén correctamente posicionados
+    let result = addText(titulo, 40, currentY - 35, 12, boldFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText(nombreProyecto, 40, currentY - 15, 12, boldFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    addHorizontalLine(40, currentY - 10, 555, 1, "#000000", currentPage);
+
+    result = addText(documentoFormulario.obra, 50, currentY - 35, 10, regularFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText(documentoFormulario.tramo, 50, currentY - 15, 10, regularFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    addHorizontalLine(40, currentY - 30, 555, 30, "#e2e8f0", currentPage);
+
+    result = addText("Trazabilidad: ", 50, currentY - 34, 12, boldFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText("Pk inicial: ", 50, currentY - 30, 10, boldFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText(textoLargo, 105, currentY, 10, regularFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText("Pk final: ", 50, currentY - 20, 10, boldFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText(textoLargo, 95, currentY, 10, regularFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText("Sector: ", 50, currentY - 20, 10, boldFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText(textoLargo, 90, currentY, 10, regularFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText("Sub sector: ", 50, currentY - 20, 10, boldFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText(textoLargo, 110, currentY, 10, regularFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText("Parte: ", 50, currentY - 30, 10, boldFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText(textoLargo, 85, currentY, 10, regularFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText("Elemento: ", 50, currentY - 30, 10, boldFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+    result = addText(textoLargo, 105, currentY, 10, regularFont, currentPage);
+    currentPage = result.page;
+    currentY = result.lastY;
+
+
+
+        
+
+        // Guardar y descargar PDF
+        const pdfBytes = await pdfDoc.save();
+        const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = 'documento.pdf';
+        link.click();
+        URL.revokeObjectURL(pdfUrl);
+
+        // Función para cerrar modal y limpiar datos si es necesario
+        cerrarModalYLimpiarDatos();
+    };
+
+
     const { idLote } = useParams();
     const navigate = useNavigate();
     const [ppi, setPpi] = useState(null);
