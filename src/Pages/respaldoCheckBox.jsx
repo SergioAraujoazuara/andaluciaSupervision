@@ -534,6 +534,42 @@ function TablaPpi() {
         cerrarModalYLimpiarDatos();
     };
 
+// Función para añadir texto y calcular el espacio vertical usado
+const addText = (text, x, y, fontSize, font, currentPage, color = blackColor, maxWidth = 420) => {
+    const words = text.split(' ');
+    let currentLine = '';
+    let currentY = y;
+
+    words.forEach(word => {
+        let testLine = currentLine + word + " ";
+        let testWidth = font.widthOfTextAtSize(testLine, fontSize);
+
+        // Verifica si la línea de prueba es más larga que el ancho máximo permitido
+        if (testWidth > maxWidth) {
+            // Dibuja la línea actual si no está vacía
+            if (currentLine !== '') {
+                currentPage.drawText(currentLine, { x, y: currentY, size: fontSize, font, color });
+                currentLine = ''; // Reinicia la línea actual
+                currentY -= fontSize * 1.4; // Ajusta la posición Y para la nueva línea
+            }
+            // Verifica si la posición Y actual es menos que la altura mínima requerida para una nueva línea
+            if (currentY < fontSize * 1.4) {
+                currentPage = pdfDoc.addPage([595, 842]); // Añade una nueva página
+                currentY = currentPage.getSize().height - fontSize * 1.4; // Restablece la posición Y en la nueva página
+            }
+            currentLine = word + ' '; // Inicia una nueva línea con la palabra actual
+        } else {
+            currentLine = testLine; // Agrega la palabra a la línea actual
+        }
+    });
+
+    // Dibuja cualquier texto restante que no haya sido agregado todavía
+    if (currentLine !== '') {
+        currentPage.drawText(currentLine, { x, y: currentY, size: fontSize, font, color });
+    }
+
+    return { lastY: currentY, page: currentPage };
+};
 
     const { idLote } = useParams();
     const navigate = useNavigate();

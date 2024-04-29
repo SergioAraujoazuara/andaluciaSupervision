@@ -168,7 +168,7 @@ function TablaPpi() {
                 if (numeroPartes.length === 2) {
                     nuevaSubactividad.numero += ".1";
                 } else if (numeroPartes.length > 2) {
-                    let repeticion = parseInt(numeroPartes.pop(), 10) + 1;
+                    let repeticion = parseInt(numeroPartes.pop(), 11) + 1;
                     numeroPartes.push(repeticion.toString());
                     nuevaSubactividad.numero = numeroPartes.join('.');
                 }
@@ -595,10 +595,11 @@ function TablaPpi() {
         const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
         // Función para añadir texto y calcular el espacio vertical usado
-        const addText = (text, x, y, fontSize, font, currentPage, color = blackColor, maxWidth = 450) => {
+        const addText = (text, x, y, fontSize, font, currentPage, color = blackColor, maxWidth = 412, newX = 50) => {
             const words = text.split(' ');
             let currentLine = '';
             let currentY = y;
+            let currentX = x; // Almacenar la coordenada X actual
 
             words.forEach(word => {
                 let testLine = currentLine + word + " ";
@@ -608,14 +609,16 @@ function TablaPpi() {
                 if (testWidth > maxWidth) {
                     // Dibuja la línea actual si no está vacía
                     if (currentLine !== '') {
-                        currentPage.drawText(currentLine, { x, y: currentY, size: fontSize, font, color });
+                        currentPage.drawText(currentLine, { x: currentX, y: currentY, size: fontSize, font, color });
                         currentLine = ''; // Reinicia la línea actual
                         currentY -= fontSize * 1.4; // Ajusta la posición Y para la nueva línea
+                        currentX = newX; // Actualiza la coordenada X para la nueva línea
                     }
                     // Verifica si la posición Y actual es menos que la altura mínima requerida para una nueva línea
                     if (currentY < fontSize * 1.4) {
                         currentPage = pdfDoc.addPage([595, 842]); // Añade una nueva página
                         currentY = currentPage.getSize().height - fontSize * 1.4; // Restablece la posición Y en la nueva página
+                        currentX = x; // Restablece la coordenada X en el margen original
                     }
                     currentLine = word + ' '; // Inicia una nueva línea con la palabra actual
                 } else {
@@ -625,11 +628,13 @@ function TablaPpi() {
 
             // Dibuja cualquier texto restante que no haya sido agregado todavía
             if (currentLine !== '') {
-                currentPage.drawText(currentLine, { x, y: currentY, size: fontSize, font, color });
+                currentPage.drawText(currentLine, { x: currentX, y: currentY, size: fontSize, font, color });
             }
 
             return { lastY: currentY, page: currentPage };
         };
+
+
 
 
         function hexToRgb(hex) {
@@ -688,13 +693,13 @@ function TablaPpi() {
         currentPage = result.page;
         currentY = result.lastY;
 
-        addHorizontalLine(40, currentY - 10, 555, 1, "#000000", currentPage);
+        addHorizontalLine(40, currentY - 11, 555, 1, "#000000", currentPage);
 
-        result = addText(documentoFormulario.obra, 50, currentY - 35, 10, regularFont, currentPage);
+        result = addText(documentoFormulario.obra, 50, currentY - 35, 12, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(documentoFormulario.tramo, 50, currentY - 15, 10, regularFont, currentPage);
+        result = addText(documentoFormulario.tramo, 50, currentY - 15, 12, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
@@ -704,92 +709,81 @@ function TablaPpi() {
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Pk inicial: ", 50, currentY - 30, 10, boldFont, currentPage);
+        result = addText("Pk inicial: ", 50, currentY - 30, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(documentoFormulario.pkInicial, 100, currentY, 10, regularFont, currentPage);
+        result = addText(documentoFormulario.pkInicial, 105, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Pk final: ", 50, currentY - 15, 10, boldFont, currentPage);
+        result = addText("Pk final: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(documentoFormulario.pkFinal, 90, currentY, 10, regularFont, currentPage);
+        result = addText(documentoFormulario.pkFinal, 95, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Sector: ", 50, currentY - 15, 10, boldFont, currentPage);
+        result = addText("Sector: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(documentoFormulario.sector, 90, currentY, 10, regularFont, currentPage);
+        result = addText(documentoFormulario.sector, 95, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Sub sector: ", 50, currentY - 15, 10, boldFont, currentPage);
+        result = addText("Sub sector: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(documentoFormulario.subSector, 110, currentY, 10, regularFont, currentPage);
+        result = addText(documentoFormulario.subSector, 115, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Parte: ", 50, currentY - 15, 10, boldFont, currentPage);
+        result = addText("Parte: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(documentoFormulario.parte, 80, currentY, 10, regularFont, currentPage);
+        result = addText(documentoFormulario.parte, 85, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Elemento: ", 50, currentY - 15, 10, boldFont, currentPage);
+        result = addText("Elemento: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(documentoFormulario.elemento, 100, currentY, 10, regularFont, currentPage);
+        result = addText(documentoFormulario.elemento, 110, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Lote: ", 50, currentY - 15, 10, boldFont, currentPage);
+        result = addText("Lote: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(documentoFormulario.lote, 80, currentY, 10, regularFont, currentPage);
+        result = addText(documentoFormulario.lote, 85, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Nombre modelo: ", 50, currentY - 15, 10, boldFont, currentPage);
+        result = addText("Nombre modelo: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(documentoFormulario.nombreGlobalId, 135, currentY, 10, regularFont, currentPage);
+        result = addText(documentoFormulario.nombreGlobalId, 145, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("GlobalID: ", 50, currentY - 15, 10, boldFont, currentPage);
+        result = addText("GlobalID: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(documentoFormulario.globalId, 100, currentY, 10, regularFont, currentPage);
+        result = addText(documentoFormulario.globalId, 105, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Resultado: ", 50, currentY - 15, 10, boldFont, currentPage);
-        currentPage = result.page;
-        currentY = result.lastY;
 
-        // Determinar el color del texto según el resultado
-        let color = blackColor; // Color predeterminado: negro
-        if (documentoFormulario.resultadoInspeccion === "Apto") {
-            color = greenColor; // Verde oscuro
-        } else if (documentoFormulario.resultadoInspeccion === "No apto") {
-            color = redColor; // Rojo
-        }
 
-        // Agregar el texto con el color determinado
-        result = addText(documentoFormulario.resultadoInspeccion, 105, currentY, 10, boldFont, currentPage, color);
+
 
         addHorizontalLine(40, currentY - 30, 555, 30, "#e2e8f0", currentPage);
 
@@ -797,33 +791,109 @@ function TablaPpi() {
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Actividad: ", 50, currentY - 30, 10, boldFont, currentPage);
+        result = addText("Actividad: ", 50, currentY - 30, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(`${documentoFormulario.num_actividad}. ${documentoFormulario.actividad}`, 100, currentY, 10, regularFont, currentPage);
+        result = addText(`${documentoFormulario.num_actividad}. ${documentoFormulario.actividad}`, 111, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Sub Actividad: ", 50, currentY - 15, 10, boldFont, currentPage);
+        result = addText("Sub Actividad: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(`(V-${documentoFormulario.version_subactividad}) ${documentoFormulario.numero_subactividad}. ${documentoFormulario.subactividad}`, 125, currentY, 10, regularFont, currentPage);
+        result = addText(`(V-${documentoFormulario.version_subactividad}) ${documentoFormulario.numero_subactividad}. ${documentoFormulario.subactividad}`, 135, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Criterio aceptación: ", 50, currentY - 15, 10, boldFont, currentPage);
+        result = addText("Criterio aceptación: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(`${documentoFormulario.criterio_aceptacion}`, 150, currentY, 10, regularFont, currentPage);
+        result = addText(`${documentoFormulario.criterio_aceptacion}`, 160, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
+        result = addText("Documentación de referencia: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
 
+        result = addText(`${documentoFormulario.documentacion_referencia}`, 210, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
 
+        result = addText("Tipo de inspección: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
 
+        result = addText(`${documentoFormulario.tipo_inspeccion}`, 160, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Punto: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.punto}`, 90, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Fecha inspección: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.fechaHoraActual}`, 150, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        addHorizontalLine(40, currentY - 30, 555, 30, "#e2e8f0", currentPage);
+
+        result = addText("Comentarios: ", 50, currentY - 34, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.observaciones}`, 50, currentY - 30, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        addHorizontalLine(40, currentY - 30, 555, 30, "#e2e8f0", currentPage);
+
+        result = addText("Inspección: ", 50, currentY - 34, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Resultado: ", 50, currentY - 30, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+        
+        // Determinar el color del texto según el resultado
+        let color = blackColor; // Color predeterminado: negro
+        if (documentoFormulario.resultadoInspeccion === "Apto") {
+            color = greenColor; // Verde oscuro
+        } else if (documentoFormulario.resultadoInspeccion === "No apto") {
+            color = redColor; // Rojo
+        }
+        
+
+        // Agregar el texto con el color determinado
+        result = addText(documentoFormulario.resultadoInspeccion, 115, currentY, 11, boldFont, currentPage, color);
+
+        result = addText("Responsable: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.nombre_responsable}`, 135, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Firma: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.firma}`, 110, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
 
 
         // Guardar y descargar PDF
@@ -1013,7 +1083,7 @@ function TablaPpi() {
 
 
             {modalFormulario && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
+                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
                     <div className="mx-auto w-[720px] h-[780px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
@@ -1127,7 +1197,7 @@ function TablaPpi() {
             )}
 
             {modalInforme && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
+                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
                     <div className="mx-auto w-[700px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
@@ -1138,7 +1208,7 @@ function TablaPpi() {
                             <IoCloseCircle />
                         </button>
 
-                        <p className='text-xl font-medium flex gap-2 mb-10 items-center'><p className='text-2xl'><FaQuestionCircle /></p> ¿Quieres generar un informe en Pdf?</p>
+                        <p className='text-xl font-medium flex gap-2 mb-11 items-center'><p className='text-2xl'><FaQuestionCircle /></p> ¿Quieres generar un informe en Pdf?</p>
 
 
                         <div className='flex items-center gap-5 mt-5'>
@@ -1166,7 +1236,7 @@ function TablaPpi() {
             )}
 
             {modalConfirmacionInforme && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
+                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
                     <div className="mx-auto w-[700px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
@@ -1215,7 +1285,7 @@ function TablaPpi() {
             )}
 
             {modalExito && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
+                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
                     <div className="mx-auto w-[400px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8 text-center flex flex-col gap-5 items-center"
@@ -1238,7 +1308,7 @@ function TablaPpi() {
             )}
 
             {modalRecuperarFormulario && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
+                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
                     <div className="mx-auto w-[400px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8 text-center flex flex-col gap-5 items-center"
