@@ -15,6 +15,7 @@ import RecuperarPdf from './RecuperarPdf';
 import jsPDF from 'jspdf';
 import logo from '../assets/tpf_logo_azul.png'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import Pdf_final from './Pdf_final';
 
 function TablaPpi() {
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
@@ -938,7 +939,15 @@ function TablaPpi() {
 
             </div>
 
-
+            <Pdf_final fileName="ejemplo.pdf" ppi={ppi} 
+            nombreProyecto={nombreProyecto}
+            obra={obra}
+            tramo={tramo}
+            titulo={titulo}
+            imagenPath={imagenPath}
+            imagenPath2={imagenPath2}
+            
+            />
 
 
             <div className='flex gap-3 flex-col mt-5 bg-white p-8 rounded-xl shadow-md'>
