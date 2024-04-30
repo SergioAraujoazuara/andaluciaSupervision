@@ -17,6 +17,7 @@ import logo from '../assets/tpf_logo_azul.png'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import Pdf_final from './Pdf_final';
 
+
 function TablaPpi() {
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
 
@@ -586,6 +587,15 @@ function TablaPpi() {
         let currentPage = pdfDoc.addPage([595, 842]); // Inicializa la primera página
         let currentY = currentPage.getSize().height; // Inicializa la coordenada Y actual
 
+        const imagesAndPDFs = [...images, ...pdfs]; // Combinar imágenes y PDFs seleccionados
+
+        for (const file of imagesAndPDFs) {
+            // Agregar cada imagen o PDF al PDF generado
+            const img = await pdfDoc.embedPng(await file.arrayBuffer());
+            const page = pdfDoc.addPage([img.width, img.height]);
+            page.drawImage(img, { x: 0, y: 0 });
+        }
+
         const { height } = currentPage.getSize();
 
         // Funciones auxiliares
@@ -867,7 +877,7 @@ function TablaPpi() {
         result = addText("Resultado: ", 50, currentY - 30, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
-        
+
         // Determinar el color del texto según el resultado
         let color = blackColor; // Color predeterminado: negro
         if (documentoFormulario.resultadoInspeccion === "Apto") {
@@ -875,7 +885,7 @@ function TablaPpi() {
         } else if (documentoFormulario.resultadoInspeccion === "No apto") {
             color = redColor; // Rojo
         }
-        
+
 
         // Agregar el texto con el color determinado
         result = addText(documentoFormulario.resultadoInspeccion, 115, currentY, 11, boldFont, currentPage, color);
@@ -911,6 +921,24 @@ function TablaPpi() {
         cerrarModalYLimpiarDatos();
     };
 
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [allowPdfGeneration, setAllowPdfGeneration] = useState(false);
+    const [showFinishButton, setShowFinishButton] = useState(false);
+
+    const handleGeneratePdf = (blob) => {
+        const pdfUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = 'documento.pdf';
+        link.click();
+        URL.revokeObjectURL(pdfUrl);
+        setShowConfirmModal(false); // Cierra el modal después de descargar
+    };
+
+    //! ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 
 
@@ -937,17 +965,20 @@ function TablaPpi() {
                     </Link>
                 </div>
 
+
+
+                <button
+                    onClick={() => setShowConfirmModal(true)}
+                    className="bg-blue-500 text-white font-bold py-2 px-4 rounded"
+                >
+                    Preparar PDF
+                </button>
+
+
             </div>
 
-            <Pdf_final fileName="ejemplo.pdf" ppi={ppi} 
-            nombreProyecto={nombreProyecto}
-            obra={obra}
-            tramo={tramo}
-            titulo={titulo}
-            imagenPath={imagenPath}
-            imagenPath2={imagenPath2}
-            
-            />
+
+
 
 
             <div className='flex gap-3 flex-col mt-5 bg-white p-8 rounded-xl shadow-md'>
@@ -1091,6 +1122,8 @@ function TablaPpi() {
             </div>
 
 
+
+
             {modalFormulario && (
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
@@ -1136,6 +1169,8 @@ function TablaPpi() {
                                         <span className="ml-2">No apto</span>
                                     </label>
                                 </div>
+
+                                
                             </div>
                         </div>
                         <div className="mb-4">
@@ -1341,6 +1376,44 @@ function TablaPpi() {
             )}
 
 
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-gray-600 text-gray-500 bg-opacity-50 flex justify-center items-center">
+                    <div className="bg-white p-10 pb-20  rounded-lg shadow-lg max-w-sm mx-auto">
+                        <div className='text-center flex flex-col gap-2'>
+                            <button
+                                onClick={() => {
+                                    setAllowPdfGeneration(false);
+                                    setShowConfirmModal(false);
+
+                                    ; // Cerrar el modal
+                                }}
+                                className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300 mb-5">
+                                <IoCloseCircle />
+                            </button>
+                            <h2 className="text-xl font-semibold">¿Quieres terminar la inspección?</h2>
+
+                        </div>
+
+                        <div className='flex mt-10'>
+                            <Pdf_final
+                                fileName="ejemplo.pdf"
+                                ppi={ppi}
+                                nombreProyecto={nombreProyecto}
+                                obra={obra}
+                                tramo={tramo}
+                                titulo={titulo}
+                                imagenPath={imagenPath}
+                                imagenPath2={imagenPath2}
+                                allowPdfGeneration={allowPdfGeneration}
+                                setAllowPdfGeneration={setAllowPdfGeneration}
+                                setShowConfirmModal={setShowConfirmModal}
+                            />
+                        </div>
+
+
+                    </div>
+                </div>
+            )}
 
 
 
