@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
 
-        marginBottom: 20,
+        marginBottom: 8,
     },
     title: {
         fontSize: 10,
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
         height: '100%',
         borderStyle: 'solid',
         borderColor: '#CCCCCC',
-        backgroundColor: '#0369a1',
+        backgroundColor: '#d1d5db',
         padding: 10,
         textAlign: 'center',
         alignSelf: 'center',
@@ -75,14 +75,17 @@ const styles = StyleSheet.create({
         marginHorizontal: -30,
     },
     tableCellHeader: {
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: 'bold',
-        color: '#FFFFFF',
+       
     },
     tableCell: {
         fontSize: 10,
         color: '#333333',
-    }
+    },
+    line: {
+       width:500
+    },
 });
 
 const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, imagenPath2, setShowConfirmModal }) => {
@@ -132,10 +135,12 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                 <Page size="A3" style={styles.page} orientation="landscape">
                     <View style={styles.titleContainer}>
                         <View style={styles.projectInfo}>
-                            <Text style={styles.title}>Nombre del Proyecto: {nombreProyecto}</Text>
-                            <Text style={styles.title}>Título: {titulo}</Text>
-                            <Text style={styles.title}>Obra: {obra}</Text>
-                            <Text style={styles.title}>Tramo: {tramo}</Text>
+                            <Text style={{...styles.title, marginBottom:4}}>{nombreProyecto}</Text>
+                            <Text style={{...styles.title, marginBottom:4}}>{titulo}</Text>
+                            <Text style={{...styles.title, marginBottom:4}}>Obra: {obra}</Text>
+                            <Text style={{...styles.title, marginBottom:4}}>Tramo: {tramo}</Text>
+                            {/* Línea debajo del texto */}
+                            
                         </View>
 
                         <View style={{ ...styles.imagesContainer, flexDirection: 'row', marginLeft: 500 }}>
@@ -143,7 +148,16 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                             <Image style={{ ...styles.image2, marginRight: 20 }} src={imagenPath2} />
                             <Image style={styles.image} src={imagenPath} />
                         </View>
+
+                       
                     </View>
+                    <View >
+                        
+
+                        <Text style={{ width: 1115, borderBottomWidth: 1, borderBottomColor: '#d1d5db', marginBottom: 10 }}></Text>
+
+                    </View>
+
 
                     <View style={styles.table}>
                         {/* Cabeceras de la tabla */}

@@ -587,14 +587,7 @@ function TablaPpi() {
         let currentPage = pdfDoc.addPage([595, 842]); // Inicializa la primera página
         let currentY = currentPage.getSize().height; // Inicializa la coordenada Y actual
 
-        const imagesAndPDFs = [...images, ...pdfs]; // Combinar imágenes y PDFs seleccionados
-
-        for (const file of imagesAndPDFs) {
-            // Agregar cada imagen o PDF al PDF generado
-            const img = await pdfDoc.embedPng(await file.arrayBuffer());
-            const page = pdfDoc.addPage([img.width, img.height]);
-            page.drawImage(img, { x: 0, y: 0 });
-        }
+        
 
         const { height } = currentPage.getSize();
 
@@ -939,9 +932,23 @@ function TablaPpi() {
 
 
 
+    // Variables de estado para almacenar los archivos de imagen y PDF seleccionados
+    const [images, setImages] = useState([]);
+    const [pdfs, setPDFs] = useState([]);
 
+    // Función para manejar el cambio en el input de archivos de imagen
+    const handleImageInputChange = (event) => {
+        const files = event.target.files; // Obtener los archivos seleccionados
+        const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/')); // Filtrar solo los archivos de imagen
+        setImages(imageFiles); // Actualizar el estado con los archivos de imagen seleccionados
+    };
 
-
+    // Función para manejar el cambio en el input de archivos PDF
+    const handlePDFInputChange = (event) => {
+        const files = event.target.files; // Obtener los archivos seleccionados
+        const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf'); // Filtrar solo los archivos PDF
+        setPDFs(pdfFiles); // Actualizar el estado con los archivos PDF seleccionados
+    };
 
 
     return (
@@ -976,7 +983,6 @@ function TablaPpi() {
 
 
             </div>
-
 
 
 
@@ -1170,7 +1176,31 @@ function TablaPpi() {
                                     </label>
                                 </div>
 
-                                
+                                {/* Agregar input para seleccionar imágenes */}
+                                <div className="mb-4">
+                                    <label htmlFor="imageInput" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar Imágenes</label>
+                                    <input
+                                        type="file"
+                                        id="imageInput"
+                                        accept="image/*"
+                                        onChange={handleImageInputChange} // Reemplaza 'handleImageInputChange' con la función que maneja la selección de imágenes
+                                        multiple
+                                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    />
+                                </div>
+
+                                {/* Agregar input para seleccionar archivos PDF */}
+                                <div className="mb-4">
+                                    <label htmlFor="pdfInput" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar PDFs</label>
+                                    <input
+                                        type="file"
+                                        id="pdfInput"
+                                        accept=".pdf"
+                                        onChange={handlePDFInputChange} // Reemplaza 'handlePDFInputChange' con la función que maneja la selección de archivos PDF
+                                        multiple
+                                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    />
+                                </div>
                             </div>
                         </div>
                         <div className="mb-4">
