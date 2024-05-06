@@ -4,11 +4,11 @@ import { FaFilePdf } from "react-icons/fa";
 import jsPDF from 'jspdf';
 import logo from '../assets/tpf_logo_azul.png'
 import { IoIosWarning } from "react-icons/io";
-import imageCompression from 'browser-image-compression';
+
 import { db } from '../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 
-function FormularioInspeccion({onObservaciones , formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros }) {
+function FormularioInspeccion({ onObservaciones, formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros }) {
 
     const { id } = useParams()
     const idLote = localStorage.getItem('loteId');
@@ -26,8 +26,7 @@ function FormularioInspeccion({onObservaciones , formulario, crearVariableFormul
     const [pkInicial, setPkInicial] = useState('');
     const [pkFinal, setPkFinal] = useState('');
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
-    const [imagen, setImagen] = useState(null);
-    const [imagen2, setImagen2] = useState(null);
+
     const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
     const imagenPath2 = logo
     const [obra, setObra] = useState(localStorage.getItem('obra'));
@@ -100,52 +99,10 @@ function FormularioInspeccion({onObservaciones , formulario, crearVariableFormul
 
 
 
-    const handleImagenChange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            try {
-                const options = {
-                    maxSizeMB: .3, // (opcional) Tamaño máximo en MB, por ejemplo, 0.5MB
-                    maxWidthOrHeight: 600, // (opcional) ajusta la imagen al tamaño máximo (manteniendo la relación de aspecto)
-                    useWebWorker: true, // (opcional) Usa un web worker para realizar la compresión en un hilo de fondo
-                };
-                const compressedFile = await imageCompression(file, options);
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setImagen(reader.result); // Almacenar la imagen comprimida en el estado
-                };
-                reader.readAsDataURL(compressedFile);
-            } catch (error) {
-                console.error(error);
-            }
-        }
-    };
-
-    const handleImagenChange2 = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            try {
-                const options = {
-                    maxSizeMB: .3, // Tamaño máximo en MB, ajustable según necesites
-                    maxWidthOrHeight: 600, // Ajusta la imagen al tamaño máximo (manteniendo la relación de aspecto)
-                    useWebWorker: true, // Utiliza un web worker para realizar la compresión en un hilo de fondo
-                };
-                const compressedFile = await imageCompression(file, options); // Comprimir la imagen
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setImagen2(reader.result); // Almacenar la imagen comprimida en base64 en el estado
-                };
-                reader.readAsDataURL(compressedFile);
-            } catch (error) {
-                console.error("Error al comprimir la imagen:", error);
-            }
-        }
-    };
 
 
 
 
-   
 
     const handleConfirmarEnvio = () => {
         setMostrarConfirmacion(false); // Cierra el primer modal
@@ -161,7 +118,7 @@ function FormularioInspeccion({onObservaciones , formulario, crearVariableFormul
             setMostrarConfirmacionAdicional(false); // Cierra el segundo modal tras la confirmación
             // Aquí puedes también limpiar el formulario o realizar cualquier otra acción necesaria tras el envío
             setMensajeExitoInspeccion('Inspección completada con éxito');
-            
+
             setObservaciones('')
             // Si es necesario, cierra el formulario o limpia los estados
         } else {
@@ -504,17 +461,10 @@ function FormularioInspeccion({onObservaciones , formulario, crearVariableFormul
                         <label htmlFor="plano" className="block text-gray-500 text-sm font-bold mb-2">Plano que aplica</label>
                         <input type="text" id="plano" value={plano} onChange={(e) => setPlano(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                     </div>
-                    <div className="mb-4">
-                        <label htmlFor="imagen" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar imagen</label>
-                        <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                    </div>
-                    <div className="mb-4">
-                        <label htmlFor="imagen" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar imagen</label>
-                        <input onChange={handleImagenChange2} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                    </div>
+
 
                     <div className="mb-4">
-                        <label htmlFor="observaciones" className="block text-gray-500 text-sm font-bold mb-2">Observaciones</label>
+                        <label htmlFor="observaciones" className="block text-gray-500 text-sm font-bold mb-2">Observaciones del informe</label>
                         <textarea id="observaciones" value={localObservaciones} onChange={(e) => setLocalObservaciones(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
                     </div>
                 </div>
@@ -556,61 +506,74 @@ function FormularioInspeccion({onObservaciones , formulario, crearVariableFormul
                 {/* Botones */}
                 <div className='flex gap-5'>
                     <button type="button" onClick={handleSolicitarConfirmacion} className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center"><FaFilePdf /> Guardar</button>
-                    <button type="button"className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center" 
-                    onClick={() => {
-                        handleCloseModal()
-                        setModalConfirmacionInforme(false)
+                    <button type="button" className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center"
+                        onClick={() => {
+                            handleCloseModal()
+                            setModalConfirmacionInforme(false)
                         }}>Cancelar </button>
                 </div>
             </form>
 
             {
                 mostrarConfirmacion && (
-                    <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-900 bg-opacity-90 text-gray-500 fonmt-medium text-center">
-                        <div className="mx-auto w-[720px] h-800px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8">
+                    <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-800 bg-opacity-90 text-gray-500 fonmt-medium text-center">
+                        <div className="mx-auto w-[600px] h-800px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto px-12 py-8">
 
                             <div>
                                 {resultadoInspeccion && (
                                     <>
-                                        <div className='flex flex-col gap-2 justify-center items-center'>
-                                            <p className='font-bold text-yellow-500 text-8xl'><IoIosWarning /></p>
-                                            <p className='text-3xl font-bold'>¡Cuidado! estás por cerrar la inspección</p>
-                                            <p className='text-3xl font-bold'>
+                                        <div className='flex flex-col gap-2 justify-start items-center rounded-xl px-6'>
+                                            <div className='text-center flex flex-col items-center'>
+                                            <p className='text-2xl font-bold flex items-center gap-2 text-yellow-600'><span className='font-bold text-yellow-500 text-5xl'><IoIosWarning /></span>¡Atención!<span className='font-bold text-yellow-500 text-5xl'><IoIosWarning /></span></p>
+                                            <p className='text-xl font-bold flex items-center gap-2 mt-2'>Se guardará la inspección y no podras modificarla</p>
+                                            </div>
+                                           
+                                            <div className=''>
+                                                <h2 className="font-bold text-gray-500 text-start text-lg underline">Revisa los datos y comprueba que todo esta correcto</h2>
+                                            </div>
+                                            
+                                            {/* <p className='text-2xl font-bold'>
                                                 Resultado:{' '}
                                                 <span className={resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}>
                                                     {resultadoInspeccion}
                                                 </span>
-                                            </p>
+                                            </p> */}
 
 
-                                            <h2 className="font-bold text-lg mb-2 mt-6">Revisa los datos y comprueba que todo esta correcto</h2>
+
                                         </div>
 
-                                        <div className='flex flex-col gap-1'>
+                                        <div className='flex flex-col gap-1 mt-2'>
 
-                                            <p><strong> Fecha: </strong>{fechaHoraActual}</p>
-                                            <p><strong> Proyecto: </strong>{nombreProyecto}</p>
-                                            <p><strong> Obra: </strong>{obra}</p>
-                                            <p><strong> Tramo: </strong>{tramo}</p>
-                                            <p><strong> Ppi: </strong>{loteInfo.ppiNombre}</p>
-                                            <p><strong> Observaciones Informe: </strong>{observaciones}</p>
-                                            <p><strong> Sector: </strong>{loteInfo.sectorNombre}</p>
-                                            <p><strong> Sub sector: </strong>{loteInfo.subSectorNombre}</p>
-                                            <p><strong> Parte: </strong>{loteInfo.parteNombre}</p>
-                                            <p><strong> Elemento: </strong>{loteInfo.elementoNombre}</p>
-                                            <p><strong> Lote: </strong>{loteInfo.nombre}</p>
-                                            <p><strong> Pk inicial: </strong>{loteInfo.pkInicial}</p>
-                                            <p><strong> Pk final: </strong>{loteInfo.pkFinal}</p>
-                                            <p><strong> Usuario: </strong>{nombreResponsable}</p>
-                                            <p>
-                                                <strong>Resultado:</strong>{' '}
-                                                <span className={`font-bold ${resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}`}>
-                                                    {resultadoInspeccion}
-                                                </span>
-                                            </p>
+                                            
+
+                                            <div className='bg-gray-200 px-6 py-4 rounded-xl text-start flex flex-col gap-2 mt-4'>
+                                            <p className='text-xl underline'>
+                                                    <strong>Resultado:</strong>{' '}
+                                                    <span className={`font-bold ${resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}`}>
+                                                        {resultadoInspeccion}
+                                                    </span>
+                                                </p>
+                                                <p><strong> Fecha: </strong>{fechaHoraActual}</p>
+                                                <p><strong> Proyecto: </strong>{nombreProyecto}</p>
+                                                <p><strong> Obra: </strong>{obra}</p>
+                                                <p><strong> Tramo: </strong>{tramo}</p>
+                                                <p><strong> Ppi: </strong>{loteInfo.ppiNombre}</p>
+                                                <p><strong> Observaciones Informe: </strong>{observaciones}</p>
+                                                <p><strong> Sector: </strong>{loteInfo.sectorNombre}</p>
+                                                <p><strong> Sub sector: </strong>{loteInfo.subSectorNombre}</p>
+                                                <p><strong> Parte: </strong>{loteInfo.parteNombre}</p>
+                                                <p><strong> Elemento: </strong>{loteInfo.elementoNombre}</p>
+                                                <p><strong> Lote: </strong>{loteInfo.nombre}</p>
+                                                <p><strong> Pk inicial: </strong>{loteInfo.pkInicial}</p>
+                                                <p><strong> Pk final: </strong>{loteInfo.pkFinal}</p>
+                                                <p><strong> Usuario: </strong>{nombreResponsable}</p>
+                                                
 
 
-                                            <p><strong> Comentarios inspección: </strong>{comentario}</p>
+                                                <p><strong> Comentarios inspección: </strong>{comentario}</p>
+                                            </div>
+
 
                                         </div>
                                     </>
@@ -647,15 +610,15 @@ function FormularioInspeccion({onObservaciones , formulario, crearVariableFormul
             {mostrarConfirmacionAdicional && (
                 <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-900 bg-opacity-90 text-gray-500 font-medium text-center">
                     <div className="bg-white flex flex-col items-center p-10 rounded-lg shadow-lg">
-                       
+
                         <p className='text-3xl font-bold'>
-                                                Resultado:{' '}
-                                                <span className={resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}>
-                                                    {resultadoInspeccion}
-                                                </span>
-                                            </p>
+                            Resultado:{' '}
+                            <span className={resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}>
+                                {resultadoInspeccion}
+                            </span>
+                        </p>
                         <h2 className="font-bold text-lg mb-2 mt-6">¿Estás seguro de que quieres guardar los datos?</h2>
-                        
+
                         <p className='text-xl font-bold text-amber-600'>
                             ¿No podras modificarlos posteriormente y se guardara el informe</p>
                         <div className="flex gap-4 justify-center mt-8">

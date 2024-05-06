@@ -18,6 +18,10 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import FormularioInspeccion from './Components/FormularioInspeccion';
 import Trazabilidad from './Pages/Administrador/Trazabilidad'
 import TrazabilidadBim from './Pages/Administrador/TrazabiidadBim';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import Pdf_final from './Pdf_final';
+import imageCompression from 'browser-image-compression';
+import { GrNotes } from "react-icons/gr";
 
 
 interface Lote {
@@ -1360,12 +1364,12 @@ export default function ViewerInspeccion() {
         const [, actividadIndex, subactividadIndex] = currentSubactividadId.split('-').map(Number);
 
         // Acceder a la subactividad seleccionada
+        const actividadSeleccionada = ppi.actividades[actividadIndex];
         const subactividadSeleccionada = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
 
         // Objeto que representa los datos del formulario
         const datosFormulario = {
             nombreProyecto,
-            fechaHoraActual: fechaHoraActual,
             obra: obra,
             tramo: tramo,
             ppiNombre: loteInfo.ppiNombre,
@@ -1379,11 +1383,23 @@ export default function ViewerInspeccion() {
             firma: firma,
             pkInicial: loteInfo.pkInicial,
             pkFinal: loteInfo.pkFinal,
-            nombreResponsable: nombreResponsable,
-            subactividadNombre: subactividadSeleccionada.nombre, // Nombre de la subactividad seleccionada
-            versionSubactividad: subactividadSeleccionada.version,
-            numeroSubactividad: subactividadSeleccionada.numero,
-            formulario: formulario
+            actividad: actividadSeleccionada.actividad,
+            num_actividad: actividadSeleccionada.numero,
+            version_subactividad: subactividadSeleccionada.version,
+            numero_subactividad: subactividadSeleccionada.numero,
+            subactividad: subactividadSeleccionada.nombre, // Nombre de la subactividad seleccionada
+            criterio_aceptacion: subactividadSeleccionada.criterio_aceptacion,
+            documentacion_referencia: subactividadSeleccionada.documentacion_referencia,
+            tipo_inspeccion: subactividadSeleccionada.tipo_inspeccion,
+            punto: subactividadSeleccionada.punto,
+            nombre_responsable: nombreResponsable,
+            fechaHoraActual: fechaHoraActual,
+            globalId: loteInfo.globalId,
+            nombreGlobalId: loteInfo.nameBim,
+            resultadoInspeccion: resultadoInspeccion,
+            formulario: formulario,
+            imagen: imagen, // Incluyendo la primera imagen comprimida
+            imagen2: imagen2
         };
 
         try {
@@ -1395,9 +1411,10 @@ export default function ViewerInspeccion() {
 
             // Opcionalmente, cierra el modal o limpia el formulario aquí
             setModalFormulario(false);
-            setResultadoInspeccion('')
-            setObservaciones('')
 
+            setObservaciones('')
+            setComentario('')
+            console.log("Documento escrito con ID: ", docRef.id);
             return docRef.id; // Devolver el ID del documento creado
 
 
@@ -1405,6 +1422,7 @@ export default function ViewerInspeccion() {
             console.error("Error al añadir documento: ", e);
         }
     };
+
 
     const handleConfirmarEnviotablaPpi = async () => {
         // Aquí llamarías a la función que realmente envía los datos del formulario
@@ -1501,231 +1519,490 @@ export default function ViewerInspeccion() {
 
 
 
-    const generatePDF = () => {
-        const doc = new jsPDF();
-        // Establecer el tamaño de fuente deseado
-        const fontSize = 10;
+    const generatePDF = async () => {
+        const pdfDoc = await PDFDocument.create();
+        let currentPage = pdfDoc.addPage([595, 842]); // Inicializa la primera página
+        let currentY = currentPage.getSize().height; // Inicializa la coordenada Y actual
 
-        // Tamaño y posición del recuadro
-        const rectX = 10;
-        const rectY = 10;
-        const rectWidth = 190; // Ancho del recuadro
-        const rectHeight = 20; // Altura del recuadro
 
-        // Establecer el tamaño de fuente
-        doc.setFontSize(fontSize);
 
-        doc.setFillColor(230, 230, 230); // Gris muy claro casi blanco
+        const { height } = currentPage.getSize();
 
-        // Dibujar el recuadro con fondo gris
-        doc.rect(rectX, rectY, rectWidth, rectHeight, 'F'); // 'F' indica que se debe rellenar el rectángulo
+        // Funciones auxiliares
+        const blackColor = rgb(0, 0, 0); // Color negro
+        const greenColor = hexToRgb("#15803d")
+        const redColor = hexToRgb("#b91c1c")
+        const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-        // Establecer el color de texto
-        doc.setTextColor(0, 0, 0); // Color negro
+        // Función para añadir texto y calcular el espacio vertical usado
+        const addText = (text, x, y, fontSize, font, currentPage, color = blackColor, maxWidth = 350, newX = 50) => {
+            const words = text.split(' ');
+            let currentLine = '';
+            let currentY = y;
+            let currentX = x; // Almacenar la coordenada X actual
 
-        // Colocar texto dentro del recuadro
-        doc.text(titulo, 75, 18); // Ajusta las coordenadas según tu diseño
-        doc.text(nombreProyecto, 75, 22); // Ajusta las coordenadas según tu diseño
+            words.forEach(word => {
+                let testLine = currentLine + word + " ";
+                let testWidth = font.widthOfTextAtSize(testLine, fontSize);
 
-        if (imagenPath2) {
-            const imgData = imagenPath2;
-            doc.addImage(imgData, 'JPEG', 12, 12, 30, 15); // Ajusta las coordenadas y dimensiones según tu diseño
+                // Verifica si la línea de prueba es más larga que el ancho máximo permitido
+                if (testWidth > maxWidth) {
+                    // Dibuja la línea actual si no está vacía
+                    if (currentLine !== '') {
+                        currentPage.drawText(currentLine, { x: currentX, y: currentY, size: fontSize, font, color });
+                        currentLine = ''; // Reinicia la línea actual
+                        currentY -= fontSize * 1.8; // Ajusta la posición Y para la nueva línea
+                        currentX = newX; // Actualiza la coordenada X para la nueva línea
+                    }
+                    // Verifica si la posición Y actual es menos que la altura mínima requerida para una nueva línea
+                    if (currentY < fontSize * 1.4) {
+                        currentPage = pdfDoc.addPage([595, 842]); // Añade una nueva página
+                        currentY = currentPage.getSize().height - fontSize * 1.8; // Restablece la posición Y en la nueva página
+                        currentX = x; // Restablece la coordenada X en el margen original
+                    }
+                    currentLine = word + ' '; // Inicia una nueva línea con la palabra actual
+                } else {
+                    currentLine = testLine; // Agrega la palabra a la línea actual
+                }
+            });
+
+            // Dibuja cualquier texto restante que no haya sido agregado todavía
+            if (currentLine !== '') {
+                currentPage.drawText(currentLine, { x: currentX, y: currentY, size: fontSize, font, color });
+            }
+
+            return { lastY: currentY, page: currentPage };
+        };
+
+
+
+
+        function hexToRgb(hex) {
+            // Asegurarse de que el hex tiene el formato correcto
+            hex = hex.replace("#", "");
+            if (hex.length === 3) {
+                hex = hex.split('').map((hex) => {
+                    return hex + hex;
+                }).join('');
+            }
+
+            // Convertir hex a rgb
+            const r = parseInt(hex.substring(0, 2), 16) / 255;
+            const g = parseInt(hex.substring(2, 4), 16) / 255;
+            const b = parseInt(hex.substring(4, 6), 16) / 255;
+
+            return rgb(r, g, b);
         }
-        if (imagenPath) {
-            const imgData = imagenPath;
-            doc.addImage(imgData, 'JPEG', 45, 15, 20, 10); // Ajusta las coordenadas y dimensiones según tu diseño
+
+        const addHorizontalLine = (x1, y, x2, thickness, hexColor = "#000000") => {
+            const color = hexToRgb(hexColor);
+            currentPage.drawLine({
+                start: { x: x1, y },
+                end: { x: x2, y },
+                thickness: thickness,
+                color: color,
+            });
+        };
+
+
+        // Función para agregar imágenes al PDF
+        const embedImage = async (imagePath, x, y, width, height) => {
+            const imageBytes = await fetch(imagePath).then(res => res.arrayBuffer());
+            const image = await pdfDoc.embedPng(imageBytes);
+            currentPage.drawImage(image, {
+                x,
+                y,
+                width,
+                height,
+            });
+        };
+
+        const l = 'Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas ';
+
+        // Agregar imágenes al lado del nombre del proyecto
+        await embedImage(imagenPath2, 380, height - 58, 80, 45); // Ajusta las coordenadas y dimensiones según sea necesario
+        await embedImage(imagenPath, 490, height - 55, 70, 35); // Ajusta las coordenadas y dimensiones según sea necesario
+
+
+        // Primero, asegurémonos de que todos los elementos anteriores estén correctamente posicionados
+        let result = addText(titulo, 40, currentY - 35, 12, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(nombreProyecto, 40, currentY - 15, 12, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        addHorizontalLine(40, currentY - 11, 555, 1, "#000000", currentPage);
+
+        result = addText(documentoFormulario.obra, 50, currentY - 35, 12, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(documentoFormulario.tramo, 50, currentY - 15, 12, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        addHorizontalLine(40, currentY - 40, 555, 30, "#e2e8f0", currentPage);
+
+        result = addText("Trazabilidad: ", 50, currentY - 44, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Pk inicial: ", 50, currentY - 30, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(documentoFormulario.pkInicial, 105, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Pk final: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(documentoFormulario.pkFinal, 95, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Sector: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(documentoFormulario.sector, 95, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Sub sector: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(documentoFormulario.subSector, 115, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Parte: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(documentoFormulario.parte, 85, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Elemento: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(documentoFormulario.elemento, 110, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Lote: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(documentoFormulario.lote, 85, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Nombre modelo: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(documentoFormulario.nombreGlobalId, 145, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("GlobalID: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(documentoFormulario.globalId, 105, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+
+
+
+
+        addHorizontalLine(40, currentY - 40, 555, 30, "#e2e8f0", currentPage);
+
+        result = addText("Inspección: ", 50, currentY - 44, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Actividad: ", 50, currentY - 30, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.num_actividad}. ${documentoFormulario.actividad}`, 111, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Sub Actividad: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`(V-${documentoFormulario.version_subactividad}) ${documentoFormulario.numero_subactividad}. ${documentoFormulario.subactividad}`, 135, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Criterio aceptación: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.criterio_aceptacion}`, 160, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Documentación de referencia: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.documentacion_referencia}`, 210, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Tipo de inspección: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.tipo_inspeccion}`, 160, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Punto: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.punto}`, 90, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Fecha inspección: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.fechaHoraActual}`, 150, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        addHorizontalLine(40, currentY - 40, 555, 30, "#e2e8f0", currentPage);
+
+        result = addText("Comentarios: ", 50, currentY - 44, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.observaciones}`, 50, currentY - 30, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        addHorizontalLine(40, currentY - 40, 555, 30, "#e2e8f0", currentPage);
+
+        result = addText("Inspección: ", 50, currentY - 44, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+
+
+        result = addText("Responsable: ", 50, currentY - 30, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.nombre_responsable}`, 135, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Firma: ", 50, currentY - 20, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.firma}`, 95, currentY, 11, regularFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText("Resultado: ", 50, currentY - 20, 14, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        // Determinar el color del texto según el resultado
+        let color = blackColor; // Color predeterminado: negro
+        if (documentoFormulario.resultadoInspeccion === "Apto") {
+            color = greenColor; // Verde oscuro
+        } else if (documentoFormulario.resultadoInspeccion === "No apto") {
+            color = redColor; // Rojo
         }
 
-        // Dibujar el borde después de agregar las imágenes
-        doc.setDrawColor(0); // Color negro
-        doc.rect(rectX, rectY, rectWidth, rectHeight); // Dibujar el borde del rectángulo
 
 
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Tamaño y posición del segundo recuadro
-        const rectX2 = 10;
-        const rectY2 = 30;
-        const rectWidth2 = 190; // Ancho del recuadro
-        const rectHeight2 = 20; // Altura del recuadro
+        // Cargar y agregar la flecha verde si el resultado es "Apto"
+        if (documentoFormulario.resultadoInspeccion === "Apto") {
+            const arrowPath = 'data:image/png;base64,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'; // Cambia esto por la ruta real de tu imagen
+            await embedImage(arrowPath, 130, currentY - 5, 15, 15); // Ajusta las coordenadas y el tamaño según sea necesario
+        }
 
-        // Establecer el ancho de la línea del borde
-        const borderWidth = 0.5; // Ancho del borde en puntos
+        // Agregar el texto con el color determinado
+        result = addText(documentoFormulario.resultadoInspeccion, 145, currentY, 14, boldFont, currentPage, color);
 
-        // Establecer el color de la línea del borde
-        doc.setDrawColor(0); // Color negro
+        // Función para agregar imágenes Base64 al PDF
+        const embedBase64Image = async (base64Image, x, y, width, height) => {
+            const base64String = base64Image.split(';base64,').pop(); // Extraer solo la parte Base64 sin el encabezado MIME
+            const imageBytes = base64ToArrayBuffer(base64String);
+            const image = await pdfDoc.embedPng(imageBytes);
+            currentPage.drawImage(image, {
+                x: x,
+                y: y - height, // Ajusta la posición y porque en PDFLib la posición y es desde la parte inferior
+                width: width,
+                height: height,
+            });
+        };
 
-        // Dibujar el borde del segundo recuadro
-        doc.rect(rectX2, rectY2, rectWidth2, rectHeight2);
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64); // Decodificar base64 a string binario
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
 
-        // Establecer el color de fondo para el segundo recuadro
-        doc.setFillColor(240, 240, 240); // Gris muy claro casi blanco
+        // Verificar si hay imágenes para añadir y necesitan una página nueva
+        if (documentoFormulario.imagen || documentoFormulario.imagen2) {
+            // Crear una nueva página específicamente para las imágenes
+            currentPage = pdfDoc.addPage([595, 842]);
+            currentY = currentPage.getSize().height;
 
-        // Dibujar el segundo recuadro con fondo gris claro y borde en todos los lados
-        doc.rect(rectX2, rectY2, rectWidth2, rectHeight2, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde en todos los lados
-
-        // Establecer el tamaño de fuente
-        doc.setFontSize(fontSize);
-
-        // Colocar texto dentro del segundo recuadro
-        doc.text(`Obra: ${documentoFormulario.obra}`, 15, 40);
-        doc.text(`Tramo: ${documentoFormulario.tramo}`, 15, 45);
-        doc.text(`Nº de registro: ${documentoFormulario.id}`, 130, 40);
-        doc.text(`Fecha: ${documentoFormulario.fechaHoraActual}`, 130, 45);
-
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Tamaño y posición del recuadro
-        const rectX3 = 10;
-        const rectY3 = 50;
-        const rectWidth3 = 190; // Ancho del recuadro
-        const rectHeight3 = 20; // Altura del recuadro
-
-        // Establecer el tamaño de fuente
-        doc.setFontSize(fontSize);
-
-        // Establecer el color de fondo para el recuadro
-        doc.setFillColor(240, 240, 240); // Gris muy claro casi blanco
-
-        // Dibujar el recuadro con fondo gris claro
-        doc.rect(rectX3, rectY3, rectWidth3, rectHeight3, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
-
-        // Establecer el color de texto
-        doc.setTextColor(0, 0, 0); // Color negro
-
-        // Colocar texto dentro del recuadro
-        doc.text(`PPI: ${documentoFormulario.ppiNombre}`, 15, 60);
-        doc.text(`Plano que aplica: `, 15, 65);
+            // Agregar imágenes al lado del nombre del proyecto
+            await embedImage(imagenPath2, 380, height - 58, 80, 45); // Ajusta las coordenadas y dimensiones según sea necesario
+            await embedImage(imagenPath, 490, height - 55, 70, 35); // Ajusta las coordenadas y dimensiones según sea necesario
 
 
-        // Tamaño y posición del recuadro
-        const rectX4 = 10;
-        const rectY4 = 70;
-        const rectWidth4 = 190; // Ancho del recuadro
-        const rectHeight4 = 20; // Altura del recuadro
+            // Primero, asegurémonos de que todos los elementos anteriores estén correctamente posicionados
+            let result = addText(titulo, 40, currentY - 35, 12, boldFont, currentPage);
+            currentPage = result.page;
+            currentY = result.lastY;
 
-        // Establecer el tamaño de fuente
-        doc.setFontSize(fontSize);
+            result = addText(nombreProyecto, 40, currentY - 15, 12, boldFont, currentPage);
+            currentPage = result.page;
+            currentY = result.lastY;
 
-        // Establecer el color de fondo para el recuadro
-        doc.setFillColor(240, 240, 240); // Gris claro casi blanco
+            addHorizontalLine(40, currentY - 11, 555, 1, "#000000", currentPage);
 
-        // Dibujar el recuadro con fondo gris claro
-        doc.rect(rectX4, rectY4, rectWidth4, rectHeight4, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
+            addHorizontalLine(40, currentY - 50, 555, 30, "#e2e8f0", currentPage);
 
-        // Establecer el color de texto
-        doc.setTextColor(0, 0, 0); // Color negro
+            result = addText("Imagenes adjuntas: ", 50, currentY - 53, 11, boldFont, currentPage);
+            currentPage = result.page;
+            currentY = result.lastY;
 
-        // Dibujar el borde del rectángulo
-        doc.rect(rectX4, rectY4, rectWidth4, rectHeight4);
+            // Agregar la primera imagen si existe
+            if (documentoFormulario.imagen) {
+                await embedBase64Image(documentoFormulario.imagen, 50, currentY - 40, 400, 300);
+                currentY -= 320;  // Ajustar el currentY para la siguiente imagen, incluyendo un espacio adicional
+            }
 
-        // Texto a colocar con salto de línea
-        const textoObservaciones = `Observaciones: ${documentoFormulario.observaciones}`;
-
-        // Dividir el texto en líneas cada vez que exceda 15 palabras
-        const words = textoObservaciones.split(' ');
-        const maxWordsPerLine = 15;
-        const lines = [];
-        let currentLine = '';
-
-        for (let i = 0; i < words.length; i++) {
-            currentLine += words[i] + ' ';
-            if ((i + 1) % maxWordsPerLine === 0 || i === words.length - 1) {
-                lines.push(currentLine.trim());
-                currentLine = '';
+            // Agregar la segunda imagen si existe
+            if (documentoFormulario.imagen2) {
+                await embedBase64Image(documentoFormulario.imagen2, 50, currentY - 40, 400, 300);
             }
         }
 
-        // Colocar texto en el PDF
-        let yPosition = rectY4 + fontSize + 2; // Iniciar la posición dentro del recuadro
-        let xPosition = rectX4 + 5; // Ajustar posición x para evitar que el texto toque el borde del rectángulo
-        lines.forEach(line => {
-            doc.text(line, xPosition, yPosition, { maxWidth: rectWidth4 - 4 }); // Ajustar maxWidth para evitar que el texto exceda el ancho del rectángulo
-            yPosition += fontSize + 2; // Aumentar la posición para la siguiente línea
-        });
 
-        // Tamaño y posición del recuadro 5
-        const rectX5 = 10;
-        const rectY5 = 90;
-        const rectWidth5 = 190; // Ancho del recuadro
-        const rectHeight5 = 80; // Altura del recuadro
+        // Continuar con el guardado y descarga del PDF, etc.
 
-        // Establecer el tamaño de fuente
-        doc.setFontSize(fontSize);
 
-        // Establecer el color de fondo para el recuadro 5
-        doc.setFillColor(240, 240, 240); // Gris claro casi blanco
+        // Guardar y descargar PDF
+        const pdfBytes = await pdfDoc.save();
+        const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = 'documento.pdf';
+        link.click();
+        URL.revokeObjectURL(pdfUrl);
 
-        // Dibujar el recuadro 5 con fondo gris claro
-        doc.rect(rectX5, rectY5, rectWidth5, rectHeight5, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
+        // Función para cerrar modal y limpiar datos si es necesario
+        cerrarModalYLimpiarDatos();
+    };
 
-        // Establecer el color de texto
-        doc.setTextColor(0, 0, 0); // Color negro
+    //! ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    const [imagen, setImagen] = useState(null);
+    const [imagen2, setImagen2] = useState(null);
 
-        // Dibujar el borde del recuadro 5
-        doc.rect(rectX5, rectY5, rectWidth5, rectHeight5);
+    const handleImagenChange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            console.log('Cargando imagen:', file.name); // Registro de la carga de la imagen
+            try {
+                const options = {
+                    maxSizeMB: 0.2, // Tamaño máximo en MB
+                    maxWidthOrHeight: 460, // Ajusta la imagen al tamaño máximo manteniendo la relación de aspecto
+                    useWebWorker: true, // Usa un web worker para la compresión en un hilo de fondo
+                };
+                const compressedFile = await imageCompression(file, options);
+                console.log('Imagen comprimida exitosamente:', compressedFile); // Registro después de la compresión
 
-        // Colocar texto dentro del recuadro 5
-        doc.text(`Sector: ${documentoFormulario.sector}`, 15, 100);
-        doc.text(`Subsector: ${documentoFormulario.subSector}`, 15, 110);
-        doc.text(`Parte: ${documentoFormulario.parte}`, 15, 120);
-        doc.text(`Elemento: ${documentoFormulario.elemento}`, 15, 130);
-        doc.text(`Lote: ${documentoFormulario.lote}`, 15, 140);
-        doc.text(`Pk inicial: ${documentoFormulario.pkInicial}`, 15, 150);
-        doc.text(`Pk final: ${documentoFormulario.pkFinal}`, 15, 160);
-
-        // Tamaño y posición del recuadro 6
-        const rectX6 = 10;
-        const rectY6 = 170;
-        const rectWidth6 = 190; // Ancho del recuadro
-        const rectHeight6 = 70; // Altura del recuadro
-
-        // Establecer el tamaño de fuente
-        doc.setFontSize(fontSize);
-
-        // Establecer el color de fondo para el recuadro 6
-        doc.setFillColor(240, 240, 240); // Gris claro casi blanco
-
-        // Dibujar el recuadro 6 con fondo gris claro
-        doc.rect(rectX6, rectY6, rectWidth6, rectHeight6, 'FD');
-
-        // Dibujar el borde del recuadro 6
-        doc.rect(rectX6, rectY6, rectWidth6, rectHeight6);
-
-        // Agregar imagen al PDF dentro del recuadro 6
-        if (documentoFormulario.imagen) {
-            doc.addImage(documentoFormulario.imagen, 'JPEG', 25, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const imgElement = document.createElement("img");
+                    imgElement.src = reader.result;
+                    imgElement.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        canvas.width = imgElement.width;
+                        canvas.height = imgElement.height;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
+                        const pngDataUrl = canvas.toDataURL("image/png");
+                        setImagen(pngDataUrl); // Almacenar la imagen PNG en el estado
+                        console.log('Imagen convertida a PNG y cargada en el estado');
+                    };
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (error) {
+                console.error('Error durante la compresión de la imagen:', error);
+            }
         }
-        if (documentoFormulario.imagen2) {
-            doc.addImage(documentoFormulario.imagen2, 'JPEG', 110, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
+    };
+
+    const handleImagenChange2 = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            console.log('Cargando segunda imagen:', file.name);
+            try {
+                const options = {
+                    maxSizeMB: 0.2,
+                    maxWidthOrHeight: 460,
+                    useWebWorker: true,
+                };
+                const compressedFile = await imageCompression(file, options);
+                console.log('Segunda imagen comprimida exitosamente:', compressedFile);
+
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const imgElement = document.createElement("img");
+                    imgElement.src = reader.result;
+                    imgElement.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        canvas.width = imgElement.width;
+                        canvas.height = imgElement.height;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
+                        const pngDataUrl = canvas.toDataURL("image/png");
+                        setImagen2(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
+                        console.log('Segunda imagen convertida a PNG y cargada en el estado');
+                    };
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (error) {
+                console.error('Error durante la compresión de la segunda imagen:', error);
+            }
         }
+    };
 
-        // Tamaño y posición del recuadro 7
-        const rectX7 = 10;
-        const rectY7 = 240;
-        const rectWidth7 = 190; // Ancho del recuadro
-        const rectHeight7 = 28; // Altura del recuadro
 
-        // Establecer el tamaño de fuente
-        doc.setFontSize(fontSize);
-
-        // Establecer el color de fondo para el recuadro 7
-        doc.setFillColor(240, 240, 240); // Gris claro casi blanco
-
-        // Dibujar el recuadro 7 con fondo gris claro
-        doc.rect(rectX7, rectY7, rectWidth7, rectHeight7, 'FD');
-
-        // Dibujar el borde del recuadro 7
-        doc.rect(rectX7, rectY7, rectWidth7, rectHeight7);
-
-        // Colocar texto dentro del recuadro 7
-        doc.text('Resultado de la inspección', 150, 250);
-        doc.text(documentoFormulario.resultadoInspeccion, 150, 260);
-        doc.text(`Firmado electronicamente con blockchain`, 15, 250);
-        // Asegúrate de que la firma es una cadena y no está vacía
-        doc.text(documentoFormulario.firma, 15, 260);
-        doc.save('formulario.pdf');
-        cerrarModalYLimpiarDatos()
-
+    const handleObservaciones = (nuevasObservaciones) => {
+        setObservaciones(nuevasObservaciones);
     };
 
 
@@ -1897,10 +2174,10 @@ export default function ViewerInspeccion() {
             </div>
 
             {modalFormulario && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
-                    <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
+                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
+                    <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-70"></div>
 
-                    <div className="mx-auto w-[700px] h-[750px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
+                    <div className="mx-auto w-[500px] h-800px] modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto px-12 py-8"
                     >
                         <button
                             onClick={handleCloseModal}
@@ -1910,7 +2187,7 @@ export default function ViewerInspeccion() {
 
                         <div className="my-6">
                             <label htmlFor="resultadoInspeccion" className="block text-2xl font-bold text-gray-500 mb-4 flex items-center gap-2">
-                                <span className='text-3xl'><SiReacthookform /></span> Resultado de la inspección:
+                                <span className='text-3xl'></span> Resultado de la inspección:
                             </label>
                             <div className="block w-full py-2 text-base p-2 border-gray-300 focus:outline-none focus:ring-gray-500  sm:text-sm rounded-md">
                                 {/* Opción Apto */}
@@ -1927,6 +2204,7 @@ export default function ViewerInspeccion() {
                                         <span className="ml-2">Apto</span>
                                     </label>
                                 </div>
+
                                 {/* Opción No apto */}
                                 <div>
                                     <label className="inline-flex items-center">
@@ -1941,26 +2219,22 @@ export default function ViewerInspeccion() {
                                         <span className="ml-2">No apto</span>
                                     </label>
                                 </div>
+
+                                <div className="my-4">
+                                    <label htmlFor="comentario" className="block text-gray-500 text-sm font-bold mb-2">Comentarios de la inspección</label>
+                                    <textarea id="comentario" value={comentario} onChange={(e) => setComentario(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                                </div>
+                                <div className="mb-4 mt-4">
+                                    <label htmlFor="imagen" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar imagen</label>
+                                    <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                </div>
+                                <div className="">
+                                    <label htmlFor="imagen" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar imagen 2</label>
+                                    <input onChange={handleImagenChange2} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="mb-4">
-                            <label htmlFor="comentario" className="block text-gray-500 text-sm font-bold mb-2">Comentarios de la inspección</label>
-                            <textarea id="comentario" value={comentario} onChange={(e) => setComentario(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
-                        </div>
-
-                        {/* <div className='my-8'>
-                            <label htmlFor="formularioCheckbox" className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    id="formularioCheckbox"
-                                    checked={formulario}
-                                    onChange={e => setFormulario(e.target.checked)} // Actualizado para usar setFormulario directamente
-                                    className="form-checkbox rounded text-sky-600"
-                                />
-                                <span className='flex gap-2 items-center font-medium'><p className='text-xl ms-2'><FaFilePdf/></p> Crear Informe pdf </span>
-                            </label>
-                        </div> */}
 
                         <FormularioInspeccion
                             setModalFormulario={setModalFormulario}
@@ -1979,27 +2253,17 @@ export default function ViewerInspeccion() {
                             nombreResponsable={nombreResponsable}
 
                             setResultadoInspeccion={setResultadoInspeccion}
-
+                            enviarDatosARegistros={enviarDatosARegistros}
 
                             setModalConfirmacionInforme={setModalConfirmacionInforme}
 
                             handleConfirmarEnvioPdf={handleConfirmarEnvioPdf}
                             setMensajeExitoInspeccion={setMensajeExitoInspeccion}
                             handleConfirmarEnviotablaPpi={handleConfirmarEnviotablaPpi}
+                            onObservaciones={handleObservaciones}
 
 
                         />
-
-
-
-
-
-
-
-                        {/* <div className='flex gap-5 mt-8'>
-                            <button className='bg-sky-600 hover:bg-sky-700 px-4 py-2 text-white font-medium rounded-lg shadow-md' onClick={confirmarInforme}>Guardar</button>
-                            <button className='bg-gray-500 hover:bg-gray-600 px-4 py-2 text-white font-medium rounded-lg shadow-md' onClick={handleCloseModal}>Cancelar</button>
-                        </div> */}
 
 
 
