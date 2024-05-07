@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Document, Page, Text, View, StyleSheet, Image, pdf } from '@react-pdf/renderer';
 import { PDFDocument } from 'pdf-lib';
+import { MdAttachFile } from "react-icons/md";
+import { FaFilePdf } from "react-icons/fa6";
 
 const styles = StyleSheet.create({
     page: {
@@ -77,14 +79,14 @@ const styles = StyleSheet.create({
     tableCellHeader: {
         fontSize: 10,
         fontWeight: 'bold',
-       
+
     },
     tableCell: {
         fontSize: 10,
         color: '#333333',
     },
     line: {
-       width:500
+        width: 500
     },
 });
 
@@ -135,12 +137,12 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                 <Page size="A3" style={styles.page} orientation="landscape">
                     <View style={styles.titleContainer}>
                         <View style={styles.projectInfo}>
-                            <Text style={{...styles.title, marginBottom:4}}>{nombreProyecto}</Text>
-                            <Text style={{...styles.title, marginBottom:4}}>{titulo}</Text>
-                            <Text style={{...styles.title, marginBottom:4}}>Obra: {obra}</Text>
-                            <Text style={{...styles.title, marginBottom:4}}>Tramo: {tramo}</Text>
+                            <Text style={{ ...styles.title, marginBottom: 4 }}>{nombreProyecto}</Text>
+                            <Text style={{ ...styles.title, marginBottom: 4 }}>{titulo}</Text>
+                            <Text style={{ ...styles.title, marginBottom: 4 }}>Obra: {obra}</Text>
+                            <Text style={{ ...styles.title, marginBottom: 4 }}>Tramo: {tramo}</Text>
                             {/* Línea debajo del texto */}
-                            
+
                         </View>
 
                         <View style={{ ...styles.imagesContainer, flexDirection: 'row', marginLeft: 500 }}>
@@ -149,10 +151,10 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                             <Image style={styles.image} src={imagenPath} />
                         </View>
 
-                       
+
                     </View>
                     <View >
-                        
+
 
                         <Text style={{ width: 1115, borderBottomWidth: 1, borderBottomColor: '#d1d5db', marginBottom: 10 }}></Text>
 
@@ -286,21 +288,60 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
     };
 
     if (loading) {
-        return <div>
-            <div className='mb-5'>
-                <input
-                    type="file" accept="application/pdf" multiple onChange={handleFileChange} />
+        return<div>
+
+        {showConfirmationModal && (
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-90 z-50">
+                <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+                    <p className="text-lg font-semibold mb-4">¿Estás seguro de que quieres crear el PDF final?</p>
+                    <div className="flex justify-center gap-4">
+                        <button className="bg-amber-700 text-white px-4 py-2 rounded-md" onClick={confirmPDFCreation}>Sí</button>
+                        <button className="bg-gray-500 text-white px-4 py-2 rounded-md" onClick={closeConfirmationModal}>Cancelar</button>
+                    </div>
+                </div>
             </div>
+        )}
+
+
+
+        {additionalFiles.length >= 0 && (
 
             <div>
-                <button className='bg-amber-600 text-white font-medium px-4 py-2 rounded-lg'
-                    onClick={combinePDFs}>
-                    Crear PDF final
-                </button>
+                <div className='flex items-center gap-2 mb-3'>
+                    <h2>Adjuntar archivos</h2>
+                    <button className="text-gray-600 bg-gray-500  text-white rounded-md px-3 py-1 cursor-pointer" onClick={addMoreFiles}>
+                        <span className='font-bold text-lg'><MdAttachFile /></span>
+                    </button>
+
+                </div>
+                <p className='text-sm'><span className='text-amber-600'>* </span>
+                    Presiona el boton de adjuntar para generar nuevos campos de entrada de archivos </p>
 
             </div>
 
+        )}
+
+        {additionalFiles.map((file, index) => (
+            <div key={file.id} className="mt-3 flex items-center">
+                <p className="mr-2">{index + 1}.</p>
+                <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(event) => handleAdditionalFileChange(event, file.id)}
+                />
+            </div>
+        ))}
+
+
+        <div className='mt-8'>
+        <button className='bg-amber-600 text-white font-medium px-4 py-2 rounded-lg flex gap-2 items-center'
+                onClick={openConfirmationModal}>
+               <span><FaFilePdf/></span> Crear PDF final
+            </button>
+
         </div>
+
+    </div>
     }
 
     return (
@@ -321,11 +362,18 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
 
 
             {additionalFiles.length >= 0 && (
-                <div className='flex items-center gap-2 mb-5'>
-                    <h2>Adjuntar archivos</h2>
-                    <button className="text-gray-600 bg-gray-500  text-white rounded-md px-3 py-1 cursor-pointer" onClick={addMoreFiles}>
-                        <span className='font-bold text-lg'>+</span>
-                    </button>
+
+                <div>
+                    <div className='flex items-center gap-2 mb-3'>
+                        <h2>Adjuntar archivos</h2>
+                        <button className="text-gray-600 bg-gray-500  text-white rounded-md px-3 py-1 cursor-pointer" onClick={addMoreFiles}>
+                            <span className='font-bold text-lg'><MdAttachFile /></span>
+                        </button>
+
+                    </div>
+                    <p className='text-sm'><span className='text-amber-600'>* </span>
+                        Presiona el boton de adjuntar para generar nuevos campos de entrada de archivos </p>
+
                 </div>
 
             )}
@@ -343,9 +391,9 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
 
 
             <div className='mt-8'>
-                <button className='bg-amber-600 text-white font-medium px-4 py-2 rounded-lg'
+                <button className='bg-amber-600 text-white font-medium px-4 py-2 rounded-lg flex gap-2 items-center'
                     onClick={openConfirmationModal}>
-                    Crear PDF final
+                     <span><FaFilePdf/></span> Crear PDF final
                 </button>
 
             </div>

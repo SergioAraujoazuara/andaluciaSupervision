@@ -6,18 +6,16 @@ import { GoHomeFill } from "react-icons/go";
 import { FaArrowRight } from "react-icons/fa";
 import { IoCloseCircle } from "react-icons/io5";
 import { IoMdAddCircle } from "react-icons/io";
-import { SiReacthookform } from "react-icons/si";
 import { FaFilePdf } from "react-icons/fa6";
 import { FaQuestionCircle } from "react-icons/fa";
 import { FaCheckCircle } from "react-icons/fa";
+import { FcInspection } from "react-icons/fc";
 import FormularioInspeccion from '../Components/FormularioInspeccion'
-import RecuperarPdf from './RecuperarPdf';
-import jsPDF from 'jspdf';
 import logo from '../assets/tpf_logo_azul.png'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import Pdf_final from './Pdf_final';
 import imageCompression from 'browser-image-compression';
-import { GrNotes } from "react-icons/gr";
+import { div } from 'three/examples/jsm/nodes/Nodes.js';
 
 
 function TablaPpi() {
@@ -56,7 +54,7 @@ function TablaPpi() {
                     setPpi(inspeccionesData[0]);
                     setPpiNombre(inspeccionesData[0].nombre) // O maneja múltiples inspecciones según sea necesario
                 } else {
-                    console.log('No se encontraron inspecciones para el lote con el ID:', idLote);
+
                     setPpi(null);
                 }
             } catch (error) {
@@ -67,12 +65,12 @@ function TablaPpi() {
 
 
         obtenerInspecciones();
-        console.log(ppi)
+
     }, [idLote]); // Dependencia del efecto basada en idLote
 
     useEffect(() => {
 
-        console.log(ppi)
+
     }, []);
 
 
@@ -100,19 +98,11 @@ function TablaPpi() {
 
 
 
-    const handleOpenModal = (subactividadId) => {
-        setCurrentSubactividadId(subactividadId);
-        console.log(subactividadId)
-        // Inicializar la selección temporal con el valor actual si existe
-        const valorActual = seleccionApto[subactividadId]?.resultadoInspeccion;
-        setTempSeleccion(valorActual);
-        setModal(true);
-    };
 
 
     const handleOpenModalFormulario = (subactividadId) => {
         setCurrentSubactividadId(subactividadId);
-        console.log(subactividadId);
+
         // Inicializar la selección temporal con el valor actual si existe
         const valorActual = seleccionApto[subactividadId]?.resultadoInspeccion;
         setTempSeleccion(valorActual);
@@ -134,118 +124,6 @@ function TablaPpi() {
 
     };
 
-    const handleGuardarTemporal = () => {
-        // Solo muestra la confirmación, no aplica la selección todavía
-        setMostrarConfirmacion(true);
-    };
-
-    const handleConfirmarGuardar = async () => {
-        const fechaHoraActual = new Date().toLocaleString('es-ES', {
-            year: 'numeric', month: '2-digit', day: '2-digit',
-            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-        });
-
-        const hashFirma = 'GSJDJDN5663VDHSDN';
-
-        if (currentSubactividadId && tempSeleccion !== null) {
-            // Encuentra el índice de la actividad y de la subactividad desde el ID
-            const [actividadIndex, subactividadIndex] = currentSubactividadId.split('-').slice(1).map(Number);
-
-            // Prepara la evaluación de la subactividad seleccionada
-            const evaluacionSubactividad = {
-
-                enviado: true,
-                fecha: fechaHoraActual,
-                responsable: nombreResponsable,
-                firma: hashFirma.toString(),
-                comentario: comentario,
-            };
-
-            // Actualiza siempre la subactividad seleccionada con la nueva evaluación
-            let subactividadActualizada = { ...ppi.actividades[actividadIndex].subactividades[subactividadIndex], ...evaluacionSubactividad };
-            ppi.actividades[actividadIndex].subactividades[subactividadIndex] = subactividadActualizada;
-
-            // Si la evaluación es "No apto", agrega una nueva subactividad para una futura inspección
-            if (tempSeleccion === "No apto") {
-                let nuevaSubactividad = { ...subactividadActualizada };
-                const numeroPartes = subactividadActualizada.numero.split('.');
-                if (numeroPartes.length === 2) {
-                    nuevaSubactividad.numero += ".1";
-                } else if (numeroPartes.length > 2) {
-                    let repeticion = parseInt(numeroPartes.pop(), 11) + 1;
-                    numeroPartes.push(repeticion.toString());
-                    nuevaSubactividad.numero = numeroPartes.join('.');
-                }
-
-                // La nueva subactividad copiada no debe incluir los datos específicos de la evaluación
-                delete nuevaSubactividad.resultadoInspeccion;
-                delete nuevaSubactividad.enviado;
-                delete nuevaSubactividad.fecha;
-                delete nuevaSubactividad.responsable;
-                delete nuevaSubactividad.firma;
-                delete nuevaSubactividad.comentario;
-
-                ppi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividad);
-            }
-
-            // Actualiza Firestore con el nuevo objeto ppi
-            await actualizarPpiEnFirestore(ppi);
-
-            // Limpia el formulario y cierra el modal
-            setComentario('');
-            setMostrarConfirmacion(false);
-            setTempSeleccion(null);
-            setModal(false);
-        }
-    };
-
-
-
-
-
-
-    const actualizarPpiEnFirestore = async (nuevoPpi) => {
-        if (!nuevoPpi.docId) {
-            console.error("No se proporcionó docId para la actualización.");
-            return;
-        }
-
-        try {
-            // Aquí, "docId" es el ID del documento de Firestore donde se almacenan los datos del PPI.
-            const ppiRef = doc(db, "lotes", idLote, "inspecciones", nuevoPpi.docId);
-
-            // Prepara los datos que se van a actualizar. En este caso, actualizamos todo el objeto de actividades.
-            const updatedData = {
-                actividades: nuevoPpi.actividades.map(actividad => ({
-                    ...actividad,
-                    subactividades: actividad.subactividades.map(subactividad => ({
-                        numero: subactividad.numero,
-                        nombre: subactividad.nombre,
-                        criterio_aceptacion: subactividad.criterio_aceptacion,
-                        documentacion_referencia: subactividad.documentacion_referencia,
-                        tipo_inspeccion: subactividad.tipo_inspeccion,
-                        punto: subactividad.punto,
-                        responsable: subactividad.responsable || '',
-                        fecha: subactividad.fecha || '',
-                        firma: subactividad.firma || '',
-                        comentario: subactividad.comentario || '',
-                        resultadoInspeccion: subactividad.resultadoInspeccion || '',
-                        formularioEnviado: subactividad.formularioEnviado || '',
-                        idRegistroFormulario: subactividad.idRegistroFormulario || ''
-                        // Agrega aquí más campos si son necesarios.
-                    }))
-                }))
-            };
-
-            // Realiza la actualización en Firestore.
-            await updateDoc(ppiRef, updatedData);
-
-            console.log("PPI actualizado con éxito en Firestore.");
-        } catch (error) {
-            console.error("Error al actualizar PPI en Firestore:", error);
-        }
-    };
-
 
     // agregar cometarios
     const [comentario, setComentario] = useState("");
@@ -263,7 +141,7 @@ function TablaPpi() {
 
     const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspeccion,) => {
         if (!ppi || !currentSubactividadId) {
-            console.error("PPI o subactividad no definida.");
+
             return;
         }
 
@@ -360,7 +238,7 @@ function TablaPpi() {
             // Realiza la actualización en Firestore.
             await updateDoc(ppiRef, updatedData);
 
-            console.log("PPI actualizado con éxito en Firestore.");
+
         } catch (error) {
             console.error("Error al actualizar PPI en Firestore:", error);
         }
@@ -371,10 +249,6 @@ function TablaPpi() {
     const [modalInforme, setModalInforme] = useState(false)
     const [modalConfirmacionInforme, setModalConfirmacionInforme] = useState(false)
 
-    const confirmarInforme = () => {
-        setModalInforme(true)
-        handleCloseModal()
-    }
 
     const closeModalConfirmacion = () => {
         setModalInforme(false)
@@ -400,9 +274,13 @@ function TablaPpi() {
 
     const [loteInfo, setLoteInfo] = useState(null); // Estado para almacenar los datos del PPI
     const [sectorInfoLote, setSectorInfoLote] = useState(null); // Estado para almacenar los datos del PPI
+    const [cierreInspeccion, setCierreInspeccion] = useState(false); // Estado para almacenar los datos del PPI
+    const [actividadesAptas, setActividadesAptas] = useState(0); // Estado para almacenar los datos del PPI
+    const [totalSubactividades, setTotalSubActividades] = useState(0); // Estado para almacenar los datos del PPI
+    const [difActividades, setDifActividades] = useState(0); // Estado para almacenar los datos del PPI
     useEffect(() => {
         const obtenerLotePorId = async () => {
-            console.log('**********', idLote)
+
             if (!idLote) return; // Verifica si idLote está presente
 
             try {
@@ -410,9 +288,26 @@ function TablaPpi() {
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    console.log("Datos del lote:", docSnap.data());
+
                     setLoteInfo({ id: docSnap.id, ...docSnap.data() });
-                    console.log({ id: docSnap.id, ...docSnap.data() }, 'lote info****loteinfo');
+                    let loteObject = { id: docSnap.id, ...docSnap.data() };
+                    let actividadesAptas = loteObject.actividadesAptas
+                    setActividadesAptas(actividadesAptas)
+                    let totalSubactividades = loteObject.totalSubactividades
+                    setTotalSubActividades(totalSubactividades)
+                    let difActividades = totalSubactividades - actividadesAptas
+                    setDifActividades(difActividades)
+
+                    if (difActividades === 0) {
+                        setCierreInspeccion(true)
+                    }
+                    else {
+                        setCierreInspeccion(false)
+                    }
+
+                    console.log(cierreInspeccion, difActividades, '******************')
+
+
                 } else {
                     console.log("No se encontró el lote con el ID:", idLote);
 
@@ -488,7 +383,7 @@ function TablaPpi() {
 
             setObservaciones('')
             setComentario('')
-            console.log("Documento escrito con ID: ", docRef.id);
+
             return docRef.id; // Devolver el ID del documento creado
 
 
@@ -562,7 +457,7 @@ function TablaPpi() {
                 if (docSnap.exists()) {
                     setDocumentoFormulario(docSnap.data())
                     setModalRecuperarFormulario(true)
-                    console.log("Datos del documento:", docSnap.data());
+
                 } else {
                     console.log("No se encontró el documento con el ID:", idRegistroFormulario);
                 }
@@ -985,7 +880,7 @@ function TablaPpi() {
         const pdfUrl = URL.createObjectURL(pdfBlob);
         const link = document.createElement('a');
         link.href = pdfUrl;
-        link.download = 'documento.pdf';
+        link.download = `${obra}_${ppi}`;
         link.click();
         URL.revokeObjectURL(pdfUrl);
 
@@ -995,17 +890,7 @@ function TablaPpi() {
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [allowPdfGeneration, setAllowPdfGeneration] = useState(false);
-    const [showFinishButton, setShowFinishButton] = useState(false);
 
-    const handleGeneratePdf = (blob) => {
-        const pdfUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = pdfUrl;
-        link.download = 'documento.pdf';
-        link.click();
-        URL.revokeObjectURL(pdfUrl);
-        setShowConfirmModal(false); // Cierra el modal después de descargar
-    };
 
     //! ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     const [imagen, setImagen] = useState(null);
@@ -1014,15 +899,17 @@ function TablaPpi() {
     const handleImagenChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            console.log('Cargando imagen:', file.name); // Registro de la carga de la imagen
+            // Registro de la carga de la imagen
             try {
                 const options = {
                     maxSizeMB: 0.2, // Tamaño máximo en MB
-                    maxWidthOrHeight: 460, // Ajusta la imagen al tamaño máximo manteniendo la relación de aspecto
+                    maxWidthOrHeight: 500, // Ajusta la imagen al tamaño máximo manteniendo la relación de aspecto
                     useWebWorker: true, // Usa un web worker para la compresión en un hilo de fondo
                 };
                 const compressedFile = await imageCompression(file, options);
-                console.log('Imagen comprimida exitosamente:', compressedFile); // Registro después de la compresión
+                // Registrar el tamaño del archivo comprimido
+                console.log(`Tamaño del archivo comprimido: ${compressedFile.size} bytes`);
+
 
                 const reader = new FileReader();
                 reader.onload = async () => {
@@ -1036,7 +923,7 @@ function TablaPpi() {
                         ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
                         const pngDataUrl = canvas.toDataURL("image/png");
                         setImagen(pngDataUrl); // Almacenar la imagen PNG en el estado
-                        console.log('Imagen convertida a PNG y cargada en el estado');
+
                     };
                 };
                 reader.readAsDataURL(compressedFile);
@@ -1049,15 +936,16 @@ function TablaPpi() {
     const handleImagenChange2 = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            console.log('Cargando segunda imagen:', file.name);
+
             try {
                 const options = {
                     maxSizeMB: 0.2,
-                    maxWidthOrHeight: 460,
+                    maxWidthOrHeight: 500,
                     useWebWorker: true,
                 };
                 const compressedFile = await imageCompression(file, options);
-                console.log('Segunda imagen comprimida exitosamente:', compressedFile);
+                // Registrar el tamaño del archivo comprimido
+                console.log(`Tamaño del archivo comprimido: ${compressedFile.size} bytes`);
 
                 const reader = new FileReader();
                 reader.onload = async () => {
@@ -1071,7 +959,7 @@ function TablaPpi() {
                         ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
                         const pngDataUrl = canvas.toDataURL("image/png");
                         setImagen2(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
-                        console.log('Segunda imagen convertida a PNG y cargada en el estado');
+
                     };
                 };
                 reader.readAsDataURL(compressedFile);
@@ -1082,9 +970,11 @@ function TablaPpi() {
     };
 
 
+    //! Cierre de inspeccion ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
+    useEffect(() => {
+        console.log(loteInfo, '******')
+    }, [idLote])
 
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500 text-sm'>
@@ -1106,17 +996,6 @@ function TablaPpi() {
                         <h1 className='font-medium text-amber-600'>Ppi: {ppiNombre}</h1>
                     </Link>
                 </div>
-
-
-
-                <button
-                    onClick={() => setShowConfirmModal(true)}
-                    className="bg-blue-500 text-white font-bold py-2 px-4 rounded"
-                >
-                    Preparar PDF
-                </button>
-
-
             </div>
 
 
@@ -1260,9 +1139,41 @@ function TablaPpi() {
                         </div>
                     </div>
                 </div>
+
+
             </div>
 
+            <div className='bg-white px-8 py-4 rounded-xl mt-4'>
+                {actividadesAptas && (
+                    <>
+                        <div className='flex gap-3 items-center text-lg'>
 
+                            <div>
+                                <p className='font-bold'>Inspecciones aptas: <span className='font-normal'>{actividadesAptas}</span></p>
+                            </div>
+                            {'/'}
+                            <div>
+                                <p className='font-bold'>Inspecciones totales: <span className='font-normal'>{totalSubactividades}</span></p>
+                            </div>
+                            <div className='ms-10'>
+                                {difActividades === 0 && (
+                                    <button
+                                        onClick={() => setShowConfirmModal(true)}
+                                        className="bg-amber-600 text-white font-bold py-2 px-4 rounded"
+                                    >
+                                        <p className='flex gap-2 items-center'><span><FaFilePdf /></span>Cerrar inspección</p>
+                                    </button>
+                                )
+                                }
+                            </div>
+
+                        </div>
+
+                    </>
+
+
+                )}
+            </div>
 
 
             {modalFormulario && (
@@ -1504,8 +1415,8 @@ function TablaPpi() {
 
             {showConfirmModal && (
                 <div className="fixed inset-0 bg-gray-600 text-gray-500 bg-opacity-50 flex justify-center items-center">
-                    <div className="bg-white p-10 pb-20  rounded-lg shadow-lg max-w-sm mx-auto">
-                        <div className='text-center flex flex-col gap-2'>
+                    <div className="bg-white p-10 pb-12  rounded-lg shadow-lg max-w-xl mx-auto">
+                        <div className='text-center flex flex-col items-start gap-1'>
                             <button
                                 onClick={() => {
                                     setAllowPdfGeneration(false);
@@ -1513,10 +1424,11 @@ function TablaPpi() {
 
                                     ; // Cerrar el modal
                                 }}
-                                className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300 mb-5">
+                                className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300 mb-2">
                                 <IoCloseCircle />
                             </button>
-                            <h2 className="text-xl font-semibold">¿Quieres terminar la inspección?</h2>
+
+                            <h2 className="text-xl font-semibold flex gap-1 items-center text-left"><span className='text-4xl'><FcInspection /></span>¿Quieres terminar la inspección?</h2>
 
                         </div>
 
