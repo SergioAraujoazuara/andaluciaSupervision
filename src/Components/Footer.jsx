@@ -13,12 +13,12 @@ import { GiHamburgerMenu } from "react-icons/gi";
 
 const Footer = () => {
   return (
-    <footer className="bg-white text-gray-500 p-10 flex flex-col items-center justify-center gap-3">
+    <footer className="bg-white text-gray-500 p-5 flex items-center justify-center gap-3">
       <div className="text-center lg:mr-4 mb-2 lg:mb-0">
-        <img src={logo} width={200} alt="logo footer" className="mx-auto mr-8" />
+        <img src={logo} width={150} alt="logo footer" className="mx-auto mr-8" />
       </div>
       <div>
-        <p className='text-md font-bold'>
+        <p className='text-md font-medium'>
           C. de Ramón de Aguinaga, 8, Salamanca, 28028 Madrid
         </p>
       </div>
@@ -30,7 +30,7 @@ const Footer = () => {
 
       {/* Cuarta Columna - Número de Teléfono */}
       <div className="text-center lg:text-center">
-        <p className=' text-md font-bold'>+34 914 18 21 10</p>
+        <p className=' text-md font-medium'>+34 914 18 21 10</p>
 
       </div>
 

@@ -6,8 +6,14 @@ import { Link, useParams } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
 import { BsClipboardCheck } from "react-icons/bs";
 import { GrDocumentTest } from "react-icons/gr";
+import { IoArrowBackCircle } from "react-icons/io5";
+import { useNavigate } from 'react-router-dom';
 
 function PlantillaPpi() {
+    const navigate = useNavigate();
+    const handleGoBack = () => {
+        navigate('/admin'); // Esto navega hacia atrás en la historia
+      };
     const { ppiNombre } = useParams();
     const [ppi, setPpi] = useState(null); // Estado para almacenar los datos del PPI
 
@@ -104,17 +110,17 @@ function PlantillaPpi() {
         e.preventDefault();
         setLoading(true);
         setError('');
-    
+
         // Calcular el total de subactividades
         const totalSubactividades = actividades.reduce((acc, actividad) => acc + actividad.subactividades.length, 0);
-    
+
         try {
             await addDoc(collection(db, 'ppis'), {
                 nombre,
                 actividades,
                 totalSubactividades // Guardar el total de subactividades en el documento
             });
-    
+
             // Restablecer el estado al estado inicial después de agregar el documento
             setNombre('');
             setActividades([
@@ -149,7 +155,7 @@ function PlantillaPpi() {
             setLoading(false);
         }
     };
-    
+
 
     // Función para agregar una nueva actividad
     const addActividad = () => {
@@ -184,24 +190,32 @@ function PlantillaPpi() {
     return (
         <>
 
-            <div className='min-h-screen px-14 py-5 text-gray-500 text-sm'>
+            <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500 text-sm'>
+                <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
 
-                {/* Navigation section */}
-                <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+                    <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'/admin'}>
                         <h1 className='text-gray-500 text-gray-500'>Administración</h1>
                     </Link>
                     <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                     <Link to={'/verPpis'}>
-                        <h1 className='text-gray-500 text-gray-500'>Ver Ppis</h1>
+                        <h1 className='text-gray-500 text-gray-500'>Plantillas PPI</h1>
                     </Link>
                     <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                     <Link to={'#'}>
                         <h1 className='font-medium text-amber-600'>Crear PPI</h1>
                     </Link>
+                    </div>
+
+
+                    <div className='flex items-center'>
+                        <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
+
+                    </div>
 
                 </div>
+               
 
 
                 <div className='flex gap-3 flex-col  mt-5 bg-white p-8 rounded rounded-xl shadow-md'>

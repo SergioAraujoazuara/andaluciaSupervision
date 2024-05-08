@@ -63,13 +63,15 @@ function Home() {
 
       <div className='flex gap-3 flex-col'>
 
+        
+
         {proyectos.map((p, i) => (
           <Link to={`/elemento/${p.id}`} onClick={() => { obtenerProyecto(p) }}>
             <div className="relative">
               <img src='https://maldita.es/uploads/images/2022/07/62c6f70f2549cadif-copy-jpg.jpg' alt="Sustainable Building" className="w-full  h-screen" />
               <div className="absolute inset-0 bg-black bg-opacity-45"></div>
 
-              <div className="absolute inset-0 flex flex-col items-start justify-start">
+              <div className="absolute inset-0 flex flex-col items-start justify-start md:px-20 lg:px-40 xl:px-20 2xl:px-40">
 
                 {/* <div className=' text-white mt-10  w-[800px]  px-16 py-6 rounded-xl'>
                   <h2 className="text-xl font-bold text-white">Building the world, better</h2>
@@ -81,7 +83,7 @@ function Home() {
                   <p className="text-2xl mt-4"> {p.obra}</p>
                   <p className="text-2xl mt-1"> {p.tramo}</p>
                   <button
-                    onClick={() => navigate('/signin')}
+                   
                     className="text-gray-500 mt-8 flex items-center gap-3 text-lg font-semibold bg-white py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out hover:bg-gray-100 hover:shadow-lg hover:-translate-y-1"
                   >
                     <span className='text-amber-500 text-xl transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>

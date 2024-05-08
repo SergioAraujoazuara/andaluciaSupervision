@@ -7,12 +7,16 @@ import { GoHomeFill } from "react-icons/go";
 import { FaEdit } from "react-icons/fa";
 import { MdDeleteOutline } from "react-icons/md";
 import { IoCloseCircle } from "react-icons/io5";
-
+import { useNavigate } from 'react-router-dom';
+import { IoArrowBackCircle } from "react-icons/io5";
 
 import { IoMdAddCircleOutline } from "react-icons/io";
 
 function VerPpis() {
-
+    const navigate = useNavigate();
+    const handleGoBack = () => {
+        navigate('/admin'); // Esto navega hacia atrás en la historia
+    };
     const [ppis, setPpis] = useState([]);
     const [selectedPpi, setSelectedPpi] = useState("");
 
@@ -65,23 +69,28 @@ function VerPpis() {
 
 
     return (
-        <div className='min-h-screen px-14 py-5 text-gray-500'>
+        <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500'>
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
 
-
-
-            {/* Navigation section */}
-            <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+                <div className='flex gap-2 items-center'>
                 <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                 <Link to={'/admin'}>
                     <h1 className='text-gray-500 text-gray-500'>Administración</h1>
                 </Link>
                 <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                 <Link to={'/verPpis'}>
-                    <h1 className='text-amber-500 font-medium'>Ver Ppis</h1>
+                    <h1 className='text-amber-500 font-medium'>Plantillas PPI</h1>
                 </Link>
+                </div>
 
+
+                <div className='flex items-center'>
+                    <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
+
+                </div>
 
             </div>
+
 
 
             <div>
@@ -92,14 +101,10 @@ function VerPpis() {
 
                     <div class="w-full rounded rounded-xl">
 
-                        <div>
-                            <Link to={'/agregarPpi'}>
-                                <button className='bg-sky-600 flex gap-1 items-center text-white px-4 py-2 rounded-lg'> <IoMdAddCircleOutline /> Agregar ppi</button>
-                            </Link>
-                        </div>
+                       
 
 
-                        <div className="overflow-x-auto relative shadow-md sm:rounded-lg mt-5">
+                        <div className="overflow-x-auto relative shadow-md sm:rounded-lg ">
                             <div className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                 <div className="text-sm text-gray-700 dark:bg-gray-700 dark:text-gray-400 bg-gray-200">
                                     <div>
@@ -140,10 +145,16 @@ function VerPpis() {
 
 
                     </div>
-
+                    <div className='flex gap-2 mt-2'>
+                    <p className=' px-4 py-2 rounded-lg'> Crear nuevo ppi: </p>
+                            <Link to={'/agregarPpi'}>
+                               
+                                <button className='bg-sky-600 flex gap-1 items-center text-white px-4 py-2 rounded-lg'> <IoMdAddCircleOutline /> Agregar</button>
+                            </Link>
+                        </div>
                 </div>
 
-
+                
 
 
 
@@ -160,10 +171,10 @@ function VerPpis() {
                             <p className='text-gray-500 font-medium'>¿Estás seguro de que deseas eliminar este PPI?</p>
 
                             <div className='flex gap-3 justify-center mt-4'>
-                            <button className='text-sm bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg shadow-md' onClick={() => eliminarPpiConfirmado()}>Eliminar</button>
-                            <button className='text-sm bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg shadow-md' onClick={handleCloseAlert}>Cancelar</button>
+                                <button className='text-sm bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg shadow-md' onClick={() => eliminarPpiConfirmado()}>Eliminar</button>
+                                <button className='text-sm bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg shadow-md' onClick={handleCloseAlert}>Cancelar</button>
                             </div>
-                            
+
 
                         </div>
                     </div>

@@ -15,10 +15,15 @@ import logo from '../assets/tpf_logo_azul.png'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import Pdf_final from './Pdf_final';
 import imageCompression from 'browser-image-compression';
-import { div } from 'three/examples/jsm/nodes/Nodes.js';
+
+import { IoArrowBackCircle } from "react-icons/io5";
 
 
 function TablaPpi() {
+  
+    const handleGoBack = () => {
+        navigate(`/elementos/${id}`); // Esto navega hacia atrás en la historia
+    };
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
 
     const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
@@ -977,14 +982,15 @@ function TablaPpi() {
     }, [idLote])
 
     return (
-        <div className='min-h-screen px-14 py-5 text-gray-500 text-sm'>
+        <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500 text-sm'>
+
+           
 
             <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
-
-                <div className='flex items-center gap-2'>
-                    <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+                <div className='flex gap-2 items-center'>
+                <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'/'}>
-                        <h1 className=' text-gray-500'>Inicio</h1>
+                        <h1 className=' text-gray-500'>Home</h1>
                     </Link>
 
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
@@ -996,12 +1002,21 @@ function TablaPpi() {
                         <h1 className='font-medium text-amber-600'>Ppi: {ppiNombre}</h1>
                     </Link>
                 </div>
+
+
+                <div className='flex items-center gap-4'>
+                    <button className='text-amber-600 text-3xl' onClick={regresar}><IoArrowBackCircle /></button>
+
+                    
+
+                </div>
+
             </div>
 
 
 
 
-            <div className='flex gap-3 flex-col mt-5 bg-white p-8 rounded-xl shadow-md'>
+            <div className='flex gap-3 flex-col mt-5 bg-white  rounded-xl shadow-md'>
                 <div className="w-full rounded-xl overflow-x-auto">
                     <div>
                         <div className="w-full bg-gray-300 text-gray-600 text-sm font-medium py-3 px-3 grid grid-cols-24">
@@ -1143,10 +1158,10 @@ function TablaPpi() {
 
             </div>
 
-            <div className='bg-white px-8 py-4 rounded-xl mt-4'>
+            <div className='bg-white px-8 py-4 rounded-xl mt-4 rounded rounded-xl shadow-md'>
                 {actividadesAptas && (
                     <>
-                        <div className='flex gap-3 items-center text-lg'>
+                        <div className='flex gap-3 items-center text-md'>
 
                             <div>
                                 <p className='font-bold'>Inspecciones aptas: <span className='font-normal'>{actividadesAptas}</span></p>
@@ -1161,7 +1176,7 @@ function TablaPpi() {
                                         onClick={() => setShowConfirmModal(true)}
                                         className="bg-amber-600 text-white font-bold py-2 px-4 rounded"
                                     >
-                                        <p className='flex gap-2 items-center'><span><FaFilePdf /></span>Cerrar inspección</p>
+                                        <p className='flex gap-2 items-center'><span><FaFilePdf /></span>Terminar inspección</p>
                                     </button>
                                 )
                                 }

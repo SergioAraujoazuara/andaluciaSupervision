@@ -2008,7 +2008,7 @@ export default function ViewerInspeccion() {
 
     return (
 
-        <div className="min-h-screen text-gray-500 px-14 py-5">
+        <div className="container mx-auto min-h-screen text-gray-500 px-14 py-5">
             <div className='flex gap-2 items-center justify start bg-white px-5 py-5 rounded rounded-xl shadow-md text-lg'>
                 <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                 <Link to={'/'}>
@@ -2045,7 +2045,7 @@ export default function ViewerInspeccion() {
                                 <p className=' bg-white text-gray-500 ps-1'><strong> PPI: </strong> {selectedLote.ppiNombre}</p>
                             </div>
 
-                            <div className="bg-sky-700 p-2 font-bold text-white mt-6 rounded-t-lg">Avance de la inspección</div>
+                            <div className="bg-sky-600 p-2 font-bold text-white mt-6 rounded-t-lg">Avance de la inspección</div>
                             <div className=''>
                                 {
                                     inspecciones.length > 0 && inspecciones.map((inspeccion) => (

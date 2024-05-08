@@ -52,11 +52,11 @@ const Navbar = () => {
 
   return (
     <nav className="bg-white shadow">
-      <div className="px-20">
-        <div className="flex justify-between h-30">
+      <div className="container mx-auto px-10">
+        <div className="flex justify-between h-24">
           <div className="flex gap-10">
             <div className="flex-shrink-0 flex items-center">
-              <img className="h-auto" src={Imagen} width={220} alt="logo" />
+              <img className="h-auto" src={Imagen} width={150} alt="logo" />
             </div>
             {user && (
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -82,15 +82,15 @@ const Navbar = () => {
             )}
           </div>
           {user && (
-            <div className='flex items-center font-medium text-gray-500 pr-5 gap-3 text-base'>
-              <div className='flex gap-3 items-center text-lg text-gray-500 font-bold'>
+            <div className='flex items-center font-medium text-gray-500 pr-5 gap-5 text-base'>
+              <div className='flex gap-2 items-center text-gray-500'>
                 <FaUserAlt />
                 <p>{userNombre || 'Usuario'}</p>
               </div>
-              <div className="relative bg-sky-600 text-white px-4 py-2 rounded-lg">
-                <button className="flex gap-2 items-center text-lg font-bold" onClick={toggleLogoutConfirmation}>
-                
-                  {showProfileDropdown ? <span className='text-sm flex items-center'><IoIosSettings /></span> : <span className='text-sm'><ImExit /></span>}
+              <div className="relative bg-sky-600 text-white px-4 py-2 rounded-full">
+                <button className="flex items-center text-md" onClick={toggleLogoutConfirmation}>
+                  
+                  {showProfileDropdown ? <span className='text-xl flex items-center'><IoIosSettings /></span> : <span className='text-md'><ImExit /></span>}
                 </button>
                 {/* {showProfileDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-md">
@@ -106,12 +106,12 @@ const Navbar = () => {
       </div>
       {showLogoutConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-80 z-10 flex justify-center items-center">
-          <div className="bg-white p-10 rounded-lg flex flex-col gap-2 items-center">
+          <div className="bg-white p-10 rounded-md flex flex-col gap-2 items-center">
             <p className='text-gray-500 text-7xl'><FaDoorOpen /></p>
             <p className="text-gray-500 font-bold">¿Estás seguro que quieres cerrar sesión?</p>
             <div className="flex justify-around gap-5 mt-4 p-1">
-              <button onClick={handleLogout} className="bg-amber-600 text-white font-medium px-4 py-2 rounded-lg">Confirmar</button>
-              <button onClick={() => setShowLogoutConfirmation(false)} className="bg-gray-300 text-black px-10 py-2 rounded-lg">Cancelar</button>
+              <button onClick={handleLogout} className="bg-amber-600 text-white font-medium px-4 py-2 rounded-full">Confirmar</button>
+              <button onClick={() => setShowLogoutConfirmation(false)} className="bg-gray-300 text-black px-10 py-2 rounded-full">Cancelar</button>
             </div>
           </div>
         </div>
@@ -129,7 +129,7 @@ const NavLink = ({ to, linkName, activeLink, handleLinkClick }) => {
     <Link
       to={to}
       onClick={() => handleLinkClick(to)}
-      className={`inline-flex items-center px-1 pt-1 border-b-2 text-lg font-bold ${borderColorClass} ${textColorClass}`}
+      className={`inline-flex items-center px-1 pt-1 border-b-2 text-md font-medium ${borderColorClass} ${textColorClass}`}
     >
       {linkName}
     </Link>

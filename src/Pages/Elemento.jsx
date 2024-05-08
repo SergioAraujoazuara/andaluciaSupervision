@@ -6,8 +6,14 @@ import { FaArrowRight } from "react-icons/fa";
 import { GoHomeFill } from "react-icons/go";
 import { Link } from 'react-router-dom';
 import { SiBim } from "react-icons/si";
+import { useNavigate } from 'react-router-dom';
+import { IoArrowBackCircle } from "react-icons/io5";
 
 function Elemento() {
+    const navigate = useNavigate();
+    const handleGoBack = () => {
+        navigate('/'); // Esto navega hacia atrás en la historia
+    };
 
     const [lotes, setLotes] = useState([]);
     const [ppiNombre, setPpiNombre] = useState([]);
@@ -53,32 +59,39 @@ function Elemento() {
 
 
     return (
-        <div className='min-h-screen px-14 py-5'>
+        <div className='container mx-auto min-h-screen px-14 py-5'>
 
-            <div className='flex gap-2 items-center justify-between bg-white px-10 py-5 rounded rounded-xl shadow-md text-lg'>
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
                 <div className='flex gap-2 items-center'>
-
-                
-                <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'/'}>
-                    <h1 className=' text-gray-500'>Home</h1>
-                </Link>
+                    <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+                    <Link to={'/'}>
+                        <h1 className=' text-gray-500'>Home</h1>
+                    </Link>
 
 
-                <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-                <Link to={'#'}>
-                    <h1 className='font-medium text-amber-600'>Inspección</h1>
-                </Link>
-                </div>
-
-                <div className='px-4 py-2 bg-sky-500 text-white rounded-lg '>
-                    <Link to={'/visor_inspeccion'}>
-                        <button className='text-white flex items-center gap-3'>
-                            Version <span className='text-2xl'><SiBim /> </span>
-                        </button>
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                    <Link to={'#'}>
+                        <h1 className='font-medium text-amber-600'>Inspección</h1>
                     </Link>
                 </div>
+
+
+                <div className='flex items-center gap-4'>
+                    <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
+
+                    <div className='px-4 bg-sky-600 text-white rounded-lg '>
+                        <Link to={'/visor_inspeccion'}>
+                            <button className='text-white flex items-center gap-3'>
+                                <span className='text-2xl'><SiBim /> </span>
+                            </button>
+                        </Link>
+                    </div>
+
+                </div>
+
             </div>
+
+
 
 
 
@@ -88,16 +101,14 @@ function Elemento() {
 
 
                     <div class="w-full rounded rounded-xl">
-                        <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded rounded-md '>
-                            <div className='text-left font-medium text-gray-600 sm:block hidden'>Sector</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden  col-span-2'>Sub Sector</div>
-                            <div className='text-left sm:ps-5 font-medium text-gray-600 sm:block hidden '>Parte</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden  col-span-2'>Elemento</div>
-                            <div className='text-left sm:ps-10  font-medium text-gray-600 sm:block hidden col-span-2 '>Pk</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden col-span-2'>Lote y ppi</div>
-
-
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 sm:block hidden col-span-2'>Progreso inspección</div>
+                        <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded rounded-md'>
+                            <div className='text-left font-medium text-gray-600 border-r-2 border-gray-300 sm:block hidden border-r-2 border-gray-300'>Sector</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-2  sm:block hidden border-r-2 border-gray-300'>Sub Sector</div>
+                            <div className='text-left sm:ps-5 font-medium text-gray-600 border-r sm:block hidden border-r-3 border-gray-300'>Parte</div>
+                            <div className='text-left sm:ps-5 font-medium text-gray-600 col-span-1  sm:block hidden border-r-2 border-gray-300'>Elemento</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-2 sm:block hidden border-r-2 border-gray-300'>Pk</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-3 sm:block hidden border-r-2 border-gray-300'>Lote y ppi</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-2  sm:block hidden border-gray-300'>Progreso inspección</div>
                         </div>
 
 
@@ -117,24 +128,24 @@ function Elemento() {
                                         {l.parteNombre}
                                     </div>
 
-                                    <div className=' sm:border-r-2 flex items-center sm:justify-start col-span-2  sm:ps-10'>
+                                    <div className=' sm:border-r-2 flex items-center sm:justify-start col-span-1  sm:ps-6'>
                                         {l.elementoNombre}
                                     </div>
 
 
                                     <div className='sm:border-r-2 flex flex-col col-span-2 items-start justify-center text-center sm:ps-8'>
-                                        <div className='col-span-2'><p className='p-2'>Inicial: {l.pkInicial}</p></div>
-                                        <div className='col-span-2'><p className='  p-2'>Final: {l.pkFinal}</p></div>
+                                        <div className='col-span-2'><p className='p-1'>Inicial: {l.pkInicial}</p></div>
+                                        <div className='col-span-2'><p className='  p-1'>Final: {l.pkFinal}</p></div>
 
 
                                     </div>
-                                    <div className='sm:border-r-2 flex flex-col col-span-2 items-start sm:justify-center sm:ps-10 sm:pr-5'>
+                                    <div className='sm:border-r-2 flex flex-col col-span-3 items-start sm:justify-center sm:ps-10 sm:pr-5'>
                                         <p className='font-medium'>Lote: {l.nombre}</p>
-                                        <p className='text-sky-600 font-medium'>Ppi: {l.ppiNombre}</p>
+                                        <p className='text-amber-600 font-medium'>Ppi: {l.ppiNombre}</p>
                                     </div>
 
 
-                                    <div className='h-10 flex items-center sm:justify-start gap-5 col-span-2 sm:ps-10'>
+                                    <div className=' flex flex-col items-center sm:justify-start gap-5 col-span-2 sm:ps-10'>
                                         {
                                             l.totalSubactividades > 0 ? (
                                                 <>

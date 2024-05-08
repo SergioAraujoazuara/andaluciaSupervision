@@ -12,9 +12,16 @@ import { MdOutlineAddLocationAlt } from "react-icons/md";
 import { ImLocation } from "react-icons/im";
 import { FaEdit } from "react-icons/fa";
 import { RiDeleteBinLine } from "react-icons/ri";
+import { IoArrowBackCircle } from "react-icons/io5";
+import { GrSave } from "react-icons/gr";
+import { SiBim } from "react-icons/si";
+import { useNavigate } from 'react-router-dom';
+import { FaArrowAltCircleRight } from "react-icons/fa";
 
 
 function Trazabilidad() {
+
+    const navigate = useNavigate();
     const { id } = useParams();
 
     // Variables de estado
@@ -44,6 +51,11 @@ function Trazabilidad() {
     const [alerta, setAlerta] = useState('');
     const [tipoAlerta, setTipoAlerta] = useState('');
     const [mostrarModal, setMostrarModal] = useState(false);
+
+
+    const handleGoBack = () => {
+        navigate(-1); // Esto navega hacia atrás en la historia
+    };
 
     const handleCloseAlert = () => {
         setMostrarModal(false)
@@ -971,12 +983,13 @@ function Trazabilidad() {
 
 
     return (
-        <div className='min-h-screen px-14 py-5 text-gray-500'>
+        <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500'>
             {/* Encabezado */}
 
 
 
-            <div className='flex gap-2 items-center justify-between bg-white px-10 py-5 rounded rounded-xl shadow-md text-lg'>
+
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
 
                 <div className='flex items-center gap-2'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
@@ -991,9 +1004,11 @@ function Trazabilidad() {
                     </Link>
                 </div>
 
-                <div className='font-medium text-gray-500 flex items-center gap-3'>
-                    
-                    <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-600 text-white text-sm rounded-lg'>Visor BIM</button></Link>
+
+
+                <div className='flex items-center'>
+                    <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
+
                 </div>
 
             </div>
@@ -1001,7 +1016,7 @@ function Trazabilidad() {
 
 
             {/* Contenido */}
-            <div className='flex gap-3 flex-col mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
+            <div className='flex gap-3 flex-col mt-5 bg-white p-6 rounded rounded-xl shadow-md'>
 
 
 
@@ -1013,13 +1028,13 @@ function Trazabilidad() {
 
                     <div className='grid grid-cols-24 text-sm'>
 
-                        <div className='flex flex-col col-span-5'>
+                        <div className='flex flex-col col-span-5  pr-6 border-r-2 '>
                             {/* Sector */}
-                            <div className="flex flex-col col-span-4 items-start gap-3 border-r-2 px-5 py-3 ">
-                                <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sector</p>
+                            <div className="flex flex-col col-span-4 items-start gap-3 ">
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>1. Sector</p>
                                 <div className="flex items-center w-full">
                                     <input
-                                        placeholder='Agregar sector'
+                                        placeholder='Agregar nuevo sector'
                                         type="text"
                                         className='border px-3 py-1 rounded-lg w-full'
                                         value={sectorInput}
@@ -1027,18 +1042,13 @@ function Trazabilidad() {
                                     />
                                     <button
                                         onClick={agregarSector}
-                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                     >
                                         <IoMdAddCircle />
                                     </button>
                                 </div>
-
-                            </div>
-                            {/* Sub Sector */}
-                            <div className="flex flex-col col-span-4 items-start gap-3 border-r-2 px-5 py-3">
-                                <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Sub sector</p>
                                 <div className="flex flex-col items-start gap-3 w-full">
-                                    <label htmlFor="sectores"><strong className='text-amber-600 '>*</strong> Para agregar información selecciona el sector: </label>
+
                                     <select
                                         id="sectores"
                                         className="border px-3 py-1 rounded-lg w-full"
@@ -1050,12 +1060,18 @@ function Trazabilidad() {
                                             <option key={sector.id} value={sector.id}>{sector.nombre}</option>
                                         ))}
                                     </select>
-                                </div>
 
+                                </div>
+                            </div>
+                            {/* Sub Sector */}
+                            <div className="flex flex-col col-span-4 items-start gap-3 mt-6">
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>2. Sub sector</p>
+
+                                <label className='text-sm  px-3'><strong className='text-amber-600 text-xs'>*</strong> Para agregar información selecciona el sector: </label>
                                 <div className="flex items-center w-full">
 
                                     <input
-                                        placeholder='Agregar sub sector: '
+                                        placeholder='Agregar nuevo sub sector: '
                                         type="text"
                                         id="subsector"
                                         className='border px-3 py-1 rounded-lg w-full'
@@ -1064,7 +1080,7 @@ function Trazabilidad() {
                                     />
                                     <button
                                         onClick={() => agregarSubsector(selectedSector)}
-                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                     >
                                         <IoMdAddCircle />
                                     </button>
@@ -1072,12 +1088,8 @@ function Trazabilidad() {
 
                             </div>
 
-                        </div>
+                            <div className="flex flex-col items-start gap-3 w-full mt-3">
 
-                        <div className="flex flex-col col-span-5 items-start gap-3 border-r-2 p-5">
-                            <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Parte</p>
-                            <div className="flex flex-col items-start gap-3 w-full">
-                                <label htmlFor="subsectores"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el sub sector: </label>
                                 <select
                                     id="subsectores"
                                     className="border px-3 py-1 rounded-lg w-full"
@@ -1090,10 +1102,19 @@ function Trazabilidad() {
                                     ))}
                                 </select>
                             </div>
+
+                        </div>
+
+                        {/* Parte */}
+
+                        <div className='flex flex-col col-span-5 gap-3  px-6 border-r-2 '>
+                            <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>3. Parte</p>
+
+                            <label className='ps-3'><strong className='text-amber-600'>*</strong> Para agregar información selecciona el sub sector: </label>
                             <div className="flex items-center w-full">
 
                                 <input
-                                    placeholder='Agregar parte: '
+                                    placeholder='Agregar nuevo parte: '
                                     type="text"
                                     id="parte"
                                     className='border px-3 py-1 rounded-lg w-full'
@@ -1102,19 +1123,14 @@ function Trazabilidad() {
                                 />
                                 <button
                                     onClick={handleAgregarParte}
-                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                 >
                                     <IoMdAddCircle />
                                 </button>
                             </div>
 
-
-                        </div>
-
-                        <div className="flex flex-col col-span-5 items-start gap-3 border-r-2 p-5">
-                            <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Elemento</p>
                             <div className="flex flex-col items-start gap-3 w-full">
-                                <label htmlFor="partes"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el parte: </label>
+
                                 <select
                                     id="partes"
                                     className="border px-3 py-1 rounded-lg w-full"
@@ -1127,10 +1143,22 @@ function Trazabilidad() {
                                     ))}
                                 </select>
                             </div>
+
+
+                        </div>
+
+                        {/* Elemento */}
+
+                        <div className='flex flex-col col-span-5 gap-3  px-6 border-r-2 '>
+                            <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>4. Elemento</p>
+
+
+                            <label className='ps-3'><strong className='text-amber-600'>*</strong> Para agregar información selecciona el parte: </label>
+
                             <div className="flex items-center w-full">
 
                                 <input
-                                    placeholder='Agregar elemento: '
+                                    placeholder='Agregar nuevo elemento: '
                                     type="text"
                                     id="elemento"
                                     className='border px-3 py-1 rounded-lg w-full'
@@ -1139,10 +1167,26 @@ function Trazabilidad() {
                                 />
                                 <button
                                     onClick={() => agregarElemento(selectedParte)} // Asegúrate de tener un estado selectedParte para manejar la parte seleccionada
-                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
+                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                 >
                                     <IoMdAddCircle />
                                 </button>
+                            </div>
+
+                            <div className="flex flex-col items-start gap-3 w-full">
+
+                                <select
+                                    id="elementos"
+                                    className="border px-3 py-1 rounded-lg w-full"
+                                    value={selectedElemento}
+                                    onChange={(e) => setSelectedElemento(e.target.value)}
+                                >
+                                    <option value="">Seleccione un elemento</option>
+                                    {/* Asumiendo que tienes una manera de obtener los elementos del estado para el subsector y parte seleccionados */}
+                                    {sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes.find(parte => parte.id === selectedParte)?.elementos.map((elemento) => (
+                                        <option key={elemento.id} value={elemento.id}>{elemento.nombre}</option>
+                                    ))}
+                                </select>
                             </div>
 
 
@@ -1150,35 +1194,24 @@ function Trazabilidad() {
                         </div>
 
 
-                        <div className="flex flex-col col-span-9 items-start gap-3 p-5 ps-20">
-                            <div className='text-center'>
-                                <p className='text-lg font-medium text-gray-500 flex items-center gap-2'><TbBuildingFactory /> Lote y ppi</p>
-                                <p htmlFor="elementos"><strong className='text-amber-600'>*</strong> Para agregar información selecciona el elemento: </p>
-                            </div>
+                        {/* Elemento */}
 
+
+                        <div className='flex flex-col col-span-9 gap-3  px-6  '>
+                            <div className='text-start'>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>5. Lote y ppi</p>
+
+                            </div>
+                            <p className='ps-3'><strong className='text-amber-600'>*</strong> Para agregar información selecciona el elemento: </p>
                             <div className='grid grid-cols-2 gap-3'>
 
 
                                 <div className='flex flex-col gap-3'>
 
-                                    <div className="flex flex-col items-start gap-3 w-full">
 
-                                        <select
-                                            id="elementos"
-                                            className="border px-3 py-1 rounded-lg w-full"
-                                            value={selectedElemento}
-                                            onChange={(e) => setSelectedElemento(e.target.value)}
-                                        >
-                                            <option value="">Seleccione un elemento</option>
-                                            {/* Asumiendo que tienes una manera de obtener los elementos del estado para el subsector y parte seleccionados */}
-                                            {sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes.find(parte => parte.id === selectedParte)?.elementos.map((elemento) => (
-                                                <option key={elemento.id} value={elemento.id}>{elemento.nombre}</option>
-                                            ))}
-                                        </select>
-                                    </div>
 
                                     <input
-                                        placeholder='Agregar lote: '
+                                        placeholder='Agregar nuevo lote: '
                                         type="text"
                                         id="lote"
                                         className='border px-3 py-1 rounded-lg w-full'
@@ -1218,7 +1251,7 @@ function Trazabilidad() {
                                     />
                                     <div className="flex items-center">
                                         <input
-                                            placeholder='GlobalID'
+                                            placeholder='GlobalID (Opcional)'
                                             type="text"
                                             className='border px-3 py-1 rounded-lg w-full'
                                             value={idBimInput}
@@ -1227,11 +1260,25 @@ function Trazabilidad() {
                                     </div>
 
                                     <button
-                                        onClick={() => agregarLote(selectedElemento)} // Función para agregar lote a elemento seleccionado
-                                        className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded flex gap-2 items-center w-full"
+                                        onClick={() => agregarLote(selectedElemento)}
+                                        className="text-white mt-2 flex items-center gap-3 font-semibold bg-amber-600 hover:bg-amber-700 py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                     >
-                                        Guardar
+                                        <span className='text-white text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
+                                        Guardar trazabilidad
                                     </button>
+
+                                    {/* <button
+                                        onClick={() => agregarLote(selectedElemento)} // Función para agregar lote a elemento seleccionado
+                                        className="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-4 rounded flex gap-2 items-center"
+                                    >
+                                        <span><GrSave /></span> Guardar trazabilidad
+                                    </button> */}
+
+                                    <div className='font-medium text-gray-500 flex items-center gap-3'>
+
+                                        <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-2xl rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1'><SiBim /></button></Link>
+                                        <p className='text-xs flex gap-2'><span className='text-amber-600 text-xl'> *</span>Asigna el globalId dentro del modelo BIM</p>
+                                    </div>
                                 </div>
 
 
@@ -1256,18 +1303,18 @@ function Trazabilidad() {
                 </div>
 
                 <div className="mt-5">
-                    <div className='grid grid-cols-5 bg-gray-200 rounded-t-lg  border font-medium'>
-                        <p className='px-4 py-2'>Sector</p>
-                        <p className='border-r-2 border-l-2  border-gray-300 px-4 py-2'>Sub sector</p>
-                        <p className='border-r-2 border-gray-300 px-4 py-2'>Parte</p>
-                        <p className='border-r-2 border-gray-300 px-4 py-2'>Elemento</p>
-                        <p className='px-4 py-2'>Lote y ppi</p>
+                    <div className='flex bg-gray-200 rounded-t-lg  border font-medium'>
+                        <p className='px-4 py-2 w-1/5'>Sector</p>
+                        <p className='border-r-2 border-l-2  border-gray-300 px-4 py-2 w-1/5'>Sub sector</p>
+                        <p className='border-r-2 border-gray-300 px-4 py-2 w-1/5'>Parte</p>
+                        <p className='border-r-2 border-gray-300 px-4 py-2 w-1/5'>Elemento</p>
+                        <p className='px-4 py-2 w-1/5'>Lote y ppi</p>
                     </div>
 
                     <div className="divide-y divide-gray-200 border rounded-b-lg">
                         {sectores.map((sector, index) => (
                             <div key={sector.id} className={`flex flex-wrap items-center ${index % 2 === 0 ? 'bg-gray-100' : 'bg-gray-50'}`}>
-                                <div className="text-lg font-medium px-4 py-2 rounded-lg w-full md:w-1/5 group cursor-pointer flex justify-between">
+                                <div className="text-lg font-medium px-4 pr-5 py-2 rounded-lg  md:w-1/5 group cursor-pointer flex justify-between">
                                     <p>{sector.nombre}</p>
                                     {/* <button
                                         onClick={() => solicitarEditarSector(sector.id, sector.nombre)}
@@ -1284,26 +1331,78 @@ function Trazabilidad() {
 
                                 </div>
                                 {sector.subsectores && sector.subsectores.length > 0 && (
-                                    <ul className="divide-y divide-gray-200 w-full md:w-4/5">
+                                    <ul className="divide-y divide-gray-200  md:w-4/5">
                                         {sector.subsectores.map((subsector) => (
                                             subsector.partes && subsector.partes.length > 0 ? (
-                                                
+
                                                 subsector.partes.sort((a, b) => a.nombre.localeCompare(b.nombre))
-                                                
-                                                .map((parte) => (
-                                                    
-                                                    parte.elementos && parte.elementos.length > 0 ? (
-                                                        parte.elementos.map((elemento) => (
-                                                            elemento.lotes && elemento.lotes.length > 0 ? (
-                                                                elemento.lotes.map((lote) => (
-                                                                    <li key={lote.id} className="grid grid-cols-4 items-center py-4">
+
+                                                    .map((parte) => (
+
+                                                        parte.elementos && parte.elementos.length > 0 ? (
+                                                            parte.elementos.map((elemento) => (
+                                                                elemento.lotes && elemento.lotes.length > 0 ? (
+                                                                    elemento.lotes.map((lote) => (
+                                                                        <li key={lote.id} className="grid grid-cols-4 items-center py-4 ">
+                                                                            <div className='flex justify-between items-center pr-5 gap-1 border-r-2 border-l-2 group cursor-pointer'>
+                                                                                <p className='px-4 '>{subsector.nombre}</p>
+                                                                                <div className='flex gap-4'>
+                                                                                    <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
+                                                                                <p className='px-4'>{parte.nombre}</p>
+                                                                                <div className='flex gap-4'>
+                                                                                    <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
+                                                                                <p className='px-4 '>{elemento.nombre}</p>
+                                                                                <div className='flex gap-4'>
+
+                                                                                    <button onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                                                                                </div>
+                                                                            </div>
+
+
+
+                                                                            <div className='flex flex-col justify-center px-4 group'>
+                                                                                <p className='font-medium'>Lote: {lote.nombre}</p>
+                                                                                <div className='flex justify-between'>
+                                                                                    <div>
+                                                                                        <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
+                                                                                            {lote.ppiNombre ? <p>PPI: {lote.ppiNombre}</p> : "Ppi sin Asignar"}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                    <div className='flex gap-4'>
+                                                                                        {/* Condición para mostrar el botón solo si existe un ppiId */}
+                                                                                        {lote.ppiId && (
+                                                                                            <div>
+
+
+
+                                                                                                <button
+                                                                                                    onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)}
+                                                                                                    className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
+                                                                                                    <RiDeleteBinLine />
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </div>
+
+                                                                                </div>
+                                                                            </div>
+                                                                        </li>
+                                                                    ))
+                                                                ) : (
+                                                                    <li key={`${elemento.id}-sin-lote`} className="grid grid-cols-4 items-center py-4 ">
                                                                         <div className='flex justify-between items-center pr-5 gap-1 border-r-2 border-l-2 group cursor-pointer'>
                                                                             <p className='px-4 '>{subsector.nombre}</p>
                                                                             <div className='flex gap-4'>
                                                                                 <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
                                                                             </div>
                                                                         </div>
-
                                                                         <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
                                                                             <p className='px-4'>{parte.nombre}</p>
                                                                             <div className='flex gap-4'>
@@ -1311,118 +1410,66 @@ function Trazabilidad() {
                                                                             </div>
                                                                         </div>
                                                                         <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
-                                                                            <p className='px-4 '>{elemento.nombre}</p>
+                                                                            <p className='px-4'>{elemento.nombre}</p>
                                                                             <div className='flex gap-4'>
-
                                                                                 <button onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
                                                                             </div>
                                                                         </div>
-
-
-
-                                                                        <div className='flex flex-col justify-center px-4 group'>
-                                                                            <p className='font-medium'>{lote.nombre}</p>
+                                                                        <div className='lex flex-col justify-center px-4'>
                                                                             <div className='flex justify-between'>
                                                                                 <div>
-                                                                                    <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
-                                                                                        {lote.ppiNombre ? lote.ppiNombre : "Ppi sin Asignar"}
-                                                                                    </p>
+                                                                                    <p>-</p>
+                                                                                    <p className="text-red-500">-</p>
                                                                                 </div>
+
                                                                                 <div className='flex gap-4'>
                                                                                     {/* Condición para mostrar el botón solo si existe un ppiId */}
                                                                                     {lote.ppiId && (
-                                                                                        <div>
-
-
-
-                                                                                            <button
-                                                                                                onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)}
-                                                                                                className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
-                                                                                                <RiDeleteBinLine />
-                                                                                            </button>
-                                                                                        </div>
+                                                                                        <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
+                                                                                            <RiDeleteBinLine />
+                                                                                        </button>
                                                                                     )}
                                                                                 </div>
-
                                                                             </div>
                                                                         </div>
                                                                     </li>
-                                                                ))
-                                                            ) : (
-                                                                <li key={`${elemento.id}-sin-lote`} className="grid grid-cols-4 items-center py-4 ">
-                                                                    <div className='flex justify-between items-center pr-5 gap-1 border-r-2 border-l-2 group cursor-pointer'>
-                                                                        <p className='px-4 '>{subsector.nombre}</p>
-                                                                        <div className='flex gap-4'>
-                                                                            <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
-                                                                        <p className='px-4'>{parte.nombre}</p>
-                                                                        <div className='flex gap-4'>
-                                                                            <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
-                                                                        <p className='px-4'>{elemento.nombre}</p>
-                                                                        <div className='flex gap-4'>
-                                                                            <button onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className='lex flex-col justify-center px-4'>
-                                                                        <div className='flex justify-between'>
-                                                                            <div>
-                                                                                <p>-</p>
-                                                                                <p className="text-red-500">-</p>
-                                                                            </div>
-
-                                                                            <div className='flex gap-4'>
-                                                                                {/* Condición para mostrar el botón solo si existe un ppiId */}
-                                                                                {lote.ppiId && (
-                                                                                    <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
-                                                                                        <RiDeleteBinLine />
-                                                                                    </button>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </li>
-                                                            )
-                                                        ))
-                                                    ) : (
-                                                        <li key={`${parte.id}-sin-elemento`} className="items-center grid grid-cols-4">
-                                                            <div className='flex justify-between items-center pr-5 gap-1 border-r-2 border-l-2 cursor-pointer group'>
-                                                                <p className='px-4 '>{subsector.nombre}</p>
-                                                                <div className='flex gap-4'>
-                                                                    <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                </div>
-                                                            </div>
-                                                            <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
-                                                                <p className='px-4'>{parte.nombre}</p>
-                                                                <div className='flex gap-4'>
-                                                                    <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                </div>
-                                                            </div>
-                                                            <p className='px-4 border-r-2'>-</p>
-                                                            <div className='lex flex-col justify-center px-4'>
-                                                                <div className='flex justify-between'>
-                                                                    <div>
-                                                                        <p>-</p>
-                                                                        <p className="text-red-500">-</p>
-                                                                    </div>
-
+                                                                )
+                                                            ))
+                                                        ) : (
+                                                            <li key={`${parte.id}-sin-elemento`} className="items-center grid grid-cols-4">
+                                                                <div className='flex justify-between items-center pr-5 gap-1 border-r-2 border-l-2 cursor-pointer group'>
+                                                                    <p className='px-4 '>{subsector.nombre}</p>
                                                                     <div className='flex gap-4'>
-                                                                        {/* Condición para mostrar el botón solo si existe un ppiId */}
-                                                                        {lote.ppiId && (
-                                                                            <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
-                                                                                <RiDeleteBinLine />
-                                                                            </button>
-                                                                        )}
+                                                                        <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        </li>
-                                                    )
-                                                ))
+                                                                <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
+                                                                    <p className='px-4'>{parte.nombre}</p>
+                                                                    <div className='flex gap-4'>
+                                                                        <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                                                                    </div>
+                                                                </div>
+                                                                <p className='px-4 border-r-2'>-</p>
+                                                                <div className='lex flex-col justify-center px-4'>
+                                                                    <div className='flex justify-between'>
+                                                                        <div>
+                                                                            <p>-</p>
+                                                                            <p className="text-red-500">-</p>
+                                                                        </div>
+
+                                                                        <div className='flex gap-4'>
+                                                                            {/* Condición para mostrar el botón solo si existe un ppiId */}
+                                                                            {lote.ppiId && (
+                                                                                <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
+                                                                                    <RiDeleteBinLine />
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </li>
+                                                        )
+                                                    ))
                                             ) : (
                                                 <li key={`${subsector.id}-sin-parte`} className="grid grid-cols-4 items-center">
                                                     <div className='flex justify-between pr-5 gap-1 border-r-2 border-l-2 cursor-pointer group'>
