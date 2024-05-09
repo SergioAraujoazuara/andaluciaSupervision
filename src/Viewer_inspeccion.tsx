@@ -19,7 +19,7 @@ import FormularioInspeccion from './Components/FormularioInspeccion';
 import Trazabilidad from './Pages/Administrador/Trazabilidad'
 import TrazabilidadBim from './Pages/Administrador/TrazabiidadBim';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import Pdf_final from './pages/Pdf_final';
+import Pdf_final from './Pages/Pdf_final';
 import { FcInspection } from "react-icons/fc";
 import imageCompression from 'browser-image-compression';
 import { GrNotes } from "react-icons/gr";
