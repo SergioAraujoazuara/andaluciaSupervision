@@ -1,8 +1,8 @@
-import React from 'react'
-
+import React, { useEffect, useState } from 'react'
+import { db } from '../../../firebase_config';
 import { FaArrowRight } from "react-icons/fa";
 import { GoHomeFill } from "react-icons/go";
-
+import { collection, getDocs, deleteDoc, query, where, updateDoc, doc, onSnapshot } from 'firebase/firestore';
 import { IoCreateOutline } from "react-icons/io5";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { MdOutlineEditLocation } from "react-icons/md";
@@ -11,9 +11,38 @@ import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowAltCircleRight } from "react-icons/fa";
 import { FaCircleUser } from "react-icons/fa6";
+import { FaRegUserCircle } from "react-icons/fa";
+import { useAuth } from '../../context/authContext';
 
 
 function AdminHome() {
+    const { user } = useAuth();
+    const [userRole, setUserRole] = useState('');
+
+    useEffect(() => {
+        if (user) {
+            const fetchUserData = async () => {
+                try {
+                    const q = query(collection(db, "usuarios"), where("uid", "==", user.uid));
+                    const querySnapshot = await getDocs(q);
+                    if (!querySnapshot.empty) {
+                        // Asumiendo que el uid es único y solo debería devolver un documento
+                        const userData = querySnapshot.docs[0].data();
+                        setUserRole(userData.role)
+                        console.log(userData.role)
+                    } else {
+                        console.log("No se encontraron documentos con ese UID.");
+                    }
+                } catch (error) {
+                    console.error("Error al obtener datos del usuario:", error);
+                }
+            };
+
+            fetchUserData();
+        }
+    }, [user]);
+
+
     const navigate = useNavigate();
     const handleGoBack = () => {
         navigate('/'); // Esto navega hacia atrás en la historia
@@ -51,18 +80,25 @@ function AdminHome() {
                     <div class="w-full rounded rounded-xl">
 
 
-                        <div className='cursor-pointer flex flex-col gap-20 items-start justify-start p-10
+                        <div className='flex flex-col gap-16 items-start justify-start p-10
      '>
+                            {(userRole === 'invitado' && (
+                                
+                                    <div className=''>
+                                        <p>No tienes permisos para administrador</p>
+                                    </div>
 
+                               
+                            ))}
 
-
-                            <Link to={`/trazabilidad/${idProyecto}`}>
-                                <div className='flex gap-10 items-center '>
+                            {(userRole === 'admin' || userRole === 'usuario') && (
+                                <Link className='w-full' to={`/trazabilidad/${idProyecto}`}>
+                                <div className='flex gap-10 items-center transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
                                     <div className=' flex items-center text-gray-600'>
                                         <span ><IoCreateOutline className='w-[100px] h-[100px]' /></span>
                                     </div>
                                     <div className='sm:col-span-9 h-10 flex flex-col justify-center items-start sm:justify-center text-base font-medium'>
-                                        <p>Administrar proyecto</p>
+                                        <p className='flex items-center gap-2'>  <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>Administrar proyecto</p>
                                         <p className='mt-4 font-normal'>Creación y configuración del proyecto,
                                             agregar la trazabilidad completa del proyecto, establecer parámetros como el sector, sub sector, parte, elemento, lote y asignar PPI
                                             Puedes agregar los datos en 2 visualizaciones distintas:
@@ -71,65 +107,58 @@ function AdminHome() {
                                             <br />
                                             - Versión BIM
                                         </p>
-                                        <button
 
-                                            className="text-gray-500 mt-2 flex items-center gap-3 font-semibold bg-white py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
-                                        >
-                                            <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
-                                            Comenzar
-                                        </button>
                                     </div>
                                 </div>
 
                             </Link>
-                            
+                            ) }
 
-                            
-                            <Link className='mt-10' to={'/verPpis'}>
-                                <div className='flex gap-10 items-center '>
-                                    <div className=' flex items-center text-gray-600'>
-                                        <span ><MdOutlineEditLocation className='w-[100px] h-[100px]' /></span>
+
+
+
+                            {userRole === 'admin' && (
+                                <Link className=' w-full' to={'/verPpis'}>
+                                    <div className='flex gap-10 items-center transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
+                                        <div className=' flex items-center text-gray-600'>
+                                            <span ><MdOutlineEditLocation className='w-[100px] h-[100px]' /></span>
+                                        </div>
+                                        <div className='sm:col-span-9 h-10 flex flex-col justify-center items-start sm:justify-center text-base font-medium'>
+                                            <p className='flex items-center gap-2'>  <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>Plantillas PPI</p>
+                                            <p className='mt-4 font-normal'>Creación y edición de plantillas de puntos de inspección (PPI).
+
+                                            </p>
+
+                                        </div>
                                     </div>
-                                    <div className='sm:col-span-9 h-10 flex flex-col justify-center items-start sm:justify-center text-base font-medium'>
-                                        <p>Plantillas PPI</p>
-                                        <p className='mt-4 font-normal'>Creación y edición de plantillas de puntos de inspección (PPI).
-                                        
-                                        </p>
-                                        <button
 
-                                            className="text-gray-500 mt-2 flex items-center gap-3 font-semibold bg-white py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
-                                        >
-                                            <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
-                                            Comenzar
-                                        </button>
-                                    </div>
-                                </div>
+                                </Link>
+                            )}
 
-                            </Link>
+                            {
+                                userRole === 'admin' && (
+                                    <Link className=' w-full' to={'/roles'}>
+                                        <div className='flex gap-10 items-center transition duration-300 ease-in-out  hover:-translate-y-1'>
+                                            <div className=' flex items-center text-gray-600'>
+                                                <span ><FaRegUserCircle className='w-[100px] h-[100px]' /></span>
+                                            </div>
+                                            <div className='sm:col-span-9 h-10 flex flex-col justify-center items-start sm:justify-center text-base font-medium'>
+                                                <p className='flex items-center gap-2'>  <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>Roles de usuarios</p>
+                                                <p className='mt-4 font-normal'>Asignar y editar roles a los usuarios registrados del proyecto:
 
-                            <Link to={'/verPpis'}>
-                                <div className='flex gap-10 items-center '>
-                                    <div className=' flex items-center text-gray-600'>
-                                        <span ><FaCircleUser className='w-[100px] h-[100px]' /></span>
-                                    </div>
-                                    <div className='sm:col-span-9 h-10 flex flex-col justify-center items-start sm:justify-center text-base font-medium'>
-                                        <p>Roles usuarios</p>
-                                        <p className='mt-4 font-normal'>Asignar y editar roles a los usuarios registrados del proyecto:
-                                          
-                                        </p>
-                                        <button
+                                                </p>
 
-                                            className="text-gray-500 mt-2 flex items-center gap-3 font-semibold bg-white py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
-                                        >
-                                            <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
-                                            Comenzar
-                                        </button>
-                                    </div>
-                                </div>
+                                            </div>
+                                        </div>
 
-                            </Link>
+                                    </Link>
+                                )
+                            }
 
-                        
+
+
+
+
 
                         </div>
 

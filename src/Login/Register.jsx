@@ -43,8 +43,8 @@ const Register = () => {
         uid: userId,
         nombre: newUser.name,
         email: newUser.email,
-        proyectos: [],
-        role: 'usuario',
+        proyectos: 'Sector 3',
+        role: 'invitado',
       };
 
       await setDoc(doc(db, 'usuarios', userId), userData);

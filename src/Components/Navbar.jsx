@@ -16,6 +16,7 @@ const Navbar = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [userNombre, setUserNombre] = useState('');
+  const [userRol, setUserRol] = useState('');
   const location = useLocation();
   const idProyecto = localStorage.getItem('idProyecto')
 
@@ -26,6 +27,8 @@ const Navbar = () => {
         if (docSnap.exists()) {
           const userData = docSnap.data();
           setUserNombre(userData.nombre);
+          setUserRol(userData.role);
+          console.log(userData.role)
         }
       });
     } else {
@@ -66,18 +69,24 @@ const Navbar = () => {
                   activeLink={activeLink}
                   handleLinkClick={handleLinkClick}
                 />
-                <NavLink
-                  to="/elemento/proyecto"
-                  linkName="Inspección"
-                  activeLink={activeLink}
-                  handleLinkClick={handleLinkClick}
-                />
-                <NavLink
-                  to="/admin"
-                  linkName="Administración"
-                  activeLink={activeLink}
-                  handleLinkClick={handleLinkClick}
-                />
+
+                {(userRol === 'usuario' || userRol === 'admin') && (
+                  <NavLink
+                    to="/elemento/proyecto"
+                    linkName="Inspección"
+                    activeLink={activeLink}
+                    handleLinkClick={handleLinkClick}
+                  />
+                )}
+
+                {(userRol === 'admin' || userRol === 'usuario') && (
+                  <NavLink
+                    to="/admin"
+                    linkName="Administración"
+                    activeLink={activeLink}
+                    handleLinkClick={handleLinkClick}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -89,7 +98,7 @@ const Navbar = () => {
               </div>
               <div className="relative bg-sky-600 text-white px-4 py-2 rounded-full">
                 <button className="flex items-center text-md" onClick={toggleLogoutConfirmation}>
-                  
+
                   {showProfileDropdown ? <span className='text-xl flex items-center'><IoIosSettings /></span> : <span className='text-md'><ImExit /></span>}
                 </button>
                 {/* {showProfileDropdown && (

@@ -109,7 +109,7 @@ const ViewerComponent = React.memo(({ setSelectedGlobalId, setSelectedNameBim })
         };
     }, [setSelectedGlobalId, setSelectedNameBim ]);
 
-    return <div id="viewerContainer" style={viewerContainerStyle}></div>;
+    return <div className='container' id="viewerContainer" style={viewerContainerStyle}></div>;
 });
 
 export default ViewerComponent;

@@ -79,7 +79,7 @@ function Elemento() {
                 <div className='flex items-center gap-4'>
                     <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
 
-                    <div className='px-4 bg-sky-600 text-white rounded-lg '>
+                    <div className='px-4 bg-sky-600 text-white rounded-full '>
                         <Link to={'/visor_inspeccion'}>
                             <button className='text-white flex items-center gap-3'>
                                 <span className='text-2xl'><SiBim /> </span>
@@ -154,7 +154,7 @@ function Elemento() {
                                                     <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '100%' }}>
                                                         <div
                                                             style={{
-                                                                background: '#0284c7',
+                                                                background: '#d97706',
                                                                 height: '100%',
                                                                 borderRadius: '8px',
                                                                 width: `${((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%`

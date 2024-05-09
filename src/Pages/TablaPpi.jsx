@@ -1161,7 +1161,7 @@ function TablaPpi() {
             <div className='bg-white px-8 py-4 rounded-xl mt-4 rounded rounded-xl shadow-md'>
                 {actividadesAptas && (
                     <>
-                        <div className='flex gap-3 items-center text-md'>
+                        <div className='flex gap-3 items-center'>
 
                             <div>
                                 <p className='font-bold'>Inspecciones aptas: <span className='font-normal'>{actividadesAptas}</span></p>
@@ -1174,7 +1174,7 @@ function TablaPpi() {
                                 {difActividades === 0 && (
                                     <button
                                         onClick={() => setShowConfirmModal(true)}
-                                        className="bg-amber-600 text-white font-bold py-2 px-4 rounded"
+                                        className="bg-amber-600 text-white font-bold py-2 px-4 rounded-full"
                                     >
                                         <p className='flex gap-2 items-center'><span><FaFilePdf /></span>Terminar inspección</p>
                                     </button>

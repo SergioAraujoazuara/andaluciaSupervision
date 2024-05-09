@@ -30,6 +30,7 @@ import AuthTabs from './Login/AuthTabs.jsx';
 import Login from './Login/Login.jsx'
 import Register from './Login/Register.jsx'
 import Pdf_final from './Components/Pdf_final.jsx'
+import Roles from './Pages/Administrador/Roles.jsx'
 
 function App() {
 
@@ -71,6 +72,7 @@ function App() {
           <Route path='/formularioInspeccion/:idLote/:id' element={<FormularioInspeccion />}></Route>
 
           <Route path='/pdf_final' element={<Pdf_final />}></Route>
+          <Route path='/roles' element={<Roles />}></Route>
         </Routes>
 
         <Footer />

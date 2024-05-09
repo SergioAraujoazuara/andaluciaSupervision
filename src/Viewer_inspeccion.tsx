@@ -19,9 +19,11 @@ import FormularioInspeccion from './Components/FormularioInspeccion';
 import Trazabilidad from './Pages/Administrador/Trazabilidad'
 import TrazabilidadBim from './Pages/Administrador/TrazabiidadBim';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import Pdf_final from './Pdf_final';
+import Pdf_final from './pages/Pdf_final';
+import { FcInspection } from "react-icons/fc";
 import imageCompression from 'browser-image-compression';
 import { GrNotes } from "react-icons/gr";
+import { IoArrowBackCircle } from "react-icons/io5";
 
 
 interface Lote {
@@ -44,7 +46,10 @@ export default function ViewerInspeccion() {
     const [selectedLote, setSelectedLote] = useState<Lote | null>(null);
     const [inspecciones, setInspecciones] = useState([]);
 
-
+  
+    const handleGoBack = () => {
+        navigate('/'); // Esto navega hacia atrás en la historia
+    };
 
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
 
@@ -1330,9 +1335,13 @@ export default function ViewerInspeccion() {
 
     const [loteInfo, setLoteInfo] = useState(null); // Estado para almacenar los datos del PPI
     const [sectorInfoLote, setSectorInfoLote] = useState(null); // Estado para almacenar los datos del PPI
+    const [cierreInspeccion, setCierreInspeccion] = useState(false); // Estado para almacenar los datos del PPI
+    const [actividadesAptas, setActividadesAptas] = useState(0); // Estado para almacenar los datos del PPI
+    const [totalSubactividades, setTotalSubActividades] = useState(0); // Estado para almacenar los datos del PPI
+    const [difActividades, setDifActividades] = useState(0); // Estado para almacenar los datos del PPI
     useEffect(() => {
         const obtenerLotePorId = async () => {
-            console.log('********** id lote', idLote)
+
             if (!idLote) return; // Verifica si idLote está presente
 
             try {
@@ -1342,6 +1351,23 @@ export default function ViewerInspeccion() {
                 if (docSnap.exists()) {
 
                     setLoteInfo({ id: docSnap.id, ...docSnap.data() });
+                    let loteObject = { id: docSnap.id, ...docSnap.data() };
+                    let actividadesAptas = loteObject.actividadesAptas
+                    setActividadesAptas(actividadesAptas)
+                    let totalSubactividades = loteObject.totalSubactividades
+                    setTotalSubActividades(totalSubactividades)
+                    let difActividades = totalSubactividades - actividadesAptas
+                    setDifActividades(difActividades)
+
+                    if (difActividades === 0) {
+                        setCierreInspeccion(true)
+                    }
+                    else {
+                        setCierreInspeccion(false)
+                    }
+
+                    console.log(cierreInspeccion, difActividades, '******************')
+
 
                 } else {
                     console.log("No se encontró el lote con el ID:", idLote);
@@ -1929,6 +1955,8 @@ export default function ViewerInspeccion() {
     //! ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     const [imagen, setImagen] = useState(null);
     const [imagen2, setImagen2] = useState(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [allowPdfGeneration, setAllowPdfGeneration] = useState(false);
 
     const handleImagenChange = async (e) => {
         const file = e.target.files[0];
@@ -2009,7 +2037,10 @@ export default function ViewerInspeccion() {
     return (
 
         <div className="container mx-auto min-h-screen text-gray-500 px-14 py-5">
-            <div className='flex gap-2 items-center justify start bg-white px-5 py-5 rounded rounded-xl shadow-md text-lg'>
+          
+
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+                <div className='flex gap-2 items-center'>
                 <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                 <Link to={'/'}>
                     <h1 className=' text-gray-500'>Inicio</h1>
@@ -2023,6 +2054,15 @@ export default function ViewerInspeccion() {
                 <Link to={'#'}>
                     <h1 className='font-medium text-amber-600'>Ppi: {ppiNombre}</h1>
                 </Link>
+                </div>
+
+
+                <div className='flex items-center gap-4'>
+                    <button className='text-amber-600 text-3xl' onClick={regresar}><IoArrowBackCircle /></button>
+
+                    
+
+                </div>
 
             </div>
 
@@ -2169,9 +2209,45 @@ export default function ViewerInspeccion() {
 
                     )}
                 </div>
-                <div className='w-1/2' id="viewerContainer" style={viewerContainerStyle}></div>
+                <div className='w-1/2'>
+                <div  id="viewerContainer" style={viewerContainerStyle}></div>
+                <div className='bg-white px-8 py-4 rounded-xl mt-4 rounded rounded-xl shadow-md'>
+                {actividadesAptas && (
+                    <>
+                        <div className='flex gap-3 items-center'>
+
+                            <div>
+                                <p className='font-bold'>Inspecciones aptas: <span className='font-normal'>{actividadesAptas}</span></p>
+                            </div>
+                            {'/'}
+                            <div>
+                                <p className='font-bold'>Inspecciones totales: <span className='font-normal'>{totalSubactividades}</span></p>
+                            </div>
+                            <div className='ms-10'>
+                                {difActividades === 0 && (
+                                    <button
+                                        onClick={() => setShowConfirmModal(true)}
+                                        className="bg-amber-600 text-white font-bold py-2 px-4 rounded-full"
+                                    >
+                                        <p className='flex gap-2 items-center'><span><FaFilePdf /></span>Terminar inspección</p>
+                                    </button>
+                                )
+                                }
+                            </div>
+
+                        </div>
+
+                    </>
+
+
+                )}
+            </div>
+                </div>
+                
 
             </div>
+
+           
 
             {modalFormulario && (
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
@@ -2273,6 +2349,47 @@ export default function ViewerInspeccion() {
 
                 </div>
             )}
+
+{showConfirmModal && (
+                <div className="fixed inset-0 bg-gray-600 text-gray-500 bg-opacity-50 flex justify-center items-center">
+                    <div className="bg-white p-10 pb-12  rounded-lg shadow-lg max-w-xl mx-auto">
+                        <div className='text-center flex flex-col items-start gap-1'>
+                            <button
+                                onClick={() => {
+                                    setAllowPdfGeneration(false);
+                                    setShowConfirmModal(false);
+
+                                    ; // Cerrar el modal
+                                }}
+                                className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300 mb-2">
+                                <IoCloseCircle />
+                            </button>
+
+                            <h2 className="text-xl font-semibold flex gap-1 items-center text-left"><span className='text-4xl'><FcInspection /></span>¿Quieres terminar la inspección?</h2>
+
+                        </div>
+
+                        <div className='flex mt-10'>
+                            <Pdf_final
+                                fileName="ejemplo.pdf"
+                                ppi={ppi}
+                                nombreProyecto={nombreProyecto}
+                                obra={obra}
+                                tramo={tramo}
+                                titulo={titulo}
+                                imagenPath={imagenPath}
+                                imagenPath2={imagenPath2}
+                                allowPdfGeneration={allowPdfGeneration}
+                                setAllowPdfGeneration={setAllowPdfGeneration}
+                                setShowConfirmModal={setShowConfirmModal}
+                            />
+                        </div>
+
+
+                    </div>
+                </div>
+            )}
+
 
             {modalInforme && (
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">

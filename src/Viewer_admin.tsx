@@ -19,6 +19,7 @@ import Trazabilidad from './Pages/Administrador/Trazabilidad'
 import TrazabilidadBim from './Pages/Administrador/TrazabiidadBim';
 import { div } from 'three/examples/jsm/nodes/Nodes.js';
 import ViewerComponent from './ViewerComponent';
+import { IoArrowBackCircle } from "react-icons/io5";
 
 
 interface Lote {
@@ -34,6 +35,11 @@ interface Lote {
 }
 
 export default function Viewer_admin() {
+
+    const navigate = useNavigate();
+    const handleGoBack = () => {
+        navigate('-1'); // Esto navega hacia atrás en la historia
+    };
     const [modelCount, setModelCount] = useState(0);
     const [lotes, setLotes] = useState<Lote[]>([]);
     const [selectedGlobalId, setSelectedGlobalId] = useState<string | null>(null);
@@ -54,7 +60,7 @@ export default function Viewer_admin() {
     const [observaciones, setObservaciones] = useState('');
     const idLote = localStorage.getItem('loteId');
 
-    const navigate = useNavigate();
+    
     const [ppi, setPpi] = useState(null);
 
 
@@ -259,9 +265,10 @@ export default function Viewer_admin() {
         if (filtro === "noAsignados") return !lote.globalId;
     });
 
+   
     return (
 
-        <div className="min-h-screen text-gray-500 px-14 py-5">
+        <div className="container mx-auto min-h-screen text-gray-500 px-14 py-5">
             <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
 
                 <div className='flex items-center gap-2'>
@@ -279,6 +286,12 @@ export default function Viewer_admin() {
                     <Link to={'#'}>
                         <h1 className='font-medium text-amber-600'>BIM </h1>
                     </Link>
+                </div>
+
+                <div>
+                <button className='text-amber-600 text-3xl' onClick={regresar}><IoArrowBackCircle /></button>
+
+                    
                 </div>
 
             </div>
@@ -312,7 +325,7 @@ export default function Viewer_admin() {
                                         .sort((a, b) => a.parteNombre.localeCompare(b.parteNombre))  // Ordenando alfabéticamente por 'parteNombre'
                                         .map((lote) => (
                                             <option key={lote.docId} value={lote.docId}
-                                                className={`${!lote.globalId ? 'bg-amber-600 font-light text-white' : 'bg-white text-black'}`}>
+                                                className={`${!lote.globalId ? 'bg-amber-200 font-light text-gray-500' : 'bg-white text-black'}`}>
                                                 {lote.nombre} - {lote.elementoNombre} - {lote.parteNombre}
                                             </option>
                                         ))
@@ -356,7 +369,7 @@ export default function Viewer_admin() {
                                                         onClick={() => selectedLote && selectedGlobalId && actualizarLoteConGlobalId(selectedLote.docId, selectedGlobalId, selectedNameBim)}
                                                         className={`px-4 py-2 rounded text-white ${selectedGlobalId ? 'bg-amber-600 hover:bg-amber-700' : 'bg-gray-500 cursor-not-allowed'}`}
                                                         disabled={!selectedLote || !selectedGlobalId}>
-                                                        +
+                                                        + Agregar
                                                     </button>
                                                 </div>
 

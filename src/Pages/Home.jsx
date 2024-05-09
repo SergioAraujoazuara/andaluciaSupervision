@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { db } from '../../firebase_config';
-import { collection, getDocs, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, query, where, updateDoc, doc, onSnapshot } from 'firebase/firestore';
 
 import { GoHomeFill } from "react-icons/go";
 import { FaArrowAltCircleRight } from "react-icons/fa";
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/authContext';
 
 
 
@@ -12,9 +13,6 @@ import { Link } from 'react-router-dom';
 
 function Home() {
   const [proyectos, setProyectos] = useState([])
-
-
-
   const obtenerProyecto = (p) => {
     localStorage.setItem('nombre_proyecto', p.nombre_corto)
     localStorage.setItem('logo_proyecto', p.logo)
@@ -22,8 +20,31 @@ function Home() {
     localStorage.setItem('obra', p.obra)
     localStorage.setItem('idProyecto', p.id)
   }
- 
+  const { user } = useAuth();
+  const [userData, setUserData] = useState(null);
+  const [userRole, setUserRole] = useState('');
 
+  useEffect(() => {
+      if (user) {
+          const fetchUserData = async () => {
+              try {
+                  const q = query(collection(db, "usuarios"), where("uid", "==", user.uid));
+                  const querySnapshot = await getDocs(q);
+                  if (!querySnapshot.empty) {
+                      // Asumiendo que el uid es único y solo debería devolver un documento
+                      const userData = querySnapshot.docs[0].data();
+                      setUserRole(userData.role)
+                  } else {
+                      console.log("No se encontraron documentos con ese UID.");
+                  }
+              } catch (error) {
+                  console.error("Error al obtener datos del usuario:", error);
+              }
+          };
+
+          fetchUserData();
+      }
+  }, [user]);
   // Obtener proyectos
   useEffect(() => {
     const obtenerProyectos = async () => {
@@ -66,7 +87,7 @@ function Home() {
         
 
         {proyectos.map((p, i) => (
-          <Link to={`/elemento/${p.id}`} onClick={() => { obtenerProyecto(p) }}>
+         
             <div className="relative">
               <img src='https://maldita.es/uploads/images/2022/07/62c6f70f2549cadif-copy-jpg.jpg' alt="Sustainable Building" className="w-full  h-screen" />
               <div className="absolute inset-0 bg-black bg-opacity-45"></div>
@@ -82,18 +103,24 @@ function Home() {
                   <div className="text-6xl font-bold text-white mb-2"> {p.nombre_corto}</div>
                   <p className="text-2xl mt-4"> {p.obra}</p>
                   <p className="text-2xl mt-1"> {p.tramo}</p>
-                  <button
+                  <Link to={`/elemento/${p.id}`} onClick={() => { obtenerProyecto(p) }}>
+                  {(userRole === 'admin' || userRole === 'usuario') && (
+                    <button
                    
-                    className="text-gray-500 mt-8 flex items-center gap-3 text-lg font-semibold bg-white py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out hover:bg-gray-100 hover:shadow-lg hover:-translate-y-1"
-                  >
-                    <span className='text-amber-500 text-xl transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
-                    Comenzar
-                  </button>
+                   className="text-gray-500 mt-8 flex items-center gap-3 text-lg font-semibold bg-white py-2 px-6 rounded-xl shadow-md transition duration-300 ease-in-out hover:bg-gray-100 hover:shadow-lg hover:-translate-y-1"
+                 >
+                   <span className='text-amber-500 text-xl transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
+                   Comenzar
+                 </button>
+                  )}
+                  </Link>
+                  
+                  
 
                 </div>
               </div>
             </div>
-          </Link>
+          
         ))}
 
         {/* <div class="w-full rounded rounded-xl">

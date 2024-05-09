@@ -1042,7 +1042,7 @@ function Trazabilidad() {
                                     />
                                     <button
                                         onClick={agregarSector}
-                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                     >
                                         <IoMdAddCircle />
                                     </button>
@@ -1080,7 +1080,7 @@ function Trazabilidad() {
                                     />
                                     <button
                                         onClick={() => agregarSubsector(selectedSector)}
-                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                     >
                                         <IoMdAddCircle />
                                     </button>
@@ -1123,7 +1123,7 @@ function Trazabilidad() {
                                 />
                                 <button
                                     onClick={handleAgregarParte}
-                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                 >
                                     <IoMdAddCircle />
                                 </button>
@@ -1167,7 +1167,7 @@ function Trazabilidad() {
                                 />
                                 <button
                                     onClick={() => agregarElemento(selectedParte)} // Asegúrate de tener un estado selectedParte para manejar la parte seleccionada
-                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                 >
                                     <IoMdAddCircle />
                                 </button>
@@ -1261,7 +1261,7 @@ function Trazabilidad() {
 
                                     <button
                                         onClick={() => agregarLote(selectedElemento)}
-                                        className="text-white mt-2 flex items-center gap-3 font-semibold bg-amber-600 hover:bg-amber-700 py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                        className="text-white mt-2 flex items-center gap-3 font-semibold bg-amber-600 hover:bg-amber-700 py-2 px-6 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                     >
                                         <span className='text-white text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
                                         Guardar trazabilidad
@@ -1276,7 +1276,7 @@ function Trazabilidad() {
 
                                     <div className='font-medium text-gray-500 flex items-center gap-3'>
 
-                                        <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-2xl rounded-full shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1'><SiBim /></button></Link>
+                                        <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-2xl rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1'><SiBim /></button></Link>
                                         <p className='text-xs flex gap-2'><span className='text-amber-600 text-xl'> *</span>Asigna el globalId dentro del modelo BIM</p>
                                     </div>
                                 </div>
