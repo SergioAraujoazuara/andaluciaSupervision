@@ -96,6 +96,9 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
     const [additionalFiles, setAdditionalFiles] = useState([]);
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
+    const lote = localStorage.getItem('lote')
+    const ppiname = localStorage.getItem('ppi')
+
 
     const openConfirmationModal = () => {
         setShowConfirmationModal(true);
@@ -261,7 +264,7 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         }
 
         const finalPdfBytes = await mergedPdf.save();
-        downloadPDF(finalPdfBytes, 'final_document.pdf');
+        downloadPDF(finalPdfBytes, `${ppiname}_${lote}`);
     };
 
 
