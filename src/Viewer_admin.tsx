@@ -325,7 +325,7 @@ export default function Viewer_admin() {
                                         .sort((a, b) => a.parteNombre.localeCompare(b.parteNombre))  // Ordenando alfabéticamente por 'parteNombre'
                                         .map((lote) => (
                                             <option key={lote.docId} value={lote.docId}
-                                                className={`${!lote.globalId ? 'bg-amber-200 font-light text-gray-500' : 'bg-white text-black'}`}>
+                                                className={`${!lote.globalId ? 'bg-amber-300 text-gray-500' : 'bg-white text-black'}`}>
                                                 {lote.nombre} - {lote.elementoNombre} - {lote.parteNombre}
                                             </option>
                                         ))

@@ -68,7 +68,11 @@ function Home() {
     obtenerProyectos();
   }, []);
 
+  const suma = (a,b) => {
+  return a + b
+  }
 
+  
   return (
     <div className='min-h-screen text-gray-500'>
 

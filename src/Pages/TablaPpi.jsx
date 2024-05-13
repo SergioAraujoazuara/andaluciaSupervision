@@ -35,6 +35,7 @@ function TablaPpi() {
     const { idLote } = useParams();
     const navigate = useNavigate();
     const [ppi, setPpi] = useState(null);
+    const lote = localStorage.getItem('lote')
 
 
 
@@ -368,8 +369,8 @@ function TablaPpi() {
             punto: subactividadSeleccionada.punto,
             nombre_responsable: nombreResponsable,
             fechaHoraActual: fechaHoraActual,
-            globalId: loteInfo.globalId,
-            nombreGlobalId: loteInfo.nameBim,
+            globalId: loteInfo.globalId || '',
+            nombreGlobalId: loteInfo.nameBim || '',
             resultadoInspeccion: resultadoInspeccion,
             formulario: formulario,
             imagen: imagen, // Incluyendo la primera imagen comprimida
@@ -1023,7 +1024,7 @@ function TablaPpi() {
 
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'#'}>
-                        <h1 className='font-medium text-amber-600'>Ppi: {ppiNombre}</h1>
+                        <h1 className='font-medium text-amber-600'>Lote: {lote} / Ppi: {ppiNombre}</h1>
                     </Link>
                 </div>
 
