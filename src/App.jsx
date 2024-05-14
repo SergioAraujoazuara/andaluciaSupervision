@@ -1,86 +1,76 @@
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import { Routes, Route } from 'react-router-dom'
-import Home from './Pages/Home'
-import Navbar from './Components/Navbar'
-
-import Contacto from './Pages/Contacto'
-import Footer from './Components/Footer'
-import Modulos from './Pages/Modulos'
-
-
-import TablaPpi from './Pages/TablaPpi'
-import FormularioInspeccion from './Components/FormularioInspeccion'
-import AdminHome from './Pages/Administrador/AdminHome'
-import CrearProyecto from './Pages/Administrador/CrearProyecto'
-import ViewProject from './Pages/Administrador/ViewProject'
-import EditProject from './Pages/Administrador/EditProject'
-import Elemento from './Pages/Elemento'
-
-import Trazabilidad from './Pages/Administrador/Trazabilidad'
-import AgregarPPi from './Pages/Administrador/AgregarPPi'
-import VerPpis from './Pages/Administrador/VerPpis'
-import EditarPpi from './Pages/Administrador/EditarPpi'
-import Viewer_inspeccion from './Viewer_inspeccion'
-import Viewer_admin from './Viewer_admin'
+import './App.css';
+import { Routes, Route } from 'react-router-dom';
+import Home from './Pages/Home';
+import Navbar from './Components/Navbar';
+import Footer from './Components/Footer';
+import AuthTabs from './Login/AuthTabs.jsx';
 import { AuthProvider } from './context/authContext.jsx';
 import ProtectedRoutes from './ProtectedRoutes.jsx';
-import AuthTabs from './Login/AuthTabs.jsx';
-import Login from './Login/Login.jsx'
-import Register from './Login/Register.jsx'
-import Pdf_final from './Components/Pdf_final.jsx'
-import Roles from './Pages/Administrador/Roles.jsx'
+import AdminHome from './Pages/Administrador/AdminHome';
+import Trazabilidad from './Pages/Administrador/Trazabilidad';
+import Viewer_admin from './Viewer_admin';
+import VerPpis from './Pages/Administrador/VerPpis';
+import AgregarPPi from './Pages/Administrador/AgregarPPi';
+import Roles from './Pages/Administrador/Roles';
+import Viewer_inspeccion from './Viewer_inspeccion';
+import Elemento from './Pages/Elemento';
+import TablaPpi from './Pages/TablaPpi';
+import EditarPpi from './Pages/Administrador/EditarPpi';
+import FormularioInspeccion from './Components/FormularioInspeccion';
+import Pdf_final from './Components/Pdf_final';
 
 function App() {
+  const publicRoutes = [
+    { path: '/', element: <Home /> },
+    { path: '/authTabs', element: <AuthTabs /> },
+  ];
 
+  const adminRoutes = [
+    { path: '/admin', element: <AdminHome />, roles: ['admin', 'usuario'] },
+    { path: '/trazabilidad/:id', element: <Trazabilidad />, roles: ['admin', 'usuario'] },
+    { path: '/visorAdmin', element: <Viewer_admin />, roles: ['admin', 'usuario'] },
+    { path: '/verPPis', element: <VerPpis />, roles: ['admin'] },
+    { path: '/agregarPpi', element: <AgregarPPi />, roles: ['admin'] },
+    { path: '/roles', element: <Roles />, roles: ['admin'] },
+  ];
+
+  const inspectionRoutes = [
+    { path: '/visor_inspeccion', element: <Viewer_inspeccion />, roles: ['admin', 'usuario'] },
+    { path: '/elemento/:id', element: <Elemento />, roles: ['admin', 'usuario'] },
+    { path: '/tablaPpi', element: <TablaPpi />, roles: ['admin', 'usuario'] },
+    { path: '/tablaPpi/:idLote/:ppiNombre', element: <TablaPpi />, roles: ['admin', 'usuario'] },
+    { path: '/editarPpi/:id', element: <EditarPpi />, roles: ['admin', 'usuario'] },
+    { path: '/formularioInspeccion/:idLote/:id', element: <FormularioInspeccion />, roles: ['admin', 'usuario'] },
+    { path: '/pdf_final', element: <Pdf_final />, roles: ['admin', 'usuario'] },
+  ];
+  
   return (
     <>
       <AuthProvider>
         <Navbar />
-
         <Routes>
-
-        <Route path='/' element={
-              <ProtectedRoutes>
-                <Home />
-              </ProtectedRoutes>
-            } />
-          
-          <Route path='/authTabs' element={<AuthTabs />} />
-
-          <Route path='/admin' element={<AdminHome />}></Route>
-          <Route path='/crearProyecto' element={<CrearProyecto />}></Route>
-          <Route path='/viewProject' element={<ViewProject />}></Route>
-          <Route path='/editProject/:id' element={<EditProject />}></Route>
-          <Route path='/trazabilidad/:id' element={<Trazabilidad />}></Route>
-          <Route path='/verPPis' element={<VerPpis />}></Route>
-          <Route path='/agregarPpi' element={<AgregarPPi />}></Route>
-
-          <Route path='/visor_inspeccion' element={<Viewer_inspeccion />}></Route>
-          <Route path='/visorAdmin' element={<Viewer_admin />}></Route>
-
-          <Route path='/contacto' element={<Contacto />}></Route>
-          <Route path='/modulos' element={<Modulos />}></Route>
-          <Route path='/elemento' element={<Elemento />}></Route>
-          <Route path='/elemento/:id' element={<Elemento />}></Route>
-
-
-          <Route path='/tablaPpi' element={<TablaPpi />}></Route>
-          <Route path='/tablaPpi/:idLote/:ppiNombre' element={<TablaPpi />}></Route>
-          <Route path='/editarPpi/:id' element={<EditarPpi />}></Route>
-          <Route path='/formularioInspeccion/:idLote/:id' element={<FormularioInspeccion />}></Route>
-
-          <Route path='/pdf_final' element={<Pdf_final />}></Route>
-          <Route path='/roles' element={<Roles />}></Route>
+          {publicRoutes.map((route, index) => (
+            <Route key={index} path={route.path} element={route.element} />
+          ))}
+          {adminRoutes.map((route, index) => (
+            <Route
+              key={index}
+              path={route.path}
+              element={<ProtectedRoutes allowedRoles={route.roles}>{route.element}</ProtectedRoutes>}
+            />
+          ))}
+          {inspectionRoutes.map((route, index) => (
+            <Route
+              key={index}
+              path={route.path}
+              element={<ProtectedRoutes allowedRoles={route.roles}>{route.element}</ProtectedRoutes>}
+            />
+          ))}
         </Routes>
-
         <Footer />
-
       </AuthProvider>
-
     </>
-  )
+  );
 }
 
-export default App
+export default App;

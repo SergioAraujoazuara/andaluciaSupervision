@@ -1,44 +1,59 @@
-import React, { useContext, useState } from 'react'
-import { createContext } from 'react'
-import {createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut} from 'firebase/auth'
-import {auth} from '../../firebase_config'
-import { useEffect } from 'react'
+import React, { useContext, useState, useEffect } from 'react';
+import { createContext } from 'react';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '../../firebase_config';
+import { getFirestore, doc, getDoc } from 'firebase/firestore'; // Importa las funciones necesarias de Firestore
 
 // Funciones de contexto para obtener el user
-export const authContext = createContext()
+export const authContext = createContext();
 
 export const useAuth = () => {
-     const context = useContext(authContext)
-     if(!context) throw new Error('There is not authProvider')
-     return context
-}
+    const context = useContext(authContext);
+    if (!context) throw new Error('There is no authProvider');
+    return context;
+};
 
-export function AuthProvider ({children}) {
-    // Funcion design up para acceder con password y user
+export function AuthProvider({ children }) {
+    const [user, setUser] = useState(null);
+    const [role, setRole] = useState(null); // Estado para guardar el rol del usuario
+    const [loading, setLoading] = useState(true);
 
-    const [user, setUser] = useState(null)
-    const [loading, setLoading] = useState(true)
+    const signup = (email, password) => createUserWithEmailAndPassword(auth, email, password);
 
-    const signup = (email, password) => createUserWithEmailAndPassword(auth, email, password)
+    const logout = () => signOut(auth);
 
-    const logout = () => signOut(auth)
-    
+    const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
 
-    const login = async (email, password) => signInWithEmailAndPassword(auth, email, password)
-        
+    // Función para obtener el rol del usuario desde Firestore
+    const fetchUserRole = async (uid) => {
+        const db = getFirestore();
+        const userRef = doc(db, 'usuarios', uid); // Asegúrate de que la colección y el documento existen
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) {
+            setRole(docSnap.data().role); // Suponiendo que el campo que contiene el rol se llama 'role'
+        } else {
+            console.error("No such document for role!");
+            setRole(null);
+        }
+    };
 
-    useEffect(()=>{
-        onAuthStateChanged(auth, currentUser => {
-            setUser(currentUser)
-            setLoading(false)
-        })
-    }, [])
-    
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            if (currentUser) {
+                fetchUserRole(currentUser.uid); // Llama a la función para obtener el rol cuando el usuario se autentique
+            } else {
+                setRole(null); // Asegúrate de limpiar el rol si el usuario se desloguea
+            }
+            setLoading(false);
+        });
 
+        return () => unsubscribe(); // Asegúrate de limpiar el listener de auth cuando el componente se desmonte
+    }, []);
 
     return (
-       <authContext.Provider value={{signup, login, user, logout, loading}}>
+        <authContext.Provider value={{ signup, login, user, role, logout, loading }}>
             {children}
-       </authContext.Provider> 
-    )
+        </authContext.Provider>
+    );
 }

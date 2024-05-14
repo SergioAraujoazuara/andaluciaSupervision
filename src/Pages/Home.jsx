@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { db } from '../../firebase_config';
 import { collection, getDocs, deleteDoc, query, where, updateDoc, doc, onSnapshot } from 'firebase/firestore';
-
+import ImagenHome from '../assets/imagenHome.jpg'
 import { GoHomeFill } from "react-icons/go";
 import { FaArrowAltCircleRight } from "react-icons/fa";
 import { Link } from 'react-router-dom';
@@ -93,7 +93,10 @@ function Home() {
         {proyectos.map((p, i) => (
          
             <div className="relative">
-              <img src='https://maldita.es/uploads/images/2022/07/62c6f70f2549cadif-copy-jpg.jpg' alt="Sustainable Building" className="w-full  h-screen" />
+              <img src={ImagenHome} alt="Sustainable Building" className="w-full h-screen" style={{ objectFit: 'cover', objectPosition: '50% 70%' }} />
+
+
+
               <div className="absolute inset-0 bg-black bg-opacity-45"></div>
 
               <div className="absolute inset-0 flex flex-col items-start justify-start md:px-20 lg:px-40 xl:px-20 2xl:px-40">
