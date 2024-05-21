@@ -1,5 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { createContext } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../../firebase_config';
 import { getFirestore, doc, getDoc } from 'firebase/firestore'; // Importa las funciones necesarias de Firestore
@@ -39,13 +38,16 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
             if (currentUser) {
-                fetchUserRole(currentUser.uid); // Llama a la función para obtener el rol cuando el usuario se autentique
+                setUser(currentUser);
+                fetchUserRole(currentUser.uid).then(() => {
+                    setLoading(false); // Finaliza la carga después de obtener el rol
+                });
             } else {
+                setUser(null);
                 setRole(null); // Asegúrate de limpiar el rol si el usuario se desloguea
+                setLoading(false); // Finaliza la carga cuando no hay usuario
             }
-            setLoading(false);
         });
 
         return () => unsubscribe(); // Asegúrate de limpiar el listener de auth cuando el componente se desmonte

@@ -1,5 +1,5 @@
 import './App.css';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, BrowserRouter } from 'react-router-dom';
 import Home from './Pages/Home';
 import Navbar from './Components/Navbar';
 import Footer from './Components/Footer';
@@ -43,10 +43,10 @@ function App() {
     { path: '/formularioInspeccion/:idLote/:id', element: <FormularioInspeccion />, roles: ['admin', 'usuario'] },
     { path: '/pdf_final', element: <Pdf_final />, roles: ['admin', 'usuario'] },
   ];
-  
+
   return (
-    <>
-      <AuthProvider>
+    <AuthProvider>
+    
         <Navbar />
         <Routes>
           {publicRoutes.map((route, index) => (
@@ -68,8 +68,8 @@ function App() {
           ))}
         </Routes>
         <Footer />
-      </AuthProvider>
-    </>
+      
+    </AuthProvider>
   );
 }
 
