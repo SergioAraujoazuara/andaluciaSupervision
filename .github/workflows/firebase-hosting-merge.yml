@@ -17,4 +17,4 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_INSPECCION_454E4 }}'
           channelId: live
-          projectId: inspeccion-454e4
+          projectId: inspeccionadif-65654
