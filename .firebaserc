@@ -1,8 +1,9 @@
 {
   "projects": {
-    "inspeccion": "inspeccionadif-65654",
+    "inspeccion": "inspeccion-454e4",
     "default": "inspeccionadif-65654"
   },
   "targets": {},
-  "etags": {}
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
 }
