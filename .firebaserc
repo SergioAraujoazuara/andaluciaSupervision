@@ -1,9 +1,5 @@
 {
   "projects": {
-    "inspeccion": "inspeccion-454e4",
-    "default": "inspeccion-454e4",
-    "adif": "inspeccionadif-65654"
-  },
-  "targets": {},
-  "etags": {}
+    "default": "inspeccionadif-65654"
+  }
 }
