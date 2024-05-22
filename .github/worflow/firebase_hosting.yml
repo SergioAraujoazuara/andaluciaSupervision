@@ -32,17 +32,17 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_INSPECCION_65654 }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_INSPECCION_454E4 }}'
           channelId: live
-          projectId: inspeccionadif-65654
+          projectId: inspeccion-454e4
  
       - name: Deploy to Firebase Hosting Preview Channel for Non-Main Branches
         if: github.ref != 'refs/heads/main'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_INSPECCION_65654 }}'
-          projectId:  inspeccionadif-65654
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_INSPECCION_454E4 }}'
+          projectId:  inspeccion-454e4
           channelId: ${{ env.CHANNEL_ID }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
