@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../../firebase_config';
-import { getDoc, doc, updateDoc, getDocs, collection, query, where } from 'firebase/firestore';
+import { getDoc, doc, updateDoc } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 import { Link } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
@@ -11,6 +11,9 @@ import { IoArrowBackCircle } from "react-icons/io5";
 
 function EditarPpi() {
     const navigate = useNavigate();
+    const handleGoBack = () => {
+        navigate(-1); // Esto navega hacia atrás en la historia
+    };
     const { id } = useParams();
     const [ppi, setPpi] = useState(null);
     const [editPpi, setEditPpi] = useState({ actividades: [] });
@@ -71,49 +74,9 @@ function EditarPpi() {
             };
             await updateDoc(doc(db, 'ppis', id), updatedData);
             console.log('PPI actualizado exitosamente.');
-            await buscarLotePorNombrePpi(updatedData.nombre, updatedData); // Buscar lote por nombre de PPI
             setShowSuccessModal(true); // Mostrar modal de éxito
         } catch (error) {
             console.error('Error al actualizar el PPI:', error);
-        }
-    };
-
-    const buscarLotePorNombrePpi = async (nombrePpi, updatedPpiData) => {
-        try {
-            // Buscar el lote por el nombre del PPI
-            const lotesQuery = query(collection(db, 'lotes'), where('ppiNombre', '==', nombrePpi));
-            const lotesSnapshot = await getDocs(lotesQuery);
-    
-            if (lotesSnapshot.empty) {
-                console.log('No se encontró ningún lote con el nombre proporcionado.');
-                return;
-            }
-    
-            // Asumimos que solo habrá un lote con ese nombre
-            const loteDoc = lotesSnapshot.docs[0];
-            const loteId = loteDoc.id;
-    
-            console.log('Nombre del lote encontrado:', loteDoc.data().nombre);
-    
-            // Acceder a la subcolección inspecciones dentro del lote
-            const inspeccionesQuery = query(collection(db, `lotes/${loteId}/inspecciones`), where('nombre', '==', nombrePpi));
-            const inspeccionesSnapshot = await getDocs(inspeccionesQuery);
-    
-            if (inspeccionesSnapshot.empty) {
-                console.log('No se encontró ninguna inspección con el nombre proporcionado en el lote.');
-                return;
-            }
-    
-            // Asumimos que solo habrá una inspección con ese nombre
-            const inspeccionDoc = inspeccionesSnapshot.docs[0];
-            const inspeccionId = inspeccionDoc.id;
-    
-            // Actualizar el documento de inspección
-            await updateDoc(doc(db, `lotes/${loteId}/inspecciones`, inspeccionId), updatedPpiData);
-    
-            console.log('Inspección actualizada exitosamente.');
-        } catch (error) {
-            console.error('Error al buscar y actualizar la inspección:', error);
         }
     };
 
@@ -170,11 +133,11 @@ function EditarPpi() {
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'/admin'}>
-                        <h1 className='text-gray-500'>Administración</h1>
+                        <h1 className='text-gray-500 text-gray-500'>Administración</h1>
                     </Link>
                     <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                     <Link to={'/verPpis'}>
-                        <h1 className='text-gray-500'>Plantillas PPI</h1>
+                        <h1 className='text-gray-500 text-gray-500'>Plantillas PPI</h1>
                     </Link>
                     <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                     <Link to={'#'}>
@@ -199,7 +162,7 @@ function EditarPpi() {
                     </div>
 
                     <div className='mb-5'>
-                        <button type="button" onClick={addActividad} className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <button type="button" onClick={addActividad} className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             Añadir Actividad
                         </button>
                     </div>
@@ -229,7 +192,7 @@ function EditarPpi() {
                                         className='w-full p-2 border border-gray-300 bg-gray-200 font-medium'
                                         type="text"
                                         value={actividad.actividad || ''}
-                                        onChange={(e) => handleChange(e, actividadIndex, null, 'actividad')}
+                                        onChange={(e) => handleChange(e, actividadIndex, null, 'nombre')}
                                     />
                                 </div>
                             </div>
@@ -303,6 +266,7 @@ function EditarPpi() {
                     ))}
 
                     <div className='mt-5'>
+                        
                         <button type="submit" className='bg-sky-600 hover:bg-sky-700 text-white font-medium px-4 py-2 rounded-lg '>Guardar cambios</button>
                     </div>
                 </form>

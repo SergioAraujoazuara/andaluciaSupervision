@@ -21,7 +21,7 @@ import { useAuth } from '../context/authContext';
 
 
 function TablaPpi() {
-
+  
     const handleGoBack = () => {
         navigate(`/elementos/${id}`); // Esto navega hacia atrás en la historia
     };
@@ -50,17 +50,17 @@ function TablaPpi() {
     const [userName, setUserName] = useState('')
     useEffect(() => {
         if (user) {
-            const userDocRef = doc(db, 'usuarios', user.uid);
-            getDoc(userDocRef).then(docSnap => {
-                if (docSnap.exists()) {
-                    const userData = docSnap.data();
-                    setUserName(userData.nombre);
-                }
-            });
+          const userDocRef = doc(db, 'usuarios', user.uid);
+          getDoc(userDocRef).then(docSnap => {
+            if (docSnap.exists()) {
+              const userData = docSnap.data();
+              setUserName(userData.nombre);
+            }
+          });
         } else {
-            setUserNombre('');
+          setUserNombre('');
         }
-    }, [user]);
+      }, [user]);
 
 
     useEffect(() => {
@@ -160,21 +160,21 @@ function TablaPpi() {
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
     });
-    // Asumiendo que tienes una forma de obtener el nombre del usuario
+     // Asumiendo que tienes una forma de obtener el nombre del usuario
 
     const firma = '9c8245e6e0b74cfccg97e8714u3234228fb4xcd2'
 
     useEffect(() => {
         if (ppi) {
             const total = ppi.actividades.reduce((sum, actividad) => sum + actividad.subactividades.length, 0);
-            const aptas = ppi.actividades.reduce((sum, actividad) =>
+            const aptas = ppi.actividades.reduce((sum, actividad) => 
                 sum + actividad.subactividades.filter(subactividad => subactividad.resultadoInspeccion === 'Apto').length, 0
             );
-
+            
             setTotalSubActividades(total);
             setActividadesAptas(aptas);
             setDifActividades(total - aptas);
-
+    
             if (total > 1 && total === aptas) {
                 setCierreInspeccion(true);
             } else {
@@ -182,20 +182,20 @@ function TablaPpi() {
             }
         }
     }, [ppi]);
-
+    
 
     const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspeccion) => {
         if (!ppi || !currentSubactividadId) {
             return;
         }
-
+    
         // Divide el ID para obtener índices de actividad y subactividad
         const [actividadIndex, subactividadIndex] = currentSubactividadId.split('-').slice(1).map(Number);
-
+    
         // Crea una copia del estado actual del PPI para modificarlo
         let nuevoPpi = { ...ppi };
         let subactividadSeleccionada = nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex];
-
+    
         // Actualiza los campos con los datos necesarios
         subactividadSeleccionada.formularioEnviado = formulario;
         subactividadSeleccionada.idRegistroFormulario = idRegistroFormulario;
@@ -204,7 +204,7 @@ function TablaPpi() {
         subactividadSeleccionada.nombre_usuario = userName;
         subactividadSeleccionada.firma = firma;
         subactividadSeleccionada.comentario = comentario;
-
+    
         // Si la inspección es "Apto", incrementa el contador de actividadesAptas en el lote
         if (resultadoInspeccion === "Apto") {
             const loteRef = doc(db, "lotes", idLote);
@@ -212,16 +212,16 @@ function TablaPpi() {
                 actividadesAptas: increment(1)
             });
         }
-
+    
         // Si la inspección es No Apto, duplica la subactividad para una futura inspección
         if (resultadoInspeccion === "No apto") {
             let nuevaSubactividad = { ...subactividadSeleccionada };
-
+    
             // Eliminar o reiniciar propiedades específicas de la evaluación para la nueva subactividad
             delete nuevaSubactividad.resultadoInspeccion;
             delete nuevaSubactividad.enviado;
             delete nuevaSubactividad.idRegistroFormulario;
-
+    
             // Restablecer los valores de Responsable, Fecha, Comentarios e Inspección
             // Aquí asumimos que quieres restablecerlos a valores vacíos o predeterminados
             nuevaSubactividad.responsable = '';
@@ -231,7 +231,7 @@ function TablaPpi() {
             // Si Inspección se maneja con otro campo o de otra forma, ajusta esta línea acorde a tu implementación
             // Por ejemplo, si 'inspeccion' es un campo booleano que indica si se ha realizado una inspección
             nuevaSubactividad.formularioEnviado = false; // Ajusta el nombre del campo y el valor según tu caso
-
+    
             // Incrementa el número de versión de la nueva subactividad
             if (nuevaSubactividad.version) {
                 nuevaSubactividad.version = String(parseInt(nuevaSubactividad.version) + 1);
@@ -239,14 +239,14 @@ function TablaPpi() {
                 // Si por alguna razón la subactividad original no tiene número de versión, se inicializa a 1
                 nuevaSubactividad.version = "1";
             }
-
+    
             // Inserta la nueva subactividad en el PPI
             nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividad);
         }
-
+    
         // Actualiza la subactividad en el array
         nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = subactividadSeleccionada;
-
+    
         // Llama a la función que actualiza los datos en Firestore
         await actualizarFormularioEnFirestore(nuevoPpi);
         setPpi(nuevoPpi);  // Actualiza el estado `ppi` para disparar el `useEffect`
@@ -404,9 +404,7 @@ function TablaPpi() {
             documentacion_referencia: subactividadSeleccionada.documentacion_referencia,
             tipo_inspeccion: subactividadSeleccionada.tipo_inspeccion,
             punto: subactividadSeleccionada.punto,
-            responsable: subactividadSeleccionada.responsable,
-            nombre_usuario: userName,
-
+            
             fechaHoraActual: fechaHoraActual,
             globalId: loteInfo.globalId || '',
             nombreGlobalId: loteInfo.nameBim || '',
@@ -491,14 +489,14 @@ function TablaPpi() {
         const [actividadIndex, subactividadIndex] = subactividadId.split('-').slice(1).map(Number);
         const subactividadSeleccionada = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
         const idRegistroFormulario = subactividadSeleccionada.idRegistroFormulario;
-
+    
         // Asegúrate de que existe un id antes de intentar recuperar el documento
         if (idRegistroFormulario) {
             try {
                 // Obtener la referencia del documento en la colección de registros
                 const docRef = doc(db, "registros", idRegistroFormulario);
                 const docSnap = await getDoc(docRef);
-
+    
                 if (docSnap.exists()) {
                     setDocumentoFormulario(docSnap.data());
                     // Llamar a generatePDF directamente
@@ -513,7 +511,7 @@ function TablaPpi() {
             console.log("No se proporcionó un idRegistroFormulario válido.");
         }
     };
-
+    
 
     const cerrarModalYLimpiarDatos = () => {
         setDocumentoFormulario('')
@@ -626,7 +624,7 @@ function TablaPpi() {
             });
         };
 
-
+        
         // Determinar el color del texto según el resultado
         let color = blackColor; // Color predeterminado: negro
         if (documentoFormulario.resultadoInspeccion === "Apto") {
@@ -647,13 +645,13 @@ function TablaPpi() {
         currentPage = result.page;
         currentY = result.lastY;
 
-
+      
 
         result = addText(nombreProyecto, 40, currentY - 15, 12, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-
+        
 
         addHorizontalLine(40, currentY - 11, 555, 1, "#000000", currentPage);
 
@@ -665,19 +663,19 @@ function TablaPpi() {
         currentPage = result.page;
         currentY = result.lastY;
 
-        // Cargar y agregar la flecha verde si el resultado es "Apto"
-        if (documentoFormulario.resultadoInspeccion === "Apto") {
-            const arrowPath = 'data:image/png;base64,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'; // Cambia esto por la ruta real de tu imagen
-            await embedImage(arrowPath, 440, currentY - 5, 20, 20); // Ajusta las coordenadas y el tamaño según sea necesario
-        }
-        else {
-            const arrowPath = 'https://static-00.iconduck.com/assets.00/error-icon-512x512-mmajyv8q.png';
-            await embedImage(arrowPath, 440, currentY - 5, 20, 20); // Ajusta las coordenadas y el tamaño según sea necesario
-        }
-
-        result = addText(documentoFormulario.resultadoInspeccion, 470, currentY, 20, boldFont, currentPage, color);
-        currentPage = result.page;
-        currentY = result.lastY;
+               // Cargar y agregar la flecha verde si el resultado es "Apto"
+             if (documentoFormulario.resultadoInspeccion === "Apto") {
+                const arrowPath = 'data:image/png;base64,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'; // Cambia esto por la ruta real de tu imagen
+                await embedImage(arrowPath, 440, currentY-5, 20, 20); // Ajusta las coordenadas y el tamaño según sea necesario
+            }
+             else {
+                const arrowPath = 'https://static-00.iconduck.com/assets.00/error-icon-512x512-mmajyv8q.png';
+                 await embedImage(arrowPath, 440, currentY-5, 20, 20); // Ajusta las coordenadas y el tamaño según sea necesario
+            }
+    
+            result = addText(documentoFormulario.resultadoInspeccion, 470, currentY, 20, boldFont, currentPage, color);
+            currentPage = result.page;
+            currentY = result.lastY;
 
         addHorizontalLine(40, currentY - 40, 555, 30, "#e2e8f0", currentPage);
 
@@ -688,12 +686,12 @@ function TablaPpi() {
         result = addText("Pk inicial: ", 50, currentY - 38, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
-
+     
 
         result = addText("Pk final: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
-
+      
 
         result = addText(documentoFormulario.pkFinal, 95, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
@@ -801,7 +799,7 @@ function TablaPpi() {
         result = addText(`${documentoFormulario.tipo_inspeccion}`, 160, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
-
+        
         result = addText("Punto: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
@@ -810,7 +808,7 @@ function TablaPpi() {
         currentPage = result.page;
         currentY = result.lastY;
 
-
+       
 
         result = addText("Fecha inspección: ", 50, currentY - 30, 11, boldFont, currentPage);
         currentPage = result.page;
@@ -820,8 +818,8 @@ function TablaPpi() {
         currentPage = result.page;
         currentY = result.lastY;
 
-
-
+        
+        
         result = addText("Responsable: ", 50, currentY - 25, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
@@ -841,22 +839,22 @@ function TablaPpi() {
 
         addHorizontalLine(40, currentY - 40, 555, 30, "#e2e8f0", currentPage);
 
-
-
+      
+        
         result = addText("Comentarios: ", 50, currentY - 44, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
         let x = 'xxx xxxx xxxx x xxxx xx xxxxx xxxx xxxxx xxxxx xxxxxxx xxxxxx xxxxxxx xxxxx xxxxxxx xxxxxxx xxxxxx xxxxxxxx xx xxx xxxx xxxx x xxxx xx xxxxx xxxx xxxxx xxxxx xxxxxxx xxxxxx xxxxxxx xxxxx'
-
+       
 
         result = addText(`${documentoFormulario.observaciones}`, 50, currentY - 40, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
         addHorizontalLine(40, currentY - 20, 555, 1, "#e2e8f0", currentPage);
 
+        
 
-
-
+     
 
         result = addText("Firma: ", 50, currentY - 60, 11, boldFont, currentPage);
         currentPage = result.page;
@@ -940,7 +938,7 @@ function TablaPpi() {
             }
         }
 
-
+      
 
         // Continuar con el guardado y descarga del PDF, etc.
 
@@ -1050,11 +1048,11 @@ function TablaPpi() {
     return (
         <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500 text-sm'>
 
-
+           
 
             <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
                 <div className='flex gap-2 items-center'>
-                    <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+                <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'/'}>
                         <h1 className=' text-gray-500'>Home</h1>
                     </Link>
@@ -1073,7 +1071,7 @@ function TablaPpi() {
                 <div className='flex items-center gap-4'>
                     <button className='text-amber-600 text-3xl' onClick={regresar}><IoArrowBackCircle /></button>
 
-
+                    
 
                 </div>
 
@@ -1089,8 +1087,8 @@ function TablaPpi() {
                             <div className='col-span-1'>Versión</div>
                             <div className='col-span-1'>Nº</div>
 
-                            <div className="col-span-2">Actividad</div>
-                            <div className="col-span-3">Criterio de aceptación</div>
+                            <div className="col-span-3">Actividad</div>
+                            <div className="col-span-2">Criterio de aceptación</div>
                             <div className="col-span-2 text-center">Documentación de referencia</div>
                             <div className="col-span-2 text-center">Tipo de inspección</div>
                             <div className="col-span-1 text-center">Punto</div>
@@ -1137,11 +1135,11 @@ function TablaPpi() {
                                             {subactividad.numero} {/* Combina el número de actividad y el índice de subactividad */}
                                         </div>
 
-                                        <div className="col-span-2 px-3 py-5">
+                                        <div className="col-span-3 px-3 py-5">
                                             {subactividad.nombre}
                                         </div>
 
-                                        <div className="col-span-3 px-3 py-5">
+                                        <div className="col-span-2 px-3 py-5">
                                             {subactividad.criterio_aceptacion}
                                         </div>
                                         <div className="col-span-2 px-3 py-5 text-center">
@@ -1164,7 +1162,7 @@ function TablaPpi() {
                                         <div className="col-span-2 px-3 py-5 text-center">
                                             {subactividad.nombre_usuario || ''}
                                         </div>
-
+                                       
                                         <div className="col-span-2 px-5 py-5 text-center text-xs">
                                             {/* Aquí asumo que quieres mostrar la fecha en esta columna, ajusta según sea necesario */}
                                             {subactividad.fecha || ''}
@@ -1231,31 +1229,26 @@ function TablaPpi() {
             </div>
 
             <div className='bg-white px-8 py-4 rounded-xl mt-4 rounded rounded-xl shadow-md'>
-    {ppi ? (
-        <div className='flex gap-3 items-center'>
-            <div>
-                <p className='font-bold'>Inspecciones aptas: <span className='font-normal'>{actividadesAptas !== null && actividadesAptas !== undefined ? actividadesAptas : 0}</span></p>
-            </div>
-            {'/'}
-            <div>
-                <p className='font-bold'>Inspecciones totales: <span className='font-normal'>{totalSubactividades !== null && totalSubactividades !== undefined ? totalSubactividades : 0}</span></p>
-            </div>
-            <div className='ms-10'>
-                {difActividades === 0 && (
-                    <button
-                        onClick={() => setShowConfirmModal(true)}
-                        className="bg-amber-600 text-white font-bold py-2 px-4 rounded-full"
-                    >
-                        <p className='flex gap-2 items-center'><span><FaFilePdf /></span>Terminar inspección</p>
-                    </button>
-                )}
-            </div>
+    <div className='flex gap-3 items-center'>
+        <div>
+            <p className='font-bold'>Inspecciones aptas: <span className='font-normal'>{actividadesAptas !== null && actividadesAptas !== undefined ? actividadesAptas : 0}</span></p>
         </div>
-    ) : (
-        <div>Cargando...</div>
-    )}
+        {'/'}
+        <div>
+            <p className='font-bold'>Inspecciones totales: <span className='font-normal'>{totalSubactividades !== null && totalSubactividades !== undefined ? totalSubactividades : 0}</span></p>
+        </div>
+        <div className='ms-10'>
+            {difActividades === 0 && (
+                <button
+                    onClick={() => setShowConfirmModal(true)}
+                    className="bg-amber-600 text-white font-bold py-2 px-4 rounded-full"
+                >
+                    <p className='flex gap-2 items-center'><span><FaFilePdf /></span>Terminar inspección</p>
+                </button>
+            )}
+        </div>
+    </div>
 </div>
-
 
 
 
@@ -1336,7 +1329,7 @@ function TablaPpi() {
                             fechaHoraActual={fechaHoraActual}
                             handleCloseModal={handleCloseModal}
                             ppiNombre={ppiNombre}
-
+                         
 
                             setResultadoInspeccion={setResultadoInspeccion}
                             enviarDatosARegistros={enviarDatosARegistros}
@@ -1425,7 +1418,7 @@ function TablaPpi() {
                             fechaHoraActual={fechaHoraActual}
                             handleCloseModal={handleCloseModal}
                             ppiNombre={ppiNombre}
-
+                           
 
                             setResultadoInspeccion={setResultadoInspeccion}
 
