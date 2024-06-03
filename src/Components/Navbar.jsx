@@ -10,15 +10,12 @@ import { ImExit } from "react-icons/im";
 import { IoIosSettings } from "react-icons/io";
 
 const Navbar = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [showMenu, setShowMenu] = useState(false);
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [userNombre, setUserNombre] = useState('');
   const [userRol, setUserRol] = useState('');
   const location = useLocation();
-  const idProyecto = localStorage.getItem('idProyecto')
 
   useEffect(() => {
     if (user) {
@@ -28,11 +25,12 @@ const Navbar = () => {
           const userData = docSnap.data();
           setUserNombre(userData.nombre);
           setUserRol(userData.role);
-          console.log(userData.role)
+          console.log(userData.role);
         }
       });
     } else {
       setUserNombre('');
+      setUserRol('');
     }
   }, [user]);
 
@@ -42,21 +40,20 @@ const Navbar = () => {
     setActiveLink(linkName);
   };
 
-  const toggleProfileDropdown = () => setShowProfileDropdown(!showProfileDropdown);
   const toggleLogoutConfirmation = () => setShowLogoutConfirmation(!showLogoutConfirmation);
 
   const handleLogout = async () => {
     await logout();
-    navigate('/authTabs')
+    navigate('/authTabs');
     setShowLogoutConfirmation(false);
-    setShowProfileDropdown(false);
-    setShowMenu(false);
   };
+
+  const isAuthTabs = location.pathname === '/authTabs';
 
   return (
     <nav className="bg-white shadow">
       <div className="container mx-auto px-10">
-        <div className="flex justify-between h-24">
+        <div className="flex justify-between items-center h-24">
           <div className="flex gap-10">
             <div className="flex-shrink-0 flex items-center">
               <img className="h-auto" src={Imagen} width={150} alt="logo" />
@@ -90,7 +87,7 @@ const Navbar = () => {
               </div>
             )}
           </div>
-          {user && (
+          {user ? (
             <div className='flex items-center font-medium text-gray-500 pr-5 gap-5 text-base'>
               <div className='flex gap-2 items-center text-gray-500'>
                 <FaUserAlt />
@@ -98,18 +95,19 @@ const Navbar = () => {
               </div>
               <div className="relative bg-sky-600 text-white px-4 py-2 rounded-full">
                 <button className="flex items-center text-md" onClick={toggleLogoutConfirmation}>
-
-                  {showProfileDropdown ? <span className='text-xl flex items-center'><IoIosSettings /></span> : <span className='text-md'><ImExit /></span>}
+                  {showLogoutConfirmation ? <span className='text-xl flex items-center'><IoIosSettings /></span> : <span className='text-md'><ImExit /></span>}
                 </button>
-                {/* {showProfileDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-md">
-                    <button className="px-4 py-2 text-gray-800 hover:bg-gray-300 w-full" onClick={toggleLogoutConfirmation}>
-                      Cerrar Sesión
-                    </button>
-                  </div>
-                )} */}
               </div>
             </div>
+          ) : (
+            !isAuthTabs && (
+              <button
+                onClick={() => navigate('/authTabs')}
+                className="bg-sky-600 text-white font-medium py-2 px-4 h-12 rounded-lg "
+              >
+                Iniciar sesión  |  Registrarse
+              </button>
+            )
           )}
         </div>
       </div>

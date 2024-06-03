@@ -15,7 +15,7 @@ function EditarPpi() {
     const [ppi, setPpi] = useState(null);
     const [editPpi, setEditPpi] = useState({ actividades: [] });
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [totalSubactividades, seTotalSubactividades] = useState(null);
+    const [totalSubactividades, setTotalSubactividades] = useState(0);
 
     useEffect(() => {
         const obtenerPpi = async () => {
@@ -24,10 +24,10 @@ function EditarPpi() {
                 const ppiData = await getDoc(ppiDoc);
 
                 if (ppiData.exists()) {
-                    setPpi(ppiData.data());
-                    console.log(ppiData.data());
-                    setEditPpi(ppiData.data());
-                    seTotalSubactividades(ppiData.data().totalSubactividades);
+                    const ppiDataValue = ppiData.data();
+                    setPpi(ppiDataValue);
+                    setEditPpi(ppiDataValue);
+                    setTotalSubactividades(ppiDataValue.totalSubactividades || 0);
                 } else {
                     console.log('No se encontró el PPI con el ID proporcionado.');
                 }
@@ -71,50 +71,71 @@ function EditarPpi() {
             };
             await updateDoc(doc(db, 'ppis', id), updatedData);
             console.log('PPI actualizado exitosamente.');
-            await buscarLotePorNombrePpi(updatedData.nombre, updatedData); // Buscar lote por nombre de PPI
+            await buscarLotePorNombrePpi(updatedData.nombre, updatedData, totalSubactividades); // Buscar lote por nombre de PPI
             setShowSuccessModal(true); // Mostrar modal de éxito
         } catch (error) {
             console.error('Error al actualizar el PPI:', error);
         }
     };
 
-    const buscarLotePorNombrePpi = async (nombrePpi, updatedPpiData) => {
+    const buscarLotePorNombrePpi = async (nombrePpi, updatedPpiData, newTotalSubactividades) => {
         try {
             // Buscar el lote por el nombre del PPI
             const lotesQuery = query(collection(db, 'lotes'), where('ppiNombre', '==', nombrePpi));
             const lotesSnapshot = await getDocs(lotesQuery);
-    
+
             if (lotesSnapshot.empty) {
                 console.log('No se encontró ningún lote con el nombre proporcionado.');
                 return;
             }
-    
+
             // Asumimos que solo habrá un lote con ese nombre
             const loteDoc = lotesSnapshot.docs[0];
             const loteId = loteDoc.id;
-    
+
             console.log('Nombre del lote encontrado:', loteDoc.data().nombre);
-    
+
+            // Actualizar el documento del lote
+            await updateDoc(doc(db, 'lotes', loteId), {
+                totalSubactividades: newTotalSubactividades
+            });
+
             // Acceder a la subcolección inspecciones dentro del lote
             const inspeccionesQuery = query(collection(db, `lotes/${loteId}/inspecciones`), where('nombre', '==', nombrePpi));
             const inspeccionesSnapshot = await getDocs(inspeccionesQuery);
-    
+
             if (inspeccionesSnapshot.empty) {
                 console.log('No se encontró ninguna inspección con el nombre proporcionado en el lote.');
                 return;
             }
-    
+
             // Asumimos que solo habrá una inspección con ese nombre
             const inspeccionDoc = inspeccionesSnapshot.docs[0];
             const inspeccionId = inspeccionDoc.id;
-    
+
             // Actualizar el documento de inspección
-            await updateDoc(doc(db, `lotes/${loteId}/inspecciones`, inspeccionId), updatedPpiData);
-    
-            console.log('Inspección actualizada exitosamente.');
+            await updateDoc(doc(db, `lotes/${loteId}/inspecciones`, inspeccionId), {
+                ...updatedPpiData,
+                totalSubactividades: newTotalSubactividades
+            });
+
+            console.log('Lote e inspección actualizados exitosamente.');
         } catch (error) {
-            console.error('Error al buscar y actualizar la inspección:', error);
+            console.error('Error al buscar y actualizar la inspección y el lote:', error);
         }
+    };
+
+    const updateTotalSubactividades = async (increment) => {
+        const newTotalSubactividades = totalSubactividades + increment;
+        setTotalSubactividades(newTotalSubactividades);
+
+        const updatedPpiData = {
+            ...editPpi,
+            totalSubactividades: newTotalSubactividades
+        };
+
+        await updateDoc(doc(db, 'ppis', id), updatedPpiData);
+        await buscarLotePorNombrePpi(editPpi.nombre, updatedPpiData, newTotalSubactividades);
     };
 
     const addActividad = () => {
@@ -138,6 +159,7 @@ function EditarPpi() {
             ...prevState,
             actividades: [...prevState.actividades, newActividad]
         }));
+        updateTotalSubactividades(1);
     };
 
     const addSubactividad = (actividadIndex) => {
@@ -153,10 +175,9 @@ function EditarPpi() {
                 punto: '',
                 responsable: ''
             });
-            newState.totalSubactividades += 1; // Increment total subactivities count
-            seTotalSubactividades(newState.totalSubactividades); // Update the state
             return newState;
         });
+        updateTotalSubactividades(1);
     };
 
     if (!ppi) {
