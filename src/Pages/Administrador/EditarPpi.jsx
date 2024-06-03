@@ -352,7 +352,7 @@ function EditarPpi() {
                                         </h3>
                                         <div className="mt-2">
                                             <p className="text-sm text-gray-500">
-                                                El PPI ha sido actualizado exitosamente.
+                                                El PPI ha sido actualizado exitosamente
                                             </p>
                                         </div>
                                     </div>
