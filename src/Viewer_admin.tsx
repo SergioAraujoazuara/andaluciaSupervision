@@ -60,7 +60,7 @@ export default function Viewer_admin() {
     const [observaciones, setObservaciones] = useState('');
     const idLote = localStorage.getItem('loteId');
 
-    
+
     const [ppi, setPpi] = useState(null);
 
 
@@ -216,18 +216,18 @@ export default function Viewer_admin() {
     const actualizarLoteConGlobalId = async (loteId, globalId, nameBim) => {
         const loteRef = doc(db, "lotes", loteId);
         try {
-            await updateDoc(loteRef, { 
-                globalId: globalId, 
+            await updateDoc(loteRef, {
+                globalId: globalId,
                 nameBim: nameBim  // Agregar nameBim a la base de datos.
             });
             // Actualizar el estado del lote seleccionado inmediatamente
             const updatedLote = { ...selectedLote, globalId: globalId, nameBim: nameBim };
             setSelectedLote(updatedLote);
-    
+
             // Actualizar la lista de lotes
             const updatedLotes = lotes.map(lote => lote.docId === loteId ? { ...lote, globalId: globalId, nameBim: nameBim } : lote);
             setLotes(updatedLotes);
-    
+
             setSuccessMessage("Global ID y Nombre BIM agregados correctamente");
             setShowSuccessModal(true);
         } catch (error) {
@@ -236,7 +236,7 @@ export default function Viewer_admin() {
             setShowSuccessModal(true);
         }
     };
-    
+
 
 
 
@@ -265,7 +265,7 @@ export default function Viewer_admin() {
         if (filtro === "noAsignados") return !lote.globalId;
     });
 
-   
+
     return (
 
         <div className="container mx-auto min-h-screen text-gray-500 px-14 py-5">
@@ -289,9 +289,9 @@ export default function Viewer_admin() {
                 </div>
 
                 <div>
-                <button className='text-amber-600 text-3xl' onClick={regresar}><IoArrowBackCircle /></button>
+                    <button className='text-amber-600 text-3xl' onClick={regresar}><IoArrowBackCircle /></button>
 
-                    
+
                 </div>
 
             </div>
@@ -413,47 +413,85 @@ export default function Viewer_admin() {
 
 
             {modalExito && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-10">
-                    <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
-
-                    <div className="mx-auto w-[400px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8 text-center flex flex-col gap-5 items-center"
-                    >
-                        <button
-                            onClick={() => setModalExito(false)}
-                            className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300">
-                            <IoCloseCircle />
-                        </button>
-
-                        <p className='text-teal-500 font-bold text-5xl'><FaCheckCircle /></p>
-
-                        <p className='text-xl font-bold'>{mensajeExitoInspeccion}</p>
-
-
-
+                <div className="fixed z-10 inset-0 overflow-y-auto">
+                    <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                            <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+                        </div>
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <div className="sm:flex sm:items-start">
+                                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                        <FaCheckCircle className='text-6xl text-teal-500' />
+                                    </div>
+                                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                        <h3 className="text-lg leading-6 font-medium text-gray-900">
+                                            Éxito
+                                        </h3>
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-500">
+                                                {mensajeExitoInspeccion}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <button
+                                    type="button"
+                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                    onClick={() => setModalExito(false)}
+                                >
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
                     </div>
-
                 </div>
             )}
+
 
 
             {showSuccessModal && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
-                    <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-50"></div>
-
-                    <div className="modal-container bg-white w-1/4 rounded shadow-lg z-50 overflow-y-auto p-3">
-                        <div className="text-right p-2">
-                            <button onClick={() => setShowSuccessModal(false)} className="text-3xl font-semibold hover:text-red-500 transition ease-in-out duration-300">
-                                &times;
-                            </button>
+                <div className="fixed z-10 inset-0 overflow-y-auto">
+                    <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                            <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
                         </div>
-                        <div className="p-8 flex flex-col items-center">
-                            <FaCheckCircle size="60" className="text-green-500 mb-5" />
-                            <p className="text-center text-gray-800 text-xl font-medium mt-3">{successMessage}</p>
-
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <div className="sm:flex sm:items-start">
+                                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                        <FaCheckCircle className='text-6xl text-green-500' />
+                                    </div>
+                                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                        <h3 className="text-lg leading-6 font-medium text-gray-900">
+                                            Éxito
+                                        </h3>
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-500">
+                                                {successMessage}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <button
+                                    type="button"
+                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                    onClick={() => setShowSuccessModal(false)}
+                                >
+                                    Cerrar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
+
 
 
 

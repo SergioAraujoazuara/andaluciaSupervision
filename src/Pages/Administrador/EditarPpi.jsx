@@ -163,6 +163,10 @@ function EditarPpi() {
         return <div>Cargando...</div>;
     }
 
+    const handleGoBack = () => {
+        navigate('/admin'); // Esto navega hacia atrás en la historia
+    };
+
     return (
         <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500 text-sm'>
             {/* Navigation section */}

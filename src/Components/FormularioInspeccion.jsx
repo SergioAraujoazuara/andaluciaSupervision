@@ -517,19 +517,19 @@ function FormularioInspeccion({ onObservaciones, formulario, crearVariableFormul
             {
                 mostrarConfirmacion && (
                     <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-800 bg-opacity-90 text-gray-500 fonmt-medium text-center">
-                        <div className="mx-auto w-[600px] h-800px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto px-12 py-8">
+                        <div className="mx-auto w-[600px] h-[600px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto px-12 py-8">
 
                             <div>
                                 {resultadoInspeccion && (
                                     <>
                                         <div className='flex flex-col gap-2 justify-start items-center rounded-xl px-6'>
                                             <div className='text-center flex flex-col items-center'>
-                                            <p className='text-2xl font-bold flex items-center gap-2 text-yellow-600'><span className='font-bold text-yellow-500 text-5xl'><IoIosWarning /></span>¡Atención!<span className='font-bold text-yellow-500 text-5xl'><IoIosWarning /></span></p>
-                                            <p className='text-xl font-bold flex items-center gap-2 mt-2'>Se guardará la inspección y no podras modificarla</p>
+                                            <p className='text-2xl font-bold flex items-center gap-2 text-yellow-600'><span className='font-bold text-yellow-500 text-3xl'><IoIosWarning /></span>¡Atención!<span className='font-bold text-yellow-500 text-3xl'><IoIosWarning /></span></p>
+                                            <p className='text-lg font-bold flex items-center gap-2 mt-2'>Se guardará la inspección y no podras modificarla</p>
                                             </div>
                                            
                                             <div className=''>
-                                                <h2 className="font-bold text-gray-500 text-start text-lg underline">Revisa los datos y comprueba que todo esta correcto</h2>
+                                                <h2 className="font-bold text-gray-500 text-start underline">Revisa los datos y comprueba que todo esta correcto</h2>
                                             </div>
                                             
                                             {/* <p className='text-2xl font-bold'>
@@ -548,7 +548,7 @@ function FormularioInspeccion({ onObservaciones, formulario, crearVariableFormul
                                             
 
                                             <div className='bg-gray-200 px-6 py-4 rounded-xl text-start flex flex-col gap-2 mt-4'>
-                                            <p className='text-xl underline'>
+                                            <p className='text-lg underline'>
                                                     <strong>Resultado:</strong>{' '}
                                                     <span className={`font-bold ${resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}`}>
                                                         {resultadoInspeccion}
