@@ -7,10 +7,6 @@ function RecuperarPdf({documentoFormulario}) {
     const [nombreProyecto, setNombreProyecto] = useState(localStorage.getItem('nombre_proyecto') || '');
     const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
     const imagenPath2 = logo
-
-    
-    
-
     const generatePDF = () => {
         const doc = new jsPDF();
         // Establecer el tamaño de fuente deseado

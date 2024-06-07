@@ -35,7 +35,7 @@ function Modulos() {
                     <button className='bg-sky-600 text-white text-base font-medium px-5 py-2 rounded-md shadow-md' style={{ marginLeft: 'auto' }}>{nombre_proyecto}</button>
                     </div>
 
-                    <div className='border-t-2 w-full p-0 m-0'></div>
+                    <div className='border-t-2 w-full p-1 m-0'></div>
 
 
 

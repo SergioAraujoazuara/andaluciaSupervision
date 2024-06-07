@@ -13,6 +13,7 @@ function Alert({ message, closeModal }) {
         <div className="flex flex-col items-center justify-center">
           <div className='flex justify-end w-full'>
             <VscErrorSmall onClick={closeModal} style={{ fontSize: 64, fill: '#525252' }} />
+            <VscErrorSmall onClick={closeModal} style={{ fontSize: 64, fill: '#525252' }} />
           </div>
           <div className='flex justify-center items-center w-full'>
             {message === '¡Información enviada correctamente!' || message === '¡Proyecto seleccionado!' ? (

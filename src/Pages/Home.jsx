@@ -23,6 +23,25 @@ function Home() {
   const { user } = useAuth();
   const [userData, setUserData] = useState(null);
   const [userRole, setUserRole] = useState('');
+  
+
+  useEffect(()=> {
+    const getUsers = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/users');
+        if (response.ok) {
+          const users = await response.json();
+          console.log(users);
+        } else {
+          console.log(`Failed to fetch users: ${response.statusText}`);
+        }
+      } catch (error) {
+        console.log(`Failed to fetch users: ${error.message}`);
+      }
+    };
+    getUsers()
+  }, [])
+
 
   useEffect(() => {
       if (user) {

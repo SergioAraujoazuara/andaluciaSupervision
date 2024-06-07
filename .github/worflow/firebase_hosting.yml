@@ -32,7 +32,7 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_INSPECCION_454E4 }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_INSPECCION_65654 }}'
           channelId: live
           projectId: inspeccionadif-65654
  
@@ -41,7 +41,11 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
+<<<<<<< HEAD
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_INSPECCION_454E4 }}'
+=======
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_INSPECCION_65654 }}'
+>>>>>>> e8d237173af706678cbd4d98c7dd68e1a758d864
           projectId:  inspeccionadif-65654
           channelId: ${{ env.CHANNEL_ID }}
         env:

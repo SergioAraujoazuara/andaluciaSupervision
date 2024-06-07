@@ -529,10 +529,10 @@ function Trazabilidad() {
             // Limpia los campos y muestra alerta de éxito
             setLoteInput('');
             setSelectedPpi('');
-            setPkFinalInput('');
+            setPkInicialInput('');
             setPkFinalInput('');
             setIdBimInput('');
-            setAlerta('Lote agregado correctamente con PPI asociado.');
+            setAlerta('Lote agregado correctamente');
             setTipoAlerta('success');
             setMostrarModal(true);
 
@@ -1628,52 +1628,71 @@ function Trazabilidad() {
 
 
 
-
-                {mostrarModal && (
-                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
-                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
-
-                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4">
-
-                            <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
-                            {tipoAlerta === 'success' ?
-                                <div className='text-green-600 flex justify-center'><IoIosCheckmarkCircle className='text-6xl' /></div>
-                                :
-                                null
+{mostrarModal && (
+    <div className="fixed z-10 inset-0 overflow-y-auto">
+        <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div className="sm:flex sm:items-start">
+                        <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                            {/* Success or Error Icon */}
+                            {tipoAlerta === 'success' ? 
+                                <IoIosCheckmarkCircle className='text-6xl text-green-600' /> : 
+                                <IoCloseCircle className='text-6xl text-red-600' />
                             }
-
-                            {tipoAlerta === 'error' ?
-                                <div className='text-red-600 flex justify-center'><IoCloseCircle className='text-6xl' /></div>
-                                :
-                                null
-                            }
-
-                            <div className="modal-content py-4 text-left px-6 flex justify-center font-medium">
-                                {alerta}
+                        </div>
+                        <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 className="text-lg leading-6 font-medium text-gray-900">
+                                {tipoAlerta === 'success' ? 'Éxito' : 'Error'}
+                            </h3>
+                            <div className="mt-2">
+                                <p className="text-sm text-gray-500">
+                                    {alerta}
+                                </p>
                             </div>
                         </div>
                     </div>
-                )}
+                </div>
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button
+                        type="button"
+                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
+                        onClick={handleCloseAlert}
+                    >
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+)}
 
-                {mostrarModalPpi && (
-                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
-                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
 
-                        <div className="modal-container bg-white mx-auto rounded shadow-lg z-50 overflow-y-auto p-5"
-                            style={{ width: '320px', height: 'auto', maxWidth: '100%' }}>
+
+{mostrarModalPpi && (
+    <div className="fixed z-10 inset-0 overflow-y-auto">
+        <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" style={{ width: '320px', height: 'auto', maxWidth: '100%' }}>
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div className="sm:flex sm:items-start">
+                        <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                             <button onClick={handleCloseModalPpi} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
-
                             <div className='text-center flex justify-center flex-col items-center gap-2'>
                                 <MdOutlineAddLocationAlt className='font-bold text-2xl' />
-
                                 <p><strong>Lote: </strong>{objetoLote.nombre ? objetoLote.nombre : "Ppi no encontrado, selecciona la ubicación correctamente"}</p>
-
                                 {ppiObject && ppiObject.data && (
                                     <div>
                                         <p><strong>Ppi: </strong>{ppiObject.data.nombre}</p>
                                     </div>
                                 )}
-
                                 {!ppiObject && (
                                     <div>
                                         <p className='font-medium'>No se encontraron PPIs para el lote.</p>
@@ -1685,7 +1704,21 @@ function Trazabilidad() {
                             </div>
                         </div>
                     </div>
-                )}
+                </div>
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button
+                        type="button"
+                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gray-500 text-base font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:ml-3 sm:w-auto sm:text-sm"
+                        onClick={handleCloseModalPpi}
+                    >
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+)}
+
 
 
                 {/* {mostrarModalEditarSector && (
