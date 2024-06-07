@@ -114,9 +114,13 @@ function Elemento() {
 
 
 
-                        {lotes.sort((a, b) => a.parteNombre.localeCompare(b.parteNombre)).map((l, i) => (
-                            <Link to={`/tablaPpi/${l.id}/${l.ppiNombre}`} onClick={() => handleCaptrurarTrazabilidad(l)}>
-                                <div key={i} className='text-sm cursor-pointer grid sm:grid-cols-12 grid-cols-1 items-center justify-start sm:p-5 border-b-2 font-normal text-gray-600 hover:bg-gray-100'>
+                        {lotes.sort((a, b) => {
+                            const avanceA = (a.actividadesAptas || 0) / a.totalSubactividades;
+                            const avanceB = (b.actividadesAptas || 0) / b.totalSubactividades;
+                            return avanceB - avanceA; // Orden descendente: de mayor a menor avance
+                        }).map((l, i) => (
+                            <Link to={`/tablaPpi/${l.id}/${l.ppiNombre}`} onClick={() => handleCaptrurarTrazabilidad(l)} key={i}>
+                                <div className='text-sm cursor-pointer grid sm:grid-cols-12 grid-cols-1 items-center justify-start sm:p-5 border-b-2 font-normal text-gray-600 hover:bg-gray-100'>
                                     <div className='sm:border-r-2 sm:border-b-0 flex items-center sm:pr-10'>
                                         {l.sectorNombre}
                                     </div>
@@ -137,9 +141,15 @@ function Elemento() {
                                         <div className='col-span-2'><p className='p-1'>Inicial: {l.pkInicial}</p></div>
                                         <div className='col-span-2'><p className='  p-1'>Final: {l.pkFinal}</p></div>
                                     </div>
-                                    <div className='sm:border-r-2 flex flex-col col-span-3 items-start sm:justify-center sm:ps-10 sm:pr-5'>
-                                        <p className='font-medium'>Lote: {l.nombre}</p>
-                                        <p className='text-amber-600 font-medium'>Ppi: {l.ppiNombre}</p>
+                                    <div className='sm:border-r-2  flex flex-col col-span-3 items-start sm:justify-center sm:ps-10 sm:pr-5'>
+                                        <div className='flex gap-3 items-center'>
+                                        <p className='text-amber-600 font-medium'>Lote:</p>
+                                         <p className='font-medium'> {l.nombre}</p>
+                                            </div>
+                                        <div className='flex gap-3 mt-1'>
+                                        <p className='text-amber-600 font-medium'>Ppi:</p> 
+                                        <p className='font-medium'>{l.ppiNombre}</p>
+                                            </div>
                                     </div>
 
                                     <div className=' flex flex-col items-center sm:justify-start gap-5 col-span-2 sm:ps-10'>
@@ -165,6 +175,7 @@ function Elemento() {
                                 </div>
                             </Link>
                         ))}
+
 
 
 

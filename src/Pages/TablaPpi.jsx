@@ -27,7 +27,6 @@ function TablaPpi() {
     };
     const { user } = useAuth();
     let emailUser = user.email
-    console.log(user)
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
 
     const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
@@ -162,14 +161,16 @@ function TablaPpi() {
     });
     // Asumiendo que tienes una forma de obtener el nombre del usuario
 
-    const firma = '9c8245e6e0b74cfccg97e8714u3234228fb4xcd2'
+    const firma = 'zO9c82%&45e6e0b74cfccg97e/&/8714u32342&%&/28fb4xcd2'
+
+
 
     useEffect(() => {
         if (ppi) {
-            const total = ppi.actividades.reduce((sum, actividad) => sum + actividad.subactividades.length, 0);
+            const total = ppi.actividades.reduce((sum, actividad) =>
+                sum + actividad.subactividades.filter(subactividad => subactividad.version === 0).length, 0);
             const aptas = ppi.actividades.reduce((sum, actividad) =>
-                sum + actividad.subactividades.filter(subactividad => subactividad.resultadoInspeccion === 'Apto').length, 0
-            );
+                sum + actividad.subactividades.filter(subactividad => subactividad.resultadoInspeccion === 'Apto' && subactividad.version === 0).length, 0);
 
             setTotalSubActividades(total);
             setActividadesAptas(aptas);
@@ -182,6 +183,7 @@ function TablaPpi() {
             }
         }
     }, [ppi]);
+
 
 
     const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspeccion) => {
@@ -222,11 +224,13 @@ function TablaPpi() {
             delete nuevaSubactividad.enviado;
             delete nuevaSubactividad.idRegistroFormulario;
 
+
             // Restablecer los valores de Responsable, Fecha, Comentarios e Inspección
             // Aquí asumimos que quieres restablecerlos a valores vacíos o predeterminados
-            nuevaSubactividad.responsable = '';
+
             nuevaSubactividad.fecha = '';
             nuevaSubactividad.comentario = '';
+            nuevaSubactividad.nombre_usuario = '';
             // Para el campo Inspección, asegúrate de restablecerlo según cómo lo manejas en tu modelo de datos
             // Si Inspección se maneja con otro campo o de otra forma, ajusta esta línea acorde a tu implementación
             // Por ejemplo, si 'inspeccion' es un campo booleano que indica si se ha realizado una inspección
@@ -322,50 +326,49 @@ function TablaPpi() {
     const [totalSubactividades, setTotalSubActividades] = useState(0); // Estado para almacenar los datos del PPI
     const [difActividades, setDifActividades] = useState(0); // Estado para almacenar los datos del PPI
 
-    
+
     useEffect(() => {
         const obtenerLotePorId = async () => {
-
-            if (!idLote) return; // Verifica si idLote está presente
+            if (!idLote) return;
 
             try {
-                const docRef = doc(db, "lotes", idLote); // Crea una referencia al documento usando el id
+                const docRef = doc(db, "lotes", idLote);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-
                     setLoteInfo({ id: docSnap.id, ...docSnap.data() });
-                   
+
                     let loteObject = { id: docSnap.id, ...docSnap.data() };
-                    let actividadesAptas = loteObject.actividadesAptas
-                    setActividadesAptas(actividadesAptas)
-                    let totalSubactividades = loteObject.totalSubactividades
-                    setTotalSubActividades(totalSubactividades)
-                    let difActividades = totalSubactividades - actividadesAptas
-                    setDifActividades(difActividades)
+                    let actividadesAptas = loteObject.actividadesAptas;
+                    console.log(actividadesAptas, 'actividades aptas');
+                    setActividadesAptas(actividadesAptas);
+
+                    // Calcular totalSubactividades solo para versiones 0
+                    let totalSubactividades = ppi.actividades.reduce((sum, actividad) =>
+                        sum + actividad.subactividades.filter(subactividad => subactividad.version === 0).length, 0);
+                    setTotalSubActividades(totalSubactividades);
+
+                    let difActividades = totalSubactividades - actividadesAptas;
+                    setDifActividades(difActividades);
 
                     if (difActividades === 0) {
-                        setCierreInspeccion(true)
+                        setCierreInspeccion(true);
+                    } else {
+                        setCierreInspeccion(false);
                     }
-                    else {
-                        setCierreInspeccion(false)
-                    }
 
-                    console.log(cierreInspeccion, difActividades, '******************')
-
-
+                    console.log(cierreInspeccion, difActividades, '******************');
                 } else {
                     console.log("No se encontró el lote con el ID:", idLote);
-
                 }
             } catch (error) {
                 console.error("Error al obtener el lote:", error);
-
             }
         };
 
         obtenerLotePorId();
-    }, [idLote]);
+    }, [idLote, ppi]);
+
 
     const [formulario, setFormulario] = useState(true)
 
@@ -418,6 +421,12 @@ function TablaPpi() {
             imagen: imagen, // Incluyendo la primera imagen comprimida
             imagen2: imagen2
         };
+
+        // Convertir datos a JSON y medir el tamaño
+        const jsonString = JSON.stringify(datosFormulario);
+        const dataSize = new Blob([jsonString]).size;
+        console.log(`Tamaño total del registro (incluyendo imágenes): ${(dataSize / 1024 / 1024).toFixed(2)} MB`);
+
 
         try {
             // Referencia a la colección 'registros' en Firestore
@@ -546,8 +555,13 @@ function TablaPpi() {
         const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
         const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-        // Función para añadir texto y calcular el espacio vertical usado
+        const replaceSpecialChars = (text) => {
+            return text.replace(/≤/g, "<=");
+        };
+
         const addText = (text, x, y, fontSize, font, currentPage, color = blackColor, maxWidth = 350, newX = 50) => {
+            text = replaceSpecialChars(text); // Reemplazar caracteres especiales
+
             const words = text.split(' ');
             let currentLine = '';
             let currentY = y;
@@ -585,7 +599,6 @@ function TablaPpi() {
 
             return { lastY: currentY, page: currentPage };
         };
-
 
 
 
@@ -849,7 +862,6 @@ function TablaPpi() {
         result = addText("Comentarios: ", 50, currentY - 44, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
-        let x = 'xxx xxxx xxxx x xxxx xx xxxxx xxxx xxxxx xxxxx xxxxxxx xxxxxx xxxxxxx xxxxx xxxxxxx xxxxxxx xxxxxx xxxxxxxx xx xxx xxxx xxxx x xxxx xx xxxxx xxxx xxxxx xxxxx xxxxxxx xxxxxx xxxxxxx xxxxx'
 
 
         result = addText(`${documentoFormulario.observaciones}`, 50, currentY - 40, 11, regularFont, currentPage);
@@ -868,16 +880,6 @@ function TablaPpi() {
         result = addText(`${documentoFormulario.firma}`, 95, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
-
-
-
-        // addHorizontalLine(40, currentY - 40, 555, 30, "#e2e8f0", currentPage);
-
-        // result = addText("Inspección: ", 50, currentY - 44, 11, boldFont, currentPage);
-        // currentPage = result.page;
-        // currentY = result.lastY;
-
-
 
 
         // Función para agregar imágenes Base64 al PDF
@@ -954,7 +956,7 @@ function TablaPpi() {
         const pdfUrl = URL.createObjectURL(pdfBlob);
         const link = document.createElement('a');
         link.href = pdfUrl;
-        link.download = `${obra}_${ppi.nombre}${documentoFormulario.num_actividad}_${documentoFormulario.actividad}${documentoFormulario.fechaHoraActual}`;
+        link.download = `${obra}_${ppi.nombre}${documentoFormulario.num_actividad}_${documentoFormulario.actividad}${documentoFormulario.fechaHoraActual}.pdf`;
         link.click();
         URL.revokeObjectURL(pdfUrl);
 
@@ -970,34 +972,42 @@ function TablaPpi() {
     const [imagen, setImagen] = useState(null);
     const [imagen2, setImagen2] = useState(null);
 
+
     const handleImagenChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Registro de la carga de la imagen
+            console.log(`Tamaño original de la imagen: ${(file.size / 1024 / 1024).toFixed(2)} MB`); // Log del tamaño original
+
             try {
                 const options = {
-                    maxSizeMB: 0.2, // Tamaño máximo en MB
-                    maxWidthOrHeight: 500, // Ajusta la imagen al tamaño máximo manteniendo la relación de aspecto
+                    maxSizeMB: 0.3, // Tamaño máximo en MB
+                    maxWidthOrHeight: 1200, // Ajusta la imagen al tamaño máximo manteniendo la relación de aspecto
                     useWebWorker: true, // Usa un web worker para la compresión en un hilo de fondo
                 };
                 const compressedFile = await imageCompression(file, options);
-                // Registrar el tamaño del archivo comprimido
-                console.log(`Tamaño del archivo comprimido: ${compressedFile.size} bytes`);
-
+                console.log(`Tamaño de la imagen comprimida: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`); // Log del tamaño comprimido
 
                 const reader = new FileReader();
                 reader.onload = async () => {
                     const imgElement = document.createElement("img");
                     imgElement.src = reader.result;
                     imgElement.onload = () => {
+                        console.log(`Dimensiones de la imagen: ${imgElement.width}x${imgElement.height}`); // Log de las dimensiones
+
                         const canvas = document.createElement("canvas");
-                        canvas.width = imgElement.width;
-                        canvas.height = imgElement.height;
+                        const maxSize = Math.max(imgElement.width, imgElement.height);
+                        if (maxSize > 500) {
+                            const scaleFactor = 500 / maxSize;
+                            canvas.width = imgElement.width * scaleFactor;
+                            canvas.height = imgElement.height * scaleFactor;
+                        } else {
+                            canvas.width = imgElement.width;
+                            canvas.height = imgElement.height;
+                        }
                         const ctx = canvas.getContext("2d");
-                        ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
+                        ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
                         const pngDataUrl = canvas.toDataURL("image/png");
                         setImagen(pngDataUrl); // Almacenar la imagen PNG en el estado
-
                     };
                 };
                 reader.readAsDataURL(compressedFile);
@@ -1010,30 +1020,38 @@ function TablaPpi() {
     const handleImagenChange2 = async (e) => {
         const file = e.target.files[0];
         if (file) {
+            console.log(`Tamaño original de la segunda imagen: ${(file.size / 1024 / 1024).toFixed(2)} MB`); // Log del tamaño original
 
             try {
                 const options = {
-                    maxSizeMB: 0.2,
-                    maxWidthOrHeight: 500,
+                    maxSizeMB: 0.3,
+                    maxWidthOrHeight: 1200,
                     useWebWorker: true,
                 };
                 const compressedFile = await imageCompression(file, options);
-                // Registrar el tamaño del archivo comprimido
-                console.log(`Tamaño del archivo comprimido: ${compressedFile.size} bytes`);
+                console.log(`Tamaño de la segunda imagen comprimida: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`); // Log del tamaño comprimido
 
                 const reader = new FileReader();
                 reader.onload = async () => {
                     const imgElement = document.createElement("img");
                     imgElement.src = reader.result;
                     imgElement.onload = () => {
+                        console.log(`Dimensiones de la segunda imagen: ${imgElement.width}x${imgElement.height}`); // Log de las dimensiones
+
                         const canvas = document.createElement("canvas");
-                        canvas.width = imgElement.width;
-                        canvas.height = imgElement.height;
+                        const maxSize = Math.max(imgElement.width, imgElement.height);
+                        if (maxSize > 500) {
+                            const scaleFactor = 500 / maxSize;
+                            canvas.width = imgElement.width * scaleFactor;
+                            canvas.height = imgElement.height * scaleFactor;
+                        } else {
+                            canvas.width = imgElement.width;
+                            canvas.height = imgElement.height;
+                        }
                         const ctx = canvas.getContext("2d");
-                        ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
+                        ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
                         const pngDataUrl = canvas.toDataURL("image/png");
                         setImagen2(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
-
                     };
                 };
                 reader.readAsDataURL(compressedFile);
@@ -1044,11 +1062,6 @@ function TablaPpi() {
     };
 
 
-    //! Cierre de inspeccion ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    useEffect(() => {
-        console.log(loteInfo, '******')
-    }, [idLote])
 
     return (
         <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500 text-sm'>
@@ -1068,7 +1081,18 @@ function TablaPpi() {
 
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'#'}>
-                        <h1 className='font-medium text-amber-600'>Lote: {lote} / Ppi: {ppiNombre}</h1>
+                        <div className='font-medium text-sm text-amber-600 flex gap-2 items-center'>
+                            <div className='flex gap-1'>
+                                <p>Lote: </p>
+                                <p>{lote}</p>
+                            </div>
+
+                            <div className='flex gap-1 items-center'>
+                                <p className='text-sm'>- </p>
+                                <p className='text-sm text-amber-600'>{ppiNombre}</p>
+                            </div>
+
+                        </div>
                     </Link>
                 </div>
 
@@ -1113,17 +1137,17 @@ function TablaPpi() {
                             {ppi && ppi.actividades.map((actividad, indexActividad) => [
                                 // Row for activity name
                                 <div key={`actividad-${indexActividad}`} className="bg-gray-200 grid grid-cols-24 items-center px-3 py-3 border-b border-gray-200 text-sm font-medium">
-                                    <div className="col-span-1">
+                                    <div className="">
 
                                         (V)
 
                                     </div>
-                                    <div className="col-span-1">
+                                    <div className="">
 
                                         {actividad.numero}
 
                                     </div>
-                                    <div className="col-span-22">
+                                    <div className="col-span-12">
 
                                         {actividad.actividad}
 
@@ -1144,7 +1168,7 @@ function TablaPpi() {
                                             {subactividad.nombre}
                                         </div>
 
-                                        <div className="col-span-3 px-3 py-5">
+                                        <div className="col-span-4 px-3 py-5">
                                             {subactividad.criterio_aceptacion}
                                         </div>
                                         <div className="col-span-2 px-3 py-5 text-center">
@@ -1160,7 +1184,7 @@ function TablaPpi() {
 
 
 
-                                        <div className="col-span-2 px-3 py-5 text-center">
+                                        <div className="col-span-1 text-center">
                                             {subactividad.responsable || ''}
                                         </div>
 
@@ -1234,30 +1258,30 @@ function TablaPpi() {
             </div>
 
             <div className='bg-white px-8 py-4 rounded-xl mt-4 rounded rounded-xl shadow-md'>
-    {ppi ? (
-        <div className='flex gap-3 items-center'>
-            <div>
-                <p className='font-bold'>Inspecciones aptas: <span className='font-normal'>{actividadesAptas !== null && actividadesAptas !== undefined ? actividadesAptas : 0}</span></p>
-            </div>
-            {'/'}
-            <div>
-                <p className='font-bold'>Inspecciones totales: <span className='font-normal'>{totalSubactividades !== null && totalSubactividades !== undefined ? totalSubactividades : 0}</span></p>
-            </div>
-            <div className='ms-10'>
-                {difActividades === 0 && (
-                    <button
-                        onClick={() => setShowConfirmModal(true)}
-                        className="bg-amber-600 text-white font-bold py-2 px-4 rounded-full"
-                    >
-                        <p className='flex gap-2 items-center'><span><FaFilePdf /></span>Terminar inspección</p>
-                    </button>
+                {ppi ? (
+                    <div className='flex gap-3 items-center'>
+                        <div>
+                            <p className='font-bold'>Inspecciones aptas: <span className='font-normal'>{actividadesAptas !== null && actividadesAptas !== undefined ? actividadesAptas : 0}</span></p>
+                        </div>
+                        {'/'}
+                        <div>
+                            <p className='font-bold'>Inspecciones totales: <span className='font-normal'>{totalSubactividades !== null && totalSubactividades !== undefined ? totalSubactividades : 0}</span></p>
+                        </div>
+                        <div className='ms-10'>
+                            {difActividades === 0 && (
+                                <button
+                                    onClick={() => setShowConfirmModal(true)}
+                                    className="bg-amber-600 text-white font-bold py-2 px-4 rounded-full"
+                                >
+                                    <p className='flex gap-2 items-center'><span><FaFilePdf /></span>Terminar inspección</p>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <div>Cargando...</div>
                 )}
             </div>
-        </div>
-    ) : (
-        <div>Cargando...</div>
-    )}
-</div>
 
 
 
@@ -1451,44 +1475,44 @@ function TablaPpi() {
                 </div>
             )}
 
-{modalExito && (
-    <div className="fixed z-10 inset-0 overflow-y-auto">
-        <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div className="sm:flex sm:items-start">
-                        <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <p className='text-teal-500 font-bold text-5xl'><FaCheckCircle /></p>
+            {modalExito && (
+                <div className="fixed z-10 inset-0 overflow-y-auto">
+                    <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                            <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
                         </div>
-                        <div className="mt-3 text-center sm:mt-0 sm:ml-8 sm:text-left">
-                            <h3 className="text-lg leading-6 font-medium text-gray-900">
-                                Éxito
-                            </h3>
-                            <div className="mt-2">
-                                <p className="text-sm text-gray-500">
-                                    {mensajeExitoInspeccion}
-                                </p>
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <div className="sm:flex sm:items-start">
+                                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                        <p className='text-teal-500 font-bold text-5xl'><FaCheckCircle /></p>
+                                    </div>
+                                    <div className="mt-3 text-center sm:mt-0 sm:ml-8 sm:text-left">
+                                        <h3 className="text-lg leading-6 font-medium text-gray-900">
+                                            Éxito
+                                        </h3>
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-500">
+                                                {mensajeExitoInspeccion}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <button
+                                    type="button"
+                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                    onClick={() => setModalExito(false)}
+                                >
+                                    Cerrar
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button
-                        type="button"
-                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
-                        onClick={() => setModalExito(false)}
-                    >
-                        Cerrar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-)}
+            )}
 
 
             {modalRecuperarFormulario && (

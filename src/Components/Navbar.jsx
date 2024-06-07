@@ -93,7 +93,7 @@ const Navbar = () => {
                 <FaUserAlt />
                 <p>{userNombre || 'Usuario'}</p>
               </div>
-              <div className="relative bg-sky-600 text-white px-4 py-2 rounded-full">
+              <div className="relative bg-sky-600 text-white px-4 py-2 rounded-lg">
                 <button className="flex items-center text-md" onClick={toggleLogoutConfirmation}>
                   {showLogoutConfirmation ? <span className='text-xl flex items-center'><IoIosSettings /></span> : <span className='text-md'><ImExit /></span>}
                 </button>
@@ -117,8 +117,8 @@ const Navbar = () => {
             <p className='text-gray-500 text-7xl'><FaDoorOpen /></p>
             <p className="text-gray-500 font-bold">¿Estás seguro que quieres cerrar sesión?</p>
             <div className="flex justify-around gap-5 mt-4 p-1">
-              <button onClick={handleLogout} className="bg-amber-600 text-white font-medium px-4 py-2 rounded-full">Confirmar</button>
-              <button onClick={() => setShowLogoutConfirmation(false)} className="bg-gray-300 text-black px-10 py-2 rounded-full">Cancelar</button>
+              <button onClick={handleLogout} className="bg-amber-600 text-white font-medium px-4 py-2 rounded-lg">Confirmar</button>
+              <button onClick={() => setShowLogoutConfirmation(false)} className="bg-gray-300 text-black px-10 py-2 rounded-lg">Cancelar</button>
             </div>
           </div>
         </div>
