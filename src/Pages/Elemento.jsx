@@ -34,6 +34,7 @@ function Elemento() {
                 ...doc.data()
             }));
             setLotes(lotesData);
+            console.log(lotesData[0]);
             console.log(lotesData[0].actividadesAptas)
             console.log(lotesData[0].totalSubactividades)
         } catch (error) {

@@ -284,6 +284,8 @@ function TablaPpi() {
     const [actividadesAptas, setActividadesAptas] = useState(0); // Estado para almacenar los datos del PPI
     const [totalSubactividades, setTotalSubActividades] = useState(0); // Estado para almacenar los datos del PPI
     const [difActividades, setDifActividades] = useState(0); // Estado para almacenar los datos del PPI
+
+    
     useEffect(() => {
         const obtenerLotePorId = async () => {
 
@@ -296,6 +298,7 @@ function TablaPpi() {
                 if (docSnap.exists()) {
 
                     setLoteInfo({ id: docSnap.id, ...docSnap.data() });
+                   
                     let loteObject = { id: docSnap.id, ...docSnap.data() };
                     let actividadesAptas = loteObject.actividadesAptas
                     setActividadesAptas(actividadesAptas)
