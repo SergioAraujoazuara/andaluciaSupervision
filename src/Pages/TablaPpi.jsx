@@ -556,8 +556,10 @@ function TablaPpi() {
         const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
         const replaceSpecialChars = (text) => {
+            if (text === null || text === undefined) return "";
             return text.replace(/≤/g, "<=");
         };
+        
 
         const addText = (text, x, y, fontSize, font, currentPage, color = blackColor, maxWidth = 350, newX = 50) => {
             text = replaceSpecialChars(text); // Reemplazar caracteres especiales
@@ -673,11 +675,11 @@ function TablaPpi() {
 
         addHorizontalLine(40, currentY - 11, 555, 1, "#000000", currentPage);
 
-        result = addText(documentoFormulario.obra, 50, currentY - 35, 12, regularFont, currentPage);
+        result = addText(obra, 50, currentY - 35, 12, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(documentoFormulario.tramo, 50, currentY - 15, 12, regularFont, currentPage);
+        result = addText(tramo, 50, currentY - 15, 12, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 

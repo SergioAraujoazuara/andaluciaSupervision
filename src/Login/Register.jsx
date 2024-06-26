@@ -7,10 +7,47 @@ import { MdOutlineEmail, MdDriveFileRenameOutline } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
 import Logo_solo from '../assets/logo_solo.png';
 import AlertaRegister from '../Alertas/AlertaRegister'; // Asegúrate de que este componente esté creado
-import { FaArrowAltCircleRight } from "react-icons/fa";
+import imageCompression from 'browser-image-compression';
+
+
 const Register = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
+
+  const [signature, setSignature] = useState(null);
+
+  const handleImagenChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        try {
+            const options = {
+                maxSizeMB: 0.2,
+                maxWidthOrHeight: 500,
+                useWebWorker: true,
+            };
+            const compressedFile = await imageCompression(file, options);
+            console.log(`Tamaño del archivo comprimido: ${compressedFile.size} bytes`);
+
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const imgElement = document.createElement("img");
+                imgElement.src = reader.result;
+                imgElement.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    canvas.width = imgElement.width;
+                    canvas.height = imgElement.height;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
+                    const pngDataUrl = canvas.toDataURL("image/png");
+                    setSignature(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
+                };
+            };
+            reader.readAsDataURL(compressedFile);
+        } catch (error) {
+            console.error('Error durante la compresión de la segunda imagen:', error);
+        }
+    }
+};
 
   const [newUser, setNewUser] = useState({
     name: '',
@@ -45,6 +82,7 @@ const Register = () => {
         email: newUser.email,
         proyectos: 'Sector 3',
         role: 'invitado',
+        signature: signature, // Guarda la imagen en base64
       };
 
       await setDoc(doc(db, 'usuarios', userId), userData);
@@ -62,15 +100,17 @@ const Register = () => {
     setShowModal(false);
   };
 
+  
+
   return (
     <div className="flex h-screen bg-gray-200">
       <div className="w-full h-2/3 max-w-4xl mx-auto  mb-56 bg-white rounded-2xl shadow-2xl overflow-hidden flex">
 
-       
+
 
         <div className="md:w-1/2 p-10 flex flex-col justify-center">
           <div className="text-center mb-5">
-            
+
             <h1 className="text-3xl font-semibold text-gray-700 my-4">Registro</h1>
           </div>
           <form onSubmit={handleSubmit} className="max-w-xl mx-auto">
@@ -126,6 +166,19 @@ const Register = () => {
                 />
               </div>
             </div>
+
+            <div className="flex flex-col mb-6">
+              <div className="relative">
+                <input
+                  type="file"
+                  onChange={handleImagenChange}
+                  accept="image/*"
+                  className="mb-4"
+                />
+              </div>
+            </div>
+
+
             <div className="flex justify-center">
               <button type="submit" className="bg-amber-600 text-white w-full py-2 rounded-lg hover:bg-amber-700 focus:outline-none">
                 Register
@@ -136,22 +189,22 @@ const Register = () => {
         </div>
 
         <div className="md:w-1/2 bg-sky-600 text-white flex flex-col justify-center px-10 pb-10">
-          
+
           <div className='flex justify-center'>
-          <img src={Logo_solo} width={150} alt="logo" className="mb-5" />
+            <img src={Logo_solo} width={150} alt="logo" className="mb-5" />
           </div>
-          
+
           <h2 className="text-5xl font-bold text-center">Tpf ingeniería</h2>
-          
-         
+
+
           <p className="mb-4 text-center text-xl my-6">Building the world, better</p>
           <div className='flex justify-center mt-2'>
-          {/* <button onClick={() => navigate('/signin')} className="flex items-center gap-3 text-sky-600 font-semibold bg-white py-2 px-4 rounded-full shadow-md">
+            {/* <button onClick={() => navigate('/signin')} className="flex items-center gap-3 text-sky-600 font-semibold bg-white py-2 px-4 rounded-full shadow-md">
             <span className='text-amber-500'><FaArrowAltCircleRight /></span>
             Área inspección
           </button> */}
           </div>
-          
+
         </div>
 
       </div>

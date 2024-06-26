@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../../firebase_config';
-import { getDoc, doc, updateDoc, getDocs, collection, query, where } from 'firebase/firestore';
+import { getDoc, doc, updateDoc, getDocs, collection, query, where, writeBatch  } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 import { Link } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
@@ -83,7 +83,6 @@ function EditarPpi() {
             console.error('Error al actualizar el PPI:', error);
         }
     };
-
     const buscarLotePorNombrePpi = async (nombrePpi, updatedPpiData, newTotalSubactividades) => {
         try {
             // Definir un objeto base para las subactividades
@@ -114,119 +113,110 @@ function EditarPpi() {
                 return;
             }
     
-            // Asumimos que solo habrá un lote con ese nombre
-            const loteDoc = lotesSnapshot.docs[0];
-            const loteId = loteDoc.id;
+            // Batch write
+            const batch = writeBatch(db);
     
-            console.log('Nombre del lote encontrado:', loteDoc.data().nombre);
+            // Iterar sobre cada lote encontrado
+            for (const loteDoc of lotesSnapshot.docs) {
+                const loteId = loteDoc.id;
+                console.log('Nombre del lote encontrado:', loteDoc.data().nombre);
     
-            // Actualizar el documento del lote
-            await updateDoc(doc(db, 'lotes', loteId), {
-                totalSubactividades: newTotalSubactividades
-            });
+                // Acceder a la subcolección inspecciones dentro del lote
+                const inspeccionesQuery = query(collection(db, `lotes/${loteId}/inspecciones`), where('nombre', '==', nombrePpi));
+                const inspeccionesSnapshot = await getDocs(inspeccionesQuery);
     
-            // Acceder a la subcolección inspecciones dentro del lote
-            const inspeccionesQuery = query(collection(db, `lotes/${loteId}/inspecciones`), where('nombre', '==', nombrePpi));
-            const inspeccionesSnapshot = await getDocs(inspeccionesQuery);
-    
-            if (inspeccionesSnapshot.empty) {
-                console.log('No se encontró ninguna inspección con el nombre proporcionado en el lote.');
-                return;
-            }
-    
-            // Asumimos que solo habrá una inspección con ese nombre
-            const inspeccionDoc = inspeccionesSnapshot.docs[0];
-            const inspeccionId = inspeccionDoc.id;
-            const inspeccionData = inspeccionDoc.data();
-    
-            console.log('Datos de la inspección antes de actualizar:', JSON.stringify(inspeccionData, null, 2));
-    
-            // Combinar las nuevas subactividades con las existentes
-            updatedPpiData.actividades.forEach((actividad, actividadIndex) => {
-                if (!inspeccionData.actividades) {
-                    inspeccionData.actividades = [];
+                if (inspeccionesSnapshot.empty) {
+                    console.log('No se encontró ninguna inspección con el nombre proporcionado en el lote.');
+                    continue;
                 }
     
-                console.log(`Procesando actividad ${actividadIndex}:`, actividad);
+                // Agregar la actualización del lote al batch
+                const loteDocRef = doc(db, 'lotes', loteId);
+                batch.update(loteDocRef, {
+                    totalSubactividades: newTotalSubactividades
+                });
     
-                if (!inspeccionData.actividades[actividadIndex]) {
-                    inspeccionData.actividades[actividadIndex] = {
-                        ...actividad,
-                        subactividades: actividad.subactividades.map(subactividad => ({ ...baseSubactividad, ...subactividad }))
-                    };
-                } else {
-                    // Asegurar que la lista de subactividades exista
-                    if (!inspeccionData.actividades[actividadIndex].subactividades) {
-                        inspeccionData.actividades[actividadIndex].subactividades = [];
-                    }
+                // Iterar sobre cada inspección encontrada
+                inspeccionesSnapshot.docs.forEach((inspeccionDoc) => {
+                    const inspeccionId = inspeccionDoc.id;
+                    const inspeccionData = inspeccionDoc.data();
     
-                    actividad.subactividades.forEach((subactividad, subactividadIndex) => {
-                        console.log(`Procesando subactividad ${subactividadIndex} de la actividad ${actividadIndex}:`, subactividad);
+                    console.log('Datos de la inspección antes de actualizar:', JSON.stringify(inspeccionData, null, 2));
     
-                        const existingSubactividad = inspeccionData.actividades[actividadIndex].subactividades[subactividadIndex] || {};
-    
-                        // Agregar logs para cada campo
-                        console.log('Valores antes de la mezcla:');
-                        console.log(`subactividad.punto: ${subactividad.punto}, existingSubactividad.punto: ${existingSubactividad.punto}`);
-                        console.log(`subactividad.idRegistroFormulario: ${subactividad.idRegistroFormulario}, existingSubactividad.idRegistroFormulario: ${existingSubactividad.idRegistroFormulario}`);
-                        console.log(`subactividad.tipo_inspeccion: ${subactividad.tipo_inspeccion}, existingSubactividad.tipo_inspeccion: ${existingSubactividad.tipo_inspeccion}`);
-                        console.log(`subactividad.criterio_aceptacion: ${subactividad.criterio_aceptacion}, existingSubactividad.criterio_aceptacion: ${existingSubactividad.criterio_aceptacion}`);
-                        console.log(`subactividad.nombre: ${subactividad.nombre}, existingSubactividad.nombre: ${existingSubactividad.nombre}`);
-                        console.log(`subactividad.fecha: ${subactividad.fecha}, existingSubactividad.fecha: ${existingSubactividad.fecha}`);
-                        console.log(`subactividad.comentario: ${subactividad.comentario}, existingSubactividad.comentario: ${existingSubactividad.comentario}`);
-                        console.log(`subactividad.resultadoInspeccion: ${subactividad.resultadoInspeccion}, existingSubactividad.resultadoInspeccion: ${existingSubactividad.resultadoInspeccion}`);
-                        console.log(`subactividad.version: ${subactividad.version}, existingSubactividad.version: ${existingSubactividad.version}`);
-                        console.log(`subactividad.responsable: ${subactividad.responsable}, existingSubactividad.responsable: ${existingSubactividad.responsable}`);
-                        console.log(`subactividad.documentacion_referencia: ${subactividad.documentacion_referencia}, existingSubactividad.documentacion_referencia: ${existingSubactividad.documentacion_referencia}`);
-                        console.log(`subactividad.numero: ${subactividad.numero}, existingSubactividad.numero: ${existingSubactividad.numero}`);
-                        console.log(`subactividad.firma: ${subactividad.firma}, existingSubactividad.firma: ${existingSubactividad.firma}`);
-                        console.log(`subactividad.nombre_usuario: ${subactividad.nombre_usuario}, existingSubactividad.nombre_usuario: ${existingSubactividad.nombre_usuario}`);
-                        console.log(`subactividad.formularioEnviado: ${subactividad.formularioEnviado}, existingSubactividad.formularioEnviado: ${existingSubactividad.formularioEnviado}`);
-    
-                        // Mezclar los datos existentes con los nuevos datos, asegurándose de que no haya valores undefined
-                        const mergedSubactividad = {
-                            punto: subactividad.punto || existingSubactividad.punto || '',
-                            idRegistroFormulario: subactividad.idRegistroFormulario || existingSubactividad.idRegistroFormulario || '',
-                            tipo_inspeccion: subactividad.tipo_inspeccion || existingSubactividad.tipo_inspeccion || '',
-                            criterio_aceptacion: subactividad.criterio_aceptacion || existingSubactividad.criterio_aceptacion || '',
-                            nombre: subactividad.nombre || existingSubactividad.nombre || '',
-                            fecha: subactividad.fecha || existingSubactividad.fecha || '',
-                            comentario: subactividad.comentario || existingSubactividad.comentario || '',
-                            resultadoInspeccion: subactividad.resultadoInspeccion || existingSubactividad.resultadoInspeccion || '',
-                            version: subactividad.version || existingSubactividad.version || 0,
-                            responsable: subactividad.responsable || existingSubactividad.responsable || '',
-                            documentacion_referencia: subactividad.documentacion_referencia || existingSubactividad.documentacion_referencia || '',
-                            numero: subactividad.numero || existingSubactividad.numero || '',
-                            firma: subactividad.firma || existingSubactividad.firma || '',
-                            nombre_usuario: subactividad.nombre_usuario || existingSubactividad.nombre_usuario || '',
-                            formularioEnviado: subactividad.formularioEnviado !== undefined ? subactividad.formularioEnviado : (existingSubactividad.formularioEnviado !== undefined ? existingSubactividad.formularioEnviado : false)
-                        };
-    
-                        // Si el existingSubactividad tiene formularioEnviado como true, se mantiene como true
-                        if (existingSubactividad.formularioEnviado) {
-                            mergedSubactividad.formularioEnviado = true;
+                    // Combinar las nuevas subactividades con las existentes
+                    updatedPpiData.actividades.forEach((actividad, actividadIndex) => {
+                        if (!inspeccionData.actividades) {
+                            inspeccionData.actividades = [];
                         }
     
-                        console.log('Valores después de la mezcla:', mergedSubactividad);
+                        console.log(`Procesando actividad ${actividadIndex}:`, actividad);
     
-                        inspeccionData.actividades[actividadIndex].subactividades[subactividadIndex] = mergedSubactividad;
+                        if (!inspeccionData.actividades[actividadIndex]) {
+                            inspeccionData.actividades[actividadIndex] = {
+                                ...actividad,
+                                subactividades: actividad.subactividades.map(subactividad => ({ ...baseSubactividad, ...subactividad }))
+                            };
+                        } else {
+                            // Asegurar que la lista de subactividades exista
+                            if (!inspeccionData.actividades[actividadIndex].subactividades) {
+                                inspeccionData.actividades[actividadIndex].subactividades = [];
+                            }
+    
+                            actividad.subactividades.forEach((subactividad, subactividadIndex) => {
+                                console.log(`Procesando subactividad ${subactividadIndex} de la actividad ${actividadIndex}:`, subactividad);
+    
+                                const existingSubactividad = inspeccionData.actividades[actividadIndex].subactividades[subactividadIndex] || {};
+    
+                                // Mezclar los datos existentes con los nuevos datos, asegurándose de que no haya valores undefined
+                                const mergedSubactividad = {
+                                    punto: subactividad.punto || existingSubactividad.punto || '',
+                                    idRegistroFormulario: subactividad.idRegistroFormulario || existingSubactividad.idRegistroFormulario || '',
+                                    tipo_inspeccion: subactividad.tipo_inspeccion || existingSubactividad.tipo_inspeccion || '',
+                                    criterio_aceptacion: subactividad.criterio_aceptacion || existingSubactividad.criterio_aceptacion || '',
+                                    nombre: subactividad.nombre || existingSubactividad.nombre || '',
+                                    fecha: subactividad.fecha || existingSubactividad.fecha || '',
+                                    comentario: subactividad.comentario || existingSubactividad.comentario || '',
+                                    resultadoInspeccion: subactividad.resultadoInspeccion || existingSubactividad.resultadoInspeccion || '',
+                                    version: subactividad.version || existingSubactividad.version || 0,
+                                    responsable: subactividad.responsable || existingSubactividad.responsable || '',
+                                    documentacion_referencia: subactividad.documentacion_referencia || existingSubactividad.documentacion_referencia || '',
+                                    numero: subactividad.numero || existingSubactividad.numero || '',
+                                    firma: subactividad.firma || existingSubactividad.firma || '',
+                                    nombre_usuario: subactividad.nombre_usuario || existingSubactividad.nombre_usuario || '',
+                                    formularioEnviado: subactividad.formularioEnviado !== undefined ? subactividad.formularioEnviado : (existingSubactividad.formularioEnviado !== undefined ? existingSubactividad.formularioEnviado : false)
+                                };
+    
+                                // Si el existingSubactividad tiene formularioEnviado como true, se mantiene como true
+                                if (existingSubactividad.formularioEnviado) {
+                                    mergedSubactividad.formularioEnviado = true;
+                                }
+    
+                                console.log('Valores después de la mezcla:', mergedSubactividad);
+    
+                                inspeccionData.actividades[actividadIndex].subactividades[subactividadIndex] = mergedSubactividad;
+                            });
+                        }
                     });
-                }
-            });
     
-            console.log('Datos de la inspección después de combinar:', JSON.stringify(inspeccionData, null, 2));
+                    // Agregar la actualización de la inspección al batch
+                    const inspeccionDocRef = doc(db, `lotes/${loteId}/inspecciones`, inspeccionId);
+                    batch.update(inspeccionDocRef, {
+                        ...inspeccionData,
+                        totalSubactividades: newTotalSubactividades
+                    });
+                });
+            }
     
-            // Actualizar el documento de inspección
-            await updateDoc(doc(db, `lotes/${loteId}/inspecciones`, inspeccionId), {
-                ...inspeccionData,
-                totalSubactividades: newTotalSubactividades
-            });
+            // Ejecutar el batch
+            await batch.commit();
     
-            console.log('Lote e inspección actualizados exitosamente.');
+            console.log('Lote e inspecciones actualizados exitosamente.');
         } catch (error) {
             console.error('Error al buscar y actualizar la inspección y el lote:', error);
         }
     };
+    
+    
     
     
     

@@ -6,6 +6,7 @@ import { GoHomeFill } from "react-icons/go";
 import { IoArrowBackCircle } from "react-icons/io5";
 import { Link, useNavigate } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
+import imageCompression from 'browser-image-compression';
 
 
 function AdminPanel() {
@@ -13,6 +14,41 @@ function AdminPanel() {
     const [selectedUserId, setSelectedUserId] = useState('');
     const [newRole, setNewRole] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [signatureImage, setSignatureImage] = useState(null);
+
+    const handleImagenChange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            try {
+                const options = {
+                    maxSizeMB: 0.2,
+                    maxWidthOrHeight: 500,
+                    useWebWorker: true,
+                };
+                const compressedFile = await imageCompression(file, options);
+                console.log(`Tamaño del archivo comprimido: ${compressedFile.size} bytes`);
+
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const imgElement = document.createElement("img");
+                    imgElement.src = reader.result;
+                    imgElement.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        canvas.width = imgElement.width;
+                        canvas.height = imgElement.height;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
+                        const pngDataUrl = canvas.toDataURL("image/png");
+                        setSignatureImage(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
+                    };
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (error) {
+                console.error('Error durante la compresión de la segunda imagen:', error);
+            }
+        }
+    };
+
 
     // Cargar todos los usuarios al montar el componente
     useEffect(() => {
@@ -39,21 +75,26 @@ function AdminPanel() {
         return () => unsubscribe();
     }, []);
 
-    // Manejador para actualizar el role de un usuario
     const handleRoleUpdate = async () => {
-        if (!selectedUserId || !newRole) {
-            alert('Seleccione un usuario y un rol para actualizar.');
+        if (!selectedUserId) {
+            alert('Seleccione un usuario para actualizar.');
             return;
         }
-
+    
         const userDocRef = doc(db, 'usuarios', selectedUserId);
-        await updateDoc(userDocRef, {
-            role: newRole
-        });
-
+        const updates = {
+            role: newRole,
+        };
+    
+        // Si hay una imagen nueva, añádela al documento
+        if (signatureImage) updates.signature = signatureImage;
+    
+        await updateDoc(userDocRef, updates);
         setNewRole(''); // Reset role selection
+        setSignatureImage(''); // Reset image state
         setShowSuccessModal(true);
     };
+    
 
     // Cerrar el modal de éxito
     const handleCloseSuccessModal = () => {
@@ -102,6 +143,7 @@ function AdminPanel() {
                                         <th className="px-4 py-2 text-left">Nombre</th>
                                         <th className="px-4 py-2 text-left">Email</th>
                                         <th className="px-4 py-2 text-left">Rol</th>
+                                        <th className="px-4 py-2 text-center">Firma</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -110,6 +152,13 @@ function AdminPanel() {
                                             <td className="px-4 py-2">{user.nombre}</td>
                                             <td className="px-4 py-2">{user.email}</td>
                                             <td className="px-4 py-2">{user.role}</td>
+                                            <td className="px-4 py-2 flex items-center justify-center ">
+                                                {user.signature ? (
+                                                    <img className='w-16' src={user.signature} alt="firma" />
+                                                ) : (
+                                                    <p>Sin firma</p>
+                                                )}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -141,6 +190,14 @@ function AdminPanel() {
                                 <option value="usuario">Usuario</option>
                                 <option value="admin">Admin</option>
                             </select>
+
+                            <input
+                                type="file"
+                                onChange={handleImagenChange}
+                                accept="image/*"
+                                className="w-full py-2 px-3 mb-4 border border-gray-300 rounded-md"
+                            />
+
                             <button
                                 onClick={handleRoleUpdate}
                                 className="text-white mt-4 flex items-center gap-3 text-lg font-semibold bg-amber-600 py-2 px-6 rounded-xl shadow-md transition duration-300 ease-in-out hover:bg-amber-700 hover:shadow-lg hover:-translate-y-1"

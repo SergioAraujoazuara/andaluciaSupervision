@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { db } from '../../firebase_config';
-import { getDoc, getDocs, doc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc, deleteDoc } from 'firebase/firestore';
-import logo from '../assets/logo_solo.png';
-import { FaArrowRight } from "react-icons/fa";
+import { getDocs, collection } from 'firebase/firestore';
+import { FaArrowRight, FaSearch, FaTimes } from "react-icons/fa";
 import { GoHomeFill } from "react-icons/go";
 import { Link } from 'react-router-dom';
 import { SiBim } from "react-icons/si";
@@ -16,8 +15,24 @@ function Elemento() {
     };
 
     const [lotes, setLotes] = useState([]);
-    const [ppiNombre, setPpiNombre] = useState([]);
+    const [filterText, setFilterText] = useState('');
+    const [filters, setFilters] = useState({
+        sector: '',
+        subSector: '',
+        parte: '',
+        elemento: '',
+        lote: '',
+        ppi: ''
+    });
 
+    const [uniqueValues, setUniqueValues] = useState({
+        sector: [],
+        subSector: [],
+        parte: [],
+        elemento: [],
+        lote: [],
+        ppi: []
+    });
 
     // Llamar elementos de la base de datos
     useEffect(() => {
@@ -34,16 +49,18 @@ function Elemento() {
                 ...doc.data()
             }));
             setLotes(lotesData);
-            console.log(lotesData[0]);
-            console.log(lotesData[0].actividadesAptas)
-            console.log(lotesData[0].totalSubactividades)
+            setUniqueValues({
+                sector: getUniqueValues(lotesData, 'sectorNombre'),
+                subSector: getUniqueValues(lotesData, 'subSectorNombre'),
+                parte: getUniqueValues(lotesData, 'parteNombre'),
+                elemento: getUniqueValues(lotesData, 'elementoNombre'),
+                lote: getUniqueValues(lotesData, 'nombre'),
+                ppi: getUniqueValues(lotesData, 'ppiNombre')
+            });
         } catch (error) {
             console.error('Error al obtener los lotes:', error);
         }
     };
-
-
-
 
     const handleCaptrurarTrazabilidad = (l) => {
         localStorage.setItem('sector', l.sectorNombre || '')
@@ -55,20 +72,76 @@ function Elemento() {
         localStorage.setItem('ppi', l.ppiNombre || '')
         localStorage.setItem('pkInicial', l.pkInicial || '')
         localStorage.setItem('pkFinal', l.pkFinal || '')
-    }
+    };
 
+    const handleFilterChange = (e) => {
+        setFilterText(e.target.value);
+    };
 
+    const handleSelectChange = (e) => {
+        const { name, value } = e.target;
+        setFilters(prevFilters => ({
+            ...prevFilters,
+            [name]: value
+        }));
+    };
+
+    const handleClearFilters = () => {
+        setFilters({
+            sector: '',
+            subSector: '',
+            parte: '',
+            elemento: '',
+            lote: '',
+            ppi: ''
+        });
+        setFilterText('');
+    };
+
+    useEffect(() => {
+        const filteredLotes = lotes.filter(l =>
+            (filters.sector === '' || l.sectorNombre === filters.sector) &&
+            (filters.subSector === '' || l.subSectorNombre === filters.subSector) &&
+            (filters.parte === '' || l.parteNombre === filters.parte) &&
+            (filters.elemento === '' || l.elementoNombre === filters.elemento) &&
+            (filters.lote === '' || l.nombre === filters.lote) &&
+            (filters.ppi === '' || l.ppiNombre === filters.ppi)
+        );
+
+        setUniqueValues({
+            sector: getUniqueValues(filteredLotes, 'sectorNombre'),
+            subSector: getUniqueValues(filteredLotes, 'subSectorNombre'),
+            parte: getUniqueValues(filteredLotes, 'parteNombre'),
+            elemento: getUniqueValues(filteredLotes, 'elementoNombre'),
+            lote: getUniqueValues(filteredLotes, 'nombre'),
+            ppi: getUniqueValues(filteredLotes, 'ppiNombre')
+        });
+    }, [filters]);
+
+    const getUniqueValues = (data, key) => {
+        return [...new Set(data.map(item => item[key]))];
+    };
+
+    const filteredLotes = lotes.filter(l =>
+        (l.nombre.toLowerCase().includes(filterText.toLowerCase()) ||
+            l.ppiNombre.toLowerCase().includes(filterText.toLowerCase())) &&
+        (filters.sector === '' || l.sectorNombre === filters.sector) &&
+        (filters.subSector === '' || l.subSectorNombre === filters.subSector) &&
+        (filters.parte === '' || l.parteNombre === filters.parte) &&
+        (filters.elemento === '' || l.elementoNombre === filters.elemento) &&
+        (filters.lote === '' || l.nombre === filters.lote) &&
+        (filters.ppi === '' || l.ppiNombre === filters.ppi)
+    );
 
     return (
         <div className='container mx-auto min-h-screen px-14 py-5'>
 
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded-xl shadow-md text-base'>
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'/'}>
-                        <h1 className=' text-gray-500'>Home</h1>
+                        <h1 className='text-gray-500'>Home</h1>
                     </Link>
-
 
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'#'}>
@@ -76,47 +149,120 @@ function Elemento() {
                     </Link>
                 </div>
 
-
                 <div className='flex items-center gap-4'>
                     <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
-
-                    <div className='px-4 bg-sky-600 text-white rounded-full '>
+                    <div className='px-4 bg-sky-600 text-white rounded-full'>
                         <Link to={'/visor_inspeccion'}>
                             <button className='text-white flex items-center gap-3'>
                                 <span className='text-2xl'><SiBim /> </span>
                             </button>
                         </Link>
                     </div>
-
                 </div>
-
             </div>
 
-
-
-
-
             <div>
-                <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
+                <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white p-4 rounded-xl shadow-md'>
+                    <div className='w-full mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4 text-sm'>
+                        <div className="relative flex items-center">
+                            <input
+                                type="text"
+                                className="w-full p-2 border border-gray-300 rounded-lg pl-10"
+                                placeholder="Lote o PPI"
+                                value={filterText}
+                                onChange={handleFilterChange}
+                            />
+                            <FaSearch className="absolute left-3 top-3 text-gray-400 text-sm" />
+                        </div>
+                        <select
+                            name="sector"
+                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            value={filters.sector}
+                            onChange={handleSelectChange}
+                        >
+                            <option value="">Sector</option>
+                            {uniqueValues.sector.map((value, index) => (
+                                <option key={index} value={value}>{value}</option>
+                            ))}
+                        </select>
+                        <select
+                            name="subSector"
+                            className="w-full p-1 border border-gray-300 rounded-lg"
+                            value={filters.subSector}
+                            onChange={handleSelectChange}
+                        >
+                            <option value="">Sub Sector</option>
+                            {uniqueValues.subSector.map((value, index) => (
+                                <option key={index} value={value}>{value}</option>
+                            ))}
+                        </select>
+                        <select
+                            name="parte"
+                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            value={filters.parte}
+                            onChange={handleSelectChange}
+                        >
+                            <option value="">Parte</option>
+                            {uniqueValues.parte.map((value, index) => (
+                                <option key={index} value={value}>{value}</option>
+                            ))}
+                        </select>
+                        <select
+                            name="elemento"
+                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            value={filters.elemento}
+                            onChange={handleSelectChange}
+                        >
+                            <option value="">Elemento</option>
+                            {uniqueValues.elemento.map((value, index) => (
+                                <option key={index} value={value}>{value}</option>
+                            ))}
+                        </select>
+                        <select
+                            name="lote"
+                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            value={filters.lote}
+                            onChange={handleSelectChange}
+                        >
+                            <option value="">Lote</option>
+                            {uniqueValues.lote.map((value, index) => (
+                                <option key={index} value={value}>{value}</option>
+                            ))}
+                        </select>
+                        <select
+                            name="ppi"
+                            className="w-full p-2 border border-gray-300 rounded-lg"
+                            value={filters.ppi}
+                            onChange={handleSelectChange}
+                        >
+                            <option value="">PPI</option>
+                            {uniqueValues.ppi.map((value, index) => (
+                                <option key={index} value={value}>{value}</option>
+                            ))}
+                        </select>
+                        <button
+                            className="w-full p-2 bg-gray-500 text-white rounded-lg flex items-center justify-center gap-2"
+                            onClick={handleClearFilters}
+                        >
+                            <FaTimes />
+                            Borrar filtros
+                        </button>
+                    </div>
 
-
-
-                    <div class="w-full rounded rounded-xl">
-                        <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded rounded-md'>
-                            <div className='text-left font-medium text-gray-600 border-r-2 border-gray-300 sm:block hidden border-r-2 border-gray-300'>Sector</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-2  sm:block hidden border-r-2 border-gray-300'>Sub Sector</div>
-                            <div className='text-left sm:ps-5 font-medium text-gray-600 border-r sm:block hidden border-r-3 border-gray-300'>Parte</div>
-                            <div className='text-left sm:ps-5 font-medium text-gray-600 col-span-1  sm:block hidden border-r-2 border-gray-300'>Elemento</div>
+                    <div className="w-full rounded-xl">
+                        <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded-md'>
+                            <div className='text-left font-medium text-gray-600 border-r-2 border-gray-300 sm:block hidden'>Sector</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-2 sm:block hidden border-r-2 border-gray-300'>Sub Sector</div>
+                            <div className='text-left sm:ps-5 font-medium text-gray-600 sm:block hidden border-r-3 border-gray-300'>Parte</div>
+                            <div className='text-left sm:ps-5 font-medium text-gray-600 col-span-1 sm:block hidden border-r-2 border-gray-300'>Elemento</div>
                             <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-2 sm:block hidden border-r-2 border-gray-300'>Pk</div>
                             <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-3 sm:block hidden border-r-2 border-gray-300'>Lote y ppi</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-2  sm:block hidden border-gray-300'>Progreso inspección</div>
+                            <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-2 sm:block hidden'>Progreso inspección</div>
                         </div>
 
-
-
-                        {lotes.sort((a, b) => {
+                        {filteredLotes.sort((a, b) => {
                             const avanceA = (a.actividadesAptas || 0) / a.totalSubactividades;
-                            const avanceB = (b.actividadesAptas || 0) / b.totalSubactividades;
+                            const avanceB = (b.actividadesAptas || 0) / a.totalSubactividades;
                             return avanceB - avanceA; // Orden descendente: de mayor a menor avance
                         }).map((l, i) => (
                             <Link to={`/tablaPpi/${l.id}/${l.ppiNombre}`} onClick={() => handleCaptrurarTrazabilidad(l)} key={i}>
@@ -124,35 +270,30 @@ function Elemento() {
                                     <div className='sm:border-r-2 sm:border-b-0 flex items-center sm:pr-10'>
                                         {l.sectorNombre}
                                     </div>
-
-                                    <div className='sm:border-r-2 sm:border-b-0 flex items-center col-span-2  sm:ps-10'>
+                                    <div className='sm:border-r-2 sm:border-b-0 flex items-center col-span-2 sm:ps-10'>
                                         {l.subSectorNombre}
                                     </div>
-
-                                    <div className='sm:border-r-2  flex items-center sm:justify-start  sm:ps-6'>
+                                    <div className='sm:border-r-2 flex items-center sm:justify-start sm:ps-6'>
                                         {l.parteNombre}
                                     </div>
-
-                                    <div className=' sm:border-r-2 flex items-center sm:justify-start col-span-1  sm:ps-4 text-sm'>
+                                    <div className='sm:border-r-2 flex items-center sm:justify-start col-span-1 sm:ps-4 text-sm'>
                                         {l.elementoNombre}
                                     </div>
-
                                     <div className='sm:border-r-2 flex flex-col col-span-2 items-start justify-center text-center sm:ps-8'>
                                         <div className='col-span-2'><p className='p-1'>Inicial: {l.pkInicial}</p></div>
-                                        <div className='col-span-2'><p className='  p-1'>Final: {l.pkFinal}</p></div>
+                                        <div className='col-span-2'><p className='p-1'>Final: {l.pkFinal}</p></div>
                                     </div>
-                                    <div className='sm:border-r-2  flex flex-col col-span-3 items-start sm:justify-center sm:ps-10 sm:pr-5'>
+                                    <div className='sm:border-r-2 flex flex-col col-span-3 items-start sm:justify-center sm:ps-10 sm:pr-5'>
                                         <div className='flex gap-3 items-center'>
-                                        <p className='text-amber-600 font-medium'>Lote:</p>
-                                         <p className='font-medium'> {l.nombre}</p>
-                                            </div>
+                                            <p className='text-amber-600 font-medium'>Lote:</p>
+                                            <p className='font-medium'>{l.nombre}</p>
+                                        </div>
                                         <div className='flex gap-3 mt-1'>
-                                        <p className='text-amber-600 font-medium'>Ppi:</p> 
-                                        <p className='font-medium'>{l.ppiNombre}</p>
-                                            </div>
+                                            <p className='text-amber-600 font-medium'>Ppi:</p>
+                                            <p className='font-medium'>{l.ppiNombre}</p>
+                                        </div>
                                     </div>
-
-                                    <div className=' flex flex-col items-center sm:justify-start gap-5 col-span-2 sm:ps-10'>
+                                    <div className='flex flex-col items-center sm:justify-start gap-5 col-span-2 sm:ps-10'>
                                         {
                                             l.totalSubactividades > 0 ? (
                                                 <>
@@ -175,23 +316,11 @@ function Elemento() {
                                 </div>
                             </Link>
                         ))}
-
-
-
-
-
                     </div>
-
                 </div>
-
-
-
-
-
             </div>
-
         </div>
-    )
+    );
 }
 
-export default Elemento
+export default Elemento;
