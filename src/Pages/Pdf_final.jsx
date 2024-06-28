@@ -13,7 +13,6 @@ const styles = StyleSheet.create({
     titleContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-
         marginBottom: 8,
     },
     title: {
@@ -28,7 +27,6 @@ const styles = StyleSheet.create({
     imagesContainer: {
         width: '40%',
         textAlign: 'right',
-
     },
     image2: {
         width: 100,
@@ -48,10 +46,10 @@ const styles = StyleSheet.create({
     },
     tableRow: {
         flexDirection: 'row',
-        backgroundColor: '#f9fafb', // Cambio de color a gris claro
+        backgroundColor: '#f9fafb',
     },
     tableColHeader: {
-        width: '10%',
+        width: '8.33%',
         height: '100%',
         borderStyle: 'solid',
         borderColor: '#CCCCCC',
@@ -62,13 +60,13 @@ const styles = StyleSheet.create({
         fontSize: 8
     },
     tableCol: {
-        width: '10%',
+        width: '8.33%',
         borderStyle: 'solid',
         borderColor: '#CCCCCC',
-        borderTopWidth: 0, // Eliminar la línea superior para evitar duplicados
+        borderTopWidth: 0,
         padding: 8,
         textAlign: 'center',
-        alignSelf: 'center'
+        alignSelf: 'center',
     },
     divider: {
         borderStyle: 'solid',
@@ -79,7 +77,6 @@ const styles = StyleSheet.create({
     tableCellHeader: {
         fontSize: 10,
         fontWeight: 'bold',
-
     },
     tableCell: {
         fontSize: 10,
@@ -98,7 +95,6 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
 
     const lote = localStorage.getItem('lote')
     const ppiname = localStorage.getItem('ppi')
-
 
     const openConfirmationModal = () => {
         setShowConfirmationModal(true);
@@ -131,9 +127,6 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         setAdditionalFiles(updatedFiles);
     };
 
-
-
-
     useEffect(() => {
         const doc = (
             <Document>
@@ -144,28 +137,18 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                             <Text style={{ ...styles.title, marginBottom: 4 }}>{titulo}</Text>
                             <Text style={{ ...styles.title, marginBottom: 4 }}>Obra: {obra}</Text>
                             <Text style={{ ...styles.title, marginBottom: 4 }}>Tramo: {tramo}</Text>
-                            {/* Línea debajo del texto */}
-
                         </View>
 
                         <View style={{ ...styles.imagesContainer, flexDirection: 'row', marginLeft: 500 }}>
-                            {/* Aquí puedes agregar tus imágenes */}
                             <Image style={{ ...styles.image2, marginRight: 20 }} src={imagenPath2} />
                             <Image style={styles.image} src={imagenPath} />
                         </View>
-
-
                     </View>
-                    <View >
-
-
+                    <View>
                         <Text style={{ width: 1115, borderBottomWidth: 1, borderBottomColor: '#d1d5db', marginBottom: 10 }}></Text>
-
                     </View>
-
 
                     <View style={styles.table}>
-                        {/* Cabeceras de la tabla */}
                         <View style={styles.tableRow}>
                             <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Versión</Text></View>
                             <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Número</Text></View>
@@ -175,11 +158,12 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                             <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Documentación de referencia</Text></View>
                             <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Punto</Text></View>
                             <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Responsable</Text></View>
+                            <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Usuario</Text></View>
                             <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Fecha</Text></View>
+                            <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Firma</Text></View>
                             <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Comentarios</Text></View>
                             <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Estado</Text></View>
                         </View>
-                        {/* Datos de las actividades y subactividades */}
                         {ppi && ppi.actividades.map((actividad, index) => (
                             <>
                                 <View style={{ ...styles.tableRow, backgroundColor: '#e5e7eb' }} key={index}>
@@ -195,9 +179,7 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                                     <View style={styles.tableCol}><Text style={styles.tableCell}></Text></View>
                                     <View style={styles.tableCol}><Text style={styles.tableCell}></Text></View>
                                 </View>
-                                {/* Línea divisoria */}
                                 <View style={styles.divider} key={`divider_${index}`} />
-                                {/* Subactividades */}
                                 {actividad.subactividades.map((sub, subIndex) => (
                                     <>
                                         <View style={styles.tableRow} key={`sub_${index}_${subIndex}`}>
@@ -209,7 +191,15 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                                             <View style={styles.tableCol}><Text style={styles.tableCell}>{sub.tipo_inspeccion}</Text></View>
                                             <View style={styles.tableCol}><Text style={styles.tableCell}>{sub.punto}</Text></View>
                                             <View style={styles.tableCol}><Text style={styles.tableCell}>{sub.responsable}</Text></View>
+                                            <View style={styles.tableCol}><Text style={styles.tableCell}>{sub.nombre_usuario}</Text></View>
                                             <View style={styles.tableCol}><Text style={styles.tableCell}>{sub.fecha}</Text></View>
+                                            <View style={styles.tableCol}>
+                                                {sub.signature ? (
+                                                    <Image style={styles.image} src={sub.signature} />
+                                                ) : (
+                                                    <Text style={styles.tableCell}></Text>
+                                                )}
+                                            </View>
                                             <View style={styles.tableCol}><Text style={styles.tableCell}>{sub.comentario}</Text></View>
                                             <View style={styles.tableCol}>
                                                 <Text style={{ ...styles.tableCell, ...styles.centeredContent, color: sub.resultadoInspeccion === 'Apto' ? '#15803d' : '#b91c1c' }}>
@@ -217,7 +207,6 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                                                 </Text>
                                             </View>
                                         </View>
-                                        {/* Línea divisoria */}
                                         <View style={styles.divider} key={`divider_sub_${index}_${subIndex}`} />
                                     </>
                                 ))}
@@ -237,8 +226,6 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         generatePdfBlob();
     }, []);
 
-
-
     const combinePDFs = async () => {
         if (!pdfBlob) {
             console.error("Falta el PDF inicial.");
@@ -249,11 +236,9 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         const pdfBytes = await pdfBlob.arrayBuffer();
         const existingPdfDoc = await PDFDocument.load(pdfBytes);
 
-        // Copiar todas las páginas del PDF inicial
         const copiedPages = await mergedPdf.copyPages(existingPdfDoc, existingPdfDoc.getPageIndices());
         copiedPages.forEach(page => mergedPdf.addPage(page));
 
-        // Copiar todas las páginas de los archivos adicionales solo si hay archivos
         if (additionalFiles.length > 0) {
             for (const file of additionalFiles) {
                 const arrayBuffer = await readFileAsArrayBuffer(file.file);
@@ -266,7 +251,6 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         const finalPdfBytes = await mergedPdf.save();
         downloadPDF(finalPdfBytes, `${ppiname}_${lote}`);
     };
-
 
     const readFileAsArrayBuffer = (file) => {
         return new Promise((resolve, reject) => {
@@ -281,7 +265,6 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         });
     };
 
-
     const downloadPDF = (pdfBytes, filename) => {
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         const link = document.createElement('a');
@@ -291,65 +274,55 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
     };
 
     if (loading) {
-        return<div>
-
-        {showConfirmationModal && (
-            <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-90 z-50">
-                <div className="bg-white p-8 rounded-lg shadow-lg text-center">
-                    <p className="text-lg font-semibold mb-4">¿Estás seguro de que quieres crear el PDF final?</p>
-                    <div className="flex justify-center gap-4">
-                        <button className="bg-amber-700 text-white px-4 py-2 rounded-md" onClick={confirmPDFCreation}>Sí</button>
-                        <button className="bg-gray-500 text-white px-4 py-2 rounded-md" onClick={closeConfirmationModal}>Cancelar</button>
-                    </div>
-                </div>
-            </div>
-        )}
-
-
-
-        {additionalFiles.length >= 0 && (
-
+        return (
             <div>
-                <div className='flex items-center gap-2 mb-3'>
-                    <h2>Adjuntar archivos</h2>
-                    <button className="text-gray-600 bg-gray-500  text-white rounded-md px-3 py-1 cursor-pointer" onClick={addMoreFiles}>
-                        <span className='font-bold text-lg'><MdAttachFile /></span>
+                {showConfirmationModal && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-90 z-50">
+                        <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+                            <p className="text-lg font-semibold mb-4">¿Estás seguro de que quieres crear el PDF final?</p>
+                            <div className="flex justify-center gap-4">
+                                <button className="bg-amber-700 text-white px-4 py-2 rounded-md" onClick={confirmPDFCreation}>Sí</button>
+                                <button className="bg-gray-500 text-white px-4 py-2 rounded-md" onClick={closeConfirmationModal}>Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {additionalFiles.length >= 0 && (
+                    <div>
+                        <div className='flex items-center gap-2 mb-3'>
+                            <h2>Adjuntar archivos</h2>
+                            <button className="text-gray-600 bg-gray-500 text-white rounded-md px-3 py-1 cursor-pointer" onClick={addMoreFiles}>
+                                <span className='font-bold text-lg'><MdAttachFile /></span>
+                            </button>
+                        </div>
+                        <p className='text-sm'><span className='text-amber-600'>* </span>
+                            Presiona el boton de adjuntar para generar nuevos campos de entrada de archivos</p>
+                    </div>
+                )}
+
+                {additionalFiles.map((file, index) => (
+                    <div key={file.id} className="mt-3 flex items-center">
+                        <p className="mr-2">{index + 1}.</p>
+                        <input
+                            type="file"
+                            accept="application/pdf"
+                            onChange={(event) => handleAdditionalFileChange(event, file.id)}
+                        />
+                    </div>
+                ))}
+
+                <div className='mt-8'>
+                    <button className='bg-amber-600 text-white font-medium px-4 py-2 rounded-lg flex gap-2 items-center' onClick={openConfirmationModal}>
+                        <span><FaFilePdf /></span> Crear PDF final
                     </button>
-
                 </div>
-                <p className='text-sm'><span className='text-amber-600'>* </span>
-                    Presiona el boton de adjuntar para generar nuevos campos de entrada de archivos </p>
-
             </div>
-
-        )}
-
-        {additionalFiles.map((file, index) => (
-            <div key={file.id} className="mt-3 flex items-center">
-                <p className="mr-2">{index + 1}.</p>
-                <input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={(event) => handleAdditionalFileChange(event, file.id)}
-                />
-            </div>
-        ))}
-
-
-        <div className='mt-8'>
-        <button className='bg-amber-600 text-white font-medium px-4 py-2 rounded-lg flex gap-2 items-center'
-                onClick={openConfirmationModal}>
-               <span><FaFilePdf/></span> Crear PDF final
-            </button>
-
-        </div>
-
-    </div>
+        );
     }
 
     return (
         <div>
-
             {showConfirmationModal && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-90 z-50">
                     <div className="bg-white p-8 rounded-lg shadow-lg text-center">
@@ -362,23 +335,17 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                 </div>
             )}
 
-
-
             {additionalFiles.length >= 0 && (
-
                 <div>
                     <div className='flex items-center gap-2 mb-3'>
                         <h2>Adjuntar archivos</h2>
-                        <button className="text-gray-600 bg-gray-500  text-white rounded-md px-3 py-1 cursor-pointer" onClick={addMoreFiles}>
+                        <button className="text-gray-600 bg-gray-500 text-white rounded-md px-3 py-1 cursor-pointer" onClick={addMoreFiles}>
                             <span className='font-bold text-lg'><MdAttachFile /></span>
                         </button>
-
                     </div>
                     <p className='text-sm'><span className='text-amber-600'>* </span>
-                        Presiona el boton de adjuntar para generar nuevos campos de entrada de archivos </p>
-
+                        Presiona el boton de adjuntar para generar nuevos campos de entrada de archivos</p>
                 </div>
-
             )}
 
             {additionalFiles.map((file, index) => (
@@ -392,15 +359,11 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                 </div>
             ))}
 
-
             <div className='mt-8'>
-                <button className='bg-amber-600 text-white font-medium px-4 py-2 rounded-lg flex gap-2 items-center'
-                    onClick={openConfirmationModal}>
-                     <span><FaFilePdf/></span> Crear PDF final
+                <button className='bg-amber-600 text-white font-medium px-4 py-2 rounded-lg flex gap-2 items-center' onClick={openConfirmationModal}>
+                    <span><FaFilePdf /></span> Crear PDF final
                 </button>
-
             </div>
-
         </div>
     );
 };

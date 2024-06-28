@@ -8,6 +8,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { IoMdAddCircle } from "react-icons/io";
 import { FaFilePdf } from "react-icons/fa6";
 import { FaQuestionCircle } from "react-icons/fa";
+import { FiRefreshCcw } from "react-icons/fi";
 import { FaCheckCircle } from "react-icons/fa";
 import { FcInspection } from "react-icons/fc";
 import FormularioInspeccion from '../Components/FormularioInspeccion'
@@ -47,6 +48,7 @@ function TablaPpi() {
     };
 
     const [userName, setUserName] = useState('')
+    const [userSignature, setUserSignature] = useState('')
     useEffect(() => {
         if (user) {
             const userDocRef = doc(db, 'usuarios', user.uid);
@@ -54,6 +56,7 @@ function TablaPpi() {
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
                     setUserName(userData.nombre);
+                    setUserSignature(userData.signature);
                 }
             });
         } else {
@@ -204,6 +207,7 @@ function TablaPpi() {
         subactividadSeleccionada.resultadoInspeccion = resultadoInspeccion;
         subactividadSeleccionada.fecha = fechaHoraActual;
         subactividadSeleccionada.nombre_usuario = userName;
+        subactividadSeleccionada.signature = userSignature;
         subactividadSeleccionada.firma = firma;
         subactividadSeleccionada.comentario = comentario;
 
@@ -268,28 +272,22 @@ function TablaPpi() {
         }
 
         try {
-            // Aquí, "docId" es el ID del documento de Firestore donde se almacenan los datos del PPI.
             const ppiRef = doc(db, "lotes", idLote, "inspecciones", nuevoPpi.docId);
-
-            // Prepara los datos que se van a actualizar. En este caso, actualizamos todo el objeto de PPI.
             const updatedData = {
                 actividades: nuevoPpi.actividades.map(actividad => ({
                     ...actividad,
                     subactividades: actividad.subactividades.map(subactividad => ({
                         ...subactividad,
-
                     }))
                 }))
             };
 
-            // Realiza la actualización en Firestore.
             await updateDoc(ppiRef, updatedData);
-
-
         } catch (error) {
             console.error("Error al actualizar PPI en Firestore:", error);
         }
     };
+
 
 
 
@@ -412,7 +410,7 @@ function TablaPpi() {
             punto: subactividadSeleccionada.punto,
             responsable: subactividadSeleccionada.responsable,
             nombre_usuario: userName,
-
+            signature: userSignature,
             fechaHoraActual: fechaHoraActual,
             globalId: loteInfo.globalId || '',
             nombreGlobalId: loteInfo.nameBim || '',
@@ -559,9 +557,9 @@ function TablaPpi() {
             if (text === null || text === undefined) return "";
             return text.replace(/≤/g, "<=");
         };
-        
 
-        const addText = (text, x, y, fontSize, font, currentPage, color = blackColor, maxWidth = 350, newX = 50) => {
+
+        const addText = (text, x, y, fontSize, font, currentPage, color = blackColor, maxWidth = 400, newX = 50) => {
             text = replaceSpecialChars(text); // Reemplazar caracteres especiales
 
             const words = text.split(' ');
@@ -779,7 +777,7 @@ function TablaPpi() {
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Actividad: ", 50, currentY - 40, 11, boldFont, currentPage);
+        result = addText("Actividad: ", 50, currentY - 35, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
@@ -810,7 +808,7 @@ function TablaPpi() {
         result = addText(`${documentoFormulario.documentacion_referencia}`, 210, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
-        addHorizontalLine(40, currentY - 50, 555, 1, "#e2e8f0", currentPage);
+
 
         result = addText("Tipo de inspección: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
@@ -829,8 +827,30 @@ function TablaPpi() {
         currentY = result.lastY;
 
 
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        result = addText("Fecha inspección: ", 50, currentY - 30, 11, boldFont, currentPage);
+
+        addHorizontalLine(40, currentY - 33, 555, 30, "#e2e8f0", currentPage);
+
+
+
+        const commentsMaxWidth = 520; // Ancho máximo específico para la sección de comentarios
+
+        result = addText("Comentarios: ", 50, currentY - 35, 11, boldFont, currentPage);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+        result = addText(`${documentoFormulario.observaciones}`, 50, currentY - 35, 11, regularFont, currentPage, blackColor, commentsMaxWidth);
+        currentPage = result.page;
+        currentY = result.lastY;
+
+
+        addHorizontalLine(40, currentY - 20, 555, 1, "#e2e8f0", currentPage);
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+        result = addText("Fecha inspección: ", 50, currentY - 50, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
@@ -840,7 +860,7 @@ function TablaPpi() {
 
 
 
-        result = addText("Responsable: ", 50, currentY - 25, 11, boldFont, currentPage);
+        result = addText("Responsable: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
@@ -848,7 +868,7 @@ function TablaPpi() {
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText("Nombre usuario: ", 50, currentY - 25, 11, boldFont, currentPage);
+        result = addText("Nombre usuario: ", 50, currentY - 20, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
@@ -856,32 +876,49 @@ function TablaPpi() {
         currentPage = result.page;
         currentY = result.lastY;
 
+        const embedSignatureImage = async (pdfDoc, imagePath, currentPage, x, y, maxWidth) => {
+            const imageBytes = await fetch(imagePath).then(res => res.arrayBuffer());
+            const image = await pdfDoc.embedPng(imageBytes);
 
-        addHorizontalLine(40, currentY - 40, 555, 30, "#e2e8f0", currentPage);
+            const { width, height } = image.scale(1); // Obtén el tamaño original de la imagen
 
+            const scaledWidth = width > maxWidth ? maxWidth : width;
+            const scaledHeight = (height / width) * scaledWidth;
 
+            currentPage.drawImage(image, {
+                x: x + 5, // Posiciona la imagen 5 unidades a la derecha del final del texto
+                y: y - scaledHeight / 2 + 40, // Centra verticalmente la imagen con el texto
+                width: scaledWidth,
+                height: scaledHeight
+            });
+        };
 
-        result = addText("Comentarios: ", 50, currentY - 44, 11, boldFont, currentPage);
+        // En tu código principal:
+        result = addText(`${documentoFormulario.nombre_usuario}`, 145, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
+        // Calcula la posición X para la imagen en función de la longitud del texto
+        const textWidth = regularFont.widthOfTextAtSize(documentoFormulario.nombre_usuario, 11);
+        const imageX = 360 + textWidth; // Posición X del texto más su longitud
 
-        result = addText(`${documentoFormulario.observaciones}`, 50, currentY - 40, 11, regularFont, currentPage);
+        // Ajusta el ancho máximo de la imagen
+        const maxWidth = 70; // Puedes ajustar esto según sea necesario
+
+        await embedSignatureImage(pdfDoc, userSignature, currentPage, imageX, currentY, maxWidth);
+
+        addHorizontalLine(520, currentY - -14, 400, 0.5, "#030712", currentPage);
+
+        result = addText("Firma ", 450, currentY - 1, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
-        addHorizontalLine(40, currentY - 20, 555, 1, "#e2e8f0", currentPage);
+        // result = addText("Firma: ", 50, currentY - 60, 11, boldFont, currentPage);
+        // currentPage = result.page;
+        // currentY = result.lastY;
 
-
-
-
-
-        result = addText("Firma: ", 50, currentY - 60, 11, boldFont, currentPage);
-        currentPage = result.page;
-        currentY = result.lastY;
-
-        result = addText(`${documentoFormulario.firma}`, 95, currentY, 11, regularFont, currentPage);
-        currentPage = result.page;
-        currentY = result.lastY;
+        // result = addText(`${documentoFormulario.firma}`, 95, currentY, 11, regularFont, currentPage);
+        // currentPage = result.page;
+        // currentY = result.lastY;
 
 
         // Función para agregar imágenes Base64 al PDF
@@ -1064,9 +1101,210 @@ function TablaPpi() {
     };
 
 
+    const [showConfirmModalRepetida, setShowConfirmModalRepetida] = useState(false);
+    const [subactividadToRepeat, setSubactividadToRepeat] = useState(null);
+    const [subactividadSeleccionada, setSubactividadSeleccionada] = useState(null);
+
+
+    const openConfirmModal = async (subactividadId) => {
+        setSubactividadToRepeat(subactividadId);
+    
+        const [actividadIndex, subactividadIndex] = subactividadId.split('-').slice(1).map(Number);
+        const subactividad = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
+    
+        const formularioData = await obtenerDatosFormulario(subactividad.idRegistroFormulario);
+        
+        setSubactividadSeleccionada(subactividad);
+        setActividadNombre(subactividad.nombre || '');
+        setCriterioAceptacion(subactividad.criterio_aceptacion || '');
+        setDocReferencia(subactividad.documentacion_referencia || '');
+        setTipoInspeccion(subactividad.tipo_inspeccion || '');
+        setPunto(subactividad.punto || '');
+        setResponsable(subactividad.responsable || '');
+        setComentario(subactividad.comentario || '');
+        setFormularioData(formularioData || {});
+        setShowConfirmModalRepetida(true);
+    };
+    
+    
+    
+    
+
+
+    const handleRepetirInspeccion = async () => {
+        if (!ppi || !subactividadToRepeat) return;
+    
+        const [actividadIndex, subactividadIndex] = subactividadToRepeat.split('-').slice(1).map(Number);
+    
+        let nuevoPpi = { ...ppi };
+        let subactividadSeleccionada = { ...nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] };
+    
+        const isApto = subactividadSeleccionada.resultadoInspeccion === "Apto";
+    
+        // Restar 1 a actividadesAptas si la inspección es apto
+        if (isApto) {
+            const loteRef = doc(db, "lotes", idLote);
+            await updateDoc(loteRef, {
+                actividadesAptas: increment(-1)
+            });
+            setActividadesAptas(actividadesAptas - 1);
+        }
+    
+        // Crear una copia de la subactividad antes de actualizarla
+        let nuevaSubactividad = { ...subactividadSeleccionada };
+    
+        // Actualizar la subactividad seleccionada con los nuevos valores
+        nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = {
+            ...subactividadSeleccionada,
+            nombre: actividadNombre,
+            criterio_aceptacion: criterioAceptacion,
+            documentacion_referencia: docReferencia,
+            tipo_inspeccion: tipoInspeccion,
+            punto: punto,
+            responsable: responsable,
+            comentario: comentario,
+            edited: true
+        };
+    
+        // Duplicar la subactividad con la versión anterior antes de los cambios
+        nuevaSubactividad.version += "R";
+        nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividad);
+    
+        await actualizarFormularioEnFirestore(nuevoPpi);
+    
+        setPpi(nuevoPpi);
+        setShowConfirmModalRepetida(false);
+    };
+    
+    
+    
+const [actividadNombre, setActividadNombre] = useState('');
+const [criterioAceptacion, setCriterioAceptacion] = useState('');
+const [docReferencia, setDocReferencia] = useState('');
+const [tipoInspeccion, setTipoInspeccion] = useState('');
+const [punto, setPunto] = useState('');
+const [responsable, setResponsable] = useState('');
+
+const [formularioData, setFormularioData] = useState({});
+
+
+const obtenerDatosFormulario = async (idRegistroFormulario) => {
+    try {
+        const docRef = doc(db, "registros", idRegistroFormulario);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            return docSnap.data();
+        } else {
+            console.log("No se encontró el documento con el ID:", idRegistroFormulario);
+            return null;
+        }
+    } catch (error) {
+        console.error("Error al obtener el documento:", error);
+        return null;
+    }
+};
+
+
 
     return (
         <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500 text-sm'>
+{showConfirmModalRepetida && (
+    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
+        <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
+        <div className="mx-auto w-[500px] modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8">
+            <button
+                onClick={() => setShowConfirmModalRepetida(false)}
+                className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300">
+                <IoCloseCircle />
+            </button>
+            <div className="text-center">
+                <FaQuestionCircle className="text-5xl text-gray-500 mb-4" />
+                <h2 className="text-xl font-medium mb-4">¿Estás seguro de que deseas repetir la inspección?</h2>
+                {subactividadSeleccionada && (
+                    <div className="text-left mb-4">
+                       <label className="block text-sm font-medium text-gray-700">Actividad</label>
+                        <p className="mt-1 p-2 block w-full shadow-sm sm:text-sm">{actividadNombre}</p>
+
+                        <label className="block text-sm font-medium text-gray-700 mt-4">Criterio de aceptación</label>
+                        <p className="mt-1 p-2 block w-full shadow-sm sm:text-sm ">{criterioAceptacion}</p>
+
+                        <label className="block text-sm font-medium text-gray-700 mt-4">Documentación de referencia</label>
+                        <p className="mt-1 p-2 block w-full shadow-sm sm:text-sm ">{docReferencia}</p>
+
+                        <label className="block text-sm font-medium text-gray-700 mt-4">Tipo de inspección</label>
+                        <p className="mt-1 p-2 block w-full shadow-sm sm:text-sm">{tipoInspeccion}</p>
+
+                        <label className="block text-sm font-medium text-gray-700 mt-4">Punto</label>
+                        <p className="mt-1 p-2 block w-full shadow-sm sm:text-sm">{punto}</p>
+
+                        <label className="block text-sm font-medium text-gray-700 mt-4">Responsable</label>
+                        <p className="mt-1 p-2 block w-full shadow-sm sm:text-sm ">{responsable}</p>
+
+                        <label className="block text-sm font-medium text-gray-700 mt-4">Comentario</label>
+                        <p className="mt-1 p-2 block w-full shadow-sm sm:text-sm border">{comentario}</p>
+                        {formularioData && (
+                            <div className="mt-4 p-4 border border-gray-300 rounded-md">
+                                <h3 className="text-lg font-medium text-gray-700 mb-2">Datos del Formulario</h3>
+                                <label className="block text-sm font-medium text-gray-700">Fecha</label>
+                                <input
+                                    type="text"
+                                    value={formularioData.fechaHoraActual}
+                                    onChange={(e) => setFormularioData({ ...formularioData, fechaHoraActual: e.target.value })}
+                                    className="mt-1 p-2 block w-full shadow-sm sm:text-sm border border-gray-300 rounded-md"
+                                />
+                                <label className="block text-sm font-medium text-gray-700">Nombre Usuario</label>
+                                <input
+                                    type="text"
+                                    value={formularioData.nombre_usuario}
+                                    onChange={(e) => setFormularioData({ ...formularioData, nombre_usuario: e.target.value })}
+                                    className="mt-1 p-2 block w-full shadow-sm sm:text-sm border border-gray-300 rounded-md"
+                                />
+                                <label className="block text-sm font-medium text-gray-700">Firma</label>
+                                <input
+                                    type="text"
+                                    value={formularioData.firma}
+                                    onChange={(e) => setFormularioData({ ...formularioData, firma: e.target.value })}
+                                    className="mt-1 p-2 block w-full shadow-sm sm:text-sm border border-gray-300 rounded-md"
+                                />
+                                <label className="block text-sm font-medium text-gray-700">Comentarios</label>
+                                <textarea
+                                    value={formularioData.comentario}
+                                    onChange={(e) => setFormularioData({ ...formularioData, comentario: e.target.value })}
+                                    className="mt-1 p-2 block w-full shadow-sm sm:text-sm border border-gray-300 rounded-md"
+                                />
+                                <label className="block text-sm font-medium text-gray-700">Observaciones</label>
+                                <textarea
+                                    value={formularioData.observaciones}
+                                    onChange={(e) => setFormularioData({ ...formularioData, observaciones: e.target.value })}
+                                    className="mt-1 p-2 block w-full shadow-sm sm:text-sm border border-gray-300 rounded-md"
+                                />
+                                {/* Agrega más campos según lo necesario */}
+                            </div>
+                        )}
+                    </div>
+                )}
+                <div className="flex justify-center gap-4">
+                    <button
+                        onClick={handleRepetirInspeccion}
+                        className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md shadow-md text-white font-medium"
+                    >
+                        Repetir
+                    </button>
+                    <button
+                        onClick={() => setShowConfirmModalRepetida(false)}
+                        className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-md shadow-md text-white font-medium"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+)}
+
+
+
 
 
 
@@ -1119,13 +1357,14 @@ function TablaPpi() {
                             <div className='col-span-1'>Nº</div>
 
                             <div className="col-span-2">Actividad</div>
-                            <div className="col-span-3">Criterio de aceptación</div>
-                            <div className="col-span-2 text-center">Documentación de referencia</div>
+                            <div className="col-span-4">Criterio de aceptación</div>
+                            <div className="col-span-1 text-center">Doc de referencia</div>
                             <div className="col-span-2 text-center">Tipo de inspección</div>
                             <div className="col-span-1 text-center">Punto</div>
                             <div className="col-span-2 text-center">Responsable</div>
                             <div className="col-span-2 text-center">Nombre usuario</div>
                             <div className="col-span-2 text-center">Fecha</div>
+
                             <div className="col-span-3 text-center">Comentarios</div>
                             {/* <div className="col-span-2 text-center">Estatus</div> */}
                             {/* <div className="col-span-1 text-center">Inspección</div> */}
@@ -1139,7 +1378,7 @@ function TablaPpi() {
                             {ppi && ppi.actividades.map((actividad, indexActividad) => [
                                 // Row for activity name
                                 <div key={`actividad-${indexActividad}`} className="bg-gray-200 grid grid-cols-24 items-center px-3 py-3 border-b border-gray-200 text-sm font-medium">
-                                    <div className="">
+                                    <div className="text-right">
 
                                         (V)
 
@@ -1149,7 +1388,7 @@ function TablaPpi() {
                                         {actividad.numero}
 
                                     </div>
-                                    <div className="col-span-12">
+                                    <div className="col-span-12 text-xs">
 
                                         {actividad.actividad}
 
@@ -1159,8 +1398,16 @@ function TablaPpi() {
                                 // Rows for subactividades
                                 ...actividad.subactividades.map((subactividad, indexSubactividad) => (
                                     <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-24 items-center border-b border-gray-200 text-sm">
-                                        <div className="col-span-1 px-3 py-5 ">
-                                            V-{subactividad.version}  {/* Combina el número de actividad y el índice de subactividad */}
+                                        <div className="col-span-1 px-3 py-5 flex gap-2 items-center text-xs">
+
+                                            <button
+                                                onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                className="text-amber-700 font-bold font-bold py-1 px-1 text-xs"
+                                            >
+                                                <FiRefreshCcw />
+                                            </button>
+                                            {subactividad.version}
+                                            {/* Combina el número de actividad y el índice de subactividad */}
                                         </div>
                                         <div className="col-span-1 px-3 py-5 ">
                                             {subactividad.numero} {/* Combina el número de actividad y el índice de subactividad */}
@@ -1173,7 +1420,7 @@ function TablaPpi() {
                                         <div className="col-span-4 px-3 py-5">
                                             {subactividad.criterio_aceptacion}
                                         </div>
-                                        <div className="col-span-2 px-3 py-5 text-center">
+                                        <div className="col-span-1 px-3 py-5 text-center">
                                             {subactividad.documentacion_referencia}
                                         </div>
                                         <div className="col-span-2 px-3 py-5 text-center">
@@ -1186,7 +1433,7 @@ function TablaPpi() {
 
 
 
-                                        <div className="col-span-1 text-center">
+                                        <div className="col-span-2 text-center">
                                             {subactividad.responsable || ''}
                                         </div>
 
@@ -1198,6 +1445,8 @@ function TablaPpi() {
                                             {/* Aquí asumo que quieres mostrar la fecha en esta columna, ajusta según sea necesario */}
                                             {subactividad.fecha || ''}
                                         </div>
+
+
                                         <div className="col-span-3 px-5 py-5 text-center">
                                             {subactividad.comentario || ''}
                                         </div>
@@ -1286,6 +1535,36 @@ function TablaPpi() {
             </div>
 
 
+            {/* {showConfirmModalRepetida && (
+                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
+                    <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
+                    <div className="mx-auto w-[400px] modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8">
+                        <button
+                            onClick={() => setShowConfirmModalRepetida(false)}
+                            className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300">
+                            <IoCloseCircle />
+                        </button>
+                        <div className="text-center">
+                            <FaQuestionCircle className="text-5xl text-gray-500 mb-4" />
+                            <h2 className="text-xl font-medium mb-4">¿Estás seguro de que deseas repetir la inspección?</h2>
+                            <div className="flex justify-center gap-4">
+                                <button
+                                    onClick={handleRepetirInspeccion}
+                                    className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md shadow-md text-white font-medium"
+                                >
+                                    Repetir
+                                </button>
+                                <button
+                                    onClick={() => setShowConfirmModalRepetida(false)}
+                                    className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-md shadow-md text-white font-medium"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )} */}
 
 
             {modalFormulario && (
@@ -1361,6 +1640,7 @@ function TablaPpi() {
                             resultadoInspeccion={resultadoInspeccion}
                             comentario={comentario}
                             firma={firma}
+                            signature={userSignature}
 
                             fechaHoraActual={fechaHoraActual}
                             handleCloseModal={handleCloseModal}

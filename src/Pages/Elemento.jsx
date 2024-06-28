@@ -24,6 +24,7 @@ function Elemento() {
         lote: '',
         ppi: ''
     });
+    const [showSector, setShowSector] = useState(true);
 
     const [uniqueValues, setUniqueValues] = useState({
         sector: [],
@@ -132,6 +133,10 @@ function Elemento() {
         (filters.lote === '' || l.nombre === filters.lote) &&
         (filters.ppi === '' || l.ppiNombre === filters.ppi)
     );
+
+    const toggleSector = () => {
+        setShowSector(prevShowSector => !prevShowSector);
+    };
 
     return (
         <div className='container mx-auto min-h-screen px-14 py-5'>
@@ -249,9 +254,14 @@ function Elemento() {
                         </button>
                     </div>
 
+                  
+
                     <div className="w-full rounded-xl">
                         <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded-md'>
-                            <div className='text-left font-medium text-gray-600 border-r-2 border-gray-300 sm:block hidden'>Sector</div>
+                            {showSector && <div className='text-left font-medium text-gray-600 border-r-2 border-gray-300 sm:block hidden'>
+                                
+                                Sector
+                                </div>}
                             <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-2 sm:block hidden border-r-2 border-gray-300'>Sub Sector</div>
                             <div className='text-left sm:ps-5 font-medium text-gray-600 sm:block hidden border-r-3 border-gray-300'>Parte</div>
                             <div className='text-left sm:ps-5 font-medium text-gray-600 col-span-1 sm:block hidden border-r-2 border-gray-300'>Elemento</div>
@@ -267,9 +277,9 @@ function Elemento() {
                         }).map((l, i) => (
                             <Link to={`/tablaPpi/${l.id}/${l.ppiNombre}`} onClick={() => handleCaptrurarTrazabilidad(l)} key={i}>
                                 <div className='text-sm cursor-pointer grid sm:grid-cols-12 grid-cols-1 items-center justify-start sm:p-5 border-b-2 font-normal text-gray-600 hover:bg-gray-100'>
-                                    <div className='sm:border-r-2 sm:border-b-0 flex items-center sm:pr-10'>
+                                    {showSector && <div className='sm:border-r-2 sm:border-b-0 flex items-center sm:pr-10'>
                                         {l.sectorNombre}
-                                    </div>
+                                    </div>}
                                     <div className='sm:border-r-2 sm:border-b-0 flex items-center col-span-2 sm:ps-10'>
                                         {l.subSectorNombre}
                                     </div>
@@ -292,6 +302,7 @@ function Elemento() {
                                             <p className='text-amber-600 font-medium'>Ppi:</p>
                                             <p className='font-medium'>{l.ppiNombre}</p>
                                         </div>
+                                        
                                     </div>
                                     <div className='flex flex-col items-center sm:justify-start gap-5 col-span-2 sm:ps-10'>
                                         {
