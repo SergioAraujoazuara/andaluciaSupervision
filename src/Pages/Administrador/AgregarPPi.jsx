@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../../firebase_config';
 import { GoHomeFill } from "react-icons/go";
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
 import { BsClipboardCheck } from "react-icons/bs";
 import { GrDocumentTest } from "react-icons/gr";
 import { IoArrowBackCircle } from "react-icons/io5";
-import { useNavigate } from 'react-router-dom';
 
 function PlantillaPpi() {
     const navigate = useNavigate();
@@ -65,8 +64,9 @@ function PlantillaPpi() {
                     comentario: '',
                     formularioEnviado: false,
                     idRegistroFormulario: '',
-                    resultadoInspeccion: ''
-
+                    resultadoInspeccion: '',
+                    active: true,
+                    motivoVersion: 'original' // Añadir active: true
                 }
             ]
         }
@@ -102,7 +102,9 @@ function PlantillaPpi() {
             comentario: '',
             formularioEnviado: false,
             idRegistroFormulario: '',
-            resultadoInspeccion: ''
+            resultadoInspeccion: '',
+            active: true,
+            motivoVersion: 'original'
         });
         setActividades(newActividades);
     };
@@ -143,7 +145,9 @@ function PlantillaPpi() {
                             comentario: '',
                             formularioEnviado: false,
                             idRegistroFormulario: '',
-                            resultadoInspeccion: ''
+                            resultadoInspeccion: '',
+                            active: true,
+                            motivoVersion: 'original'
                         }
                     ]
                 }
@@ -158,8 +162,6 @@ function PlantillaPpi() {
         }
     };
 
-
-    // Función para agregar una nueva actividad
     const addActividad = () => {
         const newActividad = {
             numero: '',
@@ -179,55 +181,41 @@ function PlantillaPpi() {
                     comentario: '',
                     formularioEnviado: false,
                     idRegistroFormulario: '',
-                    resultadoInspeccion: ''
+                    resultadoInspeccion: '',
+                    active: true,
+                    motivoVersion: "original"
                 }
             ]
         };
         setActividades([...actividades, newActividad]);
     };
 
-
-
-
     return (
         <>
-
             <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500 text-sm'>
                 <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
-
                     <div className='flex gap-2 items-center'>
                         <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                         <Link to={'/admin'}>
-                            <h1 className='text-gray-500 text-gray-500'>Administración</h1>
+                            <h1 className='text-gray-500'>Administración</h1>
                         </Link>
                         <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                         <Link to={'/verPpis'}>
-                            <h1 className='text-gray-500 text-gray-500'>Plantillas PPI</h1>
+                            <h1 className='text-gray-500'>Plantillas PPI</h1>
                         </Link>
                         <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                         <Link to={'#'}>
                             <h1 className='font-medium text-amber-600'>Crear PPI</h1>
                         </Link>
                     </div>
-
-
                     <div className='flex items-center'>
                         <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
-
                     </div>
-
                 </div>
 
-
-
-                <div className='flex gap-3 flex-col  mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
-
-
-
-
+                <div className='flex gap-3 flex-col mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
                     <form onSubmit={handleAgregarPPi}>
                         <div className="mb-4">
-
                             <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">Nombre punto inspección (PPI):</label>
                             <input
                                 type="text"
@@ -242,25 +230,18 @@ function PlantillaPpi() {
                                 <button type="button" onClick={addActividad} className="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     Añadir Actividad
                                 </button>
-
                             </div>
-
                         </div>
 
                         <div className='w-full bg-gray-200 grid grid-cols-7 text-sm'>
                             <div className="py-3 px-2 text-left">Nº</div>
-                            <div className="py-3 px-2 text-left whitespace-normal ">Actividad</div>
-                            <div className="py-3 px-2 text-left whitespace-normal ">Criterio de aceptación</div>
-                            <div className="py-3 px-2 text-left whitespace-normal ">Documentación de referencia</div>
+                            <div className="py-3 px-2 text-left whitespace-normal">Actividad</div>
+                            <div className="py-3 px-2 text-left whitespace-normal">Criterio de aceptación</div>
+                            <div className="py-3 px-2 text-left whitespace-normal">Documentación de referencia</div>
                             <div className="py-3 px-2 text-left">Tipo de inspección</div>
                             <div className="py-3 px-2 text-left">Punto</div>
                             <div className="py-3 px-2 text-left">Responsable</div>
-
-
-
                         </div>
-
-
 
                         <div>
                             {actividades.map((actividad, i) => (
@@ -284,7 +265,6 @@ function PlantillaPpi() {
                                                 className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100"
                                             />
                                         </div>
-
 
                                         {actividad.subactividades && actividad.subactividades.map((sub, j) => (
                                             <div key={j} className="w-full grid grid-cols-7">
@@ -336,7 +316,6 @@ function PlantillaPpi() {
                                                     required
                                                     className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                 />
-
                                                 <input
                                                     name="responsable"
                                                     placeholder="Responsable"
@@ -345,15 +324,12 @@ function PlantillaPpi() {
                                                     required
                                                     className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                 />
-
                                             </div>
-
                                         ))}
                                         <button type="button" onClick={() => addSubactividad(i)} className="inline-flex items-center mt-2 mb-6 px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                             Añadir Subactividad
                                         </button>
                                     </div>
-
                                 </>
                             ))}
                         </div>
@@ -362,14 +338,11 @@ function PlantillaPpi() {
                             <button type="submit" disabled={loading} className=" mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                 {loading ? 'Cargando...' : 'Guardar'}
                             </button>
-
-
                         </div>
 
                         {error && <p className="mt-4 text-red-500">{error}</p>}
                     </form>
                 </div>
-
             </div>
 
             {showSuccessModal && (
@@ -395,7 +368,6 @@ function PlantillaPpi() {
                                             </p>
                                         </div>
                                     </div>
-
                                 </div>
                                 <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                                     <button type="button" onClick={() => setShowSuccessModal(false)} className="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
@@ -403,16 +375,11 @@ function PlantillaPpi() {
                                     </button>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
             )}
-
-
-
         </>
-
     );
 }
 

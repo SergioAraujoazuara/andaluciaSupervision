@@ -19,6 +19,7 @@ import EditarPpi from './Pages/Administrador/EditarPpi';
 import FormularioInspeccion from './Components/FormularioInspeccion';
 import Pdf_final from './Components/Pdf_final';
 
+
 function App() {
   const publicRoutes = [
     { path: '/', element: <Home /> },

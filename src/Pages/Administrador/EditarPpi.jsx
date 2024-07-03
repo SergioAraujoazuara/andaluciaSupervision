@@ -273,7 +273,9 @@ function EditarPpi() {
                 documentacion_referencia: '',
                 tipo_inspeccion: '',
                 punto: '',
-                responsable: ''
+                responsable: '',
+                active: true,
+                motivoVersion: "original"
             });
             return newState;
         });
