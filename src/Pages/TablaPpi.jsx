@@ -12,6 +12,8 @@ import { FiRefreshCcw } from "react-icons/fi";
 import { FaCheckCircle } from "react-icons/fa";
 import { FcInspection } from "react-icons/fc";
 import { FaRegEdit } from "react-icons/fa";
+import { IoMdEye } from "react-icons/io";
+import { IoIosEyeOff } from "react-icons/io";
 import FormularioInspeccion from '../Components/FormularioInspeccion'
 import logo from '../assets/tpf_logo_azul.png'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
@@ -196,14 +198,12 @@ function TablaPpi() {
             return;
         }
 
-        // Divide el ID para obtener índices de actividad y subactividad
         const [actividadIndex, subactividadIndex] = currentSubactividadId.split('-').slice(1).map(Number);
-
-        // Crea una copia del estado actual del PPI para modificarlo
         let nuevoPpi = { ...ppi };
         let subactividadSeleccionada = nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex];
 
-        // Actualiza los campos con los datos necesarios
+        let motivoVersionActual = subactividadSeleccionada.motivoVersion || 'original';
+
         subactividadSeleccionada.formularioEnviado = formulario;
         subactividadSeleccionada.idRegistroFormulario = idRegistroFormulario;
         subactividadSeleccionada.resultadoInspeccion = resultadoInspeccion;
@@ -212,9 +212,8 @@ function TablaPpi() {
         subactividadSeleccionada.signature = userSignature;
         subactividadSeleccionada.firma = firma;
         subactividadSeleccionada.comentario = comentario;
-        subactividadSeleccionada.active = true; // Establecer como activo
+        subactividadSeleccionada.active = true;
 
-        // Si la inspección es "Apto", incrementa el contador de actividadesAptas en el lote
         if (resultadoInspeccion === "Apto") {
             const loteRef = doc(db, "lotes", idLote);
             await updateDoc(loteRef, {
@@ -222,46 +221,50 @@ function TablaPpi() {
             });
         }
 
-        // Si la inspección es No Apto, duplica la subactividad para una futura inspección
         if (resultadoInspeccion === "No apto") {
-            let nuevaSubactividad = { ...subactividadSeleccionada };
+            let nuevaSubactividad = {
+                ...subactividadSeleccionada,
+                active: false,
+                motivoVersion: motivoVersionActual
+            };
+            nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = nuevaSubactividad;
 
-            // Eliminar o reiniciar propiedades específicas de la evaluación para la nueva subactividad
-            delete nuevaSubactividad.resultadoInspeccion;
-            delete nuevaSubactividad.enviado;
-            delete nuevaSubactividad.idRegistroFormulario;
+            let nuevaVersion = nuevoPpi.actividades[actividadIndex].subactividades.reduce((maxVersion, subactividad) => {
+                return Math.max(maxVersion, parseInt(subactividad.version));
+            }, 0) + 1;
 
+            let nuevaSubactividadRepetida = {
+                ...nuevaSubactividad,
+                version: nuevaVersion,
+                active: true,
+                comentario: '',
+                resultadoInspeccion: '',
+                nombre_usuario: '',
+                signature: '',
+                firma: '',
+                fecha: '',
+                formularioEnviado: false,
+                motivoVersion: 'rechazada'
+            };
 
-            // Restablecer los valores de Responsable, Fecha, Comentarios e Inspección
-            // Aquí asumimos que quieres restablecerlos a valores vacíos o predeterminados
-
-            nuevaSubactividad.fecha = '';
-            nuevaSubactividad.comentario = '';
-            nuevaSubactividad.nombre_usuario = '';
-            // Para el campo Inspección, asegúrate de restablecerlo según cómo lo manejas en tu modelo de datos
-            // Si Inspección se maneja con otro campo o de otra forma, ajusta esta línea acorde a tu implementación
-            // Por ejemplo, si 'inspeccion' es un campo booleano que indica si se ha realizado una inspección
-            nuevaSubactividad.formularioEnviado = false; // Ajusta el nombre del campo y el valor según tu caso
-
-            // Incrementa el número de versión de la nueva subactividad
-            if (nuevaSubactividad.version) {
-                nuevaSubactividad.version = String(parseInt(nuevaSubactividad.version) + 1);
-            } else {
-                // Si por alguna razón la subactividad original no tiene número de versión, se inicializa a 1
-                nuevaSubactividad.version = "1";
-            }
-
-            // Inserta la nueva subactividad en el PPI
-            nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividad);
+            nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividadRepetida);
         }
 
-        // Actualiza la subactividad en el array
-        nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = subactividadSeleccionada;
+        // Lógica adicional para manejar la edición de versiones relacionadas
+        if (motivoVersionActual !== 'original' && resultadoInspeccion === "Apto") {
+            nuevoPpi.actividades[actividadIndex].subactividades.forEach((subactividad, index) => {
+                if (index > subactividadIndex && subactividad.motivoVersion === 'rechazada') {
+                    subactividad.version = nuevaVersion;
+                    subactividad.active = false;
+                    subactividad.motivoVersion = 'editada';
+                }
+            });
+        }
 
-        // Llama a la función que actualiza los datos en Firestore
         await actualizarFormularioEnFirestore(nuevoPpi);
-        setPpi(nuevoPpi);  // Actualiza el estado `ppi` para disparar el `useEffect`
+        setPpi(nuevoPpi);
     };
+
 
 
 
@@ -1089,12 +1092,12 @@ function TablaPpi() {
 
     const openConfirmModal = async (subactividadId) => {
         setSubactividadToRepeat(subactividadId);
-    
+
         const [actividadIndex, subactividadIndex] = subactividadId.split('-').slice(1).map(Number);
         const subactividad = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
-    
+
         const formularioData = await obtenerDatosFormulario(subactividad.idRegistroFormulario);
-    
+
         setSubactividadSeleccionada(subactividad);
         setActividadNombre(subactividad.nombre || '');
         setCriterioAceptacion(subactividad.criterio_aceptacion || '');
@@ -1106,22 +1109,23 @@ function TablaPpi() {
         setNombre_usuario_edit(subactividad.nombre_usuario || '');
         setComentario(subactividad.comentario || '');
         setFormularioData(formularioData || {});
-    
+
         // Guardar las imágenes originales
         setImagenOriginal(formularioData.imagen || '');
         setImagen2Original(formularioData.imagen2 || '');
-    
+
         setShowConfirmModalRepetida(true);
     };
-    
-    
-    
-    
+
+
+
+
+
     const duplicarRegistro = async (idRegistroFormulario, nuevoIdRegistroFormulario) => {
         try {
             const docRef = doc(db, "registros", idRegistroFormulario);
             const docSnap = await getDoc(docRef);
-    
+
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 const nuevoDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
@@ -1134,7 +1138,7 @@ function TablaPpi() {
                     version: (parseInt(data.version) + 1).toString(),
                     originalId: data.originalId || idRegistroFormulario,
                 });
-    
+
                 console.log("Documento original:", data);
                 console.log("Nuevo documento duplicado:", {
                     ...data,
@@ -1145,7 +1149,7 @@ function TablaPpi() {
                     version: (parseInt(data.version) + 1).toString(),
                     originalId: data.originalId || idRegistroFormulario,
                 });
-    
+
                 return nuevoIdRegistroFormulario;
             } else {
                 console.log("No se encontró el documento con el ID:", idRegistroFormulario);
@@ -1156,30 +1160,31 @@ function TablaPpi() {
             return null;
         }
     };
-    
-    
-    
-    
+
+
+
+
+
 
     const handleRepetirInspeccion = async () => {
         if (!ppi || !subactividadToRepeat) return;
-    
+
         const [actividadIndex, subactividadIndex] = subactividadToRepeat.split('-').slice(1).map(Number);
-    
+
         let nuevoPpi = { ...ppi };
         let subactividadSeleccionada = { ...nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] };
-    
+
         // Generar un nuevo ID para el registro duplicado
         const nuevoIdRegistroFormulario = doc(collection(db, "registros")).id;
-    
+
         // Obtener datos actuales
         const duplicadoId = await duplicarRegistro(subactividadSeleccionada.idRegistroFormulario, nuevoIdRegistroFormulario);
-    
+
         if (!duplicadoId) {
             console.error("Error al duplicar el registro en Firestore.");
             return;
         }
-    
+
         // Crear la nueva subactividad con los valores editados
         let nuevaSubactividad = {
             ...subactividadSeleccionada,
@@ -1198,16 +1203,16 @@ function TablaPpi() {
             originalId: subactividadSeleccionada.originalId || subactividadSeleccionada.idRegistroFormulario, // Mantener el ID original
             motivoVersion: 'editada',  // Actualizar el campo aquí
         };
-    
+
         // Actualizar la subactividad seleccionada para que no esté activa
         nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = {
             ...subactividadSeleccionada,
             active: false // Marcar la versión anterior como no activa
         };
-    
+
         // Añadir la nueva subactividad con los valores editados después de la original
         nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividad);
-    
+
         // Actualizar el nuevo registro con las imágenes y observaciones si hay nuevas imágenes
         const registroDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
         const updateData = {
@@ -1221,30 +1226,22 @@ function TablaPpi() {
         if (imagen) updateData.imagen = imagen;
         if (imagen2) updateData.imagen2 = imagen2;
         await updateDoc(registroDocRef, updateData);
-    
+
         console.log("Datos actualizados en el nuevo registro:", updateData);
-    
+
         await actualizarFormularioEnFirestore(nuevoPpi);
-    
+
         setPpi(nuevoPpi);
         setShowConfirmModalRepetida(false);
     };
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
     const actualizarFormularioEnFirestore = async (nuevoPpi) => {
         if (!nuevoPpi.docId) {
             console.error("No se proporcionó docId para la actualización.");
             return;
         }
-    
+
         try {
             const ppiRef = doc(db, "lotes", idLote, "inspecciones", nuevoPpi.docId);
             const updatedData = {
@@ -1257,208 +1254,210 @@ function TablaPpi() {
                     }))
                 }))
             };
-    
+
             await updateDoc(ppiRef, updatedData);
         } catch (error) {
             console.error("Error al actualizar PPI en Firestore:", error);
         }
     };
-    
-    
-    
-    
-    
-    
-    
-    
-const [actividadNombre, setActividadNombre] = useState('');
-const [criterioAceptacion, setCriterioAceptacion] = useState('');
-const [docReferencia, setDocReferencia] = useState('');
-const [tipoInspeccion, setTipoInspeccion] = useState('');
-const [punto, setPunto] = useState('');
-const [responsable, setResponsable] = useState('');
-const [aptoNoapto, setAptoNoapto] = useState('');
-const [nombre_usuario_edit, setNombre_usuario_edit] = useState('');
-
-const [formularioData, setFormularioData] = useState({});
 
 
-const obtenerDatosFormulario = async (idRegistroFormulario) => {
-    try {
-        const docRef = doc(db, "registros", idRegistroFormulario);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-            return docSnap.data();
-        } else {
-            console.log("No se encontró el documento con el ID:", idRegistroFormulario);
+
+
+
+
+    const [actividadNombre, setActividadNombre] = useState('');
+    const [criterioAceptacion, setCriterioAceptacion] = useState('');
+    const [docReferencia, setDocReferencia] = useState('');
+    const [tipoInspeccion, setTipoInspeccion] = useState('');
+    const [punto, setPunto] = useState('');
+    const [responsable, setResponsable] = useState('');
+    const [aptoNoapto, setAptoNoapto] = useState('');
+    const [nombre_usuario_edit, setNombre_usuario_edit] = useState('');
+
+    const [formularioData, setFormularioData] = useState({});
+
+
+    const obtenerDatosFormulario = async (idRegistroFormulario) => {
+        try {
+            const docRef = doc(db, "registros", idRegistroFormulario);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                return docSnap.data();
+            } else {
+                console.log("No se encontró el documento con el ID:", idRegistroFormulario);
+                return null;
+            }
+        } catch (error) {
+            console.error("Error al obtener el documento:", error);
             return null;
         }
-    } catch (error) {
-        console.error("Error al obtener el documento:", error);
-        return null;
-    }
-};
+    };
 
 
-const [imagenOriginal, setImagenOriginal] = useState('');
-const [imagen2Original, setImagen2Original] = useState('');
+    const [imagenOriginal, setImagenOriginal] = useState('');
+    const [imagen2Original, setImagen2Original] = useState('');
 
+    const [showActiveOnly, setShowActiveOnly] = useState(true);
 
+    const toggleActiveOnly = () => {
+        setShowActiveOnly(!showActiveOnly);
+    };
     return (
         <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500 text-sm'>
-{showConfirmModalRepetida && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-gray-800 opacity-75"></div>
-        <div className="relative bg-white rounded-lg shadow-lg w-full max-w-lg mx-auto overflow-hidden">
-            <button
-                onClick={() => setShowConfirmModalRepetida(false)}
-                className="absolute top-4 right-4 text-3xl text-gray-500 hover:text-gray-700 transition-colors duration-300"
-            >
-                <IoCloseCircle />
-            </button>
-            <div className="p-8 overflow-y-auto max-h-[80vh]">
-                <div className="text-center">
-                    <h2 className="text-2xl font-semibold mb-6">Editar inspección</h2>
-                </div>
-                {subactividadSeleccionada && (
-                    <div className="mb-6">
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Actividad</label>
-                            <input
-                                type="text"
-                                value={actividadNombre}
-                                onChange={(e) => setActividadNombre(e.target.value)}
-                                className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
-                            />
-                        </div>
+            {showConfirmModalRepetida && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-gray-800 opacity-75"></div>
+                    <div className="relative bg-white rounded-lg shadow-lg w-full max-w-lg mx-auto overflow-hidden">
+                        <button
+                            onClick={() => setShowConfirmModalRepetida(false)}
+                            className="absolute top-4 right-4 text-3xl text-gray-500 hover:text-gray-700 transition-colors duration-300"
+                        >
+                            <IoCloseCircle />
+                        </button>
+                        <div className="p-8 overflow-y-auto max-h-[80vh]">
+                            <div className="text-center">
+                                <h2 className="text-2xl font-semibold mb-6">Editar inspección</h2>
+                            </div>
+                            {subactividadSeleccionada && (
+                                <div className="mb-6">
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Actividad</label>
+                                        <input
+                                            type="text"
+                                            value={actividadNombre}
+                                            onChange={(e) => setActividadNombre(e.target.value)}
+                                            className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Criterio de aceptación</label>
-                            <input
-                                type="text"
-                                value={criterioAceptacion}
-                                onChange={(e) => setCriterioAceptacion(e.target.value)}
-                                className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
-                            />
-                        </div>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Criterio de aceptación</label>
+                                        <input
+                                            type="text"
+                                            value={criterioAceptacion}
+                                            onChange={(e) => setCriterioAceptacion(e.target.value)}
+                                            className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Documentación de referencia</label>
-                            <input
-                                type="text"
-                                value={docReferencia}
-                                onChange={(e) => setDocReferencia(e.target.value)}
-                                className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
-                            />
-                        </div>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Documentación de referencia</label>
+                                        <input
+                                            type="text"
+                                            value={docReferencia}
+                                            onChange={(e) => setDocReferencia(e.target.value)}
+                                            className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Tipo de inspección</label>
-                            <input
-                                type="text"
-                                value={tipoInspeccion}
-                                onChange={(e) => setTipoInspeccion(e.target.value)}
-                                className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
-                            />
-                        </div>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Tipo de inspección</label>
+                                        <input
+                                            type="text"
+                                            value={tipoInspeccion}
+                                            onChange={(e) => setTipoInspeccion(e.target.value)}
+                                            className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Punto</label>
-                            <input
-                                type="text"
-                                value={punto}
-                                onChange={(e) => setPunto(e.target.value)}
-                                className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
-                            />
-                        </div>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Punto</label>
+                                        <input
+                                            type="text"
+                                            value={punto}
+                                            onChange={(e) => setPunto(e.target.value)}
+                                            className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Responsable</label>
-                            <input
-                                type="text"
-                                value={responsable}
-                                onChange={(e) => setResponsable(e.target.value)}
-                                className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
-                            />
-                        </div>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Responsable</label>
+                                        <input
+                                            type="text"
+                                            value={responsable}
+                                            onChange={(e) => setResponsable(e.target.value)}
+                                            className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Nombre</label>
-                            <input
-                                type="text"
-                                value={nombre_usuario_edit}
-                                onChange={(e) => setNombre_usuario_edit(e.target.value)}
-                                className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
-                            />
-                        </div>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Nombre</label>
+                                        <input
+                                            type="text"
+                                            value={nombre_usuario_edit}
+                                            onChange={(e) => setNombre_usuario_edit(e.target.value)}
+                                            className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700">Comentarios inspección</label>
-                            <textarea
-                                value={comentario}
-                                onChange={(e) => setComentario(e.target.value)}
-                                className="mt-1 p-2 w-full border border-gray-300 rounded-md shadow-sm sm:text-sm"
-                            />
-                        </div>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700">Comentarios inspección</label>
+                                        <textarea
+                                            value={comentario}
+                                            onChange={(e) => setComentario(e.target.value)}
+                                            className="mt-1 p-2 w-full border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Resultado inspección:</label>
-                            <input
-                                type="text"
-                                value={aptoNoapto}
-                                onChange={(e) => setAptoNoapto(e.target.value)}
-                                className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
-                            />
-                        </div>
-                        {formularioData && (
-                            <>
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700">Imagen 1</label>
-                                    <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                    {formularioData.imagen && (
-                                        <img src={formularioData.imagen} alt="Imagen 1" />
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Resultado inspección:</label>
+                                        <input
+                                            type="text"
+                                            value={aptoNoapto}
+                                            onChange={(e) => setAptoNoapto(e.target.value)}
+                                            className="mt-1 p-2 w-full bg-white border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
+                                    {formularioData && (
+                                        <>
+                                            <div className="mb-4">
+                                                <label className="block text-sm font-medium text-gray-700">Imagen 1</label>
+                                                <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                                {formularioData.imagen && (
+                                                    <img src={formularioData.imagen} alt="Imagen 1" />
+                                                )}
+                                            </div>
+
+                                            <div className="mb-4">
+                                                <label className="block text-sm font-medium text-gray-700">Imagen 2</label>
+                                                <input onChange={handleImagenChange2} type="file" id="imagen2" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                                {formularioData.imagen2 && (
+                                                    <img src={formularioData.imagen2} alt="Imagen 2" />
+                                                )}
+                                            </div>
+
+                                            <div className="mb-4">
+                                                <label className="block text-sm font-medium text-gray-700">Observaciones del informe</label>
+                                                <textarea
+                                                    value={formularioData.observaciones}
+                                                    onChange={(e) => setFormularioData({ ...formularioData, observaciones: e.target.value })}
+                                                    className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                                />
+                                            </div>
+                                        </>
                                     )}
                                 </div>
-
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700">Imagen 2</label>
-                                    <input onChange={handleImagenChange2} type="file" id="imagen2" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                    {formularioData.imagen2 && (
-                                        <img src={formularioData.imagen2} alt="Imagen 2" />
-                                    )}
-                                </div>
-
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700">Observaciones del informe</label>
-                                    <textarea
-                                        value={formularioData.observaciones}
-                                        onChange={(e) => setFormularioData({ ...formularioData, observaciones: e.target.value })}
-                                        className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm"
-                                    />
-                                </div>
-                            </>
-                        )}
+                            )}
+                            <div className="flex justify-center gap-4">
+                                <button
+                                    onClick={handleRepetirInspeccion}
+                                    className="bg-amber-700 hover:bg-amber-800 px-4 py-2 rounded-md shadow-md text-white font-medium"
+                                >
+                                    Actualizar
+                                </button>
+                                <button
+                                    onClick={() => setShowConfirmModalRepetida(false)}
+                                    className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-md shadow-md text-white font-medium"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                )}
-                <div className="flex justify-center gap-4">
-                    <button
-                        onClick={handleRepetirInspeccion}
-                        className="bg-amber-700 hover:bg-amber-800 px-4 py-2 rounded-md shadow-md text-white font-medium"
-                    >
-                        Actualizar
-                    </button>
-                    <button
-                        onClick={() => setShowConfirmModalRepetida(false)}
-                        className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-md shadow-md text-white font-medium"
-                    >
-                        Cancelar
-                    </button>
                 </div>
-            </div>
-        </div>
-    </div>
-)}
+            )}
 
 
 
@@ -1514,122 +1513,134 @@ const [imagen2Original, setImagen2Original] = useState('');
                 <div className="w-full rounded-xl overflow-x-auto">
                     <div>
                         <div className="w-full bg-gray-300 text-gray-600 text-sm font-medium py-3 px-3 grid grid-cols-24">
-                            <div className='col-span-1'>Versión</div>
-                            <div className='col-span-1'>Nº</div>
+                            <div className='col-span-1 flex items-center text-center'>Versión</div>
+                            <div className='col-span-1 flex items-center text-center'>Nº</div>
 
-                            <div className="col-span-2">Actividad</div>
-                            <div className="col-span-4">Criterio de aceptación</div>
-                            <div className="col-span-1 text-center">Doc de referencia</div>
-                            <div className="col-span-2 text-center">Tipo de inspección</div>
-                            <div className="col-span-1 text-center">Punto</div>
-                            <div className="col-span-2 text-center">Responsable</div>
-                            <div className="col-span-2 text-center">Nombre usuario</div>
-                            <div className="col-span-2 text-center">Fecha</div>
+                            <div className="col-span-2 flex items-center text-center">Actividad</div>
+                            <div className="col-span-4 flex items-center text-center">Criterio de aceptación</div>
+                            <div className="col-span-1 flex items-center text-center">Doc de referencia</div>
+                            <div className="col-span-2 flex items-center text-center">Tipo de inspección</div>
+                            <div className="col-span-1 flex items-center text-center">Punto</div>
+                            <div className="col-span-2 flex items-center text-center">Responsable</div>
+                            <div className="col-span-2 flex items-center text-center">Nombre usuario</div>
+                            <div className="col-span-2 text-center flex items-center justify-center">Fecha</div>
 
-                            <div className="col-span-3 text-center">Comentarios</div>
+                            <div className="col-span-3 flex items-center justify-center">Comentarios</div>
                             {/* <div className="col-span-2 text-center">Estatus</div> */}
                             {/* <div className="col-span-1 text-center">Inspección</div> */}
-                            <div className="col-span-2 text-center">Estado</div>
-                            <div className="col-span-1 text-center">Informe</div>
+                            <div className="col-span-1 flex items-center text-center">Estado</div>
+                            <div className="col-span-1 flex items-center text-center">Informe</div>
+                            <div className="col-span-1 flex items-center justify-center">Edit  <button
+                                className="text-gray-500 ms-1"
+                                onClick={toggleActiveOnly}
+                            >
+                                {showActiveOnly ? <IoMdEye /> : <IoIosEyeOff />}
+                            </button></div>
 
                         </div>
 
 
                         <div>
-                           {ppi && ppi.actividades.map((actividad, indexActividad) => [
-    // Row for activity name
-    <div key={`actividad-${indexActividad}`} className="bg-gray-200 grid grid-cols-24 items-center px-3 py-3 border-b border-gray-200 text-sm font-medium">
-        <div className="text-right">
-            (V)
-        </div>
-        <div className="">
-            {actividad.numero}
-        </div>
-        <div className="col-span-12 text-xs">
-            {actividad.actividad}
-        </div>
-    </div>,
-    // Rows for subactividades
-    ...actividad.subactividades.filter(subactividad => subactividad.active).map((subactividad, indexSubactividad) => (
-        <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-24 items-center border-b border-gray-200 text-sm">
-            <div className="col-span-1 px-3 py-5 flex gap-2 items-center text-xs">
-                <button
-                    onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
-                    className="text-amber-700 font-bold font-bold py-1 px-1 text-xs"
-                >
-                    <FaRegEdit />
-                </button>
-                {subactividad.version}
-                {/* Combina el número de actividad y el índice de subactividad */}
-            </div>
-            <div className="col-span-1 px-3 py-5 ">
-                {subactividad.numero} {/* Combina el número de actividad y el índice de subactividad */}
-            </div>
-            <div className="col-span-2 px-3 py-5">
-                {subactividad.nombre}
-            </div>
-            <div className="col-span-4 px-3 py-5">
-                {subactividad.criterio_aceptacion}
-            </div>
-            <div className="col-span-1 px-3 py-5 text-center">
-                {subactividad.documentacion_referencia}
-            </div>
-            <div className="col-span-2 px-3 py-5 text-center">
-                {subactividad.tipo_inspeccion}
-            </div>
-            <div className="col-span-1 px-3 py-5 text-center">
-                {subactividad.punto}
-            </div>
-            <div className="col-span-2 text-center">
-                {subactividad.responsable || ''}
-            </div>
-            <div className="col-span-2 px-3 py-5 text-center">
-                {subactividad.nombre_usuario || ''}
-            </div>
-            <div className="col-span-2 px-5 py-5 text-center text-xs">
-                {/* Aquí asumo que quieres mostrar la fecha en esta columna, ajusta según sea necesario */}
-                {subactividad.fecha || ''}
-            </div>
-            <div className="col-span-3 px-5 py-5 text-center">
-                {subactividad.comentario || ''}
-            </div>
-            <div className="col-span-2 px-5 py-5 bg-white flex justify-center cursor-pointer" >
-                {subactividad.resultadoInspeccion ? (
-                    subactividad.resultadoInspeccion === "Apto" ? (
-                        <span
-                            className="w-full font-bold text-lg p-2 rounded  text-center text-green-500 cursor-pointer">
-                            Apto
-                        </span>
-                    ) : subactividad.resultadoInspeccion === "No apto" ? (
-                        <span
-                            className="w-full font-bold text-lg p-2 rounded w-full text-center text-red-600 cursor-pointer">
-                            No apto
-                        </span>
-                    ) : (
-                        <span
-                            onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
-                            className="w-full font-bold text-medium text-3xl p-2 rounded  w-full flex justify-center cursor-pointer">
-                            <IoMdAddCircle />
-                        </span>
-                    )
-                ) : (
-                    <span
-                        onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
-                        className="w-full font-bold text-medium text-3xl p-2 rounded  w-full flex justify-center cursor-pointer">
-                        <IoMdAddCircle />
-                    </span>
-                )}
-            </div>
-            <div className="col-span-1 px-2 py-5 bg-white flex justify-start cursor-pointer" >
-                {subactividad.formularioEnviado ? (
-                    <p
-                        onClick={() => handleMostrarIdRegistro(`apto-${indexActividad}-${indexSubactividad}`)}
-                        className='text-2xl'><FaFilePdf /></p>
-                ) : null}
-            </div>
-        </div>
-    ))
-])}
+                            {ppi && ppi.actividades.map((actividad, indexActividad) => [
+                                // Row for activity name
+                                <div key={`actividad-${indexActividad}`} className="bg-gray-100 grid grid-cols-24 px-4 py-3 items-center border-b border-gray-200 text-sm font-medium">
+                                    <div className="text-start">
+                                        (V)
+                                    </div>
+                                    <div className="">
+                                        {actividad.numero}
+                                    </div>
+                                    <div className="col-span-12 text-xs">
+                                        {actividad.actividad}
+                                    </div>
+                                </div>,
+                                // Rows for subactividades
+                                ...actividad.subactividades
+                                    .filter(subactividad => showActiveOnly ? subactividad.active : true)
+                                    .map((subactividad, indexSubactividad) => (
+                                        <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-24 items-center border-b border-gray-200 text-sm px-4 py-3">
+                                            <div className="col-span-1 text-start text-xs ps-2">
+                                                {subactividad.version}
+                                            </div>
+                                            <div className="col-span-1">
+                                                {subactividad.numero}
+                                            </div>
+                                            <div className="col-span-2">
+                                                {subactividad.nombre}
+                                            </div>
+                                            <div className="col-span-4">
+                                                {subactividad.criterio_aceptacion}
+                                            </div>
+                                            <div className="col-span-1 text-center">
+                                                {subactividad.documentacion_referencia}
+                                            </div>
+                                            <div className="col-span-2 text-center">
+                                                {subactividad.tipo_inspeccion}
+                                            </div>
+                                            <div className="col-span-1 text-center">
+                                                {subactividad.punto}
+                                            </div>
+                                            <div className="col-span-2 text-center">
+                                                {subactividad.responsable || ''}
+                                            </div>
+                                            <div className="col-span-2 text-center">
+                                                {subactividad.nombre_usuario || ''}
+                                            </div>
+                                            <div className="col-span-2 text-center text-xs">
+                                                {subactividad.fecha || ''}
+                                            </div>
+                                            <div className="col-span-3 text-center">
+                                                {subactividad.comentario || ''}
+                                            </div>
+                                            <div className="col-span-1 flex justify-center cursor-pointer">
+                                                {subactividad.resultadoInspeccion ? (
+                                                    subactividad.resultadoInspeccion === "Apto" ? (
+                                                        <span className="w-full font-bold text-xs rounded text-green-500 cursor-pointer">
+                                                            Apto
+                                                        </span>
+                                                    ) : subactividad.resultadoInspeccion === "No apto" ? (
+                                                        <span className="w-full font-bold text-xs rounded w-full text-red-600 cursor-pointer">
+                                                            No apto
+                                                        </span>
+                                                    ) : (
+                                                        <span
+                                                            onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                            className="w-full font-bold text-medium text-xl rounded w-full flex justify-center cursor-pointer"
+                                                        >
+                                                            <IoMdAddCircle />
+                                                        </span>
+                                                    )
+                                                ) : (
+                                                    <span
+                                                        onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                        className="w-full font-bold text-medium text-xl rounded w-full flex justify-center cursor-pointer"
+                                                    >
+                                                        <IoMdAddCircle />
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="col-span-1 bg-white flex justify-center cursor-pointer">
+                                                {subactividad.formularioEnviado ? (
+                                                    <p
+                                                        onClick={() => handleMostrarIdRegistro(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                        className='text-xl'
+                                                    >
+                                                        <FaFilePdf />
+                                                    </p>
+                                                ) : null}
+                                            </div>
+                                            <div className="col-span-1 text-center">
+                                                <button
+                                                    onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                    className="text-gray-500 font-bold text-xl"
+                                                >
+                                                    <FaRegEdit />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                            ])}
+
 
                         </div>
                     </div>
