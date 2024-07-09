@@ -192,106 +192,8 @@ function TablaPpi() {
     }, [ppi]);
 
 
-////////////////////////7 FUNCIONES APTA Y NO APTA ////////////////////////////////////////////////////////////////////7
 
-
-    const handleRepetirInspeccion = async () => {
-        if (!ppi || !subactividadToRepeat) return;
-
-        const [actividadIndex, subactividadIndex] = subactividadToRepeat.split('-').slice(1).map(Number);
-
-        let nuevoPpi = { ...ppi };
-        let subactividadSeleccionada = { ...nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] };
-
-        // Generar un nuevo ID para el registro duplicado
-        const nuevoIdRegistroFormulario = doc(collection(db, "registros")).id;
-
-        // Obtener los datos actuales
-        const duplicadoId = await duplicarRegistro(subactividadSeleccionada.idRegistroFormulario, nuevoIdRegistroFormulario);
-
-        if (!duplicadoId) {
-            console.error("Error duplicando el registro en Firestore.");
-            return;
-        }
-
-        // Obtener la versión más alta para la actividad específica
-        const subactividadesMismaActividad = nuevoPpi.actividades[actividadIndex].subactividades
-            .filter(subact => subact.numero === subactividadSeleccionada.numero);
-
-        // Verificar si la subactividad es "no apta" y tiene una versión rechazada
-        const rejectedSubactividad = subactividadesMismaActividad.find(subact => subact.motivoVersion === 'rechazada');
-
-        let newEditVersion;
-        let newRejectedVersion;
-
-        // Caso 1: Si existe una subactividad rechazada
-        if (rejectedSubactividad) {
-            // Usar la versión de la subactividad rechazada para la subactividad editada
-            newEditVersion = rejectedSubactividad.version;
-
-            // Determinar el nuevo número de versión para la subactividad rechazada
-            newRejectedVersion = (parseInt(rejectedSubactividad.version) + 1).toString();
-
-            // Actualizar la subactividad rechazada con el nuevo número de versión
-            rejectedSubactividad.version = newRejectedVersion;
-
-            // Caso 2: Si no existe una subactividad rechazada
-        } else {
-            // Usar la versión más alta actual + 1 para la subactividad editada
-            newEditVersion = (Math.max(...subactividadesMismaActividad.map(subact => parseInt(subact.version))) + 1).toString();
-        }
-
-        // Crear la nueva subactividad con los valores editados
-        let nuevaSubactividadEditada = {
-            ...subactividadSeleccionada,
-            nombre: subactividadSeleccionada.nombre,
-            criterio_aceptacion: subactividadSeleccionada.criterio_aceptacion,
-            documentacion_referencia: subactividadSeleccionada.documentacion_referencia,
-            tipo_inspeccion: subactividadSeleccionada.tipo_inspeccion,
-            punto: subactividadSeleccionada.punto,
-            responsable: subactividadSeleccionada.responsable,
-            comentario: subactividadSeleccionada.comentario,
-            edited: true,  // Marcar como editada
-            resultadoInspeccion: subactividadSeleccionada.resultadoInspeccion,
-            idRegistroFormulario: nuevoIdRegistroFormulario,  // Asignar el nuevo ID del registro duplicado
-            version: newEditVersion, // Asignar la nueva versión para la subactividad editada
-            active: true, // Esta es la versión activa
-            originalId: subactividadSeleccionada.originalId || subactividadSeleccionada.idRegistroFormulario, // Mantener el ID original
-            motivoVersion: 'editada',  // Actualizar el campo aquí
-        };
-
-        // Actualizar la subactividad seleccionada para que no esté activa
-        nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = {
-            ...subactividadSeleccionada,
-            active: false // Marcar la versión anterior como no activa
-        };
-
-        // Añadir la nueva subactividad con los valores editados después de la original
-        nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividadEditada);
-
-        // Actualizar el nuevo registro con las imágenes y observaciones si hay nuevas imágenes
-        const registroDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
-        const updateData = {
-            edited: true,  // Marcar como editada
-            version: nuevaSubactividadEditada.version,
-            active: true, // Esta es la versión activa
-            originalId: nuevaSubactividadEditada.originalId,
-            motivoVersion: 'editada',  // Actualizar el campo aquí
-        };
-        if (subactividadSeleccionada.observaciones) updateData.observaciones = subactividadSeleccionada.observaciones;
-        if (subactividadSeleccionada.imagen) updateData.imagen = subactividadSeleccionada.imagen;
-        if (subactividadSeleccionada.imagen2) updateData.imagen2 = subactividadSeleccionada.imagen2;
-        await updateDoc(registroDocRef, updateData);
-
-        console.log("Datos actualizados en el nuevo registro:", updateData);
-
-        await actualizarFormularioEnFirestore(nuevoPpi);
-
-        setPpi(nuevoPpi);
-        setShowConfirmModalRepetida(false);
-    };
-
-const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspeccion) => {
+    const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspeccion) => {
         if (!ppi || !currentSubactividadId) {
             return;
         }
@@ -327,8 +229,9 @@ const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspec
             };
             nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = nuevaSubactividad;
 
-            // Asignar la nueva versión como una unidad más que la versión de la subactividad seleccionada
-            let nuevaVersion = (parseInt(subactividadSeleccionada.version) + 1).toString();
+            let nuevaVersion = nuevoPpi.actividades[actividadIndex].subactividades.reduce((maxVersion, subactividad) => {
+                return Math.max(maxVersion, parseInt(subactividad.version));
+            }, 0) + 1;
 
             let nuevaSubactividadRepetida = {
                 ...nuevaSubactividad,
@@ -361,12 +264,11 @@ const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspec
         await actualizarFormularioEnFirestore(nuevoPpi);
         setPpi(nuevoPpi);
     };
-    
 
 
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 
@@ -1188,6 +1090,37 @@ const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspec
     const [subactividadSeleccionada, setSubactividadSeleccionada] = useState(null);
 
 
+    const openConfirmModal = async (subactividadId) => {
+        setSubactividadToRepeat(subactividadId);
+
+        const [actividadIndex, subactividadIndex] = subactividadId.split('-').slice(1).map(Number);
+        const subactividad = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
+
+        const formularioData = await obtenerDatosFormulario(subactividad.idRegistroFormulario);
+
+        setSubactividadSeleccionada(subactividad);
+        setActividadNombre(subactividad.nombre || '');
+        setCriterioAceptacion(subactividad.criterio_aceptacion || '');
+        setDocReferencia(subactividad.documentacion_referencia || '');
+        setTipoInspeccion(subactividad.tipo_inspeccion || '');
+        setPunto(subactividad.punto || '');
+        setResponsable(subactividad.responsable || '');
+        setAptoNoapto(subactividad.resultadoInspeccion || '');
+        setNombre_usuario_edit(subactividad.nombre_usuario || '');
+        setComentario(subactividad.comentario || '');
+        setFormularioData(formularioData || {});
+
+        // Guardar las imágenes originales
+        setImagenOriginal(formularioData.imagen || '');
+        setImagen2Original(formularioData.imagen2 || '');
+
+        setShowConfirmModalRepetida(true);
+    };
+
+
+
+
+
     const duplicarRegistro = async (idRegistroFormulario, nuevoIdRegistroFormulario) => {
         try {
             const docRef = doc(db, "registros", idRegistroFormulario);
@@ -1233,51 +1166,74 @@ const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspec
 
 
 
+    const handleRepetirInspeccion = async () => {
+        if (!ppi || !subactividadToRepeat) return;
 
+        const [actividadIndex, subactividadIndex] = subactividadToRepeat.split('-').slice(1).map(Number);
 
+        let nuevoPpi = { ...ppi };
+        let subactividadSeleccionada = { ...nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] };
 
-   
-const [subActividadReference, setSubActividadreference] = useState({})
+        // Generar un nuevo ID para el registro duplicado
+        const nuevoIdRegistroFormulario = doc(collection(db, "registros")).id;
 
-console.log(subActividadReference, '************ reference')
+        // Obtener datos actuales
+        const duplicadoId = await duplicarRegistro(subactividadSeleccionada.idRegistroFormulario, nuevoIdRegistroFormulario);
 
-    const openConfirmModal = async (subactividadId) => {
-        setSubactividadToRepeat(subactividadId);
+        if (!duplicadoId) {
+            console.error("Error al duplicar el registro en Firestore.");
+            return;
+        }
 
-        const [actividadIndex, subactividadIndex] = subactividadId.split('-').slice(1).map(Number);
-        const subactividad = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
-        // comprobar sub actividad
+        // Crear la nueva subactividad con los valores editados
+        let nuevaSubactividad = {
+            ...subactividadSeleccionada,
+            nombre: actividadNombre,
+            criterio_aceptacion: criterioAceptacion,
+            documentacion_referencia: docReferencia,
+            tipo_inspeccion: tipoInspeccion,
+            punto: punto,
+            responsable: responsable,
+            comentario: comentario,
+            edited: true,  // Asignar el valor edited: true
+            resultadoInspeccion: aptoNoapto,
+            idRegistroFormulario: nuevoIdRegistroFormulario,  // Asignar el nuevo ID del registro duplicado
+            version: (parseInt(subactividadSeleccionada.version) + 1).toString(), // Incrementar la versión
+            active: true, // Esta es la versión activa
+            originalId: subactividadSeleccionada.originalId || subactividadSeleccionada.idRegistroFormulario, // Mantener el ID original
+            motivoVersion: 'editada',  // Actualizar el campo aquí
+        };
 
-        console.log(subactividadId, '**********************')
-        console.log(subactividad, '**********************')
-        setSubActividadreference(subactividad)
-        // // Aquí agregamos el console.log
-        // console.log('Actividad seleccionada:', ppi.actividades[actividadIndex]);
-        // console.log('Subactividad seleccionada:', subactividad);
-        // console.log('Versión de la subactividad seleccionada:', subactividad.version);
-        // console.log('Nombre de la subactividad seleccionada:', subactividad.nombre);
+        // Actualizar la subactividad seleccionada para que no esté activa
+        nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = {
+            ...subactividadSeleccionada,
+            active: false // Marcar la versión anterior como no activa
+        };
 
-        const formularioData = await obtenerDatosFormulario(subactividad.idRegistroFormulario);
+        // Añadir la nueva subactividad con los valores editados después de la original
+        nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividad);
 
-        setSubactividadSeleccionada(subactividad);
-        setActividadNombre(subactividad.nombre || '');
-        setCriterioAceptacion(subactividad.criterio_aceptacion || '');
-        setDocReferencia(subactividad.documentacion_referencia || '');
-        setTipoInspeccion(subactividad.tipo_inspeccion || '');
-        setPunto(subactividad.punto || '');
-        setResponsable(subactividad.responsable || '');
-        setAptoNoapto(subactividad.resultadoInspeccion || '');
-        setNombre_usuario_edit(subactividad.nombre_usuario || '');
-        setComentario(subactividad.comentario || '');
-        setFormularioData(formularioData || {});
+        // Actualizar el nuevo registro con las imágenes y observaciones si hay nuevas imágenes
+        const registroDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
+        const updateData = {
+            observaciones: formularioData.observaciones,
+            edited: true,  // Asignar el valor edited: true
+            version: nuevaSubactividad.version,
+            active: true, // Esta es la versión activa
+            originalId: nuevaSubactividad.originalId,
+            motivoVersion: 'editada',  // Actualizar el campo aquí
+        };
+        if (imagen) updateData.imagen = imagen;
+        if (imagen2) updateData.imagen2 = imagen2;
+        await updateDoc(registroDocRef, updateData);
 
-        // Guardar las imágenes originales
-        setImagenOriginal(formularioData.imagen || '');
-        setImagen2Original(formularioData.imagen2 || '');
+        console.log("Datos actualizados en el nuevo registro:", updateData);
 
-        setShowConfirmModalRepetida(true);
+        await actualizarFormularioEnFirestore(nuevoPpi);
+
+        setPpi(nuevoPpi);
+        setShowConfirmModalRepetida(false);
     };
-
 
 
     const actualizarFormularioEnFirestore = async (nuevoPpi) => {
