@@ -198,52 +198,50 @@ function TablaPpi() {
 
     const handleRepetirInspeccion = async () => {
         if (!ppi || !subactividadToRepeat) return;
-
+    
         const [actividadIndex, subactividadIndex] = subactividadToRepeat.split('-').slice(1).map(Number);
-
+    
         let nuevoPpi = { ...ppi };
         let subactividadSeleccionada = { ...nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] };
-
+    
         // Generar un nuevo ID para el registro duplicado
         const nuevoIdRegistroFormulario = doc(collection(db, "registros")).id;
-
+    
         // Obtener los datos actuales
         const duplicadoId = await duplicarRegistro(subactividadSeleccionada.idRegistroFormulario, nuevoIdRegistroFormulario);
-
+    
         if (!duplicadoId) {
             console.error("Error duplicando el registro en Firestore.");
             return;
         }
-
+    
         // Obtener la versión más alta para la actividad específica
         const subactividadesMismaActividad = nuevoPpi.actividades[actividadIndex].subactividades
             .filter(subact => subact.numero === subactividadSeleccionada.numero);
-
+    
         // Verificar si la subactividad es "no apta" y tiene una versión rechazada
         const rejectedSubactividad = subactividadesMismaActividad.find(subact => subact.motivoVersion === 'rechazada');
-
+    
         let newEditVersion;
         let newRejectedVersion;
-
+    
         // Caso 1: Si existe una subactividad rechazada
         if (rejectedSubactividad) {
             // Usar la versión de la subactividad rechazada para la subactividad editada
             newEditVersion = rejectedSubactividad.version;
-
+    
             // Determinar el nuevo número de versión para la subactividad rechazada
             newRejectedVersion = (parseInt(rejectedSubactividad.version) + 1).toString();
-
+    
             // Actualizar la subactividad rechazada con el nuevo número de versión
             rejectedSubactividad.version = newRejectedVersion;
-
-            // Caso 2: Si no existe una subactividad rechazada
+    
+        // Caso 2: Si no existe una subactividad rechazada
         } else {
             // Usar la versión más alta actual + 1 para la subactividad editada
             newEditVersion = (Math.max(...subactividadesMismaActividad.map(subact => parseInt(subact.version))) + 1).toString();
         }
-
-
-
+    
         // Crear la nueva subactividad con los valores editados
         let nuevaSubactividadEditada = {
             ...subactividadSeleccionada,
@@ -263,10 +261,10 @@ function TablaPpi() {
             originalId: subactividadSeleccionada.originalId || subactividadSeleccionada.idRegistroFormulario, // Mantener el ID original
             motivoVersion: 'editada',  // Actualizar el campo aquí
         };
-
+    
         let subAct = subactividadSeleccionada.motivoVersion;
         let resultadoInspeccion = subactividadSeleccionada.resultadoInspeccion;
-
+    
         // Logs basados en las condiciones
         if (subAct === 'original' && resultadoInspeccion === 'Apto') {
             console.log("La actividad editada es original y Apto");
@@ -275,7 +273,7 @@ function TablaPpi() {
                 motivoVersion: 'editada',
             };
         }
-
+    
         if (subAct === 'rechazada' && resultadoInspeccion === 'Apto') {
             console.log("La actividad editada es rechazada y Apto");
             nuevaSubactividadEditada = {
@@ -284,18 +282,18 @@ function TablaPpi() {
                 motivoVersion: 'editada',
             };
         }
-
+    
         console.log("Observaciones guardadas en PASO 2:", formularioData.observaciones);
-
+    
         // Actualizar la subactividad seleccionada para que no esté activa
         nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = {
             ...subactividadSeleccionada,
             active: false // Marcar la versión anterior como no activa
         };
-
+    
         // Añadir la nueva subactividad con los valores editados después de la original
         nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividadEditada);
-
+    
         // Actualizar el nuevo registro con las imágenes y observaciones si hay nuevas imágenes
         const registroDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
         const updateData = {
@@ -305,23 +303,21 @@ function TablaPpi() {
             originalId: nuevaSubactividadEditada.originalId,
             motivoVersion: 'editada',  // Actualizar el campo aquí
             observaciones: formularioData.observaciones,
-            comentario: comentario,
-            imagen: imagen,
-            imagen2: imagen2,
+            comentario: comentario, 
         };
         if (subactividadSeleccionada.imagen) updateData.imagen = subactividadSeleccionada.imagen;
         if (subactividadSeleccionada.imagen2) updateData.imagen2 = subactividadSeleccionada.imagen2;
         await updateDoc(registroDocRef, updateData);
-
+    
         await actualizarFormularioEnFirestore(nuevoPpi);
-
+    
         // Aquí añadimos el console.log para verificar si se ha agregado a registros
         console.log('Registro actualizado en Firestore:', updateData);
-
+    
         setPpi(nuevoPpi);
         setShowConfirmModalRepetida(false);
     };
-
+    
 
 
     const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspeccion) => {
@@ -1119,8 +1115,8 @@ function TablaPpi() {
 
 
     //! ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    const [imagen, setImagen] = useState('');
-    const [imagen2, setImagen2] = useState('');
+    const [imagen, setImagen] = useState(null);
+    const [imagen2, setImagen2] = useState(null);
 
 
     const handleImagenChange = async (e) => {
@@ -1245,26 +1241,16 @@ function TablaPpi() {
 
     const [subActividadReference, setSubActividadreference] = useState({})
 
-    const [idRegistroImagen, setIdRegistroImagen] = useState('')
-    const [imagen1Url, setImagen1Url] = useState('');
-    const [imagen2Url, setImagen2Url] = useState('');
-
-
 
     const openConfirmModal = async (subactividadId) => {
         setSubactividadToRepeat(subactividadId);
 
         const [actividadIndex, subactividadIndex] = subactividadId.split('-').slice(1).map(Number);
         const subactividad = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
-        console.log(subactividad, '************************++');
-        setIdRegistroImagen(subactividad);
+        // comprobar sub actividad
+        setSubActividadreference(subactividad)
 
-        // Comprobar sub actividad
-        setSubActividadreference(subactividad);
-
-        // Obtener el documento del formulario desde Firestore
         const formularioData = await obtenerDatosFormulario(subactividad.idRegistroFormulario);
-        console.log(formularioData)
 
         setSubactividadSeleccionada(subactividad);
         setActividadNombre(subactividad.nombre || '');
@@ -1277,12 +1263,12 @@ function TablaPpi() {
         setNombre_usuario_edit(subactividad.nombre_usuario || '');
         setComentario(subactividad.comentario || '');
         setFormularioData({ ...formularioData, observaciones: subactividad.observaciones || '' });
-        // Establecer las URLs de las imágenes en el estado
-        setImagen1Url(formularioData.imagen || '');
-        setImagen2Url(formularioData.imagen2 || '');
-        setShowConfirmModalRepetida(true);
 
-        console.log(formularioData);
+        // Guardar las imágenes originales
+        setImagenOriginal(formularioData.imagen || '');
+        setImagen2Original(formularioData.imagen2 || '');
+
+        setShowConfirmModalRepetida(true);
     };
 
 
@@ -1347,7 +1333,8 @@ function TablaPpi() {
     };
 
 
-
+    const [imagenOriginal, setImagenOriginal] = useState('');
+    const [imagen2Original, setImagen2Original] = useState('');
 
     const [showActiveOnly, setShowActiveOnly] = useState(true);
 
@@ -1466,22 +1453,18 @@ function TablaPpi() {
                                     {formularioData && (
                                         <>
                                             <div className="mb-4">
-                                                <label className="block text-sm font-medium text-gray-700 flex gap-1 items-center">
-                                                    <span><FaImage className="text-gray-500 mr-2" /></span>Imagen 1
-                                                </label>
+                                                <label className="block text-sm font-medium text-gray-700 flex gap-1 items-center"><span> <FaImage className="text-gray-500 mr-2" /></span>Imagen 1</label>
                                                 <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                                {imagen1Url && (
-                                                    <img src={imagen1Url} alt="Imagen 1" className="mt-2" />
+                                                {formularioData.imagen && (
+                                                    <img src={formularioData.imagen} alt="Imagen 1" />
                                                 )}
                                             </div>
 
                                             <div className="mb-4">
-                                                <label className="block text-sm font-medium text-gray-700 flex gap-1 items-center">
-                                                    <span><FaImage className="text-gray-500 mr-2" /></span>Imagen 2
-                                                </label>
+                                                <label className="block text-sm font-medium text-gray-700 flex gap-1 items-center"><span> <FaImage className="text-gray-500 mr-2" /></span>Imagen 2</label>
                                                 <input onChange={handleImagenChange2} type="file" id="imagen2" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                                {imagen2Url && (
-                                                    <img src={imagen2Url} alt="Imagen 2" className="mt-2" />
+                                                {formularioData.imagen2 && (
+                                                    <img src={formularioData.imagen2} alt="Imagen 2" />
                                                 )}
                                             </div>
 
@@ -2071,7 +2054,6 @@ function TablaPpi() {
 }
 
 export default TablaPpi;
-
 
 
 
