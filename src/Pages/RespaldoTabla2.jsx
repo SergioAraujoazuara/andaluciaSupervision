@@ -302,8 +302,7 @@ function TablaPpi() {
             active: true, // Esta es la versión activa
             originalId: nuevaSubactividadEditada.originalId,
             motivoVersion: 'editada',  // Actualizar el campo aquí
-            observaciones: formularioData.observaciones,
-            comentario: comentario, 
+            observaciones: formularioData.observaciones, 
         };
         if (subactividadSeleccionada.imagen) updateData.imagen = subactividadSeleccionada.imagen;
         if (subactividadSeleccionada.imagen2) updateData.imagen2 = subactividadSeleccionada.imagen2;
@@ -511,7 +510,7 @@ function TablaPpi() {
             pkFinal: loteInfo.pkFinal,
             actividad: actividadSeleccionada.actividad,
             num_actividad: actividadSeleccionada.numero,
-            version: subactividadSeleccionada.version,
+            version_subactividad: subactividadSeleccionada.version,
             numero_subactividad: subactividadSeleccionada.numero,
             subactividad: subactividadSeleccionada.nombre, // Nombre de la subactividad seleccionada
             criterio_aceptacion: subactividadSeleccionada.criterio_aceptacion,
@@ -896,7 +895,7 @@ function TablaPpi() {
         currentPage = result.page;
         currentY = result.lastY;
 
-        result = addText(`(V-${documentoFormulario.version}) ${documentoFormulario.numero_subactividad}. ${documentoFormulario.subactividad}`, 135, currentY, 11, regularFont, currentPage);
+        result = addText(`(V-${documentoFormulario.version_subactividad}) ${documentoFormulario.numero_subactividad}. ${documentoFormulario.subactividad}`, 135, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
@@ -2054,7 +2053,6 @@ function TablaPpi() {
 }
 
 export default TablaPpi;
-
 
 
 
