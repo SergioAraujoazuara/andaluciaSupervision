@@ -193,92 +193,57 @@ function TablaPpi() {
     }, [ppi]);
 
 
-////////////////////////7 FUNCIONES APTA Y NO APTA ////////////////////////////////////////////////////////////////////7
+    ////////////////////////7 FUNCIONES APTA Y NO APTA ////////////////////////////////////////////////////////////////////7
 
 
-const handleRepetirInspeccion = async () => {
-    if (!ppi || !subactividadToRepeat) return;
-
-    const [actividadIndex, subactividadIndex] = subactividadToRepeat.split('-').slice(1).map(Number);
-
-    let nuevoPpi = { ...ppi };
-    let subactividadSeleccionada = { ...nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] };
-
-    // Guardar el estado anterior
-    const estadoAnterior = {
-        motivoVersion: subactividadSeleccionada.motivoVersion,
-        resultadoInspeccion: subactividadSeleccionada.resultadoInspeccion
-    };
-
-    // Generar un nuevo ID para el registro duplicado
-    const nuevoIdRegistroFormulario = doc(collection(db, "registros")).id;
-
-    // Obtener los datos actuales
-    const duplicadoId = await duplicarRegistro(subactividadSeleccionada.idRegistroFormulario, nuevoIdRegistroFormulario);
-
-    if (!duplicadoId) {
-        console.error("Error duplicando el registro en Firestore.");
-        return;
-    }
-
-    // Obtener la versión más alta para la actividad específica
-    const subactividadesMismaActividad = nuevoPpi.actividades[actividadIndex].subactividades
-        .filter(subact => subact.numero === subactividadSeleccionada.numero);
-
-    // Verificar si la subactividad es "no apta" y tiene una versión rechazada
-    const rejectedSubactividad = subactividadesMismaActividad.find(subact => subact.motivoVersion === 'rechazada');
-
-    let newEditVersion;
-    let newRejectedVersion;
-
-    // Caso 1: Si existe una subactividad rechazada
-    if (rejectedSubactividad) {
-        // Usar la versión de la subactividad rechazada para la subactividad editada
-        newEditVersion = rejectedSubactividad.version;
-
-        // Determinar el nuevo número de versión para la subactividad rechazada
-        newRejectedVersion = (parseInt(rejectedSubactividad.version) + 1).toString();
-
-        // Actualizar la subactividad rechazada con el nuevo número de versión
-        rejectedSubactividad.version = newRejectedVersion;
-
-    // Caso 2: Si no existe una subactividad rechazada
-    } else {
-        // Usar la versión más alta actual + 1 para la subactividad editada
-        newEditVersion = (Math.max(...subactividadesMismaActividad.map(subact => parseInt(subact.version))) + 1).toString();
-    }
-
-    // Crear la nueva subactividad con los valores editados
-    let nuevaSubactividadEditada = {
-        ...subactividadSeleccionada,
-        nombre: subactividadSeleccionada.nombre,
-        criterio_aceptacion: subactividadSeleccionada.criterio_aceptacion,
-        documentacion_referencia: subactividadSeleccionada.documentacion_referencia,
-        tipo_inspeccion: subactividadSeleccionada.tipo_inspeccion,
-        punto: subactividadSeleccionada.punto,
-        responsable: subactividadSeleccionada.responsable,
-        comentario: subactividadSeleccionada.comentario,
-        edited: true,  // Marcar como editada
-        resultadoInspeccion: subactividadSeleccionada.resultadoInspeccion,
-        idRegistroFormulario: nuevoIdRegistroFormulario,  // Asignar el nuevo ID del registro duplicado
-        version: newEditVersion, // Asignar la nueva versión para la subactividad editada
-        active: true, // Esta es la versión activa
-        originalId: subactividadSeleccionada.originalId || subactividadSeleccionada.idRegistroFormulario, // Mantener el ID original
-        motivoVersion: 'editada',  // Actualizar el campo aquí
-    };
-
-    let subAct = subactividadSeleccionada.motivoVersion
-    let subVersion = subactividadSeleccionada.version
-    let resultadoInspeccion = subactividadSeleccionada.resultadoInspeccion
-    // console.log('Motivo Version: ', subAct)
-    // console.log('Numero Version: ', subVersion)
-    // console.log('Resultado: ', resultadoInspeccion)
-
-    // Logs basados en las condiciones
-
-    if (subAct === 'original' && resultadoInspeccion === 'Apto') {
-        console.log("La actividad editada es original y Apto");
-        nuevaSubactividadEditada = {
+    const handleRepetirInspeccion = async () => {
+        if (!ppi || !subactividadToRepeat) return;
+    
+        const [actividadIndex, subactividadIndex] = subactividadToRepeat.split('-').slice(1).map(Number);
+    
+        let nuevoPpi = { ...ppi };
+        let subactividadSeleccionada = { ...nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] };
+    
+        // Generar un nuevo ID para el registro duplicado
+        const nuevoIdRegistroFormulario = doc(collection(db, "registros")).id;
+    
+        // Obtener los datos actuales
+        const duplicadoId = await duplicarRegistro(subactividadSeleccionada.idRegistroFormulario, nuevoIdRegistroFormulario);
+    
+        if (!duplicadoId) {
+            console.error("Error duplicando el registro en Firestore.");
+            return;
+        }
+    
+        // Obtener la versión más alta para la actividad específica
+        const subactividadesMismaActividad = nuevoPpi.actividades[actividadIndex].subactividades
+            .filter(subact => subact.numero === subactividadSeleccionada.numero);
+    
+        // Verificar si la subactividad es "no apta" y tiene una versión rechazada
+        const rejectedSubactividad = subactividadesMismaActividad.find(subact => subact.motivoVersion === 'rechazada');
+    
+        let newEditVersion;
+        let newRejectedVersion;
+    
+        // Caso 1: Si existe una subactividad rechazada
+        if (rejectedSubactividad) {
+            // Usar la versión de la subactividad rechazada para la subactividad editada
+            newEditVersion = rejectedSubactividad.version;
+    
+            // Determinar el nuevo número de versión para la subactividad rechazada
+            newRejectedVersion = (parseInt(rejectedSubactividad.version) + 1).toString();
+    
+            // Actualizar la subactividad rechazada con el nuevo número de versión
+            rejectedSubactividad.version = newRejectedVersion;
+    
+        // Caso 2: Si no existe una subactividad rechazada
+        } else {
+            // Usar la versión más alta actual + 1 para la subactividad editada
+            newEditVersion = (Math.max(...subactividadesMismaActividad.map(subact => parseInt(subact.version))) + 1).toString();
+        }
+    
+        // Crear la nueva subactividad con los valores editados
+        let nuevaSubactividadEditada = {
             ...subactividadSeleccionada,
             nombre: subactividadSeleccionada.nombre,
             criterio_aceptacion: subactividadSeleccionada.criterio_aceptacion,
@@ -286,7 +251,8 @@ const handleRepetirInspeccion = async () => {
             tipo_inspeccion: subactividadSeleccionada.tipo_inspeccion,
             punto: subactividadSeleccionada.punto,
             responsable: subactividadSeleccionada.responsable,
-            comentario: subactividadSeleccionada.comentario,
+            comentario: comentario, // PASO 2 actualizar el input de comentario
+            observaciones: formularioData.observaciones, // PASO 2 actualizar el input de observaciones
             edited: true,  // Marcar como editada
             resultadoInspeccion: subactividadSeleccionada.resultadoInspeccion,
             idRegistroFormulario: nuevoIdRegistroFormulario,  // Asignar el nuevo ID del registro duplicado
@@ -296,133 +262,143 @@ const handleRepetirInspeccion = async () => {
             motivoVersion: 'editada',  // Actualizar el campo aquí
         };
     
-    }
-
-    if (subAct === 'rechazada' && resultadoInspeccion === 'Apto') {
-        console.log("La actividad editada es rechazada y Apto");
-        nuevaSubactividadEditada = {
+        let subAct = subactividadSeleccionada.motivoVersion;
+        let resultadoInspeccion = subactividadSeleccionada.resultadoInspeccion;
+    
+        // Logs basados en las condiciones
+        if (subAct === 'original' && resultadoInspeccion === 'Apto') {
+            console.log("La actividad editada es original y Apto");
+            nuevaSubactividadEditada = {
+                ...nuevaSubactividadEditada,
+                motivoVersion: 'editada',
+            };
+        }
+    
+        if (subAct === 'rechazada' && resultadoInspeccion === 'Apto') {
+            console.log("La actividad editada es rechazada y Apto");
+            nuevaSubactividadEditada = {
+                ...nuevaSubactividadEditada,
+                version: (parseInt(newEditVersion) + 1).toString(), // Asignar la nueva versión para la subactividad editada
+                motivoVersion: 'editada',
+            };
+        }
+    
+        console.log("Observaciones guardadas en PASO 2:", formularioData.observaciones);
+    
+        // Actualizar la subactividad seleccionada para que no esté activa
+        nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = {
             ...subactividadSeleccionada,
-            nombre: subactividadSeleccionada.nombre,
-            criterio_aceptacion: subactividadSeleccionada.criterio_aceptacion,
-            documentacion_referencia: subactividadSeleccionada.documentacion_referencia,
-            tipo_inspeccion: subactividadSeleccionada.tipo_inspeccion,
-            punto: subactividadSeleccionada.punto,
-            responsable: subactividadSeleccionada.responsable,
-            comentario: subactividadSeleccionada.comentario,
+            active: false // Marcar la versión anterior como no activa
+        };
+    
+        // Añadir la nueva subactividad con los valores editados después de la original
+        nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividadEditada);
+    
+        // Actualizar el nuevo registro con las imágenes y observaciones si hay nuevas imágenes
+        const registroDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
+        const updateData = {
             edited: true,  // Marcar como editada
-            resultadoInspeccion: subactividadSeleccionada.resultadoInspeccion,
-            idRegistroFormulario: nuevoIdRegistroFormulario,  // Asignar el nuevo ID del registro duplicado
-            version: (parseInt(newEditVersion) + 1).toString(), // Asignar la nueva versión para la subactividad editada
+            version: nuevaSubactividadEditada.version,
             active: true, // Esta es la versión activa
-            originalId: subactividadSeleccionada.originalId || subactividadSeleccionada.idRegistroFormulario, // Mantener el ID original
+            originalId: nuevaSubactividadEditada.originalId,
             motivoVersion: 'editada',  // Actualizar el campo aquí
+            observaciones: formularioData.observaciones, 
         };
-    }
+        if (subactividadSeleccionada.imagen) updateData.imagen = subactividadSeleccionada.imagen;
+        if (subactividadSeleccionada.imagen2) updateData.imagen2 = subactividadSeleccionada.imagen2;
+        await updateDoc(registroDocRef, updateData);
+    
+        await actualizarFormularioEnFirestore(nuevoPpi);
+    
+        // Aquí añadimos el console.log para verificar si se ha agregado a registros
+        console.log('Registro actualizado en Firestore:', updateData);
+    
+        setPpi(nuevoPpi);
+        setShowConfirmModalRepetida(false);
+    };
+    
 
-    // Actualizar la subactividad seleccionada para que no esté activa
-    nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = {
-        ...subactividadSeleccionada,
-        active: false // Marcar la versión anterior como no activa
+
+    const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspeccion) => {
+        if (!ppi || !currentSubactividadId) {
+            return;
+        }
+
+        const [actividadIndex, subactividadIndex] = currentSubactividadId.split('-').slice(1).map(Number);
+        let nuevoPpi = { ...ppi };
+        let subactividadSeleccionada = nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex];
+
+        let motivoVersionActual = subactividadSeleccionada.motivoVersion || 'original';
+
+        subactividadSeleccionada.formularioEnviado = formulario;
+        subactividadSeleccionada.idRegistroFormulario = idRegistroFormulario;
+        subactividadSeleccionada.resultadoInspeccion = resultadoInspeccion;
+        subactividadSeleccionada.fecha = fechaHoraActual;
+        subactividadSeleccionada.nombre_usuario = userName;
+        subactividadSeleccionada.signature = userSignature;
+        subactividadSeleccionada.firma = firma;
+        subactividadSeleccionada.comentario = comentario; // comentario input // PASO 1 para guardar info en la inspeccion
+        subactividadSeleccionada.observaciones = observaciones; // obsevaciones input // PASO 1 para guardar info en la inspeccion
+        subactividadSeleccionada.active = true;
+
+        console.log("Observaciones guardadas PASO 1:", observaciones);
+
+        if (resultadoInspeccion === "Apto") {
+            const loteRef = doc(db, "lotes", idLote);
+            await updateDoc(loteRef, {
+                actividadesAptas: increment(1)
+            });
+        }
+
+        if (resultadoInspeccion === "No apto") {
+            let nuevaSubactividad = {
+                ...subactividadSeleccionada,
+                active: false,
+                motivoVersion: motivoVersionActual
+            };
+            nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = nuevaSubactividad;
+
+            // Asignar la nueva versión como una unidad más que la versión de la subactividad seleccionada
+            let nuevaVersion = (parseInt(subactividadSeleccionada.version) + 1).toString();
+
+            let nuevaSubactividadRepetida = {
+                ...nuevaSubactividad,
+                version: nuevaVersion,
+                active: true,
+                comentario: '',
+                observaciones: '',
+                resultadoInspeccion: '',
+                nombre_usuario: '',
+                signature: '',
+                firma: '',
+                fecha: '',
+                formularioEnviado: false,
+                motivoVersion: 'rechazada'
+            };
+
+            nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividadRepetida);
+        }
+
+        // Lógica adicional para manejar la edición de versiones relacionadas
+        if (motivoVersionActual !== 'original' && resultadoInspeccion === "Apto") {
+            nuevoPpi.actividades[actividadIndex].subactividades.forEach((subactividad, index) => {
+                if (index > subactividadIndex && subactividad.motivoVersion === 'rechazada') {
+                    subactividad.version = nuevaVersion;
+                    subactividad.active = false;
+                    subactividad.motivoVersion = 'editada';
+                }
+            });
+        }
+
+
+
+        await actualizarFormularioEnFirestore(nuevoPpi);
+        setPpi(nuevoPpi);
     };
 
-    // Añadir la nueva subactividad con los valores editados después de la original
-    nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividadEditada);
-
-    // Actualizar el nuevo registro con las imágenes y observaciones si hay nuevas imágenes
-    const registroDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
-    const updateData = {
-        edited: true,  // Marcar como editada
-        version: nuevaSubactividadEditada.version,
-        active: true, // Esta es la versión activa
-        originalId: nuevaSubactividadEditada.originalId,
-        motivoVersion: 'editada',  // Actualizar el campo aquí
-    };
-    if (subactividadSeleccionada.observaciones) updateData.observaciones = subactividadSeleccionada.observaciones;
-    if (subactividadSeleccionada.imagen) updateData.imagen = subactividadSeleccionada.imagen;
-    if (subactividadSeleccionada.imagen2) updateData.imagen2 = subactividadSeleccionada.imagen2;
-    await updateDoc(registroDocRef, updateData);
-
-    await actualizarFormularioEnFirestore(nuevoPpi);
-
-    setPpi(nuevoPpi);
-    setShowConfirmModalRepetida(false);
-};
 
 
-const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspeccion) => {
-    if (!ppi || !currentSubactividadId) {
-        return;
-    }
-
-    const [actividadIndex, subactividadIndex] = currentSubactividadId.split('-').slice(1).map(Number);
-    let nuevoPpi = { ...ppi };
-    let subactividadSeleccionada = nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex];
-
-    let motivoVersionActual = subactividadSeleccionada.motivoVersion || 'original';
-
-    subactividadSeleccionada.formularioEnviado = formulario;
-    subactividadSeleccionada.idRegistroFormulario = idRegistroFormulario;
-    subactividadSeleccionada.resultadoInspeccion = resultadoInspeccion;
-    subactividadSeleccionada.fecha = fechaHoraActual;
-    subactividadSeleccionada.nombre_usuario = userName;
-    subactividadSeleccionada.signature = userSignature;
-    subactividadSeleccionada.firma = firma;
-    subactividadSeleccionada.comentario = comentario;
-    subactividadSeleccionada.active = true;
-
-    if (resultadoInspeccion === "Apto") {
-        const loteRef = doc(db, "lotes", idLote);
-        await updateDoc(loteRef, {
-            actividadesAptas: increment(1)
-        });
-    }
-
-    if (resultadoInspeccion === "No apto") {
-        let nuevaSubactividad = {
-            ...subactividadSeleccionada,
-            active: false,
-            motivoVersion: motivoVersionActual
-        };
-        nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = nuevaSubactividad;
-
-        // Asignar la nueva versión como una unidad más que la versión de la subactividad seleccionada
-        let nuevaVersion = (parseInt(subactividadSeleccionada.version) + 1).toString();
-
-        let nuevaSubactividadRepetida = {
-            ...nuevaSubactividad,
-            version: nuevaVersion,
-            active: true,
-            comentario: '',
-            resultadoInspeccion: '',
-            nombre_usuario: '',
-            signature: '',
-            firma: '',
-            fecha: '',
-            formularioEnviado: false,
-            motivoVersion: 'rechazada'
-        };
-
-        nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividadRepetida);
-    }
-
-    // Lógica adicional para manejar la edición de versiones relacionadas
-    if (motivoVersionActual !== 'original' && resultadoInspeccion === "Apto") {
-        nuevoPpi.actividades[actividadIndex].subactividades.forEach((subactividad, index) => {
-            if (index > subactividadIndex && subactividad.motivoVersion === 'rechazada') {
-                subactividad.version = nuevaVersion;
-                subactividad.active = false;
-                subactividad.motivoVersion = 'editada';
-            }
-        });
-    }
-
-    await actualizarFormularioEnFirestore(nuevoPpi);
-    setPpi(nuevoPpi);
-};
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     const [modalInforme, setModalInforme] = useState(false)
@@ -488,7 +464,7 @@ const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspec
                         setCierreInspeccion(false);
                     }
 
-                
+
                 } else {
                     console.log("No se encontró el lote con el ID:", idLote);
                 }
@@ -1261,8 +1237,8 @@ const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspec
 
 
 
-   
-const [subActividadReference, setSubActividadreference] = useState({})
+
+    const [subActividadReference, setSubActividadreference] = useState({})
 
 
     const openConfirmModal = async (subactividadId) => {
@@ -1285,7 +1261,7 @@ const [subActividadReference, setSubActividadreference] = useState({})
         setAptoNoapto(subactividad.resultadoInspeccion || '');
         setNombre_usuario_edit(subactividad.nombre_usuario || '');
         setComentario(subactividad.comentario || '');
-        setFormularioData(formularioData || {});
+        setFormularioData({ ...formularioData, observaciones: subactividad.observaciones || '' });
 
         // Guardar las imágenes originales
         setImagenOriginal(formularioData.imagen || '');
@@ -1385,7 +1361,7 @@ const [subActividadReference, setSubActividadreference] = useState({})
                                     <div className="mb-4">
                                         <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Actividad</label>
                                         <input
-                                        readOnly
+                                            readOnly
                                             type="text"
                                             value={actividadNombre}
                                             className="mt-1 p-2 w-full bg-gray-200 border border-gray-300 rounded-md shadow-sm sm:text-sm"
@@ -1395,7 +1371,7 @@ const [subActividadReference, setSubActividadreference] = useState({})
                                     <div className="mb-4">
                                         <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Criterio de aceptación</label>
                                         <input
-                                        readOnly
+                                            readOnly
                                             type="text"
                                             value={criterioAceptacion}
                                             className="mt-1 p-2 w-full bg-gray-200 border border-gray-300 rounded-md shadow-sm sm:text-sm"
@@ -1405,7 +1381,7 @@ const [subActividadReference, setSubActividadreference] = useState({})
                                     <div className="mb-4">
                                         <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Documentación de referencia</label>
                                         <input
-                                        readOnly
+                                            readOnly
                                             type="text"
                                             value={docReferencia}
                                             className="mt-1 p-2 w-full bg-gray-200  border border-gray-300 rounded-md shadow-sm sm:text-sm"
@@ -1415,7 +1391,7 @@ const [subActividadReference, setSubActividadreference] = useState({})
                                     <div className="mb-4">
                                         <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Tipo de inspección</label>
                                         <input
-                                        readOnly
+                                            readOnly
                                             type="text"
                                             value={tipoInspeccion}
                                             className="mt-1 p-2 w-full bg-gray-200  border border-gray-300 rounded-md shadow-sm sm:text-sm"
@@ -1425,7 +1401,7 @@ const [subActividadReference, setSubActividadreference] = useState({})
                                     <div className="mb-4">
                                         <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Punto</label>
                                         <input
-                                        readOnly
+                                            readOnly
                                             type="text"
                                             value={punto}
                                             className="mt-1 p-2 w-full bg-gray-200  border border-gray-300 rounded-md shadow-sm sm:text-sm"
@@ -1435,7 +1411,7 @@ const [subActividadReference, setSubActividadreference] = useState({})
                                     <div className="mb-4">
                                         <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Responsable</label>
                                         <input
-                                        readOnly
+                                            readOnly
                                             type="text"
                                             value={responsable}
                                             className="mt-1 p-2 w-full bg-gray-200  border border-gray-300 rounded-md shadow-sm sm:text-sm"
@@ -1445,19 +1421,19 @@ const [subActividadReference, setSubActividadreference] = useState({})
                                     <div className="mb-4">
                                         <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Nombre</label>
                                         <input
-                                        readOnly
+                                            readOnly
                                             type="text"
                                             value={nombre_usuario_edit}
                                             className="mt-1 p-2 w-full bg-gray-200  border border-gray-300 rounded-md shadow-sm sm:text-sm"
                                         />
                                     </div>
 
-                                    
+
 
                                     <div className="mb-4">
                                         <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Resultado inspección:</label>
                                         <input
-                                        readOnly
+                                            readOnly
                                             type="text"
                                             value={aptoNoapto}
                                             onChange={(e) => setAptoNoapto(e.target.value)}
@@ -1484,7 +1460,7 @@ const [subActividadReference, setSubActividadreference] = useState({})
                                             </div>
 
                                             <div className="mb-4">
-                                            <label className="block text-sm font-medium text-gray-700 flex gap-1 items-center"><span> <FaImage className="text-gray-500 mr-2" /></span>Imagen 2</label>
+                                                <label className="block text-sm font-medium text-gray-700 flex gap-1 items-center"><span> <FaImage className="text-gray-500 mr-2" /></span>Imagen 2</label>
                                                 <input onChange={handleImagenChange2} type="file" id="imagen2" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                                 {formularioData.imagen2 && (
                                                     <img src={formularioData.imagen2} alt="Imagen 2" />
@@ -1498,6 +1474,7 @@ const [subActividadReference, setSubActividadreference] = useState({})
                                                     onChange={(e) => setFormularioData({ ...formularioData, observaciones: e.target.value })}
                                                     className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm"
                                                 />
+
                                             </div>
                                         </>
                                     )}
