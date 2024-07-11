@@ -8,7 +8,7 @@ import { IoIosWarning } from "react-icons/io";
 import { db } from '../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 
-function FormularioInspeccion({ onObservaciones, formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros }) {
+function FormularioInspeccion({ setImagen, setImagen2, onObservaciones, formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros }) {
 
     const { id } = useParams()
     const idLote = localStorage.getItem('loteId');
@@ -405,7 +405,7 @@ function FormularioInspeccion({ onObservaciones, formulario, crearVariableFormul
 
     return (
         <div className='text-gray-500'>
-          
+
 
 
             <form className="bg-white text-gray-500  mb-4">
@@ -485,12 +485,14 @@ function FormularioInspeccion({ onObservaciones, formulario, crearVariableFormul
                     </div>
                 </div>
                 {/* Botones */}
-                <div className='flex gap-5'>
+                <div className='flex justify-center gap-5 mt-2'>
                     <button type="button" onClick={handleSolicitarConfirmacion} className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center"><FaFilePdf /> Guardar</button>
                     <button type="button" className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center"
                         onClick={() => {
                             handleCloseModal()
                             setModalConfirmacionInforme(false)
+                            setImagen('')
+                            setImagen2('')
                         }}>Cancelar </button>
                 </div>
             </form>
@@ -503,59 +505,91 @@ function FormularioInspeccion({ onObservaciones, formulario, crearVariableFormul
                             <div>
                                 {resultadoInspeccion && (
                                     <>
-                                        <div className='flex flex-col gap-2 justify-start items-center rounded-xl px-6'>
-                                            <div className='text-center flex flex-col items-center'>
-                                            <p className='text-2xl font-bold flex items-center gap-2 text-yellow-600'><span className='font-bold text-yellow-500 text-3xl'><IoIosWarning /></span>¡Atención!<span className='font-bold text-yellow-500 text-3xl'><IoIosWarning /></span></p>
-                                            <p className='text-lg font-bold flex items-center gap-2 mt-2'>Se guardará la inspección y no podras modificarla</p>
-                                            </div>
-                                           
-                                            <div className=''>
-                                                <h2 className="font-bold text-gray-500 text-start underline">Revisa los datos y comprueba que todo esta correcto</h2>
-                                            </div>
-                                            
-                                            {/* <p className='text-2xl font-bold'>
-                                                Resultado:{' '}
-                                                <span className={resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}>
-                                                    {resultadoInspeccion}
-                                                </span>
-                                            </p> */}
-
-
-
+                                        <div className="text-center flex flex-col items-center">
+                                            <p className="text-xl font-medium flex items-center gap-2 text-yellow-700">
+                                                <span className="text-yellow-600 text-3xl"><IoIosWarning /></span>¡Atención! <span className="text-yellow-600 text-3xl"><IoIosWarning /></span>
+                                            </p>
+                                            <p className="text-lg font-medium mt-2">
+                                                Se guardará la inspección y no podrás modificarla
+                                            </p>
+                                            <h2 className="font-medium text-start">
+                                                * Revisa los datos y comprueba que todo está correcto
+                                            </h2>
                                         </div>
 
-                                        <div className='flex flex-col gap-1 mt-2'>
-
-                                            
-
-                                            <div className='bg-gray-200 px-6 py-4 rounded-xl text-start flex flex-col gap-2 mt-4'>
-                                            <p className='text-lg underline'>
-                                                    <strong>Resultado:</strong>{' '}
-                                                    <span className={`font-bold ${resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}`}>
-                                                        {resultadoInspeccion}
-                                                    </span>
-                                                </p>
-                                                <p><strong> Fecha: </strong>{fechaHoraActual}</p>
-                                                <p><strong> Proyecto: </strong>{nombreProyecto}</p>
-                                                <p><strong> Obra: </strong>{obra}</p>
-                                                <p><strong> Tramo: </strong>{tramo}</p>
-                                                <p><strong> Ppi: </strong>{loteInfo.ppiNombre}</p>
-                                                <p><strong> Observaciones Informe: </strong>{observaciones}</p>
-                                                <p><strong> Sector: </strong>{loteInfo.sectorNombre}</p>
-                                                <p><strong> Sub sector: </strong>{loteInfo.subSectorNombre}</p>
-                                                <p><strong> Parte: </strong>{loteInfo.parteNombre}</p>
-                                                <p><strong> Elemento: </strong>{loteInfo.elementoNombre}</p>
-                                                <p><strong> Lote: </strong>{loteInfo.nombre}</p>
-                                                <p><strong> Pk inicial: </strong>{loteInfo.pkInicial}</p>
-                                                <p><strong> Pk final: </strong>{loteInfo.pkFinal}</p>
-                                                <p><strong> Usuario: </strong>{nombreResponsable}</p>
-                                                
-
-
-                                                <p><strong> Comentarios inspección: </strong>{comentario}</p>
-                                            </div>
-
-
+                                        <div className='overflow-x-auto mt-4'>
+                                            <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+                                                <tbody className="divide-y divide-gray-200">
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Resultado:</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`font-bold ${resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}`}>
+                                                                {resultadoInspeccion}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Fecha:</td>
+                                                        <td className="px-6 py-4">{fechaHoraActual}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Proyecto:</td>
+                                                        <td className="px-6 py-4">{nombreProyecto}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Obra:</td>
+                                                        <td className="px-6 py-4">{obra}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Tramo:</td>
+                                                        <td className="px-6 py-4">{tramo}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Ppi:</td>
+                                                        <td className="px-6 py-4">{loteInfo.ppiNombre}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Observaciones Informe:</td>
+                                                        <td className="px-6 py-4">{observaciones}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Sector:</td>
+                                                        <td className="px-6 py-4">{loteInfo.sectorNombre}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Sub sector:</td>
+                                                        <td className="px-6 py-4">{loteInfo.subSectorNombre}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Parte:</td>
+                                                        <td className="px-6 py-4">{loteInfo.parteNombre}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Elemento:</td>
+                                                        <td className="px-6 py-4">{loteInfo.elementoNombre}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Lote:</td>
+                                                        <td className="px-6 py-4">{loteInfo.nombre}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Pk inicial:</td>
+                                                        <td className="px-6 py-4">{loteInfo.pkInicial}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Pk final:</td>
+                                                        <td className="px-6 py-4">{loteInfo.pkFinal}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Usuario:</td>
+                                                        <td className="px-6 py-4">{nombreResponsable}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="px-6 py-4 font-medium text-gray-700">Comentarios inspección:</td>
+                                                        <td className="px-6 py-4">{comentario}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </>
                                 )}
@@ -564,7 +598,8 @@ function FormularioInspeccion({ onObservaciones, formulario, crearVariableFormul
 
 
 
-                            <div className="flex justify-center gap-4 mt-8">
+
+                            <div className="flex justify-center gap-4 mt-3">
                                 <button
                                     onClick={() => {
 
@@ -577,7 +612,11 @@ function FormularioInspeccion({ onObservaciones, formulario, crearVariableFormul
                                 </button>
 
                                 <button
-                                    onClick={() => setMostrarConfirmacion(false)}
+                                    onClick={() => {
+                                        setMostrarConfirmacion(false)
+                                        setImagen('')
+                                        setImagen2('')
+                                    }}
                                     className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                                 >
                                     Cancelar
@@ -589,26 +628,38 @@ function FormularioInspeccion({ onObservaciones, formulario, crearVariableFormul
             }
 
             {mostrarConfirmacionAdicional && (
-                <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-900 bg-opacity-90 text-gray-500 font-medium text-center">
-                    <div className="bg-white flex flex-col items-center p-10 rounded-lg shadow-lg">
-
-                        <p className='text-3xl font-bold'>
-                            Resultado:{' '}
-                            <span className={resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}>
-                                {resultadoInspeccion}
-                            </span>
-                        </p>
-                        <h2 className="font-bold text-lg mb-2 mt-6">¿Estás seguro de que quieres guardar los datos?</h2>
-
-                        <p className='text-xl font-bold text-amber-600'>
-                            ¿No podras modificarlos posteriormente y se guardara el informe</p>
-                        <div className="flex gap-4 justify-center mt-8">
-                            <button onClick={handleConfirmacionFinal} className="bg-sky-600 text-white font-bold py-2 px-4 rounded">Confirmar</button>
-                            <button onClick={() => setMostrarConfirmacionAdicional(false)} className="bg-gray-500 text-white font-bold py-2 px-4 rounded">Cancelar</button>
+                <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-900 bg-opacity-80">
+                    <div className="bg-white flex flex-col items-center p-6 rounded-lg shadow-md w-80">
+                        <div className="text-center">
+                            <p className="text-2xl font-semibold mb-4">
+                                Resultado:{' '}
+                                <span className={resultadoInspeccion === 'Apto' ? 'text-green-500' : 'text-red-500'}>
+                                    {resultadoInspeccion}
+                                </span>
+                            </p>
+                            <h2 className="font-semibold text-lg mb-2">¿Guardar datos?</h2>
+                            <p className="text-sm text-gray-600 mb-6">
+                                No podrás modificarlos después y se guardará el informe.
+                            </p>
+                        </div>
+                        <div className="flex gap-4 w-full">
+                            <button onClick={handleConfirmacionFinal} className="w-full bg-sky-600 hover:bg-sky-700 text-white py-2 rounded-lg transition duration-150">
+                                Confirmar
+                            </button>
+                            <button onClick={() => {
+                                setMostrarConfirmacionAdicional(false)
+                                setImagen('')
+                                setImagen2('')
+                            }} 
+                            className="w-full bg-gray-400 hover:bg-gray-500 text-white py-2 rounded-lg transition duration-150">
+                                Cancelar
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
+
+
 
 
         </div>

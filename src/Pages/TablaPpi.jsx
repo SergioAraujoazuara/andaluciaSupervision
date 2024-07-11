@@ -306,8 +306,8 @@ function TablaPpi() {
             motivoVersion: 'editada',  // Actualizar el campo aquí
             observaciones: formularioData.observaciones,
             comentario: comentario,
-            imagen: imagen,
-            imagen2: imagen2,
+            imagen: imagen || imagen1Url,
+            imagen2: imagen2 || imagen2Url,
         };
         if (subactividadSeleccionada.imagen) updateData.imagen = subactividadSeleccionada.imagen;
         if (subactividadSeleccionada.imagen2) updateData.imagen2 = subactividadSeleccionada.imagen2;
@@ -1121,6 +1121,8 @@ function TablaPpi() {
     //! ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     const [imagen, setImagen] = useState('');
     const [imagen2, setImagen2] = useState('');
+    const [imagenEdit, setImagenEdit] = useState('');
+    const [imagen2Edit, setImagen2Edit] = useState('');
 
 
     const handleImagenChange = async (e) => {
@@ -1152,6 +1154,7 @@ function TablaPpi() {
                         ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
                         const pngDataUrl = canvas.toDataURL("image/png");
                         setImagen(pngDataUrl); // Almacenar la imagen PNG en el estado
+                        setImagenEdit(pngDataUrl); // Almacenar la imagen PNG en el estado
                     };
                 };
                 reader.readAsDataURL(compressedFile);
@@ -1190,6 +1193,7 @@ function TablaPpi() {
                         ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
                         const pngDataUrl = canvas.toDataURL("image/png");
                         setImagen2(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
+                        setImagen2Edit(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
                     };
                 };
                 reader.readAsDataURL(compressedFile);
@@ -1361,7 +1365,11 @@ function TablaPpi() {
                     <div className="absolute inset-0 bg-gray-800 opacity-75"></div>
                     <div className="relative bg-white rounded-lg shadow-lg w-full max-w-lg mx-auto overflow-hidden">
                         <button
-                            onClick={() => setShowConfirmModalRepetida(false)}
+                            onClick={() => {
+                                setShowConfirmModalRepetida(false)
+                                setImagenEdit('')
+                                setImagen2Edit('')
+                            }}
                             className="absolute top-4 right-4 text-3xl text-gray-500 hover:text-gray-700 transition-colors duration-300"
                         >
                             <IoCloseCircle />
@@ -1470,18 +1478,22 @@ function TablaPpi() {
                                                     <span><FaImage className="text-gray-500 mr-2" /></span>Imagen 1
                                                 </label>
                                                 <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                                {imagen1Url && (
-                                                    <img src={imagen1Url} alt="Imagen 1" className="mt-2" />
+                                                {imagenEdit ? (
+                                                    <img src={imagenEdit} alt="Imagen 1" className="mt-2" />
+                                                ) : (
+                                                    imagen1Url && <img src={imagen1Url} alt="Imagen 1" className="mt-2" />
                                                 )}
                                             </div>
 
                                             <div className="mb-4">
                                                 <label className="block text-sm font-medium text-gray-700 flex gap-1 items-center">
-                                                    <span><FaImage className="text-gray-500 mr-2" /></span>Imagen 2
+                                                    <span><FaImage className="text-gray-500 mr-2" /></span>Imagen 1
                                                 </label>
-                                                <input onChange={handleImagenChange2} type="file" id="imagen2" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-                                                {imagen2Url && (
-                                                    <img src={imagen2Url} alt="Imagen 2" className="mt-2" />
+                                                <input onChange={handleImagenChange2} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                                {imagen2Edit ? (
+                                                    <img src={imagen2Edit} alt="Imagen 1" className="mt-2" />
+                                                ) : (
+                                                    imagen1Url && <img src={imagen1Url} alt="Imagen 1" className="mt-2" />
                                                 )}
                                             </div>
 
@@ -1506,7 +1518,11 @@ function TablaPpi() {
                                     Actualizar
                                 </button>
                                 <button
-                                    onClick={() => setShowConfirmModalRepetida(false)}
+                                    onClick={() => {
+                                        setShowConfirmModalRepetida(false)
+                                        setImagenEdit('')
+                                        setImagen2Edit('')
+                                    }}
                                     className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-md shadow-md text-white font-medium"
                                 >
                                     Cancelar
@@ -1773,7 +1789,11 @@ function TablaPpi() {
                     <div className="mx-auto w-[500px] h-800px] modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto px-12 py-8"
                     >
                         <button
-                            onClick={handleCloseModal}
+                            onClick={() => {
+                                handleCloseModal()
+                                setImagen('')
+                                setImagen2('')
+                            }}
                             className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300">
                             <IoCloseCircle />
                         </button>
@@ -1820,10 +1840,16 @@ function TablaPpi() {
                                 <div className="mb-4 mt-4">
                                     <label htmlFor="imagen" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar imagen</label>
                                     <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                    {imagen && (
+                                        <img src={imagen} />
+                                    )}
                                 </div>
                                 <div className="">
                                     <label htmlFor="imagen" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar imagen 2</label>
                                     <input onChange={handleImagenChange2} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                    {imagen2 && (
+                                        <img src={imagen2} />
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1845,7 +1871,8 @@ function TablaPpi() {
                             handleCloseModal={handleCloseModal}
                             ppiNombre={ppiNombre}
 
-
+                            setImagen={setImagen}
+                            setImagen2={setImagen2}
                             setResultadoInspeccion={setResultadoInspeccion}
                             enviarDatosARegistros={enviarDatosARegistros}
 
