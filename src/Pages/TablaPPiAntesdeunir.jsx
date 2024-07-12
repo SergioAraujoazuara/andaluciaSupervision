@@ -1677,11 +1677,11 @@ function TablaPpi() {
                                 </div>
 
                                 <div className='flex gap-3'>
-                                    <button onClick={showTableView} className={`flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2 ${view === 'table' ? 'bg-yellow-600 text-gray-100': 'bg-gray-200'}`}>
+                                    <button onClick={showTableView} className='flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2'>
                                         <span><FaTable /></span>Tabla
                                     </button>
-                                    <button onClick={showGridView} className={`flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2 ${view === 'grid' ? 'bg-yellow-600 text-gray-100': 'bg-gray-200'}`}>
-                                        <span><FaTabletAlt /></span>Grid
+                                    <button onClick={showGridView} className='flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2'>
+                                        <span><FaTabletAlt /></span>Cuadricula
                                     </button>
                                 </div>
 
@@ -1694,6 +1694,9 @@ function TablaPpi() {
                     )}
                 </div>
 
+
+
+
                 {view === 'table' ? (
                     <div className='flex gap-3 flex-col mt-5 bg-white  rounded-xl shadow-md'>
                         <div className="w-full rounded-xl overflow-x-auto">
@@ -1701,6 +1704,7 @@ function TablaPpi() {
                                 <div className="w-full bg-gray-300 text-gray-600 text-sm font-medium py-3 px-3 grid grid-cols-24">
                                     <div className='col-span-1 flex items-center text-center'>Versión</div>
                                     <div className='col-span-1 flex items-center text-center'>Nº</div>
+
                                     <div className="col-span-2 flex items-center text-center">Actividad</div>
                                     <div className="col-span-4 flex items-center text-center">Criterio de aceptación</div>
                                     <div className="col-span-1 flex items-center text-center">Doc de referencia</div>
@@ -1709,18 +1713,24 @@ function TablaPpi() {
                                     <div className="col-span-2 flex items-center text-center">Responsable</div>
                                     <div className="col-span-2 flex items-center text-center">Nombre usuario</div>
                                     <div className="col-span-2 text-center flex items-center justify-center">Fecha</div>
+
                                     <div className="col-span-3 flex items-center justify-center">Comentarios</div>
+                                    {/* <div className="col-span-2 text-center">Estatus</div> */}
+                                    {/* <div className="col-span-1 text-center">Inspección</div> */}
                                     <div className="col-span-1 flex items-center text-center">Estado</div>
                                     <div className="col-span-1 flex items-center text-center">Informe</div>
-                                    <div className="col-span-1 flex items-center justify-center">Edit
-                                        <button className="text-gray-500 ms-1" onClick={toggleActiveOnly}>
-                                            {showActiveOnly ? <IoMdEye /> : <IoIosEyeOff />}
-                                        </button>
-                                    </div>
+                                    <div className="col-span-1 flex items-center justify-center">Edit  <button
+                                        className="text-gray-500 ms-1"
+                                        onClick={toggleActiveOnly}
+                                    >
+                                        {showActiveOnly ? <IoMdEye /> : <IoIosEyeOff />}
+                                    </button></div>
+
                                 </div>
 
+
                                 <div>
-                                    {ppi && filterActividades(ppi.actividades).map((actividad, indexActividad) => [
+                                    {ppi && ppi.actividades.map((actividad, indexActividad) => [
                                         // Row for activity name
                                         <div key={`actividad-${indexActividad}`} className="bg-gray-100 grid grid-cols-24 px-4 py-3 items-center border-b border-gray-200 text-sm font-medium">
                                             <div className="text-start">
@@ -1734,61 +1744,51 @@ function TablaPpi() {
                                             </div>
                                         </div>,
                                         // Rows for subactividades
-                                        ...actividad.subactividades
-                                            .filter(subactividad => filter === 'Todos' || subactividad.resultadoInspeccion === filter)
-                                            .map((subactividad, indexSubactividad) => (
-                                                <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-24 items-center border-b border-gray-200 text-sm px-4 py-3">
-                                                    <div className="col-span-1 text-start text-xs ps-2">
-                                                        {subactividad.version}
-                                                    </div>
-                                                    <div className="col-span-1">
-                                                        {subactividad.numero}
-                                                    </div>
-                                                    <div className="col-span-2">
-                                                        {subactividad.nombre}
-                                                    </div>
-                                                    <div className="col-span-4">
-                                                        {subactividad.criterio_aceptacion}
-                                                    </div>
-                                                    <div className="col-span-1 text-center">
-                                                        {subactividad.documentacion_referencia}
-                                                    </div>
-                                                    <div className="col-span-2 text-center">
-                                                        {subactividad.tipo_inspeccion}
-                                                    </div>
-                                                    <div className="col-span-1 text-center">
-                                                        {subactividad.punto}
-                                                    </div>
-                                                    <div className="col-span-2 text-center">
-                                                        {subactividad.responsable || ''}
-                                                    </div>
-                                                    <div className="col-span-2 text-center">
-                                                        {subactividad.nombre_usuario || ''}
-                                                    </div>
-                                                    <div className="col-span-2 text-center text-xs">
-                                                        {subactividad.fecha || ''}
-                                                    </div>
-                                                    <div className="col-span-3 text-center">
-                                                        {subactividad.comentario || ''}
-                                                    </div>
-                                                    <div className="col-span-1 flex justify-center cursor-pointer">
-                                                        {subactividad.resultadoInspeccion ? (
-                                                            subactividad.resultadoInspeccion === "Apto" ? (
-                                                                <span className="w-full font-bold text-xs rounded text-green-500 cursor-pointer">
-                                                                    Apto
-                                                                </span>
-                                                            ) : subactividad.resultadoInspeccion === "No apto" ? (
-                                                                <span className="w-full font-bold text-xs rounded w-full text-red-600 cursor-pointer">
-                                                                    No apto
-                                                                </span>
-                                                            ) : (
-                                                                <span
-                                                                    onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                                    className="w-full font-bold text-medium text-xl rounded w-full flex justify-center cursor-pointer"
-                                                                >
-                                                                    <IoMdAddCircle />
-                                                                </span>
-                                                            )
+                                        ...actividad.subactividades.map((subactividad, indexSubactividad) => (
+                                            <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-24 items-center border-b border-gray-200 text-sm px-4 py-3">
+                                                <div className="col-span-1 text-start text-xs ps-2">
+                                                    {subactividad.version}
+                                                </div>
+                                                <div className="col-span-1">
+                                                    {subactividad.numero}
+                                                </div>
+                                                <div className="col-span-2">
+                                                    {subactividad.nombre}
+                                                </div>
+                                                <div className="col-span-4">
+                                                    {subactividad.criterio_aceptacion}
+                                                </div>
+                                                <div className="col-span-1 text-center">
+                                                    {subactividad.documentacion_referencia}
+                                                </div>
+                                                <div className="col-span-2 text-center">
+                                                    {subactividad.tipo_inspeccion}
+                                                </div>
+                                                <div className="col-span-1 text-center">
+                                                    {subactividad.punto}
+                                                </div>
+                                                <div className="col-span-2 text-center">
+                                                    {subactividad.responsable || ''}
+                                                </div>
+                                                <div className="col-span-2 text-center">
+                                                    {subactividad.nombre_usuario || ''}
+                                                </div>
+                                                <div className="col-span-2 text-center text-xs">
+                                                    {subactividad.fecha || ''}
+                                                </div>
+                                                <div className="col-span-3 text-center">
+                                                    {subactividad.comentario || ''}
+                                                </div>
+                                                <div className="col-span-1 flex justify-center cursor-pointer">
+                                                    {subactividad.resultadoInspeccion ? (
+                                                        subactividad.resultadoInspeccion === "Apto" ? (
+                                                            <span className="w-full font-bold text-xs rounded text-green-500 cursor-pointer">
+                                                                Apto
+                                                            </span>
+                                                        ) : subactividad.resultadoInspeccion === "No apto" ? (
+                                                            <span className="w-full font-bold text-xs rounded w-full text-red-600 cursor-pointer">
+                                                                No apto
+                                                            </span>
                                                         ) : (
                                                             <span
                                                                 onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
@@ -1796,44 +1796,56 @@ function TablaPpi() {
                                                             >
                                                                 <IoMdAddCircle />
                                                             </span>
-                                                        )}
-                                                    </div>
-                                                    <div className="col-span-1 bg-white flex justify-center cursor-pointer">
-                                                        {subactividad.formularioEnviado ? (
-                                                            <p
-                                                                onClick={() => handleMostrarIdRegistro(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                                className='text-xl'
-                                                            >
-                                                                <FaFilePdf />
-                                                            </p>
-                                                        ) : null}
-                                                    </div>
-                                                    <div className="col-span-1 text-center">
-                                                        <button
-                                                            onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                            className="text-gray-500 font-bold text-xl"
+                                                        )
+                                                    ) : (
+                                                        <span
+                                                            onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                            className="w-full font-bold text-medium text-xl rounded w-full flex justify-center cursor-pointer"
                                                         >
-                                                            <FaRegEdit />
-                                                        </button>
-                                                    </div>
+                                                            <IoMdAddCircle />
+                                                        </span>
+                                                    )}
                                                 </div>
-                                            ))
+                                                <div className="col-span-1 bg-white flex justify-center cursor-pointer">
+                                                    {subactividad.formularioEnviado ? (
+                                                        <p
+                                                            onClick={() => handleMostrarIdRegistro(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                            className='text-xl'
+                                                        >
+                                                            <FaFilePdf />
+                                                        </p>
+                                                    ) : null}
+                                                </div>
+                                                <div className="col-span-1 text-center">
+                                                    <button
+                                                        onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                        className="text-gray-500 font-bold text-xl"
+                                                    >
+                                                        <FaRegEdit />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))
                                     ])}
+
+
+
                                 </div>
                             </div>
                         </div>
+
+
                     </div>
-                ) : (
-                    <div className="flex flex-col pt-2">
-                        {ppi && filterActividades(ppi.actividades).map((actividad, indexActividad) => (
-                            <div key={`actividad-${indexActividad}`} className="bg-white rounded-lg px-6 py-2">
-                                <div className="flex gap-2 items-center border-b-2 pb-4 mb-4 text-gray-400">
-                                    <div className="text-xl font-semibold ">{actividad.numero}.- </div>
-                                    <div className="text-xl font-semibold ">{actividad.actividad}</div>
-                                </div>
-                                {actividad.subactividades
-                                    .filter(subactividad => filter === 'Todos' || subactividad.resultadoInspeccion === filter)
-                                    .map((subactividad, indexSubactividad) => (
+                )
+                    : (
+                        <div className="flex flex-col pt-2">
+                            {ppi && filterActividades(ppi.actividades).map((actividad, indexActividad) => (
+                                <div key={`actividad-${indexActividad}`} className="bg-white rounded-lg px-6 py-2">
+                                    <div className="flex gap-2 items-center border-b-2 pb-4 mb-4 text-gray-400">
+                                        <div className="text-xl font-semibold ">{actividad.numero}.- </div>
+                                        <div className="text-xl font-semibold ">{actividad.actividad}</div>
+                                    </div>
+                                    {actividad.subactividades.map((subactividad, indexSubactividad) => (
                                         <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="bg-gray-100 mb-6 rounded-lg">
                                             <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 text-sm pb-4 shadow-md rounded-xl text-gray-400">
                                                 <div className='col-span-5 flex gap-2 bg-sky-pastel-400 text-gray-100 py-3 px-4 font-medium rounded-t-xl'>
@@ -1916,10 +1928,10 @@ function TablaPpi() {
                                             </div>
                                         </div>
                                     ))}
-                            </div>
-                        ))}
-                    </div>
-                )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
             </div>
 

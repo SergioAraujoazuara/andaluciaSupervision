@@ -1354,6 +1354,10 @@ function TablaPpi() {
     const toggleActiveOnly = () => {
         setShowActiveOnly(!showActiveOnly);
     };
+
+
+    
+    
     return (
         <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500 text-sm'>
             {showConfirmModalRepetida && (
