@@ -18,14 +18,14 @@ import TablaPpi from './Pages/TablaPpi';
 import EditarPpi from './Pages/Administrador/EditarPpi';
 import FormularioInspeccion from './Components/FormularioInspeccion';
 import Pdf_final from './Components/Pdf_final';
-import Ximena from './Pages/Ximena.jsx';
+import GrocIA from './Components/GrocIA.jsx';
 
 
 function App() {
   const publicRoutes = [
     { path: '/', element: <Home /> },
     { path: '/authTabs', element: <AuthTabs /> },
-    { path: '/xime', element: <Ximena /> },
+    { path: '/groc', element: <GrocIA /> },
   ];
 
   const adminRoutes = [
