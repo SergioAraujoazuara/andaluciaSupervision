@@ -1357,14 +1357,12 @@ function TablaPpi() {
 
 
     const [showActiveOnly, setShowActiveOnly] = useState(true);
-    const [responsableFilter, setResponsableFilter] = useState('Todos');
-
 
     const toggleActiveOnly = () => {
         setShowActiveOnly(!showActiveOnly);
     };
     const [filter, setFilter] = useState('Todos');
-    const [activityFilter, setActivityFilter] = useState('Actividades');
+    const [activityFilter, setActivityFilter] = useState('Todas');
 
     const handleFilterChange = (event) => {
         setFilter(event.target.value);
@@ -1375,16 +1373,9 @@ function TablaPpi() {
     };
 
     const filterSubactividades = (subactividades) => {
-        let filtered = subactividades;
-        if (filter !== 'Todos') {
-            filtered = filtered.filter(subactividad => subactividad.resultadoInspeccion === filter);
-        }
-        if (responsableFilter !== 'Todos') {
-            filtered = filtered.filter(subactividad => subactividad.responsable === responsableFilter);
-        }
-        return filtered;
+        if (filter === 'Todos') return subactividades;
+        return subactividades.filter(subactividad => subactividad.resultadoInspeccion === filter);
     };
-
 
     const filterActividades = (actividades) => {
         return actividades
@@ -1393,14 +1384,10 @@ function TablaPpi() {
                 subactividades: filterSubactividades(actividad.subactividades)
             }))
             .filter(actividad => actividad.subactividades.length > 0)
-            .filter(actividad => activityFilter === 'Actividades' || `${actividad.numero}. ${actividad.actividad}` === activityFilter);
+            .filter(actividad => activityFilter === 'Todas' || `${actividad.numero}. ${actividad.actividad}` === activityFilter);
     };
 
-    const activityOptions = ppi ? ['Actividades', ...ppi.actividades.map(actividad => `${actividad.numero}. ${actividad.actividad}`)] : [];
-
-    const handleResponsableFilterChange = (event) => {
-        setResponsableFilter(event.target.value);
-    };
+    const activityOptions = ppi ? ['Todas', ...ppi.actividades.map(actividad => `${actividad.numero}. ${actividad.actividad}`)] : [];
 
 
     // Controlar las vistas grid y tabla
@@ -1416,10 +1403,8 @@ function TablaPpi() {
     };
 
 
-    // Columnas visibles
-
     return (
-        <div className='container mx-auto min-h-screen p-5 xl:px-12 py-5 text-gray-500 text-sm'>
+        <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500 text-sm'>
             {showConfirmModalRepetida && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-gray-800 opacity-75"></div>
@@ -1602,16 +1587,16 @@ function TablaPpi() {
 
 
 
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-xs xl:text-sm'>
-                <div className='flex flex-wrap gap-2 items-center'>
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+                <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'/'}>
                         <h1 className=' text-gray-500'>Home</h1>
                     </Link>
 
-                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} className='hidden xl:block'/>
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
 
-                    <h1 className='cursor-pointer text-gray-500 hidden xl:block' onClick={regresar}>Elementos</h1>
+                    <h1 className='cursor-pointer text-gray-500' onClick={regresar}>Elementos</h1>
 
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'#'}>
@@ -1623,7 +1608,7 @@ function TablaPpi() {
 
                             <div className='flex gap-1 items-center'>
                                 <p className='text-sm'>- </p>
-                                {/* <p className='text-xs xl:text-sm text-amber-600'>{ppiNombre}</p> */}
+                                <p className='text-sm text-amber-600'>{ppiNombre}</p>
                             </div>
 
                         </div>
@@ -1639,11 +1624,13 @@ function TablaPpi() {
 
 
 
-            <div className='flex flex-col mt-5'>
-                <div className='bg-gray-100'>
+            <div className='flex flex-col mt-4 bg-white rounded-xl shadow-md'>
+
+
+                <div className='bg-white px-6 py-3'>
                     {ppi ? (
                         <div className='flex flex-col xl:flex-row gap-3 justify-center xl:justify-between items-center'>
-                            <div className='flex gap-4 flex-row xl:flex-row  bg-gray-200 rounded-lg px-5 py-3'>
+                            <div className='flex gap-4 flex-col xl:flex-row  bg-gray-200 rounded-md px-5 py-3'>
                                 <div className='flex gap-2 items-center '>
                                     <span className='text-green-500 text-xl'><AiOutlineCheckCircle /></span>
                                     <p className='font-medium text-md'>
@@ -1669,49 +1656,33 @@ function TablaPpi() {
                                 </div>
                             </div>
 
-                            <div className='flex gap-2 flex-col xl:flex-row items-center xl:items-start'>
-                                <div className='flex gap-2 flex items-center font-medium text-md'>
-
+                            <div className='flex gap-3 flex-col xl:flex-row'>
+                                <div className='ms-10 flex gap-2 flex items-center font-medium text-md'>
+                                    <label>Resultado inspección:</label>
+                                    <select value={filter} onChange={handleFilterChange} className="bg-white border rounded-md px-4 py-2">
+                                        <option value="Todos">Todas</option>
+                                        <option value="Apto" className='text-green-500'>Apto</option>
+                                        <option value="No apto" className='text-red-600'>No Apto</option>
+                                    </select>
 
                                 </div>
 
-                                <div className='flex-col xl:flex-row gap-2 flex items-center xl:items-center'>
-
+                                <div className='ms-10 flex gap-2 flex items-center'>
+                                    <label>Actividades:</label>
                                     <select value={activityFilter} onChange={handleActivityFilterChange} className="bg-white border rounded-md px-4 py-2">
                                         {activityOptions.map(option => (
                                             <option key={option} value={option}>{option}</option>
                                         ))}
                                     </select>
-
-                                    <div className='flex gap-3'>
-                                        <select value={responsableFilter} onChange={handleResponsableFilterChange} className="bg-white border rounded-md px-4 py-2">
-                                            <option value="Todos">Responsable</option>
-                                            {ppi && [...new Set(ppi.actividades.flatMap(actividad => actividad.subactividades.map(subactividad => subactividad.responsable)))].map(responsable => (
-                                                <option key={responsable} value={responsable}>{responsable}</option>
-                                            ))}
-                                        </select>
-
-                                        <select value={filter} onChange={handleFilterChange} className="bg-white border rounded-md px-4 py-2">
-                                            <option value="Todos">Resultado</option>
-                                            <option value="Apto" className='text-green-500'>Apto</option>
-                                            <option value="No apto" className='text-red-600'>No Apto</option>
-                                        </select>
-                                    </div>
-
-                                    <div className='flex gap-3 bg-red-100'>
-                                        <button onClick={showTableView} className={`flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2 ${view === 'table' ? 'bg-yellow-600 text-gray-100' : 'bg-gray-200'}`}>
-                                            <span><FaTable /></span>Tabla
-                                        </button>
-                                        <button onClick={showGridView} className={`flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2 ${view === 'grid' ? 'bg-yellow-600 text-gray-100' : 'bg-gray-200'}`}>
-                                            <span><FaTabletAlt /></span>Grid
-                                        </button>
-                                    </div>
-
                                 </div>
 
-                                <div className='flex-col xl:flex-row gap-2 flex items-start xl:items-center'>
-
-
+                                <div className='flex gap-3'>
+                                    <button onClick={showTableView} className={`flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2 ${view === 'table' ? 'bg-yellow-600 text-gray-100': 'bg-gray-200'}`}>
+                                        <span><FaTable /></span>Tabla
+                                    </button>
+                                    <button onClick={showGridView} className={`flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2 ${view === 'grid' ? 'bg-yellow-600 text-gray-100': 'bg-gray-200'}`}>
+                                        <span><FaTabletAlt /></span>Grid
+                                    </button>
                                 </div>
 
                             </div>
@@ -1724,37 +1695,41 @@ function TablaPpi() {
                 </div>
 
                 {view === 'table' ? (
-                    <div className='flex gap-3 flex-col mt-5 bg-white rounded-xl shadow-md'>
+                    <div className='flex gap-3 flex-col mt-5 bg-white  rounded-xl shadow-md'>
                         <div className="w-full rounded-xl overflow-x-auto">
                             <div>
-                                <div className="w-full bg-sky-500 text-gray-100 text-xs xl:text-sm font-medium py-3 px-3 grid grid-cols-24 items-center">
-                                    <div className='col-span-2 xl:col-span-1'>V</div>
-                                    <div className='col-span-2 xl:col-span-1  px-2'>Nº</div>
-                                    <div className="col-span-10 xl:col-span-3 flex items-center justify-start text-xs px-5">Actividad</div>
-                                    <div className="col-span-4 xl:col-span-3 hidden xl:flex">Criterio de aceptación</div>
-                                    <div className="col-span-1  hidden xl:flex">Doc de ref.</div>
-                                    <div className="col-span-2 xl:col-span-2 hidden xl:flex">Tipo de inspección</div>
-                                    <div className="col-span-1 xl:col-span-1 hidden xl:flex">Punto</div>
-                                    <div className="col-span-2 xl:col-span-2 hidden xl:flex">Responsable</div>
-                                    <div className="col-span-2 xl:col-span-2 hidden xl:block ">Nombre</div>
-                                    <div className="col-span-4 xl:col-span-2 hidden xl:block ">Fecha</div>
-                                    <div className="col-span-3  hidden xl:flex">Comentarios</div>
-                                    <div className="col-span-4 xl:col-span-1 ">Estado</div>
-                                    <div className="col-span-3 xl:col-span-1 ">Informe</div>
-                                    <div className="col-span-3 xl:col-span-1 ">Editar</div>
+                                <div className="w-full bg-gray-300 text-gray-600 text-sm font-medium py-3 px-3 grid grid-cols-24">
+                                    <div className='col-span-1 flex items-center text-center'>Versión</div>
+                                    <div className='col-span-1 flex items-center text-center'>Nº</div>
+                                    <div className="col-span-2 flex items-center text-center">Actividad</div>
+                                    <div className="col-span-4 flex items-center text-center">Criterio de aceptación</div>
+                                    <div className="col-span-1 flex items-center text-center">Doc de referencia</div>
+                                    <div className="col-span-2 flex items-center text-center">Tipo de inspección</div>
+                                    <div className="col-span-1 flex items-center text-center">Punto</div>
+                                    <div className="col-span-2 flex items-center text-center">Responsable</div>
+                                    <div className="col-span-2 flex items-center text-center">Nombre usuario</div>
+                                    <div className="col-span-2 text-center flex items-center justify-center">Fecha</div>
+                                    <div className="col-span-3 flex items-center justify-center">Comentarios</div>
+                                    <div className="col-span-1 flex items-center text-center">Estado</div>
+                                    <div className="col-span-1 flex items-center text-center">Informe</div>
+                                    <div className="col-span-1 flex items-center justify-center">Edit
+                                        <button className="text-gray-500 ms-1" onClick={toggleActiveOnly}>
+                                            {showActiveOnly ? <IoMdEye /> : <IoIosEyeOff />}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div>
                                     {ppi && filterActividades(ppi.actividades).map((actividad, indexActividad) => [
                                         // Row for activity name
-                                        <div key={`actividad-${indexActividad}`} className="bg-gray-200 grid grid-cols-24  px-3 py-3 items-center border-b border-gray-200 text-xs xl:text-sm font-medium">
-                                            <div className="col-span-2 xl:col-span-1 text-start">
+                                        <div key={`actividad-${indexActividad}`} className="bg-gray-100 grid grid-cols-24 px-4 py-3 items-center border-b border-gray-200 text-sm font-medium">
+                                            <div className="text-start">
                                                 (V)
                                             </div>
-                                            <div className="col-span-2 xl:col-span-1">
+                                            <div className="">
                                                 {actividad.numero}
                                             </div>
-                                            <div className="col-span-10 xl:col-span-2 px-5">
+                                            <div className="col-span-12 text-xs">
                                                 {actividad.actividad}
                                             </div>
                                         </div>,
@@ -1763,40 +1738,40 @@ function TablaPpi() {
                                             .filter(subactividad => filter === 'Todos' || subactividad.resultadoInspeccion === filter)
                                             .map((subactividad, indexSubactividad) => (
                                                 <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-24 items-center border-b border-gray-200 text-sm px-4 py-3">
-                                                    <div className="col-span-2 xl:col-span-1">
+                                                    <div className="col-span-1 text-start text-xs ps-2">
                                                         {subactividad.version}
                                                     </div>
-                                                    <div className="col-span-2 xl:col-span-1 text-start px-2">
+                                                    <div className="col-span-1">
                                                         {subactividad.numero}
                                                     </div>
-                                                    <div className="col-span-10 xl:col-span-3 text-start px-5">
+                                                    <div className="col-span-2">
                                                         {subactividad.nombre}
                                                     </div>
-                                                    <div className="col-span-4 xl:col-span-3 hidden xl:block px-3">
+                                                    <div className="col-span-4">
                                                         {subactividad.criterio_aceptacion}
                                                     </div>
-                                                    <div className="col-span-1 xl:col-span-1 hidden xl:block">
+                                                    <div className="col-span-1 text-center">
                                                         {subactividad.documentacion_referencia}
                                                     </div>
-                                                    <div className="col-span-2 xl:col-span-2 hidden xl:block">
+                                                    <div className="col-span-2 text-center">
                                                         {subactividad.tipo_inspeccion}
                                                     </div>
-                                                    <div className="col-span-1 xl:col-span-1 hidden xl:block text-center">
+                                                    <div className="col-span-1 text-center">
                                                         {subactividad.punto}
                                                     </div>
-                                                    <div className="col-span-2 xl:col-span-2 hidden xl:block">
+                                                    <div className="col-span-2 text-center">
                                                         {subactividad.responsable || ''}
                                                     </div>
-                                                    <div className="col-span-2 xl:col-span-2 hidden xl:block">
+                                                    <div className="col-span-2 text-center">
                                                         {subactividad.nombre_usuario || ''}
                                                     </div>
-                                                    <div className="col-span-4 xl:col-span-2 hidden xl:block block">
+                                                    <div className="col-span-2 text-center text-xs">
                                                         {subactividad.fecha || ''}
                                                     </div>
-                                                    <div className="col-span-3 xl:col-span-3 hidden xl:block">
+                                                    <div className="col-span-3 text-center">
                                                         {subactividad.comentario || ''}
                                                     </div>
-                                                    <div className="col-span-4 xl:col-span-1 text-center">
+                                                    <div className="col-span-1 flex justify-center cursor-pointer">
                                                         {subactividad.resultadoInspeccion ? (
                                                             subactividad.resultadoInspeccion === "Apto" ? (
                                                                 <span className="w-full font-bold text-xs rounded text-green-500 cursor-pointer">
@@ -1823,7 +1798,7 @@ function TablaPpi() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="col-span-3 xl:col-span-1 block bg-white cursor-pointer flex justify-center">
+                                                    <div className="col-span-1 bg-white flex justify-center cursor-pointer">
                                                         {subactividad.formularioEnviado ? (
                                                             <p
                                                                 onClick={() => handleMostrarIdRegistro(`apto-${indexActividad}-${indexSubactividad}`)}
@@ -1833,7 +1808,7 @@ function TablaPpi() {
                                                             </p>
                                                         ) : null}
                                                     </div>
-                                                    <div className="col-span-3 xl:col-span-1 block flex justify-center">
+                                                    <div className="col-span-1 text-center">
                                                         <button
                                                             onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
                                                             className="text-gray-500 font-bold text-xl"
@@ -1848,84 +1823,73 @@ function TablaPpi() {
                             </div>
                         </div>
                     </div>
-
                 ) : (
-                    <div className="flex flex-col mt-5">
+                    <div className="flex flex-col pt-2">
                         {ppi && filterActividades(ppi.actividades).map((actividad, indexActividad) => (
-                            <div key={`actividad-${indexActividad}`} className="mb-6">
-                                <div className="flex gap-2 items-center border-b-2 p-4 mb-4 bg-gray-200 text-gray-600 rounded-lg">
-                                    <div className="font-semibold">{actividad.numero}.- </div>
-                                    <div className="font-semibold">{actividad.actividad}</div>
+                            <div key={`actividad-${indexActividad}`} className="bg-white rounded-lg px-6 py-2">
+                                <div className="flex gap-2 items-center border-b-2 pb-4 mb-4 text-gray-400">
+                                    <div className="text-xl font-semibold ">{actividad.numero}.- </div>
+                                    <div className="text-xl font-semibold ">{actividad.actividad}</div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {actividad.subactividades
-                                        .filter(subactividad => filter === 'Todos' || subactividad.resultadoInspeccion === filter)
-                                        .map((subactividad, indexSubactividad) => (
-                                            <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="bg-white rounded-lg shadow-md h-full flex flex-col">
-                                                <div className="flex gap-2 items-center bg-sky-500 text-gray-100 text-md py-1 h-20 px-6 font-medium rounded-t-lg">
+                                {actividad.subactividades
+                                    .filter(subactividad => filter === 'Todos' || subactividad.resultadoInspeccion === filter)
+                                    .map((subactividad, indexSubactividad) => (
+                                        <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="bg-gray-100 mb-6 rounded-lg">
+                                            <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 text-sm pb-4 shadow-md rounded-xl text-gray-400">
+                                                <div className='col-span-5 flex gap-2 bg-sky-pastel-400 text-gray-100 py-3 px-4 font-medium rounded-t-xl'>
                                                     <span>{subactividad.numero}</span>
                                                     <span>{subactividad.nombre}</span>
                                                 </div>
-
-                                                <div className="px-6 py-3 flex flex-col justify-between h-full">
-                                                    <div className='flex flex-col gap-1'>
-
-                                                        <div className="flex gap-2">
-                                                            <span className="font-medium">Versión:</span>
-                                                            <span>{subactividad.version}</span>
-                                                        </div>
-
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium">Criterio de aceptación:</span>
-                                                            <span>{subactividad.criterio_aceptacion}</span>
-                                                        </div>
-
-
-                                                        <div className="flex gap-2">
-                                                            <span className="font-medium">Doc de referencia:</span>
-                                                            <span>{subactividad.documentacion_referencia}</span>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            <span className="font-medium">Tipo de inspección:</span>
-                                                            <span>{subactividad.tipo_inspeccion}</span>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            <span className="font-medium">Punto:</span>
-                                                            <span>{subactividad.punto}</span>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            <span className="font-medium">Responsable:</span>
-                                                            <span>{subactividad.responsable || ''}</span>
-                                                        </div>
-
-
-                                                        <div className='border-b-2 my-2'></div>
-
-                                                        <div className="mb-4">
-                                                            <div className="flex gap-2">
-                                                                <span className="font-medium">Nombre usuario:</span>
-                                                                <span>{subactividad.nombre_usuario || ''}</span>
-                                                            </div>
-                                                            <div className="flex gap-2">
-                                                                <span className="font-medium text-gray-600">Fecha:</span>
-                                                                <span>{subactividad.fecha || ''}</span>
-                                                            </div>
-                                                            <div className="flex gap-2">
-                                                                <span className="font-medium">Comentarios:</span>
-                                                                <span>{subactividad.comentario || ''}</span>
-                                                            </div>
-                                                        </div>
+                                                <div className='px-4 col-span-5 xl:col-span-2'>
+                                                    <div className="flex gap-2">
+                                                        <span className="font-medium">Versión:</span>
+                                                        <span>{subactividad.version}</span>
                                                     </div>
-
-
-
-                                                    <div className="flex justify-start items-center gap-5 pb-4">
+                                                    <div className="flex gap-2">
+                                                        <span className="font-medium">Criterio de aceptación:</span>
+                                                        <span>{subactividad.criterio_aceptacion}</span>
+                                                    </div>
+                                                </div>
+                                                <div className='col-span-5 xl:col-span-1 px-4 sm:px-4'>
+                                                    <div className="flex gap-2">
+                                                        <span className="font-medium">Doc de referencia:</span>
+                                                        <span>{subactividad.documentacion_referencia}</span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <span className="font-medium">Tipo de inspección:</span>
+                                                        <span>{subactividad.tipo_inspeccion}</span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <span className="font-medium">Punto:</span>
+                                                        <span>{subactividad.punto}</span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <span className="font-medium">Responsable:</span>
+                                                        <span>{subactividad.responsable || ''}</span>
+                                                    </div>
+                                                </div>
+                                                <div className='col-span-5 xl:col-span-1 px-4 sm:px-4'>
+                                                    <div className="flex gap-2">
+                                                        <span className="font-medium">Nombre usuario:</span>
+                                                        <span>{subactividad.nombre_usuario || ''}</span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <span className="font-medium text-gray-600">Fecha:</span>
+                                                        <span>{subactividad.fecha || ''}</span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <span className="font-medium">Comentarios:</span>
+                                                        <span>{subactividad.comentario || ''}</span>
+                                                    </div>
+                                                </div>
+                                                <div className='flex gap-5 justify-start xl:justify-end p-4 col-span-5 sm:col-span-1'>
+                                                    <div className="flex gap-2">
                                                         <div className="flex items-center">
                                                             {subactividad.resultadoInspeccion ? (
                                                                 subactividad.resultadoInspeccion === "Apto" ? (
-                                                                    <span className="text-teal-500 text-lg font-bold">Apto</span>
+                                                                    <span className="text-teal-500 text-lg font-semibold">Apto</span>
                                                                 ) : (
-                                                                    <span className="text-red-600 text-lg font-bold">No apto</span>
+                                                                    <span className="text-red-600 text-lg font-semibold">No apto</span>
                                                                 )
                                                             ) : (
                                                                 <span onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)} className="text-gray-500 text-4xl cursor-pointer">
@@ -1933,6 +1897,8 @@ function TablaPpi() {
                                                                 </span>
                                                             )}
                                                         </div>
+                                                    </div>
+                                                    <div className="flex gap-2">
                                                         <div className="flex items-center">
                                                             {subactividad.formularioEnviado && (
                                                                 <span onClick={() => handleMostrarIdRegistro(`apto-${indexActividad}-${indexSubactividad}`)} className="text-gray-500 text-2xl cursor-pointer">
@@ -1940,21 +1906,19 @@ function TablaPpi() {
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <div className="flex items-center">
-                                                            <button onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)} className="text-gray-500 text-2xl hover:text-gray-700 transition-colors duration-300">
-                                                                <FaRegEdit />
-                                                            </button>
-                                                        </div>
+                                                    </div>
+                                                    <div className="flex col-span-full">
+                                                        <button onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)} className="text-gray-500 text-2xl hover:text-gray-700 transition-colors duration-300">
+                                                            <FaRegEdit />
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        ))}
-                                </div>
+                                        </div>
+                                    ))}
                             </div>
                         ))}
                     </div>
-
-
                 )}
 
             </div>
@@ -2312,7 +2276,6 @@ function TablaPpi() {
 }
 
 export default TablaPpi;
-
 
 
 
