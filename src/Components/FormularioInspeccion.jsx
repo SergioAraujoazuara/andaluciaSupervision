@@ -444,7 +444,7 @@ function FormularioInspeccion({ setImagen, setImagen2, onObservaciones, formular
                         <input type="text" id="plano" value={plano} onChange={(e) => setPlano(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                     </div>
 
-                    <GrocIA loteInfo = {loteInfo}/>
+                   
                     <div className="mb-4">
                         <label htmlFor="observaciones" className="block text-gray-500 text-sm font-bold mb-2">Observaciones del informe</label>
                         <textarea id="observaciones" value={localObservaciones} onChange={(e) => setLocalObservaciones(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
