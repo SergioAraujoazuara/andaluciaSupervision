@@ -35,7 +35,6 @@ function TablaPpi() {
         navigate(`/elementos/${id}`); // Esto navega hacia atrás en la historia
     };
     const { user } = useAuth();
-    let emailUser = user.email
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
 
     const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
@@ -87,6 +86,7 @@ function TablaPpi() {
                 // Asegúrate de que este paso esté ajustado a cómo manejas los datos en tu aplicación
                 if (inspeccionesData.length > 0) {
                     setPpi(inspeccionesData[0]);
+                    console.log(inspeccionesData[0])
                     setPpiNombre(inspeccionesData[0].nombre) // O maneja múltiples inspecciones según sea necesario
                 } else {
 
@@ -272,7 +272,7 @@ function TablaPpi() {
 
         // Logs basados en las condiciones
         if (subAct === 'original' && resultadoInspeccion === 'Apto') {
-            console.log("La actividad editada es original y Apto");
+            
             nuevaSubactividadEditada = {
                 ...nuevaSubactividadEditada,
                 motivoVersion: 'editada',
@@ -280,7 +280,7 @@ function TablaPpi() {
         }
 
         if (subAct === 'rechazada' && resultadoInspeccion === 'Apto') {
-            console.log("La actividad editada es rechazada y Apto");
+           
             nuevaSubactividadEditada = {
                 ...nuevaSubactividadEditada,
                 version: (parseInt(newEditVersion) + 1).toString(), // Asignar la nueva versión para la subactividad editada
@@ -288,7 +288,7 @@ function TablaPpi() {
             };
         }
 
-        console.log("Observaciones guardadas en PASO 2:", formularioData.observaciones);
+     
 
         // Actualizar la subactividad seleccionada para que no esté activa
         nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = {
@@ -318,8 +318,7 @@ function TablaPpi() {
 
         await actualizarFormularioEnFirestore(nuevoPpi);
 
-        // Aquí añadimos el console.log para verificar si se ha agregado a registros
-        console.log('Registro actualizado en Firestore:', updateData);
+      
 
         setPpi(nuevoPpi);
         setShowConfirmModalRepetida(false);
@@ -349,7 +348,7 @@ function TablaPpi() {
         subactividadSeleccionada.observaciones = observaciones; // obsevaciones input // PASO 1 para guardar info en la inspeccion
         subactividadSeleccionada.active = true;
 
-        console.log("Observaciones guardadas PASO 1:", observaciones);
+       
 
         if (resultadoInspeccion === "Apto") {
             const loteRef = doc(db, "lotes", idLote);
@@ -1263,7 +1262,7 @@ function TablaPpi() {
 
         const [actividadIndex, subactividadIndex] = subactividadId.split('-').slice(1).map(Number);
         const subactividad = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
-        console.log(subactividad, '************************++');
+      
         setIdRegistroImagen(subactividad);
 
         // Comprobar sub actividad
@@ -1271,7 +1270,7 @@ function TablaPpi() {
 
         // Obtener el documento del formulario desde Firestore
         const formularioData = await obtenerDatosFormulario(subactividad.idRegistroFormulario);
-        console.log(formularioData)
+       
 
         setSubactividadSeleccionada(subactividad);
         setActividadNombre(subactividad.nombre || '');
@@ -1289,7 +1288,7 @@ function TablaPpi() {
         setImagen2Url(formularioData.imagen2 || '');
         setShowConfirmModalRepetida(true);
 
-        console.log(formularioData);
+
     };
 
 
@@ -2008,7 +2007,7 @@ function TablaPpi() {
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
-                    <div className="mx-auto w-[500px] h-800px] modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto px-12 py-8"
+                    <div className="mx-auto w-[600px] h-[600px] modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto px-12 py-8"
                     >
                         <button
                             onClick={() => {
@@ -2088,7 +2087,7 @@ function TablaPpi() {
                             comentario={comentario}
                             firma={firma}
                             signature={userSignature}
-
+                            userName = {userName}
                             fechaHoraActual={fechaHoraActual}
                             handleCloseModal={handleCloseModal}
                             ppiNombre={ppiNombre}
@@ -2160,7 +2159,7 @@ function TablaPpi() {
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
-                    <div className="mx-auto w-[700px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
+                    <div className="mx-auto w-[600px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
                     >
                         <button
                             onClick={() => setModalConfirmacionInforme(false)}

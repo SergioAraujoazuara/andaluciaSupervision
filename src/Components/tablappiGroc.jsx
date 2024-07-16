@@ -2120,9 +2120,9 @@ function TablaPpi() {
 
             {modalInforme && (
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
-                    <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
+                    <div className="modal-overlay absolute w-full h-full bg-gray-600 opacity-90"></div>
 
-                    <div className="mx-auto w-[700px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
+                    <div className="mx-auto w-[600px] h-[600]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
                     >
                         <button
                             onClick={closeModalConfirmacion}
@@ -2161,7 +2161,7 @@ function TablaPpi() {
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
-                    <div className="mx-auto w-[700px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
+                    <div className="mx-auto w-[600px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
                     >
                         <button
                             onClick={() => setModalConfirmacionInforme(false)}

@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import Groq from "groq-sdk";
-
-const GrocIA = ({loteInfo}) => {
+import { FaCopy } from "react-icons/fa6";
+import { IoCloseCircle } from "react-icons/io5";
+import { BsStars } from "react-icons/bs";
+const GrocIA = ({ loteInfo, setInputGroc, setLocalObservaciones }) => {
     const [text, setText] = useState('');
-    const [result, setResult] = useState(''); 
+    const [result, setResult] = useState('');
+    const [copySuccess, setCopySuccess] = useState(false); // Estado para el mensaje de confirmación
 
     const handleChange = (event) => {
         setText(event.target.value);
@@ -17,12 +20,12 @@ const GrocIA = ({loteInfo}) => {
     const main = async (content) => {
         try {
             const chatCompletion = await getGroqChatCompletion(content);
-            setResult(chatCompletion.choices[0]?.message?.content || ""); 
+            setResult(chatCompletion.choices[0]?.message?.content || "");
         } catch (error) {
             console.error("Error getting completion:", error);
         }
     };
-   
+
     async function getGroqChatCompletion(content) {
         return groq.chat.completions.create({
             messages: [
@@ -36,42 +39,71 @@ const GrocIA = ({loteInfo}) => {
     }
 
     const handleClick = async () => {
-        await main(text); // Asegúrate de esperar la respuesta antes de continuar
+        await main(text);
+        setText(''); // Asegúrate de esperar la respuesta antes de continuar
+    };
+
+    const handleCopytext = () => {
+        setLocalObservaciones(result);
+        setCopySuccess(true); // Mostrar el mensaje de confirmación
+
+        setTimeout(() => {
+            setCopySuccess(false); // Ocultar el mensaje de confirmación
+            setInputGroc(false); // Cerrar el modal
+        }, 1000);
+    };
+
+    const handleCloseResult = () => {
+        setResult('');
+        setInputGroc(false);
     };
 
     return (
-    
-            <div className=" shadow-md rounded px-8 pt-6 pb-8 mb-4">
-                <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="textarea">
-                        Your Text
-                    </label>
-                    <textarea
-                        id="textarea"
-                        value={text}
-                        onChange={handleChange}
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        rows="5"
-                    />
-                </div>
-                <div className="flex items-center justify-between">
-                    <button
-                        type="button" // Cambiado a button con type="button"
-                        onClick={handleClick} // Añadir la función handleClick
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    >
-                        Submit
-                    </button>
-                </div>
+        <div className="bg-gray-200 shadow-md rounded px-4 py-4 mb-4 rounded-lg">
+            <div className="mb-2">
+                <label className="text-sm font-bold mb-2 flex gap-2 items-center text-gray-500" htmlFor="textarea">
+                    <BsStars/>Escribe tu mensaje (IA)
+                </label>
+                <textarea
+                    id="textarea"
+                    value={text}
+                    onChange={handleChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    rows="5"
+                />
+            </div>
+            <div className="flex items-center justify-between">
+                <button
+                    type="button" // Cambiado a button con type="button"
+                    onClick={handleClick} // Añadir la función handleClick
+                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                >
+                    Crear
+                </button>
+            </div>
 
-                {result && ( // Mostrar el resultado si existe
-                <div className="mt-4 p-4 bg-white shadow-md rounded">
-                    <h2 className="text-xl font-bold mb-2">Resumen</h2>
-                    <p>{result}</p>
+            {result && (
+                <div>
+                    <div className="mt-4 p-4 bg-white shadow-md rounded text-gray-500 rounded-lg">
+                        <div className='flex justify-between items-center mb-4'>
+                            <h2 className="text-lg font-medium mb-2">Resumen</h2>
+                            <div className='flex gap-5 items-center'>
+                                <div className="relative">
+                                    <FaCopy className='text-gray-400 text-lg cursor-pointer' onClick={handleCopytext} />
+                                    {copySuccess && (
+                                        <div className="absolute top-0 left-8 bg-green-100 text-green-500 text-sm px-2 py-1 rounded-md shadow-md">
+                                            ¡Copiado!
+                                        </div>
+                                    )}
+                                </div>
+                                <IoCloseCircle className='text-gray-400 text-xl cursor-pointer' onClick={handleCloseResult} />
+                            </div>
+                        </div>
+                        <p>{result}</p>
+                    </div>
                 </div>
             )}
-            </div>
-        
+        </div>
     );
 };
 

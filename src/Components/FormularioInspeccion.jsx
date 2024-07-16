@@ -4,12 +4,13 @@ import { FaFilePdf } from "react-icons/fa";
 import jsPDF from 'jspdf';
 import logo from '../assets/tpf_logo_azul.png'
 import { IoIosWarning } from "react-icons/io";
+import { BsStars } from "react-icons/bs";
 
 import { db } from '../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 import GrocIA from './GrocIA';
 
-function FormularioInspeccion({ setImagen, setImagen2, onObservaciones, formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros }) {
+function FormularioInspeccion({username, setImagen, setImagen2, onObservaciones, formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros }) {
 
     const { id } = useParams()
     const idLote = localStorage.getItem('loteId');
@@ -82,9 +83,7 @@ function FormularioInspeccion({ setImagen, setImagen2, onObservaciones, formular
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    console.log("Datos del lote:", docSnap.data());
                     setLoteInfo({ id: docSnap.id, ...docSnap.data() });
-                    console.log({ id: docSnap.id, ...docSnap.data() });
                 } else {
                     console.log("No se encontró el lote con el ID:", idLote);
 
@@ -150,252 +149,6 @@ function FormularioInspeccion({ setImagen, setImagen2, onObservaciones, formular
         enviarObservaciones()
     };
 
-
-
-
-    // const generatePDF = (firma, fechaHoraActual, nombreResponsable, docId) => {
-    //     const doc = new jsPDF();
-
-
-
-
-
-
-    //     // Establecer el tamaño de fuente deseado
-    //     const fontSize = 10;
-
-    //     // Tamaño y posición del recuadro
-    //     const rectX = 10;
-    //     const rectY = 10;
-    //     const rectWidth = 190; // Ancho del recuadro
-    //     const rectHeight = 20; // Altura del recuadro
-
-    //     // Establecer el tamaño de fuente
-    //     doc.setFontSize(fontSize);
-
-    //     doc.setFillColor(230, 230, 230); // Gris muy claro casi blanco
-
-    //     // Dibujar el recuadro con fondo gris
-    //     doc.rect(rectX, rectY, rectWidth, rectHeight, 'F'); // 'F' indica que se debe rellenar el rectángulo
-
-    //     // Establecer el color de texto
-    //     doc.setTextColor(0, 0, 0); // Color negro
-
-    //     // Colocar texto dentro del recuadro
-    //     doc.text(titulo, 75, 18); // Ajusta las coordenadas según tu diseño
-    //     doc.text(nombreProyecto, 75, 22); // Ajusta las coordenadas según tu diseño
-
-    //     if (imagenPath2) {
-    //         const imgData = imagenPath2;
-    //         doc.addImage(imgData, 'JPEG', 12, 12, 30, 15); // Ajusta las coordenadas y dimensiones según tu diseño
-    //     }
-    //     if (imagenPath) {
-    //         const imgData = imagenPath;
-    //         doc.addImage(imgData, 'JPEG', 45, 15, 20, 10); // Ajusta las coordenadas y dimensiones según tu diseño
-    //     }
-
-    //     // Dibujar el borde después de agregar las imágenes
-    //     doc.setDrawColor(0); // Color negro
-    //     doc.rect(rectX, rectY, rectWidth, rectHeight); // Dibujar el borde del rectángulo
-
-
-    //     ///////////////////////////////////////////////////////////////////////////////////////////////////////
-    //     // Tamaño y posición del segundo recuadro
-    //     const rectX2 = 10;
-    //     const rectY2 = 30;
-    //     const rectWidth2 = 190; // Ancho del recuadro
-    //     const rectHeight2 = 20; // Altura del recuadro
-
-    //     // Establecer el ancho de la línea del borde
-    //     const borderWidth = 0.5; // Ancho del borde en puntos
-
-    //     // Establecer el color de la línea del borde
-    //     doc.setDrawColor(0); // Color negro
-
-    //     // Dibujar el borde del segundo recuadro
-    //     doc.rect(rectX2, rectY2, rectWidth2, rectHeight2);
-
-    //     // Establecer el color de fondo para el segundo recuadro
-    //     doc.setFillColor(240, 240, 240); // Gris muy claro casi blanco
-
-    //     // Dibujar el segundo recuadro con fondo gris claro y borde en todos los lados
-    //     doc.rect(rectX2, rectY2, rectWidth2, rectHeight2, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde en todos los lados
-
-    //     // Establecer el tamaño de fuente
-    //     doc.setFontSize(fontSize);
-
-    //     // Colocar texto dentro del segundo recuadro
-    //     doc.text(`Obra: ${obra} test de obra *******`, 15, 40);
-    //     doc.text(`Tramo: ${tramo}`, 15, 45);
-    //     doc.text(`Nº de registro: ${docId}`, 120, 40);
-    //     doc.text(`Fecha: ${fechaHoraActual}`, 150, 45);
-
-
-    //     ///////////////////////////////////////////////////////////////////////////////////////////////////////
-    //     // Tamaño y posición del recuadro
-    //     const rectX3 = 10;
-    //     const rectY3 = 50;
-    //     const rectWidth3 = 190; // Ancho del recuadro
-    //     const rectHeight3 = 20; // Altura del recuadro
-
-    //     // Establecer el tamaño de fuente
-    //     doc.setFontSize(fontSize);
-
-    //     // Establecer el color de fondo para el recuadro
-    //     doc.setFillColor(240, 240, 240); // Gris muy claro casi blanco
-
-    //     // Dibujar el recuadro con fondo gris claro
-    //     doc.rect(rectX3, rectY3, rectWidth3, rectHeight3, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
-
-    //     // Establecer el color de texto
-    //     doc.setTextColor(0, 0, 0); // Color negro
-
-    //     // Colocar texto dentro del recuadro
-    //     doc.text(`PPI: ${ppiNombre}`, 15, 60);
-    //     doc.text(`Plano que aplica: `, 15, 65);
-
-
-    //     // Tamaño y posición del recuadro
-    //     const rectX4 = 10;
-    //     const rectY4 = 70;
-    //     const rectWidth4 = 190; // Ancho del recuadro
-    //     const rectHeight4 = 20; // Altura del recuadro
-
-    //     // Establecer el tamaño de fuente
-    //     doc.setFontSize(fontSize);
-
-    //     // Establecer el color de fondo para el recuadro
-    //     doc.setFillColor(240, 240, 240); // Gris claro casi blanco
-
-    //     // Dibujar el recuadro con fondo gris claro
-    //     doc.rect(rectX4, rectY4, rectWidth4, rectHeight4, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
-
-    //     // Establecer el color de texto
-    //     doc.setTextColor(0, 0, 0); // Color negro
-
-    //     // Dibujar el borde del rectángulo
-    //     doc.rect(rectX4, rectY4, rectWidth4, rectHeight4);
-
-    //     // Texto a colocar con salto de línea
-    //     const textoObservaciones = `Observaciones: ${observaciones}`;
-
-    //     // Dividir el texto en líneas cada vez que exceda 15 palabras
-    //     const words = textoObservaciones.split(' ');
-    //     const maxWordsPerLine = 15;
-    //     const lines = [];
-    //     let currentLine = '';
-
-    //     for (let i = 0; i < words.length; i++) {
-    //         currentLine += words[i] + ' ';
-    //         if ((i + 1) % maxWordsPerLine === 0 || i === words.length - 1) {
-    //             lines.push(currentLine.trim());
-    //             currentLine = '';
-    //         }
-    //     }
-
-    //     // Colocar texto en el PDF
-    //     let yPosition = rectY4 + fontSize + 2; // Iniciar la posición dentro del recuadro
-    //     let xPosition = rectX4 + 5; // Ajustar posición x para evitar que el texto toque el borde del rectángulo
-    //     lines.forEach(line => {
-    //         doc.text(line, xPosition, yPosition, { maxWidth: rectWidth4 - 4 }); // Ajustar maxWidth para evitar que el texto exceda el ancho del rectángulo
-    //         yPosition += fontSize + 2; // Aumentar la posición para la siguiente línea
-    //     });
-
-    //     // Tamaño y posición del recuadro 5
-    //     const rectX5 = 10;
-    //     const rectY5 = 90;
-    //     const rectWidth5 = 190; // Ancho del recuadro
-    //     const rectHeight5 = 80; // Altura del recuadro
-
-    //     // Establecer el tamaño de fuente
-    //     doc.setFontSize(fontSize);
-
-    //     // Establecer el color de fondo para el recuadro 5
-    //     doc.setFillColor(240, 240, 240); // Gris claro casi blanco
-
-    //     // Dibujar el recuadro 5 con fondo gris claro
-    //     doc.rect(rectX5, rectY5, rectWidth5, rectHeight5, 'FD'); // 'FD' indica que se debe rellenar el rectángulo y dibujar el borde
-
-    //     // Establecer el color de texto
-    //     doc.setTextColor(0, 0, 0); // Color negro
-
-    //     // Dibujar el borde del recuadro 5
-    //     doc.rect(rectX5, rectY5, rectWidth5, rectHeight5);
-
-    //     // Colocar texto dentro del recuadro 5
-    //     doc.text(`Sector: ${loteInfo.sectorNombre}`, 15, 100);
-    //     doc.text(`Subsector: ${loteInfo.subSectorNombre}`, 15, 110);
-    //     doc.text(`Parte: ${loteInfo.parteNombre}`, 15, 120);
-    //     doc.text(`Elemento: ${loteInfo.elementoNombre}`, 15, 130);
-    //     doc.text(`Lote: ${loteInfo.nombre}`, 15, 140);
-    //     doc.text(`Pk inicial: ${loteInfo.pkInicial}`, 15, 150);
-    //     doc.text(`Pk final: ${loteInfo.pkFinal}`, 15, 160);
-
-    //     // Tamaño y posición del recuadro 6
-    //     const rectX6 = 10;
-    //     const rectY6 = 170;
-    //     const rectWidth6 = 190; // Ancho del recuadro
-    //     const rectHeight6 = 70; // Altura del recuadro
-
-    //     // Establecer el tamaño de fuente
-    //     doc.setFontSize(fontSize);
-
-    //     // Establecer el color de fondo para el recuadro 6
-    //     doc.setFillColor(240, 240, 240); // Gris claro casi blanco
-
-    //     // Dibujar el recuadro 6 con fondo gris claro
-    //     doc.rect(rectX6, rectY6, rectWidth6, rectHeight6, 'FD');
-
-    //     // Dibujar el borde del recuadro 6
-    //     doc.rect(rectX6, rectY6, rectWidth6, rectHeight6);
-
-    //     // Agregar imagen al PDF dentro del recuadro 6
-    //     if (imagen) {
-    //         doc.addImage(imagen, 'JPEG', 25, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
-    //     }
-    //     if (imagen2) {
-    //         doc.addImage(imagen2, 'JPEG', 110, 180, 70, 50); // Ajusta las coordenadas y el tamaño según necesites
-    //     }
-
-    //     // Tamaño y posición del recuadro 7
-    //     const rectX7 = 10;
-    //     const rectY7 = 240;
-    //     const rectWidth7 = 190; // Ancho del recuadro
-    //     const rectHeight7 = 28; // Altura del recuadro
-
-    //     // Establecer el tamaño de fuente
-    //     doc.setFontSize(fontSize);
-
-    //     // Establecer el color de fondo para el recuadro 7
-    //     doc.setFillColor(240, 240, 240); // Gris claro casi blanco
-
-    //     // Dibujar el recuadro 7 con fondo gris claro
-    //     doc.rect(rectX7, rectY7, rectWidth7, rectHeight7, 'FD');
-
-    //     // Dibujar el borde del recuadro 7
-    //     doc.rect(rectX7, rectY7, rectWidth7, rectHeight7);
-
-    //     // Colocar texto dentro del recuadro 7
-    //     doc.text('Resultado de la inspección', 150, 240);
-    //     doc.text(resultadoInspeccion, 150, 240);
-    //     doc.text(`Nombre del responsable ${nombreResponsable}`, 150, 250);
-
-    //     doc.text(`Firmado electronicamente con blockchain`, 15, 250);
-    //     doc.text(firma, 15, 260);
-
-
-
-
-
-
-
-
-
-    //     doc.save('formularioWeb.pdf');
-    // };
-
-
-
     const [mostrarConfirmacionAdicional, setMostrarConfirmacionAdicional] = useState(false);
 
     const [localObservaciones, setLocalObservaciones] = useState('');
@@ -404,6 +157,11 @@ function FormularioInspeccion({ setImagen, setImagen2, onObservaciones, formular
         onObservaciones(localObservaciones); // Envía las observaciones al componente padre
     };
 
+
+    const [inputGroc, setInputGroc] = useState(false)
+    const handleInputGroc = () => {
+        setInputGroc(true)
+    }
     return (
         <div className='text-gray-500'>
 
@@ -444,11 +202,21 @@ function FormularioInspeccion({ setImagen, setImagen2, onObservaciones, formular
                         <input type="text" id="plano" value={plano} onChange={(e) => setPlano(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                     </div>
 
-                   
+                    
                     <div className="mb-4">
-                        <label htmlFor="observaciones" className="block text-gray-500 text-sm font-bold mb-2">Observaciones del informe</label>
-                        <textarea id="observaciones" value={localObservaciones} onChange={(e) => setLocalObservaciones(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                        <div className='flex gap-5 justify-between items-center mb-2'>
+
+                            <label htmlFor="observaciones" className="block text-gray-500 text-sm font-bold">Observaciones del informe</label>
+                            <button className='bg-gray-200 px-4 py-1 font-medium text-sm text-gray-500 flex gap-2 items-center rounded-lg' type="button" onClick={handleInputGroc}><BsStars />Generar</button>
+                        </div>
+
+                        <textarea id="observaciones" value={localObservaciones} onChange={(e) => setLocalObservaciones(e.target.value)} className="shadow appearance-none border rounded w-full h-52 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
                     </div>
+                    {inputGroc && (
+                        <GrocIA loteInfo={loteInfo} localObservaciones={localObservaciones} setLocalObservaciones={setLocalObservaciones} setInputGroc={setInputGroc} />
+                    )}
+
+
                 </div>
                 {/* Campos de trazabilidad */}
                 <div className="mb-4 hidden">
@@ -486,8 +254,8 @@ function FormularioInspeccion({ setImagen, setImagen2, onObservaciones, formular
                     </div>
                 </div>
                 {/* Botones */}
-                <div className='flex justify-center gap-5 mt-2'>
-                    <button type="button" onClick={handleSolicitarConfirmacion} className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center"><FaFilePdf /> Guardar</button>
+                <div className='flex justify-center gap-5 mt-5'>
+                    <button type="button" onClick={handleSolicitarConfirmacion} className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center"><FaFilePdf /> Guardar</button>
                     <button type="button" className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex gap-2 items-center"
                         onClick={() => {
                             handleCloseModal()
@@ -551,7 +319,7 @@ function FormularioInspeccion({ setImagen, setImagen2, onObservaciones, formular
                                                     </tr>
                                                     <tr>
                                                         <td className="px-6 py-4 font-medium text-gray-700">Observaciones Informe:</td>
-                                                        <td className="px-6 py-4">{observaciones}</td>
+                                                        <td className="px-6 py-4">{localObservaciones}</td>
                                                     </tr>
                                                     <tr>
                                                         <td className="px-6 py-4 font-medium text-gray-700">Sector:</td>
@@ -581,10 +349,11 @@ function FormularioInspeccion({ setImagen, setImagen2, onObservaciones, formular
                                                         <td className="px-6 py-4 font-medium text-gray-700">Pk final:</td>
                                                         <td className="px-6 py-4">{loteInfo.pkFinal}</td>
                                                     </tr>
-                                                    <tr>
+                                                    {/* <tr>
                                                         <td className="px-6 py-4 font-medium text-gray-700">Usuario:</td>
-                                                        <td className="px-6 py-4">{nombreResponsable}</td>
-                                                    </tr>
+                                                        <td className="px-6 py-4">{username}</td>
+                                                       
+                                                    </tr> */}
                                                     <tr>
                                                         <td className="px-6 py-4 font-medium text-gray-700">Comentarios inspección:</td>
                                                         <td className="px-6 py-4">{comentario}</td>
@@ -651,8 +420,8 @@ function FormularioInspeccion({ setImagen, setImagen2, onObservaciones, formular
                                 setMostrarConfirmacionAdicional(false)
                                 setImagen('')
                                 setImagen2('')
-                            }} 
-                            className="w-full bg-gray-400 hover:bg-gray-500 text-white py-2 rounded-lg transition duration-150">
+                            }}
+                                className="w-full bg-gray-400 hover:bg-gray-500 text-white py-2 rounded-lg transition duration-150">
                                 Cancelar
                             </button>
                         </div>
