@@ -1839,6 +1839,7 @@ function TablaPpi() {
                                                 <div className='col-span-5 flex gap-2 bg-sky-pastel-400 text-gray-100 py-3 px-4 font-medium rounded-t-xl'>
                                                     <span>{subactividad.numero}</span>
                                                     <span>{subactividad.nombre}</span>
+                                                    <p>test</p>
                                                 </div>
                                                 <div className='px-4 col-span-5 xl:col-span-2'>
                                                     <div className="flex gap-2">
@@ -1908,7 +1909,9 @@ function TablaPpi() {
                                                         </div>
                                                     </div>
                                                     <div className="flex col-span-full">
-                                                        <button onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)} className="text-gray-500 text-2xl hover:text-gray-700 transition-colors duration-300">
+                                                        <button 
+                                                        onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)} 
+                                                        className="text-gray-500 text-2xl hover:text-gray-700 transition-colors duration-300">
                                                             <FaRegEdit />
                                                         </button>
                                                     </div>

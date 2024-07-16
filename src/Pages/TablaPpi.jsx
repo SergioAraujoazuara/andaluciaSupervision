@@ -1698,7 +1698,7 @@ function TablaPpi() {
                                         </select>
                                     </div>
 
-                                    <div className='flex gap-3 bg-red-100'>
+                                    <div className='flex gap-3'>
                                         <button onClick={showTableView} className={`flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2 ${view === 'table' ? 'bg-yellow-600 text-gray-100' : 'bg-gray-200'}`}>
                                             <span><FaTable /></span>Tabla
                                         </button>
@@ -1833,14 +1833,17 @@ function TablaPpi() {
                                                             </p>
                                                         ) : null}
                                                     </div>
-                                                    <div className="col-span-3 xl:col-span-1 block flex justify-center">
-                                                        <button
-                                                            onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                            className="text-gray-500 font-bold text-xl"
-                                                        >
-                                                            <FaRegEdit />
-                                                        </button>
+                                                    <div className="col-span-3 xl:col-span-1 block bg-white cursor-pointer flex justify-center">
+                                                        {subactividad.formularioEnviado ? (
+                                                            <button
+                                                                onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                                className="text-gray-500 font-bold text-xl"
+                                                            >
+                                                                <FaRegEdit />
+                                                            </button>
+                                                        ) : null}
                                                     </div>
+                                                    
                                                 </div>
                                             ))
                                     ])}
@@ -1941,9 +1944,14 @@ function TablaPpi() {
                                                             )}
                                                         </div>
                                                         <div className="flex items-center">
-                                                            <button onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)} className="text-gray-500 text-2xl hover:text-gray-700 transition-colors duration-300">
-                                                                <FaRegEdit />
-                                                            </button>
+                                                        {subactividad.formularioEnviado ? (
+                                                         <button
+                                                         onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                         className="text-gray-500 font-bold text-xl"
+                                                     >
+                                                         <FaRegEdit />
+                                                     </button>
+                                                        ) : null}
                                                         </div>
                                                     </div>
                                                 </div>
