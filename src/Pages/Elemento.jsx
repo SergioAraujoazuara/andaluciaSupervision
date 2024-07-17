@@ -254,61 +254,63 @@ function Elemento() {
                         </button>
                     </div>
 
-                  
+
 
                     <div className="w-full rounded-xl">
                         <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded-md'>
-                            {showSector && <div className='text-left font-medium text-gray-600 border-r-2 border-gray-300 sm:block hidden'>
-                                
-                                Sector
-                                </div>}
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-2 sm:block hidden border-r-2 border-gray-300'>Sub Sector</div>
-                            <div className='text-left sm:ps-5 font-medium text-gray-600 sm:block hidden border-r-3 border-gray-300'>Parte</div>
-                            <div className='text-left sm:ps-5 font-medium text-gray-600 col-span-1 sm:block hidden border-r-2 border-gray-300'>Elemento</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-2 sm:block hidden border-r-2 border-gray-300'>Pk</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-3 sm:block hidden border-r-2 border-gray-300'>Lote y ppi</div>
-                            <div className='text-left sm:ps-10 font-medium text-gray-600 col-span-2 sm:block hidden'>Progreso inspección</div>
+                            {showSector &&
+                                <div className='text-left font-medium text-gray-600 sm:block hidden'>
+                                    Sector
+                                </div>
+                            }
+                            <div className='text-left font-medium text-gray-600 col-span-2 sm:block hidden'>Sub Sector</div>
+                            <div className='text-left font-medium text-gray-600 sm:block hidden'>Parte</div>
+                            <div className='text-left font-medium text-gray-600 col-span-1 sm:block hidden'>Elemento</div>
+                            <div className='text-center font-medium text-gray-600 col-span-2 sm:block hidden'>Pk</div>
+                            <div className='text-left font-medium text-gray-600 col-span-3 sm:block hidden'>Lote y ppi</div>
+                            <div className='text-left font-medium text-gray-600 col-span-2 sm:block hidden'>Progreso inspección</div>
                         </div>
 
                         {filteredLotes.sort((a, b) => {
                             const avanceA = (a.actividadesAptas || 0) / a.totalSubactividades;
-                            const avanceB = (b.actividadesAptas || 0) / a.totalSubactividades;
+                            const avanceB = (b.actividadesAptas || 0) / b.totalSubactividades;
                             return avanceB - avanceA; // Orden descendente: de mayor a menor avance
                         }).map((l, i) => (
                             <Link to={`/tablaPpi/${l.id}/${l.ppiNombre}`} onClick={() => handleCaptrurarTrazabilidad(l)} key={i}>
-                                <div className='text-sm cursor-pointer grid sm:grid-cols-12 grid-cols-1 items-center justify-start sm:p-5 border-b-2 font-normal text-gray-600 hover:bg-gray-100'>
-                                    {showSector && <div className='sm:border-r-2 sm:border-b-0 flex items-center sm:pr-10'>
-                                        {l.sectorNombre}
-                                    </div>}
-                                    <div className='sm:border-r-2 sm:border-b-0 flex items-center col-span-2 sm:ps-10'>
-                                        {l.subSectorNombre}
-                                    </div>
-                                    <div className='sm:border-r-2 flex items-center sm:justify-start sm:ps-6'>
-                                        {l.parteNombre}
-                                    </div>
-                                    <div className='sm:border-r-2 flex items-center sm:justify-start col-span-1 sm:ps-4 text-sm'>
-                                        {l.elementoNombre}
-                                    </div>
-                                    <div className='sm:border-r-2 flex flex-col col-span-2 items-start justify-center text-center sm:ps-8'>
-                                        <div className='col-span-2'><p className='p-1'>Inicial: {l.pkInicial}</p></div>
-                                        <div className='col-span-2'><p className='p-1'>Final: {l.pkFinal}</p></div>
-                                    </div>
-                                    <div className='sm:border-r-2 flex flex-col col-span-3 items-start sm:justify-center sm:ps-10 sm:pr-5'>
-                                        <div className='flex gap-3 items-center'>
-                                            <p className='text-amber-600 font-medium'>Lote:</p>
-                                            <p className='font-medium'>{l.nombre}</p>
+                                <div className='w-full grid grid-cols-1 xl:grid-cols-12 items-center text-sm cursor-pointer p-5 border-b-2 font-normal text-gray-600 hover:bg-gray-100'>
+                                    {showSector &&
+                                        <div className='w-full xl:col-span-1 flex xl:block gap-2'>
+                                            <p className='xl:hidden font-medium'>Sector: </p>{l.sectorNombre}
                                         </div>
-                                        <div className='flex gap-3 mt-1'>
-                                            <p className='text-amber-600 font-medium'>Ppi:</p>
-                                            <p className='font-medium'>{l.ppiNombre}</p>
-                                        </div>
-                                        
+                                    }
+                                    <div className='w-full xl:col-span-2 flex xl:block gap-2'>
+                                        <p className='xl:hidden font-medium'>Sub sector: </p>{l.subSectorNombre}
                                     </div>
-                                    <div className='flex flex-col items-center sm:justify-start gap-5 col-span-2 sm:ps-10'>
-                                        {
+                                    <div className='w-full xl:col-span-1 flex xl:block gap-2'>
+                                        <p className='xl:hidden font-medium'>Parte: </p>{l.parteNombre}
+                                    </div>
+                                    <div className='w-full xl:col-span-1 flex xl:block gap-2'>
+                                        <p className='xl:hidden font-medium'>Elemento: </p>{l.elementoNombre}
+                                    </div>
+                                    <div className='w-full xl:col-span-2 xl:text-center flex flex-col xl:flex-row xl:justify-center'>
+                                        <div className='w-full xl:w-auto'><p className='font-medium'>Pk Inicial: {l.pkInicial}</p></div>
+                                        <div className='w-full xl:w-auto'><p className='font-medium'>Pk Final: {l.pkFinal}</p></div>
+                                    </div>
+                                    <div className='w-full flex flex-col items-start justify-center xl:col-span-3'>
+                                        <div className='flex gap-2 items-center'>
+                                            <p className='text-sky-600 font-medium'>Lote:</p>
+                                            <p className='font-medium text-sky-600'>{l.nombre}</p>
+                                        </div>
+                                        <div className='flex gap-2 mt-1'>
+                                            <p className='text-sky-600 font-medium'>Ppi:</p>
+                                            <p className='font-medium text-sky-600'>{l.ppiNombre}</p>
+                                        </div>
+                                    </div>
+                                    <div className='w-full xl:col-span-2'>
+                                    {
                                             l.totalSubactividades > 0 ? (
-                                                <>
-                                                    {`${l.actividadesAptas || 0}/${l.totalSubactividades} `}
+                                                <div className='text-start flex flex-col items-start gap-3'>
+                                                     {`${l.actividadesAptas || 0}/${l.totalSubactividades} `}
                                                     ({((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%)
                                                     <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '100%' }}>
                                                         <div
@@ -320,7 +322,7 @@ function Elemento() {
                                                             }}
                                                         />
                                                     </div>
-                                                </>
+                                                </div>
                                             ) : "Inspección no iniciada"
                                         }
                                     </div>
@@ -328,6 +330,7 @@ function Elemento() {
                             </Link>
                         ))}
                     </div>
+
                 </div>
             </div>
         </div>

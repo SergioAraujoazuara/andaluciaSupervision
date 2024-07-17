@@ -10,7 +10,7 @@ import { db } from '../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 import GrocIA from './GrocIA';
 
-function FormularioInspeccion({username, setImagen, setImagen2, onObservaciones, formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros }) {
+function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones, formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros }) {
 
     const { id } = useParams()
     const idLote = localStorage.getItem('loteId');
@@ -202,15 +202,15 @@ function FormularioInspeccion({username, setImagen, setImagen2, onObservaciones,
                         <input type="text" id="plano" value={plano} onChange={(e) => setPlano(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                     </div>
 
-                    
+
                     <div className="mb-4">
                         <div className='flex gap-5 justify-between items-center mb-2'>
 
-                            <label htmlFor="observaciones" className="block text-gray-500 text-sm font-bold">Observaciones del informe</label>
+                            <label htmlFor="observaciones" className="block text-gray-500 text-sm font-medium">Observaciones del informe</label>
                             <button className='bg-gray-200 px-4 py-1 font-medium text-sm text-gray-500 flex gap-2 items-center rounded-lg' type="button" onClick={handleInputGroc}><BsStars />Generar</button>
                         </div>
 
-                        <textarea id="observaciones" value={localObservaciones} onChange={(e) => setLocalObservaciones(e.target.value)} className="shadow appearance-none border rounded w-full h-52 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                        <textarea id="observaciones" value={localObservaciones} onChange={(e) => setLocalObservaciones(e.target.value)} className="shadow appearance-none border rounded w-full h-36 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
                     </div>
                     {inputGroc && (
                         <GrocIA loteInfo={loteInfo} localObservaciones={localObservaciones} setLocalObservaciones={setLocalObservaciones} setInputGroc={setInputGroc} />
@@ -285,6 +285,8 @@ function FormularioInspeccion({username, setImagen, setImagen2, onObservaciones,
                                                 * Revisa los datos y comprueba que todo está correcto
                                             </h2>
                                         </div>
+
+                                        <div className='w-full border-b mt-5'></div>
 
                                         <div className='overflow-x-auto mt-4'>
                                             <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
@@ -375,6 +377,8 @@ function FormularioInspeccion({username, setImagen, setImagen2, onObservaciones,
 
                                         handleConfirmarEnvio()
                                         setMostrarConfirmacion(false);
+                                        setImagen('')
+                                        setImagen2('')
                                     }}
                                     className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                                 >

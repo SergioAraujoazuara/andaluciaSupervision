@@ -272,7 +272,7 @@ function TablaPpi() {
 
         // Logs basados en las condiciones
         if (subAct === 'original' && resultadoInspeccion === 'Apto') {
-            
+
             nuevaSubactividadEditada = {
                 ...nuevaSubactividadEditada,
                 motivoVersion: 'editada',
@@ -280,7 +280,7 @@ function TablaPpi() {
         }
 
         if (subAct === 'rechazada' && resultadoInspeccion === 'Apto') {
-           
+
             nuevaSubactividadEditada = {
                 ...nuevaSubactividadEditada,
                 version: (parseInt(newEditVersion) + 1).toString(), // Asignar la nueva versión para la subactividad editada
@@ -288,7 +288,7 @@ function TablaPpi() {
             };
         }
 
-     
+
 
         // Actualizar la subactividad seleccionada para que no esté activa
         nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = {
@@ -318,7 +318,7 @@ function TablaPpi() {
 
         await actualizarFormularioEnFirestore(nuevoPpi);
 
-      
+
 
         setPpi(nuevoPpi);
         setShowConfirmModalRepetida(false);
@@ -348,7 +348,7 @@ function TablaPpi() {
         subactividadSeleccionada.observaciones = observaciones; // obsevaciones input // PASO 1 para guardar info en la inspeccion
         subactividadSeleccionada.active = true;
 
-       
+
 
         if (resultadoInspeccion === "Apto") {
             const loteRef = doc(db, "lotes", idLote);
@@ -1262,7 +1262,7 @@ function TablaPpi() {
 
         const [actividadIndex, subactividadIndex] = subactividadId.split('-').slice(1).map(Number);
         const subactividad = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
-      
+
         setIdRegistroImagen(subactividad);
 
         // Comprobar sub actividad
@@ -1270,7 +1270,7 @@ function TablaPpi() {
 
         // Obtener el documento del formulario desde Firestore
         const formularioData = await obtenerDatosFormulario(subactividad.idRegistroFormulario);
-       
+
 
         setSubactividadSeleccionada(subactividad);
         setActividadNombre(subactividad.nombre || '');
@@ -1423,20 +1423,23 @@ function TablaPpi() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-gray-800 opacity-75"></div>
                     <div className="relative bg-white rounded-lg shadow-lg w-full max-w-lg mx-auto overflow-hidden">
-                        <button
-                            onClick={() => {
-                                setShowConfirmModalRepetida(false)
-                                setImagenEdit('')
-                                setImagen2Edit('')
-                            }}
-                            className="absolute top-4 right-4 text-3xl text-gray-500 hover:text-gray-700 transition-colors duration-300"
-                        >
-                            <IoCloseCircle />
-                        </button>
+
                         <div className="p-8 overflow-y-auto max-h-[80vh]">
-                            <div className="text-center">
-                                <h2 className="text-2xl font-semibold mb-6">Editar inspección</h2>
+                            <div className="text-center flex items-center justify-between mb-4">
+                                <h2 className="text-2xl font-medium">Editar inspección</h2>
+                                <button
+                                    onClick={() => {
+                                        setShowConfirmModalRepetida(false)
+                                        setImagenEdit('')
+                                        setImagen2Edit('')
+                                    }}
+                                    className="text-3xl text-gray-500 hover:text-gray-700 transition-colors duration-300"
+                                >
+                                    <IoCloseCircle />
+                                </button>
                             </div>
+
+                            <div className='w-full border-b-2 mb-5'></div>
                             {subactividadSeleccionada && (
                                 <div className="mb-6">
                                     <div className="mb-4">
@@ -1557,7 +1560,7 @@ function TablaPpi() {
                                             </div>
 
                                             <div className="mb-4">
-                                                <label className="block text-sm font-medium text-gray-700">Observaciones del informe</label>
+                                                <label className="block text-sm text-gray-500">Observaciones del informe</label>
                                                 <textarea
                                                     value={formularioData.observaciones}
                                                     onChange={(e) => setFormularioData({ ...formularioData, observaciones: e.target.value })}
@@ -1608,7 +1611,7 @@ function TablaPpi() {
                         <h1 className=' text-gray-500'>Home</h1>
                     </Link>
 
-                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} className='hidden xl:block'/>
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} className='hidden xl:block' />
 
                     <h1 className='cursor-pointer text-gray-500 hidden xl:block' onClick={regresar}>Elementos</h1>
 
@@ -1842,7 +1845,7 @@ function TablaPpi() {
                                                             </button>
                                                         ) : null}
                                                     </div>
-                                                    
+
                                                 </div>
                                             ))
                                     ])}
@@ -1943,14 +1946,14 @@ function TablaPpi() {
                                                             )}
                                                         </div>
                                                         <div className="flex items-center">
-                                                        {subactividad.formularioEnviado ? (
-                                                         <button
-                                                         onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                         className="text-gray-500 font-bold text-xl"
-                                                     >
-                                                         <FaRegEdit />
-                                                     </button>
-                                                        ) : null}
+                                                            {subactividad.formularioEnviado ? (
+                                                                <button
+                                                                    onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                                    className="text-gray-500 font-bold text-xl"
+                                                                >
+                                                                    <FaRegEdit />
+                                                                </button>
+                                                            ) : null}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -2009,19 +2012,26 @@ function TablaPpi() {
 
                     <div className="mx-auto w-[600px] h-[600px] modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto px-12 py-8"
                     >
-                        <button
-                            onClick={() => {
-                                handleCloseModal()
-                                setImagen('')
-                                setImagen2('')
-                            }}
-                            className="text-3xl w-full flex justify-end items-center text-gray-500 hover:text-gray-700 transition-colors duration-300">
-                            <IoCloseCircle />
-                        </button>
+
 
                         <div className="my-6">
-                            <label htmlFor="resultadoInspeccion" className="block text-2xl font-bold text-gray-500 mb-4 flex items-center gap-2">
-                                <span className='text-3xl'></span> Resultado de la inspección:
+                            <div className='flex justify-between items-center mb-4'>
+                                <h2 className='text-center font-medium text-2xl text-gray-400 '>Formulario</h2>
+
+                                <button
+                                    onClick={() => {
+                                        handleCloseModal()
+                                        setImagen('')
+                                        setImagen2('')
+                                    }}
+                                    className="text-3xl text-gray-500 hover:text-gray-700 transition-colors duration-300">
+                                    <IoCloseCircle />
+                                </button>
+                            </div>
+                            <div className='w-full border-b-2 mb-5'></div>
+
+                            <label htmlFor="resultadoInspeccion" className="block font-medium text-gray-500 flex items-center gap-2">
+                                <span className='text-lg'></span> Resultado de la inspección:
                             </label>
                             <div className="block w-full py-2 text-base p-2 border-gray-300 focus:outline-none focus:ring-gray-500  sm:text-sm rounded-md">
                                 {/* Opción Apto */}
@@ -2055,18 +2065,18 @@ function TablaPpi() {
                                 </div>
 
                                 <div className="my-4">
-                                    <label htmlFor="comentario" className="block text-gray-500 text-sm font-bold mb-2">Comentarios de la inspección</label>
+                                    <label htmlFor="comentario" className="block text-gray-500 text-sm font-medium mb-2">Comentarios de la inspección</label>
                                     <textarea id="comentario" value={comentario} onChange={(e) => setComentario(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
                                 </div>
                                 <div className="mb-4 mt-4">
-                                    <label htmlFor="imagen" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar imagen</label>
+                                    <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium mb-2">Seleccionar imagen</label>
                                     <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                     {imagen && (
                                         <img src={imagen} />
                                     )}
                                 </div>
                                 <div className="">
-                                    <label htmlFor="imagen" className="block text-gray-500 text-sm font-bold mb-2">Seleccionar imagen 2</label>
+                                    <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium mb-2">Seleccionar imagen 2</label>
                                     <input onChange={handleImagenChange2} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                     {imagen2 && (
                                         <img src={imagen2} />
@@ -2087,7 +2097,7 @@ function TablaPpi() {
                             comentario={comentario}
                             firma={firma}
                             signature={userSignature}
-                            userName = {userName}
+                            userName={userName}
                             fechaHoraActual={fechaHoraActual}
                             handleCloseModal={handleCloseModal}
                             ppiNombre={ppiNombre}
@@ -2139,7 +2149,7 @@ function TablaPpi() {
                                 }}><p className='text-xl'><FaFilePdf /></p>Si, generar informe</button>
                             <button
                                 onClick={handleConfirmarEnviotablaPpi}
-                                className="bg-gray-500 hover:bg-gray-600 text-white rounded-md shadow-md font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline"
+                                className="bg-gray-500 hover:bg-gray-600 text-white rounded-md shadow-md font-medium py-3 px-4 rounded focus:outline-none focus:shadow-outline"
                             >
                                 No, realizar únicamente la inspección
                             </button>
@@ -2215,7 +2225,7 @@ function TablaPpi() {
                             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                                 <div className="sm:flex sm:items-start">
                                     <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-                                        <p className='text-teal-500 font-bold text-5xl'><FaCheckCircle /></p>
+                                        <p className='text-teal-500 font-medium text-5xl'><FaCheckCircle /></p>
                                     </div>
                                     <div className="mt-3 text-center sm:mt-0 sm:ml-8 sm:text-left">
                                         <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -2256,9 +2266,9 @@ function TablaPpi() {
                             <IoCloseCircle />
                         </button>
 
-                        <p className='text-gray-500 font-bold text-5xl'><FaFilePdf /></p>
+                        <p className='text-gray-500 font-medium text-5xl'><FaFilePdf /></p>
 
-                        <p className='text-gray-500 font-bold text-xl'>¿Imprimir el informe?</p>
+                        <p className='text-gray-500 font-medium text-xl'>¿Imprimir el informe?</p>
                         <div className='flex gap-5'>
                             <button className='bg-sky-600 hover:bg-sky-700 px-4 py-3 rounded-md shadow-md text-white font-medium flex gap-2 items-center' onClick={generatePDF}>Si</button>
                             <button className='bg-gray-500 hover:bg-gray-600 px-4 py-3 rounded-md shadow-md text-white font-medium flex gap-2 items-center' onClick={cerrarModalYLimpiarDatos}>Cancelar</button>
