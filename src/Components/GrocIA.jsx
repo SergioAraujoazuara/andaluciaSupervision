@@ -31,7 +31,8 @@ const GrocIA = ({ loteInfo, setInputGroc, setLocalObservaciones }) => {
             messages: [
                 {
                     role: "user",
-                    content: `Resume de manera breve y natural como si fueras un supervisor de obra, no comienzes el mensaje con saludos ni explicaiones, el contenido que te muestro a continuación, no mencionar datos sensibles de ID. Utiliza los datos de este objeto: ${JSON.stringify(loteInfo)} y la descripción del mensaje en el input: ${content}`,
+                    content: `Eres un experto en supervisiones de obra. Redacta los siguientes puntos ${content}. No comiences el mensaje con saludos ni explicaciones. 
+                    El texto será el contenido de un informe de supervisión para el cliente final, el tono tiene que ser formal e impersonal. `,
                 },
             ],
             model: "llama3-8b-8192",
@@ -62,9 +63,10 @@ const GrocIA = ({ loteInfo, setInputGroc, setLocalObservaciones }) => {
         <div className="bg-gray-200 shadow-md rounded px-4 py-4 mb-4 rounded-lg">
             <div className="mb-2">
                 <label className="text-sm font-bold mb-2 flex gap-2 items-center text-gray-500" htmlFor="textarea">
-                    <BsStars/>Escribe tu mensaje (IA)
+                    <BsStars />Escribe tu prompt
                 </label>
                 <textarea
+                    placeholder='Escribe el texto que quieres que a IA te resuma'
                     id="textarea"
                     value={text}
                     onChange={handleChange}

@@ -207,7 +207,7 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
                         <div className='flex gap-5 justify-between items-center mb-2'>
 
                             <label htmlFor="observaciones" className="block text-gray-500 text-sm font-medium">Observaciones del informe</label>
-                            <button className='bg-gray-200 px-4 py-1 font-medium text-sm text-gray-500 flex gap-2 items-center rounded-lg' type="button" onClick={handleInputGroc}><BsStars />Generar</button>
+                            <button className='bg-gray-200 px-4 py-1 font-medium text-sm text-gray-500 flex gap-2 items-center rounded-lg' type="button" onClick={handleInputGroc}><BsStars />IA assistant</button>
                         </div>
 
                         <textarea id="observaciones" value={localObservaciones} onChange={(e) => setLocalObservaciones(e.target.value)} className="shadow appearance-none border rounded w-full h-36 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
