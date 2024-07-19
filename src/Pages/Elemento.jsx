@@ -259,16 +259,16 @@ function Elemento() {
                     <div className="w-full rounded-xl">
                         <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded-md'>
                             {showSector &&
-                                <div className='text-left font-medium text-gray-600 sm:block hidden'>
+                                <div className='text-left font-medium text-gray-600 sm:block hidden px-2'>
                                     Sector
                                 </div>
                             }
-                            <div className='text-left font-medium text-gray-600 col-span-2 sm:block hidden'>Sub Sector</div>
-                            <div className='text-left font-medium text-gray-600 sm:block hidden'>Parte</div>
-                            <div className='text-left font-medium text-gray-600 col-span-1 sm:block hidden'>Elemento</div>
-                            <div className='text-center font-medium text-gray-600 col-span-2 sm:block hidden'>Pk</div>
-                            <div className='text-left font-medium text-gray-600 col-span-3 sm:block hidden'>Lote y ppi</div>
-                            <div className='text-left font-medium text-gray-600 col-span-2 sm:block hidden'>Progreso inspección</div>
+                            <div className='text-left font-medium text-gray-600 col-span-2 sm:block hidden px-6'>Sub Sector</div>
+                            <div className='text-left font-medium text-gray-600 sm:block hidden px-2'>Parte</div>
+                            <div className='text-left font-medium text-gray-600 col-span-1 sm:block hidden px-2'>Elemento</div>
+                            <div className='text-center font-medium text-gray-600 col-span-2 sm:block hidden px-2'>Pk</div>
+                            <div className='text-left font-medium text-gray-600 col-span-3 sm:block hidden px-2'>Lote y ppi</div>
+                            <div className='text-left font-medium text-gray-600 col-span-2 sm:block hidden px-2'>Progreso inspección</div>
                         </div>
 
                         {filteredLotes.sort((a, b) => {
@@ -277,26 +277,26 @@ function Elemento() {
                             return avanceB - avanceA; // Orden descendente: de mayor a menor avance
                         }).map((l, i) => (
                             <Link to={`/tablaPpi/${l.id}/${l.ppiNombre}`} onClick={() => handleCaptrurarTrazabilidad(l)} key={i}>
-                                <div className='w-full grid grid-cols-1 xl:grid-cols-12 items-center text-sm cursor-pointer p-5 border-b-2 font-normal text-gray-600 hover:bg-gray-100'>
+                                <div className='w-full grid grid-cols-1 xl:grid-cols-12 gap-1 items-center text-sm cursor-pointer p-5 border-b-2 font-normal text-gray-600 hover:bg-gray-100'>
                                     {showSector &&
-                                        <div className='w-full xl:col-span-1 flex xl:block gap-2'>
+                                        <div className='w-full xl:col-span-1 flex xl:block gap-2 px-2'>
                                             <p className='xl:hidden font-medium'>Sector: </p>{l.sectorNombre}
                                         </div>
                                     }
-                                    <div className='w-full xl:col-span-2 flex xl:block gap-2'>
+                                    <div className='w-full xl:col-span-2 flex xl:block gap-2 px-6'>
                                         <p className='xl:hidden font-medium'>Sub sector: </p>{l.subSectorNombre}
                                     </div>
-                                    <div className='w-full xl:col-span-1 flex xl:block gap-2'>
+                                    <div className='w-full xl:col-span-1 flex xl:block gap-2 px-2'>
                                         <p className='xl:hidden font-medium'>Parte: </p>{l.parteNombre}
                                     </div>
-                                    <div className='w-full xl:col-span-1 flex xl:block gap-2'>
+                                    <div className='w-full xl:col-span-1 flex xl:block gap-2 px-2'>
                                         <p className='xl:hidden font-medium'>Elemento: </p>{l.elementoNombre}
                                     </div>
-                                    <div className='w-full xl:col-span-2 xl:text-center flex flex-col xl:flex-row xl:justify-center'>
+                                    <div className='w-full xl:col-span-2 xl:text-center flex flex-col xl:flex-row xl:justify-center px-2'>
                                         <div className='w-full xl:w-auto'><p className='font-medium'>Pk Inicial: {l.pkInicial}</p></div>
                                         <div className='w-full xl:w-auto'><p className='font-medium'>Pk Final: {l.pkFinal}</p></div>
                                     </div>
-                                    <div className='w-full flex flex-col items-start justify-center xl:col-span-3'>
+                                    <div className='w-full flex flex-col items-start justify-center xl:col-span-3 px-2'>
                                         <div className='flex gap-2 items-center'>
                                             <p className='text-sky-600 font-medium'>Lote:</p>
                                             <p className='font-medium text-sky-600'>{l.nombre}</p>
@@ -306,7 +306,7 @@ function Elemento() {
                                             <p className='font-medium text-sky-600'>{l.ppiNombre}</p>
                                         </div>
                                     </div>
-                                    <div className='w-full xl:col-span-2'>
+                                    <div className='w-full xl:col-span-2 px-2'>
                                     {
                                             l.totalSubactividades > 0 ? (
                                                 <div className='text-start flex flex-col items-start gap-3'>
