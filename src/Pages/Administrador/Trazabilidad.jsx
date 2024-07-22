@@ -565,8 +565,6 @@ function Trazabilidad() {
             }
 
 
-            console.log('Tamaño estimado del documento:', estimatedDocumentSize(ppiSeleccionado), 'bytes');
-
             // Actualización del estado para incluir el nuevo lote sin necesidad de recargar
             // (Asegúrate de que esta parte se adapta correctamente a cómo gestionas el estado de 'sectores')
             const sectoresActualizados = sectores.map(sector => {
@@ -942,44 +940,354 @@ function Trazabilidad() {
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Editar
 
-    // const [mostrarModalEditarSector, setMostrarModalEditarSector] = useState(false);
-    // const [sectorIdAEditar, setSectorIdAEditar] = useState(null);
-    // const [nuevoNombreSector, setNuevoNombreSector] = useState('');
 
-    // const solicitarEditarSector = (sectorId, nombreActual) => {
-    //     setSectorIdAEditar(sectorId);
-    //     setNuevoNombreSector(nombreActual); // Pre-populate the input with the current name
-    //     setMostrarModalEditarSector(true);
-    // };
-    // const guardarEdicionSector = async () => {
-    //     if (!nuevoNombreSector.trim()) {
-    //         setAlerta('El nombre del sector no puede estar vacío.');
-    //         setTipoAlerta('error');
-    //         setMostrarModal(true);
-    //         return;
-    //     }
-    //     try {
-    //         const sectorRef = doc(db, `proyectos/${id}/sector`, sectorIdAEditar);
-    //         await updateDoc(sectorRef, { nombre: nuevoNombreSector });
+    // EDICION TRAZABILIDAD
 
-    //         const sectoresActualizados = sectores.map(sector =>
-    //             sector.id === sectorIdAEditar ? { ...sector, nombre: nuevoNombreSector } : sector
-    //         );
-    //         setSectores(sectoresActualizados);
+    /// SECTOR ///
+    const [sectorIdAEditar, setSectorIdAEditar] = useState(null);
+    const [nuevoNombreSector, setNuevoNombreSector] = useState('');
+    const [mostrarModalEditarSector, setMostrarModalEditarSector] = useState(false);
 
-    //         setAlerta('Sector actualizado correctamente.');
-    //         setTipoAlerta('success');
-    //         setMostrarModal(true);
-    //     } catch (error) {
-    //         console.error('Error al actualizar el sector:', error);
-    //         setAlerta('Error al actualizar el sector.');
-    //         setTipoAlerta('error');
-    //         setMostrarModal(true);
-    //     }
-    //     setMostrarModalEditarSector(false);
-    // };
+    // Función para solicitar la edición de un sector
+    const solicitarEditarSector = (sectorId, nombreActual) => {
+        setSectorIdAEditar(sectorId);
+        setNuevoNombreSector(nombreActual);
+        setMostrarModalEditarSector(true);
+    };
+
+    // Función para guardar la edición de un sector
+    const guardarEdicionSector = async () => {
+        if (!nuevoNombreSector.trim()) {
+            setAlerta('El nombre no puede estar vacío.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+            return;
+        }
+
+        try {
+            const docRef = doc(db, `proyectos/${id}/sector`, sectorIdAEditar);
+            await updateDoc(docRef, { nombre: nuevoNombreSector });
+
+            const sectoresActualizados = sectores.map(sector =>
+                sector.id === sectorIdAEditar ? { ...sector, nombre: nuevoNombreSector } : sector
+            );
+
+            setSectores(sectoresActualizados);
+            setAlerta('Sector actualizado correctamente.');
+            setTipoAlerta('success');
+            setMostrarModal(true);
+        } catch (error) {
+            console.error('Error al actualizar el sector:', error);
+            setAlerta('Error al actualizar el sector.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+
+        setMostrarModalEditarSector(false);
+        setSectorIdAEditar('');
+        setNuevoNombreSector('');
+    };
+
+
+
+    /// SUB SECTOR ///
+    const [subSectorIdAEditar, setSubSectorIdAEditar] = useState(null);
+    const [nuevoNombreSubSector, setNuevoNombreSubSector] = useState('');
+    const [mostrarModalEditarSubSector, setMostrarModalEditarSubSector] = useState(false);
+
+
+    // Función para solicitar la edición de un subsector
+    const solicitarEditarSubSector = (sectorId, subSectorId, nombreActual) => {
+        setSectorIdAEditar(sectorId);
+        setSubSectorIdAEditar(subSectorId);
+        setNuevoNombreSubSector(nombreActual);
+        setMostrarModalEditarSubSector(true);
+    };
+
+    // Función para guardar la edición de un subsector
+    const guardarEdicionSubSector = async () => {
+        if (!nuevoNombreSubSector.trim()) {
+            setAlerta('El nombre no puede estar vacío.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+            return;
+        }
+
+        try {
+            const docRef = doc(db, `proyectos/${id}/sector/${sectorIdAEditar}/subsector`, subSectorIdAEditar);
+            await updateDoc(docRef, { nombre: nuevoNombreSubSector });
+
+            const sectoresActualizados = sectores.map(sector => {
+                if (sector.id === sectorIdAEditar) {
+                    return {
+                        ...sector,
+                        subsectores: sector.subsectores.map(subsector =>
+                            subsector.id === subSectorIdAEditar ? { ...subsector, nombre: nuevoNombreSubSector } : subsector
+                        )
+                    };
+                }
+                return sector;
+            });
+
+            setSectores(sectoresActualizados);
+            setAlerta('Subsector actualizado correctamente.');
+            setTipoAlerta('success');
+            setMostrarModal(true);
+        } catch (error) {
+            console.error('Error al actualizar el subsector:', error);
+            setAlerta('Error al actualizar el subsector.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+
+        setMostrarModalEditarSubSector(false);
+        setSectorIdAEditar('');
+        setSubSectorIdAEditar('');
+        setNuevoNombreSubSector('');
+    };
+
+    /// PARTE ///
+
+    const [parteIdAEditar, setParteIdAEditar] = useState(null);
+    const [nuevoNombreParte, setNuevoNombreParte] = useState('');
+    const [mostrarModalEditarParte, setMostrarModalEditarParte] = useState(false);
+
+    // Función para solicitar la edición de una parte
+    const solicitarEditarParte = (sectorId, subSectorId, parteId, nombreActual) => {
+        setSectorIdAEditar(sectorId);
+        setSubSectorIdAEditar(subSectorId);
+        setParteIdAEditar(parteId);
+        setNuevoNombreParte(nombreActual);
+        setMostrarModalEditarParte(true);
+    };
+
+    // Función para guardar la edición de una parte
+    const guardarEdicionParte = async () => {
+        if (!nuevoNombreParte.trim()) {
+            setAlerta('El nombre no puede estar vacío.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+            return;
+        }
+
+        try {
+            const docRef = doc(db, `proyectos/${id}/sector/${sectorIdAEditar}/subsector/${subSectorIdAEditar}/parte`, parteIdAEditar);
+            await updateDoc(docRef, { nombre: nuevoNombreParte });
+
+            const sectoresActualizados = sectores.map(sector => {
+                if (sector.id === sectorIdAEditar) {
+                    return {
+                        ...sector,
+                        subsectores: sector.subsectores.map(subsector => {
+                            if (subsector.id === subSectorIdAEditar) {
+                                return {
+                                    ...subsector,
+                                    partes: subsector.partes.map(parte =>
+                                        parte.id === parteIdAEditar ? { ...parte, nombre: nuevoNombreParte } : parte
+                                    )
+                                };
+                            }
+                            return subsector;
+                        })
+                    };
+                }
+                return sector;
+            });
+
+            setSectores(sectoresActualizados);
+            setAlerta('Parte actualizada correctamente.');
+            setTipoAlerta('success');
+            setMostrarModal(true);
+        } catch (error) {
+            console.error('Error al actualizar la parte:', error);
+            setAlerta('Error al actualizar la parte.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+
+        setMostrarModalEditarParte(false);
+        setSectorIdAEditar('');
+        setSubSectorIdAEditar('');
+        setParteIdAEditar('');
+        setNuevoNombreParte('');
+    };
+
+    /// ELEMENTO /// 
+
+    const [elementoIdAEditar, setElementoIdAEditar] = useState(null);
+    const [nuevoNombreElemento, setNuevoNombreElemento] = useState('');
+    const [mostrarModalEditarElemento, setMostrarModalEditarElemento] = useState(false);
+
+    // Función para solicitar la edición de un elemento
+    const solicitarEditarElemento = (sectorId, subSectorId, parteId, elementoId, nombreActual) => {
+        setSectorIdAEditar(sectorId);
+        setSubSectorIdAEditar(subSectorId);
+        setParteIdAEditar(parteId);
+        setElementoIdAEditar(elementoId);
+        setNuevoNombreElemento(nombreActual);
+        setMostrarModalEditarElemento(true);
+    };
+
+    // Función para guardar la edición de un elemento
+    const guardarEdicionElemento = async () => {
+        if (!nuevoNombreElemento.trim()) {
+            setAlerta('El nombre no puede estar vacío.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+            return;
+        }
+
+        try {
+            const docRef = doc(db, `proyectos/${id}/sector/${sectorIdAEditar}/subsector/${subSectorIdAEditar}/parte/${parteIdAEditar}/elemento`, elementoIdAEditar);
+            await updateDoc(docRef, { nombre: nuevoNombreElemento });
+
+            const sectoresActualizados = sectores.map(sector => {
+                if (sector.id === sectorIdAEditar) {
+                    return {
+                        ...sector,
+                        subsectores: sector.subsectores.map(subsector => {
+                            if (subsector.id === subSectorIdAEditar) {
+                                return {
+                                    ...subsector,
+                                    partes: subsector.partes.map(parte => {
+                                        if (parte.id === parteIdAEditar) {
+                                            return {
+                                                ...parte,
+                                                elementos: parte.elementos.map(elemento =>
+                                                    elemento.id === elementoIdAEditar ? { ...elemento, nombre: nuevoNombreElemento } : elemento
+                                                )
+                                            };
+                                        }
+                                        return parte;
+                                    })
+                                };
+                            }
+                            return subsector;
+                        })
+                    };
+                }
+                return sector;
+            });
+
+            setSectores(sectoresActualizados);
+            setAlerta('Elemento actualizado correctamente.');
+            setTipoAlerta('success');
+            setMostrarModal(true);
+        } catch (error) {
+            console.error('Error al actualizar el elemento:', error);
+            setAlerta('Error al actualizar el elemento.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+
+        setMostrarModalEditarElemento(false);
+        setSectorIdAEditar('');
+        setSubSectorIdAEditar('');
+        setParteIdAEditar('');
+        setNuevoNombreParte('');
+        setNuevoNombreElemento('');
+    };
+
+
+    /// LOTE ///
+
+    const [mostrarModalEditarLote, setMostrarModalEditarLote] = useState(false);
+    const [loteIdAEditar, setLoteIdAEditar] = useState(null);
+    const [nuevoNombreLote, setNuevoNombreLote] = useState('');
+    const [nuevoPkInicial, setNuevoPkInicial] = useState('');
+    const [nuevoPkFinal, setNuevoPkFinal] = useState('');
+    const [nuevoIdBim, setNuevoIdBim] = useState('');
+
+    const solicitarEditarLote = (sectorId, subSectorId, parteId, elementoId, loteId, lote) => {
+        setSectorIdAEditar(sectorId);
+        setSubSectorIdAEditar(subSectorId);
+        setParteIdAEditar(parteId);
+        setElementoIdAEditar(elementoId);
+        setLoteIdAEditar(loteId);
+        setNuevoNombreLote(lote.nombre);
+        setNuevoPkInicial(lote.pkInicial || '');
+        setNuevoPkFinal(lote.pkFinal || '');
+        setNuevoIdBim(lote.idBim || '');
+        setMostrarModalEditarLote(true);
+    };
+
+    const guardarEdicionLote = async () => {
+        if (!nuevoNombreLote.trim()) {
+            setAlerta('El nombre no puede estar vacío.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+            return;
+        }
+
+        try {
+            const docRef = doc(db, `proyectos/${id}/sector/${sectorIdAEditar}/subsector/${subSectorIdAEditar}/parte/${parteIdAEditar}/elemento/${elementoIdAEditar}/lote`, loteIdAEditar);
+            await updateDoc(docRef, {
+                nombre: nuevoNombreLote,
+                pkInicial: nuevoPkInicial,
+                pkFinal: nuevoPkFinal,
+                idBim: nuevoIdBim
+            });
+
+            const sectoresActualizados = sectores.map(sector => {
+                if (sector.id === sectorIdAEditar) {
+                    return {
+                        ...sector,
+                        subsectores: sector.subsectores.map(subsector => {
+                            if (subsector.id === subSectorIdAEditar) {
+                                return {
+                                    ...subsector,
+                                    partes: subsector.partes.map(parte => {
+                                        if (parte.id === parteIdAEditar) {
+                                            return {
+                                                ...parte,
+                                                elementos: parte.elementos.map(elemento => {
+                                                    if (elemento.id === elementoIdAEditar) {
+                                                        return {
+                                                            ...elemento,
+                                                            lotes: elemento.lotes.map(lote =>
+                                                                lote.id === loteIdAEditar
+                                                                    ? { ...lote, nombre: nuevoNombreLote, pkInicial: nuevoPkInicial, pkFinal: nuevoPkFinal, idBim: nuevoIdBim }
+                                                                    : lote
+                                                            )
+                                                        };
+                                                    }
+                                                    return elemento;
+                                                })
+                                            };
+                                        }
+                                        return parte;
+                                    })
+                                };
+                            }
+                            return subsector;
+                        })
+                    };
+                }
+                return sector;
+            });
+
+            setSectores(sectoresActualizados);
+            setAlerta('Lote actualizado correctamente.');
+            setTipoAlerta('success');
+            setMostrarModal(true);
+        } catch (error) {
+            console.error('Error al actualizar el lote:', error);
+            setAlerta('Error al actualizar el lote.');
+            setTipoAlerta('error');
+            setMostrarModal(true);
+        }
+
+        setMostrarModalEditarLote(false);
+        setLoteIdAEditar('');
+        setNuevoNombreLote('');
+        setNuevoPkInicial('');
+        setNuevoPkFinal('');
+        setNuevoIdBim('');
+    };
+
+
+
 
 
     return (
@@ -1286,13 +1594,6 @@ function Trazabilidad() {
 
                             </div>
 
-
-
-
-
-
-
-
                         </div>
 
 
@@ -1303,209 +1604,158 @@ function Trazabilidad() {
                 </div>
 
                 <div className="mt-5">
-                    <div className='flex bg-gray-200 rounded-t-lg  border font-medium'>
+                    <div className='flex bg-gray-200 rounded-t-lg border font-medium'>
                         <p className='px-4 py-2 w-1/5'>Sector</p>
-                        <p className='border-r-2 border-l-2  border-gray-300 px-4 py-2 w-1/5'>Sub sector</p>
+                        <p className='border-r-2 border-l-2 border-gray-300 px-4 py-2 w-1/5'>Sub sector</p>
                         <p className='border-r-2 border-gray-300 px-4 py-2 w-1/5'>Parte</p>
                         <p className='border-r-2 border-gray-300 px-4 py-2 w-1/5'>Elemento</p>
                         <p className='px-4 py-2 w-1/5'>Lote y ppi</p>
                     </div>
 
                     <div className="divide-y divide-gray-200 border rounded-b-lg">
-                        {sectores.map((sector, index) => (
-                            <div key={sector.id} className={`flex flex-wrap items-center ${index % 2 === 0 ? 'bg-gray-100' : 'bg-gray-50'}`}>
-                                <div className="text-lg font-medium px-4 pr-5 py-2 rounded-lg  md:w-1/5 group cursor-pointer flex justify-between">
-                                    <p>{sector.nombre}</p>
-                                    {/* <button
-                                        onClick={() => solicitarEditarSector(sector.id, sector.nombre)}
-                                        className="editar-sector-btn"
-                                    >
-                                        Editar
-                                    </button> */}
-                                    <button
-                                        onClick={() => solicitarEliminarSector(sector.id)}
-                                        className="text-amber-600 text-md opacity-0 group-hover:opacity-100"
-                                    >
-                                        <RiDeleteBinLine />
-                                    </button>
-
-                                </div>
-                                {sector.subsectores && sector.subsectores.length > 0 && (
-                                    <ul className="divide-y divide-gray-200  md:w-4/5">
-                                        {sector.subsectores.map((subsector) => (
-                                            subsector.partes && subsector.partes.length > 0 ? (
-
-                                                subsector.partes.sort((a, b) => a.nombre.localeCompare(b.nombre))
-
-                                                    .map((parte) => (
-
-                                                        parte.elementos && parte.elementos.length > 0 ? (
-                                                            parte.elementos.map((elemento) => (
-                                                                elemento.lotes && elemento.lotes.length > 0 ? (
-                                                                    elemento.lotes.map((lote) => (
-                                                                        <li key={lote.id} className="grid grid-cols-4 items-center py-4 ">
-                                                                            <div className='flex justify-between items-center pr-5 gap-1 border-r-2 border-l-2 group cursor-pointer'>
-                                                                                <p className='px-4 '>{subsector.nombre}</p>
-                                                                                <div className='flex gap-4'>
-                                                                                    <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
-                                                                                <p className='px-4'>{parte.nombre}</p>
-                                                                                <div className='flex gap-4'>
-                                                                                    <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
-                                                                                <p className='px-4 '>{elemento.nombre}</p>
-                                                                                <div className='flex gap-4'>
-
-                                                                                    <button onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                                </div>
-                                                                            </div>
-
-
-
-                                                                            <div className='flex flex-col justify-center px-4 group'>
-                                                                                <p className='font-medium'>Lote: {lote.nombre}</p>
-                                                                                <div className='flex justify-between'>
-                                                                                    <div>
-                                                                                        <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
-                                                                                            {lote.ppiNombre ? <p>PPI: {lote.ppiNombre}</p> : "Ppi sin Asignar"}
-                                                                                        </p>
-                                                                                    </div>
-                                                                                    <div className='flex gap-4'>
-                                                                                        {/* Condición para mostrar el botón solo si existe un ppiId */}
-                                                                                        {lote.ppiId && (
-                                                                                            <div>
-
-
-
-                                                                                                <button
-                                                                                                    onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)}
-                                                                                                    className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
-                                                                                                    <RiDeleteBinLine />
-                                                                                                </button>
-                                                                                            </div>
-                                                                                        )}
-                                                                                    </div>
-
-                                                                                </div>
-                                                                            </div>
-                                                                        </li>
-                                                                    ))
-                                                                ) : (
-                                                                    <li key={`${elemento.id}-sin-lote`} className="grid grid-cols-4 items-center py-4 ">
-                                                                        <div className='flex justify-between items-center pr-5 gap-1 border-r-2 border-l-2 group cursor-pointer'>
-                                                                            <p className='px-4 '>{subsector.nombre}</p>
-                                                                            <div className='flex gap-4'>
-                                                                                <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
-                                                                            <p className='px-4'>{parte.nombre}</p>
-                                                                            <div className='flex gap-4'>
-                                                                                <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
-                                                                            <p className='px-4'>{elemento.nombre}</p>
-                                                                            <div className='flex gap-4'>
-                                                                                <button onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className='lex flex-col justify-center px-4'>
-                                                                            <div className='flex justify-between'>
-                                                                                <div>
-                                                                                    <p>-</p>
-                                                                                    <p className="text-red-500">-</p>
-                                                                                </div>
-
-                                                                                <div className='flex gap-4'>
-                                                                                    {/* Condición para mostrar el botón solo si existe un ppiId */}
-                                                                                    {lote.ppiId && (
-                                                                                        <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
-                                                                                            <RiDeleteBinLine />
-                                                                                        </button>
-                                                                                    )}
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </li>
-                                                                )
-                                                            ))
-                                                        ) : (
-                                                            <li key={`${parte.id}-sin-elemento`} className="items-center grid grid-cols-4">
-                                                                <div className='flex justify-between items-center pr-5 gap-1 border-r-2 border-l-2 cursor-pointer group'>
-                                                                    <p className='px-4 '>{subsector.nombre}</p>
-                                                                    <div className='flex gap-4'>
-                                                                        <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                    </div>
-                                                                </div>
-                                                                <div className='flex justify-between items-center pr-5 gap-1 border-r-2  group cursor-pointer'>
-                                                                    <p className='px-4'>{parte.nombre}</p>
-                                                                    <div className='flex gap-4'>
-                                                                        <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
-                                                                    </div>
-                                                                </div>
-                                                                <p className='px-4 border-r-2'>-</p>
-                                                                <div className='lex flex-col justify-center px-4'>
-                                                                    <div className='flex justify-between'>
-                                                                        <div>
-                                                                            <p>-</p>
-                                                                            <p className="text-red-500">-</p>
-                                                                        </div>
-
-                                                                        <div className='flex gap-4'>
-                                                                            {/* Condición para mostrar el botón solo si existe un ppiId */}
-                                                                            {lote.ppiId && (
-                                                                                <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
-                                                                                    <RiDeleteBinLine />
-                                                                                </button>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </li>
-                                                        )
-                                                    ))
-                                            ) : (
-                                                <li key={`${subsector.id}-sin-parte`} className="grid grid-cols-4 items-center">
-                                                    <div className='flex justify-between pr-5 gap-1 border-r-2 border-l-2 cursor-pointer group'>
-                                                        <p className='px-4 '>{subsector.nombre}</p>
-                                                        <div className='flex gap-4'>
-                                                            <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'><RiDeleteBinLine /></button>
+                        {sectores.map((sector) => (
+                            sector.subsectores.map((subsector) => (
+                                subsector.partes.map((parte) => (
+                                    parte.elementos.map((elemento) => (
+                                        elemento.lotes.length > 0 ? (
+                                            elemento.lotes.map((lote) => (
+                                                <div key={lote.id} className="grid grid-cols-5 items-center py-4">
+                                                    <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
+                                                        <p className="px-4">{sector.nombre}</p>
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => solicitarEditarSector(sector.id, sector.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
+                                                                <FaEdit />
+                                                            </button>
+                                                            <button onClick={() => solicitarEliminarSector(sector.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
+                                                                <RiDeleteBinLine />
+                                                            </button>
                                                         </div>
                                                     </div>
-                                                    <p className='px-4 border-r-2'>-</p>
-                                                    <p className='px-4 border-r-2'>-</p>
-                                                    <div className='lex flex-col justify-center px-4'>
-                                                        <div className='flex justify-between'>
-                                                            <div>
-                                                                <p>-</p>
-                                                                <p className="text-red-500">-</p>
-                                                            </div>
-
-                                                            <div className='flex gap-4'>
-                                                                {/* Condición para mostrar el botón solo si existe un ppiId */}
+                                                    <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
+                                                        <p className="px-4">{subsector.nombre}</p>
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => solicitarEditarSubSector(sector.id, subsector.id, subsector.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
+                                                                <FaEdit />
+                                                            </button>
+                                                            <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
+                                                                <RiDeleteBinLine />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
+                                                        <p className="px-4">{parte.nombre}</p>
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => solicitarEditarParte(sector.id, subsector.id, parte.id, parte.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
+                                                                <FaEdit />
+                                                            </button>
+                                                            <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
+                                                                <RiDeleteBinLine />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
+                                                        <p className="px-4">{elemento.nombre}</p>
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => solicitarEditarElemento(sector.id, subsector.id, parte.id, elemento.id, elemento.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
+                                                                <FaEdit />
+                                                            </button>
+                                                            <button onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
+                                                                <RiDeleteBinLine />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col justify-center px-4 group">
+                                                        <p className="font-medium">Lote: {lote.nombre}</p>
+                                                        <div className="flex justify-between">
+                                                            <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
+                                                                {lote.ppiNombre ? `PPI: ${lote.ppiNombre}` : "Ppi sin Asignar"}
+                                                            </p>
+                                                            <div className="flex gap-2">
                                                                 {lote.ppiId && (
-                                                                    <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className='text-amber-600 text-md opacity-0 group-hover:opacity-100'>
-                                                                        <RiDeleteBinLine />
-                                                                    </button>
+                                                                    <div>
+                                                                        <button onClick={() => solicitarEditarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id, lote)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
+                                                                            <FaEdit />
+                                                                        </button>
+                                                                        <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
+                                                                            <RiDeleteBinLine />
+                                                                        </button>
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </li>
-                                            )
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div key={`${elemento.id}-sin-lote`} className="grid grid-cols-5 items-center py-4">
+                                                <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
+                                                    <p className="px-4">{sector.nombre}</p>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => solicitarEditarSector(sector.id, sector.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
+                                                            <FaEdit />
+                                                        </button>
+                                                        <button onClick={() => solicitarEliminarSector(sector.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
+                                                            <RiDeleteBinLine />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
+                                                    <p className="px-4">{subsector.nombre}</p>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => solicitarEditarSubSector(sector.id, subsector.id, subsector.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
+                                                            <FaEdit />
+                                                        </button>
+                                                        <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
+                                                            <RiDeleteBinLine />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
+                                                    <p className="px-4">{parte.nombre}</p>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => solicitarEditarParte(sector.id, subsector.id, parte.id, parte.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
+                                                            <FaEdit />
+                                                        </button>
+                                                        <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
+                                                            <RiDeleteBinLine />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
+                                                    <p className="px-4">{elemento.nombre}</p>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => solicitarEditarElemento(sector.id, subsector.id, parte.id, elemento.id, elemento.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
+                                                            <FaEdit />
+                                                        </button>
+                                                        <button onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
+                                                            <RiDeleteBinLine />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col justify-center px-4 group">
+                                                    <p className="font-medium">Lote: {lote.nombre}</p>
+                                                    <div className="flex justify-between">
+                                                        <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
+                                                            {lote.ppiNombre ? `PPI: ${lote.ppiNombre}` : "Ppi sin Asignar"}
+                                                        </p>
+                                                        <div className="flex gap-2">
+                                                            {lote.ppiId && (
+                                                                <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
+                                                                    <RiDeleteBinLine />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )
+                                    ))
+                                ))
+                            ))
                         ))}
                     </div>
                 </div>
+
 
 
                 {mostrarModalEliminarSubSector && (
@@ -1628,42 +1878,293 @@ function Trazabilidad() {
 
 
 
-{mostrarModal && (
-    <div className="fixed z-10 inset-0 overflow-y-auto">
-        <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div className="sm:flex sm:items-start">
-                        <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-                            {/* Success or Error Icon */}
-                            {tipoAlerta === 'success' ? 
-                                <IoIosCheckmarkCircle className='text-6xl text-green-600' /> : 
-                                <IoCloseCircle className='text-6xl text-red-600' />
-                            }
-                        </div>
-                        <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 className="text-lg leading-6 font-medium text-gray-900">
-                                {tipoAlerta === 'success' ? 'Éxito' : 'Error'}
-                            </h3>
-                            <div className="mt-2">
-                                <p className="text-sm text-gray-500">
-                                    {alerta}
-                                </p>
+                {mostrarModal && (
+                    <div className="fixed z-10 inset-0 overflow-y-auto">
+                        <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+                            </div>
+                            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                    <div className="sm:flex sm:items-start">
+                                        <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                            {/* Success or Error Icon */}
+                                            {tipoAlerta === 'success' ?
+                                                <IoIosCheckmarkCircle className='text-6xl text-green-600' /> :
+                                                <IoCloseCircle className='text-6xl text-red-600' />
+                                            }
+                                        </div>
+                                        <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                            <h3 className="text-lg leading-6 font-medium text-gray-900">
+                                                {tipoAlerta === 'success' ? 'Éxito' : 'Error'}
+                                            </h3>
+                                            <div className="mt-2">
+                                                <p className="text-sm text-gray-500">
+                                                    {alerta}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                    <button
+                                        type="button"
+                                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                        onClick={handleCloseAlert}
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                )}
+
+
+
+                {mostrarModalPpi && (
+                    <div className="fixed z-10 inset-0 overflow-y-auto">
+                        <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+                            </div>
+                            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" style={{ width: '320px', height: 'auto', maxWidth: '100%' }}>
+                                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                    <div className="sm:flex sm:items-start">
+                                        <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                            <button onClick={handleCloseModalPpi} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
+                                            <div className='text-center flex justify-center flex-col items-center gap-2'>
+                                                <MdOutlineAddLocationAlt className='font-bold text-2xl' />
+                                                <p><strong>Lote: </strong>{objetoLote.nombre ? objetoLote.nombre : "Ppi no encontrado, selecciona la ubicación correctamente"}</p>
+                                                {ppiObject && ppiObject.data && (
+                                                    <div>
+                                                        <p><strong>Ppi: </strong>{ppiObject.data.nombre}</p>
+                                                    </div>
+                                                )}
+                                                {!ppiObject && (
+                                                    <div>
+                                                        <p className='font-medium'>No se encontraron PPIs para el lote.</p>
+                                                        <Link to={`/agregarPpi/${selectedLote}`}>
+                                                            <button className='bg-amber-600 text-white px-4 py-1 rounded-md mt-2 font-medium text-sm'>Agregar Ppi</button>
+                                                        </Link>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                    <button
+                                        type="button"
+                                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gray-500 text-base font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                        onClick={handleCloseModalPpi}
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+
+
+                {mostrarModalEditarSector && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+                            <button onClick={() => setMostrarModalEditarSector(false)} className="text-2xl w-full flex justify-end text-gray-500">
+                                <IoCloseCircle />
+                            </button>
+                            <div>
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Editar Sector</h3>
+                                <input
+                                    type="text"
+                                    value={nuevoNombreSector}
+                                    onChange={(e) => setNuevoNombreSector(e.target.value)}
+                                    placeholder="Nuevo nombre del sector"
+                                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                                />
+                                <div className='flex justify-center gap-5 mt-3'>
+                                    <button
+                                        onClick={guardarEdicionSector}
+                                        className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'
+                                    >
+                                        Guardar
+                                    </button>
+                                    <button
+                                        onClick={() => setMostrarModalEditarSector(false)}
+                                        className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {mostrarModalEditarSubSector && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+                            <button onClick={() => setMostrarModalEditarSubSector(false)} className="text-2xl w-full flex justify-end text-gray-500">
+                                <IoCloseCircle />
+                            </button>
+                            <div>
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Editar Subsector</h3>
+                                <input
+                                    type="text"
+                                    value={nuevoNombreSubSector}
+                                    onChange={(e) => setNuevoNombreSubSector(e.target.value)}
+                                    placeholder="Nuevo nombre del subsector"
+                                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                                />
+                                <div className='flex justify-center gap-5 mt-3'>
+                                    <button
+                                        onClick={guardarEdicionSubSector}
+                                        className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'
+                                    >
+                                        Guardar
+                                    </button>
+                                    <button
+                                        onClick={() => setMostrarModalEditarSubSector(false)}
+                                        className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {mostrarModalEditarParte && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+                            <button onClick={() => setMostrarModalEditarParte(false)} className="text-2xl w-full flex justify-end text-gray-500">
+                                <IoCloseCircle />
+                            </button>
+                            <div>
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Editar Parte</h3>
+                                <input
+                                    type="text"
+                                    value={nuevoNombreParte}
+                                    onChange={(e) => setNuevoNombreParte(e.target.value)}
+                                    placeholder="Nuevo nombre de la parte"
+                                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                                />
+                                <div className='flex justify-center gap-5 mt-3'>
+                                    <button
+                                        onClick={guardarEdicionParte}
+                                        className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'
+                                    >
+                                        Guardar
+                                    </button>
+                                    <button
+                                        onClick={() => setMostrarModalEditarParte(false)}
+                                        className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {mostrarModalEditarElemento && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+                            <button onClick={() => setMostrarModalEditarElemento(false)} className="text-2xl w-full flex justify-end text-gray-500">
+                                <IoCloseCircle />
+                            </button>
+                            <div>
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Editar Elemento</h3>
+                                <input
+                                    type="text"
+                                    value={nuevoNombreElemento}
+                                    onChange={(e) => setNuevoNombreElemento(e.target.value)}
+                                    placeholder="Nuevo nombre del elemento"
+                                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                                />
+                                <div className='flex justify-center gap-5 mt-3'>
+                                    <button
+                                        onClick={guardarEdicionElemento}
+                                        className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'
+                                    >
+                                        Guardar
+                                    </button>
+                                    <button
+                                        onClick={() => setMostrarModalEditarElemento(false)}
+                                        className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+{mostrarModalEditarLote && (
+    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+
+        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+            <button onClick={() => setMostrarModalEditarLote(false)} className="text-2xl w-full flex justify-end text-gray-500">
+                <IoCloseCircle />
+            </button>
+            <div>
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Editar Lote</h3>
+                <input
+                    type="text"
+                    value={nuevoNombreLote}
+                    onChange={(e) => setNuevoNombreLote(e.target.value)}
+                    placeholder="Nuevo nombre del lote"
+                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                />
+                <input
+                    type="text"
+                    value={nuevoPkInicial}
+                    onChange={(e) => setNuevoPkInicial(e.target.value)}
+                    placeholder="Nuevo PK Inicial"
+                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                />
+                <input
+                    type="text"
+                    value={nuevoPkFinal}
+                    onChange={(e) => setNuevoPkFinal(e.target.value)}
+                    placeholder="Nuevo PK Final"
+                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                />
+                <input
+                    type="text"
+                    value={nuevoIdBim}
+                    onChange={(e) => setNuevoIdBim(e.target.value)}
+                    placeholder="Nuevo GlobalID"
+                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                />
+                <div className='flex justify-center gap-5 mt-3'>
                     <button
-                        type="button"
-                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
-                        onClick={handleCloseAlert}
+                        onClick={guardarEdicionLote}
+                        className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'
                     >
-                        Cerrar
+                        Guardar
+                    </button>
+                    <button
+                        onClick={() => setMostrarModalEditarLote(false)}
+                        className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'
+                    >
+                        Cancelar
                     </button>
                 </div>
             </div>
@@ -1673,69 +2174,10 @@ function Trazabilidad() {
 
 
 
-{mostrarModalPpi && (
-    <div className="fixed z-10 inset-0 overflow-y-auto">
-        <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" style={{ width: '320px', height: 'auto', maxWidth: '100%' }}>
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div className="sm:flex sm:items-start">
-                        <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <button onClick={handleCloseModalPpi} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
-                            <div className='text-center flex justify-center flex-col items-center gap-2'>
-                                <MdOutlineAddLocationAlt className='font-bold text-2xl' />
-                                <p><strong>Lote: </strong>{objetoLote.nombre ? objetoLote.nombre : "Ppi no encontrado, selecciona la ubicación correctamente"}</p>
-                                {ppiObject && ppiObject.data && (
-                                    <div>
-                                        <p><strong>Ppi: </strong>{ppiObject.data.nombre}</p>
-                                    </div>
-                                )}
-                                {!ppiObject && (
-                                    <div>
-                                        <p className='font-medium'>No se encontraron PPIs para el lote.</p>
-                                        <Link to={`/agregarPpi/${selectedLote}`}>
-                                            <button className='bg-amber-600 text-white px-4 py-1 rounded-md mt-2 font-medium text-sm'>Agregar Ppi</button>
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button
-                        type="button"
-                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gray-500 text-base font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:ml-3 sm:w-auto sm:text-sm"
-                        onClick={handleCloseModalPpi}
-                    >
-                        Cerrar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-)}
 
 
 
-                {/* {mostrarModalEditarSector && (
-                    <div className="modal">
-                        <div className="modal-content">
-                            <h3>Editar Sector</h3>
-                            <input
-                                type="text"
-                                value={nuevoNombreSector}
-                                onChange={(e) => setNuevoNombreSector(e.target.value)}
-                                placeholder="Nuevo nombre del sector"
-                            />
-                            <button onClick={guardarEdicionSector}>Guardar</button>
-                            <button onClick={() => setMostrarModalEditarSector(false)}>Cancelar</button>
-                        </div>
-                    </div>
-                )} */}
+
 
 
             </div>
