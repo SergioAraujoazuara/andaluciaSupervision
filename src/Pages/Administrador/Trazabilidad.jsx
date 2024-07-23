@@ -1331,6 +1331,7 @@ function Trazabilidad() {
 
                 {/* <div className='w-full border border-b-2'></div> */}
 
+
                 {/* Formulario de trazabilidad */}
                 <div className="flex flex-col ">
 
@@ -1595,6 +1596,13 @@ function Trazabilidad() {
 
                             </div>
 
+
+
+
+
+
+
+
                         </div>
 
 
@@ -1606,12 +1614,12 @@ function Trazabilidad() {
 
                 <div className="mt-5">
                     <div className='flex bg-gray-200 rounded-t-lg border font-medium'>
-                        <p className='px-4 py-2 w-1/6'>Sector</p>
-                        <p className='px-4 py-2 w-1/6'>Sub sector</p>
-                        <p className='px-4 py-2 w-1/6'>Parte</p>
-                        <p className='px-4 py-2 w-1/6'>Elemento</p>
-                        <p className='px-4 py-2 w-1/6'>Lote y ppi</p>
-                        <p className='px-4 py-2 w-1/6'>Estado</p>
+                        <p className='px-4 py-2 w-1/5'>Sector</p>
+                        <p className='px-4 py-2 w-1/5'>Sub sector</p>
+                        <p className='px-4 py-2 w-1/5'>Parte</p>
+                        <p className='px-4 py-2 w-1/5'>Elemento</p>
+                        <p className='px-4 py-2 w-1/5'>Lote y ppi</p>
+
                     </div>
 
                     <div className="divide-y divide-gray-200 border rounded-b-lg">
@@ -1621,7 +1629,7 @@ function Trazabilidad() {
                                     parte.elementos.map((elemento) => (
                                         elemento.lotes.length > 0 ? (
                                             elemento.lotes.map((lote) => (
-                                                <div key={lote.id} className="grid grid-cols-6 items-center py-4">
+                                                <div key={lote.id} className="grid grid-cols-5 items-center py-4">
                                                     <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
                                                         <p className="px-4">{sector.nombre}</p>
                                                         <div className="flex gap-2">
@@ -1668,7 +1676,7 @@ function Trazabilidad() {
                                                     </div>
                                                     <div className="flex flex-col justify-center px-4 group">
                                                         <p className="font-medium">Lote: {lote.nombre}</p>
-                                                        <div className="flex justify-between">
+                                                        <div className="flex flex-col">
                                                             <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
                                                                 {lote.ppiNombre ? `PPI: ${lote.ppiNombre}` : "Ppi sin Asignar"}
                                                             </p>
@@ -1684,16 +1692,15 @@ function Trazabilidad() {
                                                                     </div>
                                                                 )}
                                                             </div>
+                                                            
                                                         </div>
                                                     </div>
 
-                                                    <div className='px-4 text-start'>
-                                                        Pendiente
-                                                    </div>
+
                                                 </div>
                                             ))
                                         ) : (
-                                            <div key={`${elemento.id}-sin-lote`} className="grid grid-cols-6 items-center py-4">
+                                            <div key={`${elemento.id}-sin-lote`} className="grid grid-cols-5 items-center py-4">
                                                 <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
                                                     <p className="px-4">{sector.nombre}</p>
                                                     <div className="flex gap-2">
@@ -1751,11 +1758,10 @@ function Trazabilidad() {
                                                                 </button>
                                                             )}
                                                         </div>
+                                                        
                                                     </div>
                                                 </div>
-                                                <div className='px-4 text-start'>
-                                                    Pendiente
-                                                </div>
+
                                             </div>
                                         )
                                     ))
@@ -2162,6 +2168,8 @@ function Trazabilidad() {
                                     placeholder="Nuevo GlobalID"
                                     className="mt-2 border px-3 py-1 rounded-lg w-full"
                                 />
+                                
+
                                 <div className='flex justify-center gap-5 mt-3'>
                                     <button
                                         onClick={guardarEdicionLote}
