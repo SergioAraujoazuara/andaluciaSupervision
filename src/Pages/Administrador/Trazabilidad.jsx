@@ -511,6 +511,7 @@ function Trazabilidad() {
                 pkInicial: pkInicialInput, // Incluir pkInicial
                 pkFinal: pkFinalInput,
                 idBim: idBimInput,
+                estado: 'pendiente',
                 totalSubactividades: ppiSeleccionado.totalSubactividades || 0,
             };
 
@@ -1605,11 +1606,12 @@ function Trazabilidad() {
 
                 <div className="mt-5">
                     <div className='flex bg-gray-200 rounded-t-lg border font-medium'>
-                        <p className='px-4 py-2 w-1/5'>Sector</p>
-                        <p className='border-r-2 border-l-2 border-gray-300 px-4 py-2 w-1/5'>Sub sector</p>
-                        <p className='border-r-2 border-gray-300 px-4 py-2 w-1/5'>Parte</p>
-                        <p className='border-r-2 border-gray-300 px-4 py-2 w-1/5'>Elemento</p>
-                        <p className='px-4 py-2 w-1/5'>Lote y ppi</p>
+                        <p className='px-4 py-2 w-1/6'>Sector</p>
+                        <p className='px-4 py-2 w-1/6'>Sub sector</p>
+                        <p className='px-4 py-2 w-1/6'>Parte</p>
+                        <p className='px-4 py-2 w-1/6'>Elemento</p>
+                        <p className='px-4 py-2 w-1/6'>Lote y ppi</p>
+                        <p className='px-4 py-2 w-1/6'>Estado</p>
                     </div>
 
                     <div className="divide-y divide-gray-200 border rounded-b-lg">
@@ -1619,7 +1621,7 @@ function Trazabilidad() {
                                     parte.elementos.map((elemento) => (
                                         elemento.lotes.length > 0 ? (
                                             elemento.lotes.map((lote) => (
-                                                <div key={lote.id} className="grid grid-cols-5 items-center py-4">
+                                                <div key={lote.id} className="grid grid-cols-6 items-center py-4">
                                                     <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
                                                         <p className="px-4">{sector.nombre}</p>
                                                         <div className="flex gap-2">
@@ -1684,10 +1686,14 @@ function Trazabilidad() {
                                                             </div>
                                                         </div>
                                                     </div>
+
+                                                    <div className='px-4 text-start'>
+                                                        Pendiente
+                                                    </div>
                                                 </div>
                                             ))
                                         ) : (
-                                            <div key={`${elemento.id}-sin-lote`} className="grid grid-cols-5 items-center py-4">
+                                            <div key={`${elemento.id}-sin-lote`} className="grid grid-cols-6 items-center py-4">
                                                 <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
                                                     <p className="px-4">{sector.nombre}</p>
                                                     <div className="flex gap-2">
@@ -1746,6 +1752,9 @@ function Trazabilidad() {
                                                             )}
                                                         </div>
                                                     </div>
+                                                </div>
+                                                <div className='px-4 text-start'>
+                                                    Pendiente
                                                 </div>
                                             </div>
                                         )
@@ -2115,62 +2124,62 @@ function Trazabilidad() {
                     </div>
                 )}
 
-{mostrarModalEditarLote && (
-    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
-        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
+                {mostrarModalEditarLote && (
+                    <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
+                        <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
 
-        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
-            <button onClick={() => setMostrarModalEditarLote(false)} className="text-2xl w-full flex justify-end text-gray-500">
-                <IoCloseCircle />
-            </button>
-            <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Editar Lote</h3>
-                <input
-                    type="text"
-                    value={nuevoNombreLote}
-                    onChange={(e) => setNuevoNombreLote(e.target.value)}
-                    placeholder="Nuevo nombre del lote"
-                    className="mt-2 border px-3 py-1 rounded-lg w-full"
-                />
-                <input
-                    type="text"
-                    value={nuevoPkInicial}
-                    onChange={(e) => setNuevoPkInicial(e.target.value)}
-                    placeholder="Nuevo PK Inicial"
-                    className="mt-2 border px-3 py-1 rounded-lg w-full"
-                />
-                <input
-                    type="text"
-                    value={nuevoPkFinal}
-                    onChange={(e) => setNuevoPkFinal(e.target.value)}
-                    placeholder="Nuevo PK Final"
-                    className="mt-2 border px-3 py-1 rounded-lg w-full"
-                />
-                <input
-                    type="text"
-                    value={nuevoIdBim}
-                    onChange={(e) => setNuevoIdBim(e.target.value)}
-                    placeholder="Nuevo GlobalID"
-                    className="mt-2 border px-3 py-1 rounded-lg w-full"
-                />
-                <div className='flex justify-center gap-5 mt-3'>
-                    <button
-                        onClick={guardarEdicionLote}
-                        className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'
-                    >
-                        Guardar
-                    </button>
-                    <button
-                        onClick={() => setMostrarModalEditarLote(false)}
-                        className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'
-                    >
-                        Cancelar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-)}
+                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+                            <button onClick={() => setMostrarModalEditarLote(false)} className="text-2xl w-full flex justify-end text-gray-500">
+                                <IoCloseCircle />
+                            </button>
+                            <div>
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Editar Lote</h3>
+                                <input
+                                    type="text"
+                                    value={nuevoNombreLote}
+                                    onChange={(e) => setNuevoNombreLote(e.target.value)}
+                                    placeholder="Nuevo nombre del lote"
+                                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                                />
+                                <input
+                                    type="text"
+                                    value={nuevoPkInicial}
+                                    onChange={(e) => setNuevoPkInicial(e.target.value)}
+                                    placeholder="Nuevo PK Inicial"
+                                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                                />
+                                <input
+                                    type="text"
+                                    value={nuevoPkFinal}
+                                    onChange={(e) => setNuevoPkFinal(e.target.value)}
+                                    placeholder="Nuevo PK Final"
+                                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                                />
+                                <input
+                                    type="text"
+                                    value={nuevoIdBim}
+                                    onChange={(e) => setNuevoIdBim(e.target.value)}
+                                    placeholder="Nuevo GlobalID"
+                                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                                />
+                                <div className='flex justify-center gap-5 mt-3'>
+                                    <button
+                                        onClick={guardarEdicionLote}
+                                        className='bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2 rounded-lg'
+                                    >
+                                        Guardar
+                                    </button>
+                                    <button
+                                        onClick={() => setMostrarModalEditarLote(false)}
+                                        className='bg-gray-500 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-lg'
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
 
 
