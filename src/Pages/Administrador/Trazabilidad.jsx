@@ -11,6 +11,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { MdOutlineAddLocationAlt } from "react-icons/md";
 import { ImLocation } from "react-icons/im";
 import { FaEdit } from "react-icons/fa";
+import { VscEdit } from "react-icons/vsc";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { IoArrowBackCircle } from "react-icons/io5";
 import { GrSave } from "react-icons/gr";
@@ -1292,7 +1293,7 @@ function Trazabilidad() {
 
 
     return (
-        <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500'>
+        <div className='container mx-auto min-h-screen px-6 xl:px-14 py-5 text-gray-500'>
             {/* Encabezado */}
 
 
@@ -1325,7 +1326,7 @@ function Trazabilidad() {
 
 
             {/* Contenido */}
-            <div className='flex gap-3 flex-col mt-5 bg-white p-6 rounded rounded-xl shadow-md'>
+            <div className='flex gap-3 flex-col mt-5 bg-white p-3 rounded rounded-xl shadow-md'>
 
 
 
@@ -1333,18 +1334,16 @@ function Trazabilidad() {
 
 
                 {/* Formulario de trazabilidad */}
-                <div className="flex flex-col ">
+                <div>
+                    <div className='grid grid-cols-1 xl:grid-cols-24 gap-4 xl:gap-10 text-sm'>
 
-
-                    <div className='grid grid-cols-24 text-sm'>
-
-                        <div className='flex flex-col col-span-5  pr-6 border-r-2 '>
+                        <div className='flex flex-col col-span-24 xl:col-span-6 '>
                             {/* Sector */}
                             <div className="flex flex-col col-span-4 items-start gap-3 ">
                                 <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>1. Sector</p>
-                                <div className="flex items-center w-full">
+                                <div className="flex flex-col xl:flex-row items-center w-full">
                                     <input
-                                        placeholder='Agregar nuevo sector'
+                                        placeholder='Nuevo sector'
                                         type="text"
                                         className='border px-3 py-1 rounded-lg w-full'
                                         value={sectorInput}
@@ -1352,9 +1351,9 @@ function Trazabilidad() {
                                     />
                                     <button
                                         onClick={agregarSector}
-                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                        className="w-full xl:w-20 flex justify-center xl:ml-2 mt-2 xl:mt-0 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                     >
-                                        <IoMdAddCircle />
+                                        <IoMdAddCircle className='text-sm'/>
                                     </button>
                                 </div>
                                 <div className="flex flex-col items-start gap-3 w-full">
@@ -1374,14 +1373,14 @@ function Trazabilidad() {
                                 </div>
                             </div>
                             {/* Sub Sector */}
-                            <div className="flex flex-col col-span-4 items-start gap-3 mt-6">
+                            <div className="flex flex-col col-span-4 items-start gap-3 mt-3">
                                 <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>2. Sub sector</p>
 
-                                <label className='text-sm  px-3'><strong className='text-amber-600 text-xs'>*</strong> Para agregar información selecciona el sector: </label>
-                                <div className="flex items-center w-full">
+
+                                <div className="flex flex-col xl:flex-row items-center w-full">
 
                                     <input
-                                        placeholder='Agregar nuevo sub sector: '
+                                        placeholder='Nuevo sub sector: '
                                         type="text"
                                         id="subsector"
                                         className='border px-3 py-1 rounded-lg w-full'
@@ -1390,9 +1389,9 @@ function Trazabilidad() {
                                     />
                                     <button
                                         onClick={() => agregarSubsector(selectedSector)}
-                                        className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                        className="w-full xl:w-20  flex justify-center xl:ml-2 mt-2 xl:mt-0 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                     >
-                                        <IoMdAddCircle />
+                                        <IoMdAddCircle className='text-sm' />
                                     </button>
                                 </div>
 
@@ -1417,11 +1416,11 @@ function Trazabilidad() {
 
                         {/* Parte */}
 
-                        <div className='flex flex-col col-span-5 gap-3  px-6 border-r-2 '>
+                        <div className='flex flex-col col-span-24 xl:col-span-6 gap-3  mt-5 xl:mt-0'>
                             <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>3. Parte</p>
 
-                            <label className='ps-3'><strong className='text-amber-600'>*</strong> Para agregar información selecciona el sub sector: </label>
-                            <div className="flex items-center w-full">
+
+                            <div className="flex flex-col xl:flex-row items-center w-full">
 
                                 <input
                                     placeholder='Agregar nuevo parte: '
@@ -1433,9 +1432,9 @@ function Trazabilidad() {
                                 />
                                 <button
                                     onClick={handleAgregarParte}
-                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                    className="w-full xl:w-20  flex justify-center xl:ml-2 mt-2 xl:mt-0 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                 >
-                                    <IoMdAddCircle />
+                                    <IoMdAddCircle  className='text-sm'/>
                                 </button>
                             </div>
 
@@ -1454,71 +1453,65 @@ function Trazabilidad() {
                                 </select>
                             </div>
 
+                            <div className='flex flex-col col-span-24 xl:col-span-5 gap-3    mt-5 xl:mt-0'>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>4. Elemento</p>
+                                <div className="flex flex-col xl:flex-row items-center w-full">
 
-                        </div>
+                                    <input
+                                        placeholder='Agregar nuevo elemento: '
+                                        type="text"
+                                        id="elemento"
+                                        className='border px-3 py-1 rounded-lg w-full'
+                                        value={elementoInput}
+                                        onChange={(e) => setElementoInput(e.target.value)}
+                                    />
+                                    <button
+                                        onClick={() => agregarElemento(selectedParte)} // Asegúrate de tener un estado selectedParte para manejar la parte seleccionada
+                                        className="w-full xl:w-20  flex justify-center xl:ml-2 mt-2 xl:mt-0 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                    >
+                                        <IoMdAddCircle className='text-sm' />
+                                    </button>
+                                </div>
 
-                        {/* Elemento */}
+                                <div className="flex flex-col items-start gap-3 w-full">
 
-                        <div className='flex flex-col col-span-5 gap-3  px-6 border-r-2 '>
-                            <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>4. Elemento</p>
+                                    <select
+                                        id="elementos"
+                                        className="border px-3 py-1 rounded-lg w-full"
+                                        value={selectedElemento}
+                                        onChange={(e) => setSelectedElemento(e.target.value)}
+                                    >
+                                        <option value="">Seleccione un elemento</option>
+                                        {/* Asumiendo que tienes una manera de obtener los elementos del estado para el subsector y parte seleccionados */}
+                                        {sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes.find(parte => parte.id === selectedParte)?.elementos.map((elemento) => (
+                                            <option key={elemento.id} value={elemento.id}>{elemento.nombre}</option>
+                                        ))}
+                                    </select>
+                                </div>
 
 
-                            <label className='ps-3'><strong className='text-amber-600'>*</strong> Para agregar información selecciona el parte: </label>
 
-                            <div className="flex items-center w-full">
-
-                                <input
-                                    placeholder='Agregar nuevo elemento: '
-                                    type="text"
-                                    id="elemento"
-                                    className='border px-3 py-1 rounded-lg w-full'
-                                    value={elementoInput}
-                                    onChange={(e) => setElementoInput(e.target.value)}
-                                />
-                                <button
-                                    onClick={() => agregarElemento(selectedParte)} // Asegúrate de tener un estado selectedParte para manejar la parte seleccionada
-                                    className="ml-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
-                                >
-                                    <IoMdAddCircle />
-                                </button>
                             </div>
-
-                            <div className="flex flex-col items-start gap-3 w-full">
-
-                                <select
-                                    id="elementos"
-                                    className="border px-3 py-1 rounded-lg w-full"
-                                    value={selectedElemento}
-                                    onChange={(e) => setSelectedElemento(e.target.value)}
-                                >
-                                    <option value="">Seleccione un elemento</option>
-                                    {/* Asumiendo que tienes una manera de obtener los elementos del estado para el subsector y parte seleccionados */}
-                                    {sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes.find(parte => parte.id === selectedParte)?.elementos.map((elemento) => (
-                                        <option key={elemento.id} value={elemento.id}>{elemento.nombre}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-
-
                         </div>
 
 
-                        {/* Elemento */}
 
 
-                        <div className='flex flex-col col-span-9 gap-3  px-6  '>
+
+
+                        {/* Lote */}
+
+
+                        <div className='flex flex-col col-span-24 xl:col-span-12 gap-3 mt-5 xl:mt-0 '>
                             <div className='text-start'>
                                 <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>5. Lote y ppi</p>
 
                             </div>
-                            <p className='ps-3'><strong className='text-amber-600'>*</strong> Para agregar información selecciona el elemento: </p>
-                            <div className='grid grid-cols-2 gap-3'>
+
+                            <div className='grid xl:grid-cols-12 gap-3'>
 
 
-                                <div className='flex flex-col gap-3'>
-
-
+                                <div className='flex flex-col gap-3 col-span-6'>
 
                                     <input
                                         placeholder='Agregar nuevo lote: '
@@ -1539,10 +1532,7 @@ function Trazabilidad() {
                                             <option key={ppi.id} value={ppi.id}>{ppi.nombre}</option>
                                         ))}
                                     </select>
-                                </div>
 
-
-                                <div className='flex flex-col gap-3'>
                                     <input
                                         placeholder='Agregar pk inicial: '
                                         type="text"
@@ -1568,27 +1558,26 @@ function Trazabilidad() {
                                             onChange={(e) => setIdBimInput(e.target.value)}
                                         />
                                     </div>
+                                </div>
 
+
+
+
+                                <div className='col-span-6 xl:px-5'>
+                                    <p className='font-medium flex items-center gap-3'><span className='text-amber-600'>*</span>Para guardar trazabilidad selecciona un item en el desplegable y posteriormente agrega la información en cada campo.</p>
                                     <button
                                         onClick={() => agregarLote(selectedElemento)}
-                                        className="text-white mt-2 flex items-center gap-3 font-semibold bg-amber-600 hover:bg-amber-700 py-2 px-6 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                        className="w-full xl:w-60 text-white mt-6 flex justify-center items-center gap-3 font-semibold bg-amber-600 hover:bg-amber-700 py-2 px-6 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                     >
                                         <span className='text-white text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
                                         Guardar trazabilidad
                                     </button>
 
-                                    {/* <button
-                                        onClick={() => agregarLote(selectedElemento)} // Función para agregar lote a elemento seleccionado
-                                        className="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-4 rounded flex gap-2 items-center"
-                                    >
-                                        <span><GrSave /></span> Guardar trazabilidad
-                                    </button> */}
 
-                                    <div className='font-medium text-gray-500 flex items-center gap-3'>
 
-                                        <Link to={'/visorAdmin'}><button className='px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-2xl rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1'><SiBim /></button></Link>
-                                        <p className='text-xs flex gap-2'><span className='text-amber-600 text-xl'> *</span>Asigna el globalId dentro del modelo BIM</p>
-                                    </div>
+                                    <Link to={'/visorAdmin'}><button className="w-full xl:w-60 text-white text-2xl mt-3 flex justify-center items-center gap-3 font-semibold bg-sky-500 hover:bg-sky-600 py-2 px-6 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"><SiBim /></button></Link>
+                                    <p className=' flex items-center gap-2 mt-4'><span className='text-amber-600 text-xl'> *</span>Asigna el globalId dentro del modelo BIM</p>
+
                                 </div>
 
 
@@ -1613,163 +1602,243 @@ function Trazabilidad() {
                 </div>
 
                 <div className="mt-5">
-                    <div className='flex bg-gray-200 rounded-t-lg border font-medium'>
-                        <p className='px-4 py-2 w-1/5'>Sector</p>
-                        <p className='px-4 py-2 w-1/5'>Sub sector</p>
-                        <p className='px-4 py-2 w-1/5'>Parte</p>
-                        <p className='px-4 py-2 w-1/5'>Elemento</p>
-                        <p className='px-4 py-2 w-1/5'>Lote y ppi</p>
-
+                    <div className="hidden xl:flex bg-gray-200 rounded-t-lg border font-medium">
+                        <p className="px-4 py-2 w-1/5">Sector</p>
+                        <p className="px-4 py-2 w-1/5">Sub sector</p>
+                        <p className="px-4 py-2 w-1/5">Parte</p>
+                        <p className="px-4 py-2 w-1/5">Elemento</p>
+                        <p className="px-4 py-2 w-1/5">Lote y ppi</p>
                     </div>
 
                     <div className="divide-y divide-gray-200 border rounded-b-lg">
-                        {sectores.map((sector) => (
-                            sector.subsectores.map((subsector) => (
-                                subsector.partes.map((parte) => (
-                                    parte.elementos.map((elemento) => (
-                                        elemento.lotes.length > 0 ? (
-                                            elemento.lotes.map((lote) => (
-                                                <div key={lote.id} className="grid grid-cols-5 items-center py-4">
-                                                    <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
-                                                        <p className="px-4">{sector.nombre}</p>
-                                                        <div className="flex gap-2">
-                                                            <button onClick={() => solicitarEditarSector(sector.id, sector.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
-                                                                <FaEdit />
-                                                            </button>
-                                                            <button onClick={() => solicitarEliminarSector(sector.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
-                                                                <RiDeleteBinLine />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
-                                                        <p className="px-4">{subsector.nombre}</p>
-                                                        <div className="flex gap-2">
-                                                            <button onClick={() => solicitarEditarSubSector(sector.id, subsector.id, subsector.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
-                                                                <FaEdit />
-                                                            </button>
-                                                            <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
-                                                                <RiDeleteBinLine />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
-                                                        <p className="px-4">{parte.nombre}</p>
-                                                        <div className="flex gap-2">
-                                                            <button onClick={() => solicitarEditarParte(sector.id, subsector.id, parte.id, parte.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
-                                                                <FaEdit />
-                                                            </button>
-                                                            <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
-                                                                <RiDeleteBinLine />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
-                                                        <p className="px-4">{elemento.nombre}</p>
-                                                        <div className="flex gap-2">
-                                                            <button onClick={() => solicitarEditarElemento(sector.id, subsector.id, parte.id, elemento.id, elemento.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
-                                                                <FaEdit />
-                                                            </button>
-                                                            <button onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
-                                                                <RiDeleteBinLine />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex flex-col justify-center px-4 group">
-                                                        <p className="font-medium">Lote: {lote.nombre}</p>
-                                                        <div className="flex flex-col">
-                                                            <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
-                                                                {lote.ppiNombre ? `PPI: ${lote.ppiNombre}` : "Ppi sin Asignar"}
-                                                            </p>
-                                                            <div className="flex gap-2">
-                                                                {lote.ppiId && (
-                                                                    <div>
-                                                                        <button onClick={() => solicitarEditarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id, lote)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
-                                                                            <FaEdit />
-                                                                        </button>
-                                                                        <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
-                                                                            <RiDeleteBinLine />
-                                                                        </button>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            
-                                                        </div>
-                                                    </div>
-
-
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div key={`${elemento.id}-sin-lote`} className="grid grid-cols-5 items-center py-4">
-                                                <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
-                                                    <p className="px-4">{sector.nombre}</p>
-                                                    <div className="flex gap-2">
-                                                        <button onClick={() => solicitarEditarSector(sector.id, sector.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
-                                                            <FaEdit />
-                                                        </button>
-                                                        <button onClick={() => solicitarEliminarSector(sector.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
-                                                            <RiDeleteBinLine />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
-                                                    <p className="px-4">{subsector.nombre}</p>
-                                                    <div className="flex gap-2">
-                                                        <button onClick={() => solicitarEditarSubSector(sector.id, subsector.id, subsector.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
-                                                            <FaEdit />
-                                                        </button>
-                                                        <button onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
-                                                            <RiDeleteBinLine />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
-                                                    <p className="px-4">{parte.nombre}</p>
-                                                    <div className="flex gap-2">
-                                                        <button onClick={() => solicitarEditarParte(sector.id, subsector.id, parte.id, parte.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
-                                                            <FaEdit />
-                                                        </button>
-                                                        <button onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
-                                                            <RiDeleteBinLine />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div className="flex justify-between items-center pr-5 gap-1 group cursor-pointer">
-                                                    <p className="px-4">{elemento.nombre}</p>
-                                                    <div className="flex gap-2">
-                                                        <button onClick={() => solicitarEditarElemento(sector.id, subsector.id, parte.id, elemento.id, elemento.nombre)} className="text-sky-600 text-md opacity-0 group-hover:opacity-100">
-                                                            <FaEdit />
-                                                        </button>
-                                                        <button onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
-                                                            <RiDeleteBinLine />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-col justify-center px-4 group">
-                                                    <p className="font-medium">Lote: {lote.nombre}</p>
-                                                    <div className="flex justify-between">
-                                                        <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
-                                                            {lote.ppiNombre ? `PPI: ${lote.ppiNombre}` : "Ppi sin Asignar"}
-                                                        </p>
-                                                        <div className="flex gap-2">
-                                                            {lote.ppiId && (
-                                                                <button onClick={() => confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)} className="text-amber-600 text-md opacity-0 group-hover:opacity-100">
+                        {sectores.map((sector) =>
+                            sector.subsectores.map((subsector) =>
+                                subsector.partes.map((parte) =>
+                                    parte.elementos.map((elemento) =>
+                                        elemento.lotes.length > 0
+                                            ? elemento.lotes.map((lote) => (
+                                                <>
+                                                    <div key={lote.id} className="xl:grid xl:grid-cols-5 gap-1 items-center py-2 flex flex-col xl:flex-row xl:border-none text-sm xl:text-md ">
+                                                        <div className="flex justify-between items-center px-4 gap-1 group cursor-pointer w-full">
+                                                            <p className="font-semibold">{sector.nombre}</p>
+                                                            <div className="flex gap-4">
+                                                                <button
+                                                                    onClick={() => solicitarEditarSector(sector.id, sector.nombre)}
+                                                                    className="text-gray-600 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <VscEdit />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => solicitarEliminarSector(sector.id)}
+                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
                                                                     <RiDeleteBinLine />
                                                                 </button>
-                                                            )}
+                                                            </div>
                                                         </div>
-                                                        
+                                                        <div className="flex justify-between items-center px-4 gap-1 group cursor-pointer w-full">
+                                                            <p className="font-semibold">{subsector.nombre}</p>
+                                                            <div className="flex gap-4">
+                                                                <button
+                                                                    onClick={() => solicitarEditarSubSector(sector.id, subsector.id, subsector.nombre)}
+                                                                    className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <VscEdit />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)}
+                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <RiDeleteBinLine />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex justify-between items-center px-4 gap-1 group cursor-pointer w-full">
+                                                            <p className="font-semibold">{parte.nombre}</p>
+                                                            <div className="flex gap-4">
+                                                                <button
+                                                                    onClick={() => solicitarEditarParte(sector.id, subsector.id, parte.id, parte.nombre)}
+                                                                    className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <VscEdit />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)}
+                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <RiDeleteBinLine />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex justify-between items-center px-4 gap-1 group cursor-pointer w-full">
+                                                            <p className="font-semibold">{elemento.nombre}</p>
+                                                            <div className="flex gap-4">
+                                                                <button
+                                                                    onClick={() => solicitarEditarElemento(sector.id, subsector.id, parte.id, elemento.id, elemento.nombre)}
+                                                                    className="text-gray-600 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <VscEdit />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)}
+                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <RiDeleteBinLine />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col justify-between px-4 group w-full">
+                                                            <div className="flex justify-between">
+                                                                <div>
+                                                                    <p className="font-medium text-sky-500">Lote: {lote.nombre}</p>
+                                                                    <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
+                                                                        {lote.ppiNombre ? `PPI: ${lote.ppiNombre}` : 'Ppi sin Asignar'}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="mt-2">
+                                                                    {lote.ppiId && (
+                                                                        <div className='flex gap-4'>
+                                                                            <button
+                                                                                onClick={() =>
+                                                                                    solicitarEditarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id, lote)
+                                                                                }
+                                                                                className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                            >
+                                                                                <VscEdit />
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() =>
+                                                                                    confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)
+                                                                                }
+                                                                                className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                            >
+                                                                                <RiDeleteBinLine />
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-
-                                            </div>
-                                        )
-                                    ))
-                                ))
-                            ))
-                        ))}
+                                                    <div className='border-b-2'></div>
+                                                </>
+                                            ))
+                                            : (
+                                                <>
+                                                    <div key={`${elemento.id}-sin-lote`} className="xl:grid xl:grid-cols-5 items-center py-2 flex flex-col xl:flex-row border-b xl:border-none text-sm xl:text-md">
+                                                        <div className="flex justify-between items-center px-4 w-full gap-1 group cursor-pointer">
+                                                            <p className="font-semibold">{sector.nombre}</p>
+                                                            <div className="flex gap-4">
+                                                                <button
+                                                                    onClick={() => solicitarEditarSector(sector.id, sector.nombre)}
+                                                                    className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <VscEdit />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => solicitarEliminarSector(sector.id)}
+                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <RiDeleteBinLine />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex justify-between items-center px-4 w-full gap-1 group cursor-pointer">
+                                                            <p className="font-semibold">{subsector.nombre}</p>
+                                                            <div className="flex gap-4">
+                                                                <button
+                                                                    onClick={() => solicitarEditarSubSector(sector.id, subsector.id, subsector.nombre)}
+                                                                    className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <VscEdit />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)}
+                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <RiDeleteBinLine />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex justify-between items-center px-4 w-full gap-1 group cursor-pointer">
+                                                            <p className="font-semibold">{parte.nombre}</p>
+                                                            <div className="flex gap-4">
+                                                                <button
+                                                                    onClick={() => solicitarEditarParte(sector.id, subsector.id, parte.id, parte.nombre)}
+                                                                    className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <VscEdit />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)}
+                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <RiDeleteBinLine />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex justify-between items-center px-4 w-full gap-1 group cursor-pointer">
+                                                            <p className="font-semibold">{elemento.nombre}</p>
+                                                            <div className="flex gap-4">
+                                                                <button
+                                                                    onClick={() => solicitarEditarElemento(sector.id, subsector.id, parte.id, elemento.id, elemento.nombre)}
+                                                                    className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <VscEdit />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)}
+                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                >
+                                                                    <RiDeleteBinLine />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col justify-between px-4 group w-full">
+                                                            <div className="flex justify-between">
+                                                                <div>
+                                                                    <p className="font-medium text-sky-500">Lote: {lote.nombre || 'Sin asignar'}</p>
+                                                                    <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
+                                                                        {lote.ppiNombre ? `PPI: ${lote.ppiNombre}` : 'Ppi sin Asignar'}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="mt-2">
+                                                                    {lote.ppiId && (
+                                                                        <div className='flex gap-4'>
+                                                                            <button
+                                                                                onClick={() =>
+                                                                                    solicitarEditarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id, lote)
+                                                                                }
+                                                                                className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                            >
+                                                                                <VscEdit />
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() =>
+                                                                                    confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)
+                                                                                }
+                                                                                className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                            >
+                                                                                <RiDeleteBinLine />
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className='border-b-2'></div>
+                                                </>
+                                            )
+                                    )
+                                )
+                            )
+                        )}
                     </div>
                 </div>
+
+
+
 
 
 
@@ -1777,7 +1846,7 @@ function Trazabilidad() {
                     <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
                         <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
 
-                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+                        <div className="modal-container bg-white xl:max-w-xl mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
 
                             <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
                             <div>
@@ -1800,7 +1869,7 @@ function Trazabilidad() {
                     <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
                         <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
 
-                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+                        <div className="modal-container bg-white xl:max-w-xl mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
 
                             <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
                             <div>
@@ -1824,7 +1893,7 @@ function Trazabilidad() {
                     <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
                         <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
 
-                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+                        <div className="modal-container bg-white xl:max-w-xl mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
 
                             <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
                             <div>
@@ -1847,7 +1916,7 @@ function Trazabilidad() {
                     <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
                         <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
 
-                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+                        <div className="modal-container bg-white xl:max-w-xl mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
 
                             <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
                             <div>
@@ -1871,7 +1940,7 @@ function Trazabilidad() {
                     <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center">
                         <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-80"></div>
 
-                        <div className="modal-container bg-white md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
+                        <div className="modal-container bg-white xl:max-w-xl mx-auto rounded shadow-lg z-50 overflow-y-auto p-4 text-center font-medium">
 
                             <button onClick={handleCloseAlert} className="text-2xl w-full flex justify-end text-gray-500"><IoCloseCircle /></button>
                             <div>
@@ -2168,7 +2237,7 @@ function Trazabilidad() {
                                     placeholder="Nuevo GlobalID"
                                     className="mt-2 border px-3 py-1 rounded-lg w-full"
                                 />
-                                
+
 
                                 <div className='flex justify-center gap-5 mt-3'>
                                     <button

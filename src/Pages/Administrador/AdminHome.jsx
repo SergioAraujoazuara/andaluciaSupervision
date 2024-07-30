@@ -72,7 +72,7 @@ function AdminHome() {
 
 
             <div>
-                <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
+                <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white p-4 rounded rounded-xl shadow-md'>
 
 
 
@@ -80,50 +80,53 @@ function AdminHome() {
                     <div class="w-full rounded rounded-xl">
 
 
-                        <div className='flex flex-col gap-16 items-start justify-start p-10
+                        <div className='flex flex-col gap-16 items-start justify-start p-5 xl:p-10
      '>
                             {(userRole === 'invitado' && (
-                                
-                                    <div className=''>
-                                        <p>No tienes permisos para administrador</p>
-                                    </div>
 
-                               
+                                <div className=''>
+                                    <p>No tienes permisos para administrador</p>
+                                </div>
+
+
                             ))}
 
                             {(userRole === 'admin' || userRole === 'usuario') && (
                                 <Link className='w-full' to={`/trazabilidad/${idProyecto}`}>
-                                <div className='flex gap-10 items-center transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
-                                    <div className=' flex items-center text-gray-600'>
-                                        <span ><IoCreateOutline className='w-[100px] h-[100px]' /></span>
-                                    </div>
-                                    <div className='sm:col-span-9 h-10 flex flex-col justify-center items-start sm:justify-center text-base font-medium'>
-                                        <p className='flex items-center gap-2'>  <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>Administrar proyecto</p>
-                                        <p className='mt-4 font-normal'>Creación y configuración del proyecto,
-                                            agregar la trazabilidad completa del proyecto, establecer parámetros como el sector, sub sector, parte, elemento, lote y asignar PPI
-                                            Puedes agregar los datos en 2 visualizaciones distintas:
-                                            <br />
-                                            - Versión web
-                                            <br />
-                                            - Versión BIM
-                                        </p>
+                                    <div className='flex flex-col justify-center items-center xl:flex-row gap-4  transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
+                                        <div className=' flex items-center text-gray-600'>
+                                            <span ><IoCreateOutline className='w-[100px] h-[100px]' /></span>
+                                        </div>
+                                        <div className='sm:col-span-9 text-center xl:text-start flex flex-col justify-center items-center xl:items-start sm:justify-center text-base font-medium'>
+                                            <p className='flex items-center gap-2'>
+                                                <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight />
+                                                </span>Administrar proyecto
+                                            </p>
+                                            <p className='mt-4 font-normal'>Creación y configuración del proyecto,
+                                                agregar la trazabilidad completa del proyecto, establecer parámetros como el sector, sub sector, parte, elemento, lote y asignar PPI
+                                                Puedes agregar los datos en 2 visualizaciones distintas:
+                                                <br />
+                                                - Versión web
+                                                <br />
+                                                - Versión BIM
+                                            </p>
 
+                                        </div>
                                     </div>
-                                </div>
 
-                            </Link>
-                            ) }
+                                </Link>
+                            )}
 
 
 
 
                             {userRole === 'admin' && (
                                 <Link className=' w-full' to={'/verPpis'}>
-                                    <div className='flex gap-10 items-center transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
-                                        <div className=' flex items-center text-gray-600'>
+                                    <div className='flex flex-col xl:flex-row xl:text-start text-center gap-4 items-center transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
+                                        <div className='flex items-center justify-center text-gray-600'>
                                             <span ><MdOutlineEditLocation className='w-[100px] h-[100px]' /></span>
                                         </div>
-                                        <div className='sm:col-span-9 h-10 flex flex-col justify-center items-start sm:justify-center text-base font-medium'>
+                                        <div className='sm:col-span-9 xl:text-start text-center flex flex-col justify-center xl:items-start items-center sm:justify-center text-base font-medium'>
                                             <p className='flex items-center gap-2'>  <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>Plantillas PPI</p>
                                             <p className='mt-4 font-normal'>Creación y edición de plantillas de puntos de inspección (PPI).
 
@@ -138,11 +141,11 @@ function AdminHome() {
                             {
                                 userRole === 'admin' && (
                                     <Link className=' w-full' to={'/roles'}>
-                                        <div className='flex gap-10 items-center transition duration-300 ease-in-out  hover:-translate-y-1'>
+                                        <div className='flex flex-col xl:flex-row gap-4 items-center transition duration-300 ease-in-out  hover:-translate-y-1'>
                                             <div className=' flex items-center text-gray-600'>
                                                 <span ><FaRegUserCircle className='w-[100px] h-[100px]' /></span>
                                             </div>
-                                            <div className='sm:col-span-9 h-10 flex flex-col justify-center items-start sm:justify-center text-base font-medium'>
+                                            <div className='sm:col-span-9 flex flex-col justify-center xl:items-start items-center text-center xl:text-start sm:justify-center text-base font-medium'>
                                                 <p className='flex items-center gap-2'>  <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>Roles de usuarios</p>
                                                 <p className='mt-4 font-normal'>Asignar y editar roles a los usuarios registrados del proyecto:
 
