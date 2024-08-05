@@ -1293,7 +1293,7 @@ function Trazabilidad() {
 
 
     return (
-        <div className='container mx-auto min-h-screen px-6 xl:px-14 py-5 text-gray-500'>
+        <div className='container mx-auto min-h-screen px-3 xl:px-14 py-5 text-gray-500'>
             {/* Encabezado */}
 
 
@@ -1335,12 +1335,12 @@ function Trazabilidad() {
 
                 {/* Formulario de trazabilidad */}
                 <div>
-                    <div className='grid grid-cols-1 xl:grid-cols-24 gap-4 xl:gap-10 text-sm'>
+                    <div className='grid grid-cols-24 gap-2 xl:gap-6 text-sm'>
 
-                        <div className='flex flex-col col-span-24 xl:col-span-6 '>
+                        <div className='col-span-24 xl:col-span-6'>
                             {/* Sector */}
-                            <div className="flex flex-col col-span-4 items-start gap-3 ">
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>1. Sector</p>
+                            <div className="flex flex-col items-start gap-3">
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 rounded-md px-3 py-2 flex items-center gap-2 w-full'>1. Sector</p>
                                 <div className="flex flex-col xl:flex-row items-center w-full">
                                     <input
                                         placeholder='Nuevo sector'
@@ -1351,9 +1351,9 @@ function Trazabilidad() {
                                     />
                                     <button
                                         onClick={agregarSector}
-                                        className="w-full xl:w-20 flex justify-center xl:ml-2 mt-2 xl:mt-0 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                        className="flex justify-center w-full xl:w-20  xl:ml-2 mt-2 xl:mt-0 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                     >
-                                        <IoMdAddCircle className='text-sm'/>
+                                        <IoMdAddCircle className='text-sm' />
                                     </button>
                                 </div>
                                 <div className="flex flex-col items-start gap-3 w-full">
@@ -1416,7 +1416,7 @@ function Trazabilidad() {
 
                         {/* Parte */}
 
-                        <div className='flex flex-col col-span-24 xl:col-span-6 gap-3  mt-5 xl:mt-0'>
+                        <div className='flex flex-col col-span-24 xl:col-span-6 gap-3  mt-4 xl:mt-0'>
                             <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>3. Parte</p>
 
 
@@ -1434,7 +1434,7 @@ function Trazabilidad() {
                                     onClick={handleAgregarParte}
                                     className="w-full xl:w-20  flex justify-center xl:ml-2 mt-2 xl:mt-0 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                 >
-                                    <IoMdAddCircle  className='text-sm'/>
+                                    <IoMdAddCircle className='text-sm' />
                                 </button>
                             </div>
 
@@ -1602,7 +1602,7 @@ function Trazabilidad() {
                 </div>
 
                 <div className="mt-5">
-                    <div className="hidden xl:flex bg-gray-200 rounded-t-lg border font-medium">
+                    <div className="hidden xl:flex bg-gray-200 rounded-t-lg font-medium">
                         <p className="px-4 py-2 w-1/5">Sector</p>
                         <p className="px-4 py-2 w-1/5">Sub sector</p>
                         <p className="px-4 py-2 w-1/5">Parte</p>
@@ -1610,231 +1610,335 @@ function Trazabilidad() {
                         <p className="px-4 py-2 w-1/5">Lote y ppi</p>
                     </div>
 
-                    <div className="divide-y divide-gray-200 border rounded-b-lg">
-                        {sectores.map((sector) =>
-                            sector.subsectores.map((subsector) =>
-                                subsector.partes.map((parte) =>
-                                    parte.elementos.map((elemento) =>
-                                        elemento.lotes.length > 0
-                                            ? elemento.lotes.map((lote) => (
-                                                <>
-                                                    <div key={lote.id} className="xl:grid xl:grid-cols-5 gap-1 items-center py-2 flex flex-col xl:flex-row xl:border-none text-sm xl:text-md ">
-                                                        <div className="flex justify-between items-center px-4 gap-1 group cursor-pointer w-full">
-                                                            <p className="font-semibold">{sector.nombre}</p>
-                                                            <div className="flex gap-4">
-                                                                <button
-                                                                    onClick={() => solicitarEditarSector(sector.id, sector.nombre)}
-                                                                    className="text-gray-600 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <VscEdit />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => solicitarEliminarSector(sector.id)}
-                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <RiDeleteBinLine />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex justify-between items-center px-4 gap-1 group cursor-pointer w-full">
-                                                            <p className="font-semibold">{subsector.nombre}</p>
+                    <div className="divide-y divide-gray-200">
+                        {sectores.map((sector, index) => (
+                            <div
+                                key={sector.id}
+                                className={`flex flex-wrap items-center ${index % 2 === 0 ? 'bg-gray-100' : 'bg-gray-50'} md:flex-row flex-col`}
+                            >
+                                <div className="xl:bg-transparent bg-sky-500 text-gray-100 xl:text-gray-500 font-medium px-4 py-3 md:w-1/5 w-full group cursor-pointer flex justify-between">
+                                    <p className='w-full text-lg'>{sector.nombre}</p>
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => solicitarEditarSector(sector.id, sector.nombre)}
+                                            className="text-gray-100 xl:text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                        >
+                                            <VscEdit />
+                                        </button>
+                                        <button
+                                            onClick={() => solicitarEliminarSector(sector.id)}
+                                            className="text-amber-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                        >
+                                            <RiDeleteBinLine />
+                                        </button>
+                                    </div>
+                                </div>
+                                {sector.subsectores && sector.subsectores.length > 0 && (
+                                    <ul className="divide-y divide-gray-200 md:w-4/5 w-full">
+                                        {sector.subsectores.map((subsector) =>
+                                            subsector.partes && subsector.partes.length > 0
+                                                ? subsector.partes.sort((a, b) => a.nombre.localeCompare(b.nombre)).map((parte) =>
+                                                    parte.elementos && parte.elementos.length > 0
+                                                        ? parte.elementos.map((elemento) =>
+                                                            elemento.lotes && elemento.lotes.length > 0
+                                                                ? elemento.lotes.map((lote) => (
+                                                                    <li
+                                                                        key={lote.id}
+                                                                        className="py-4 p-4 mb-4 md:mb-0 md:grid md:grid-cols-4"
+                                                                    >
+                                                                        <div className="flex justify-between items-center group">
+                                                                            <p>{subsector.nombre}</p>
+                                                                            <div className="flex gap-4">
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        solicitarEditarSubSector(sector.id, subsector.id, subsector.nombre)
+                                                                                    }
+                                                                                    className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <VscEdit />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)}
+                                                                                    className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <RiDeleteBinLine />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex justify-between items-center group">
+                                                                            <p>{parte.nombre}</p>
+                                                                            <div className="flex gap-4">
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        solicitarEditarParte(sector.id, subsector.id, parte.id, parte.nombre)
+                                                                                    }
+                                                                                    className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <VscEdit />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)}
+                                                                                    className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <RiDeleteBinLine />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex justify-between items-center group">
+                                                                            <p>{elemento.nombre}</p>
+                                                                            <div className="flex gap-4">
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        solicitarEditarElemento(sector.id, subsector.id, parte.id, elemento.id, elemento.nombre)
+                                                                                    }
+                                                                                    className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <VscEdit />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)
+                                                                                    }
+                                                                                    className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <RiDeleteBinLine />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex flex-col justify-center">
+                                                                            <p className="font-medium">Lote: {lote.nombre}</p>
+                                                                            <div className="flex justify-between">
+                                                                                <div>
+                                                                                    <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
+                                                                                        {lote.ppiNombre ? <p>PPI: {lote.ppiNombre}</p> : 'Ppi sin Asignar'}
+                                                                                    </p>
+                                                                                </div>
+                                                                                <div className="flex gap-4 group">
+                                                                                    {lote.ppiId && (
+                                                                                        <div className="flex gap-4">
+                                                                                            <button
+                                                                                                onClick={() =>
+                                                                                                    solicitarEditarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id, lote)
+                                                                                                }
+                                                                                                className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                            >
+                                                                                                <VscEdit />
+                                                                                            </button>
+                                                                                            <button
+                                                                                                onClick={() =>
+                                                                                                    confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)
+                                                                                                }
+                                                                                                className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                            >
+                                                                                                <RiDeleteBinLine />
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </li>
+                                                                ))
+                                                                : (
+                                                                    <li
+                                                                        key={`${elemento.id}-sin-lote`}
+                                                                        className="py-4  rounded-lg p-4 mb-4 md:mb-0 md:grid md:grid-cols-4"
+                                                                    >
+                                                                        <div className="flex justify-between items-center group">
+                                                                            <p>{subsector.nombre}</p>
+                                                                            <div className="flex gap-4">
+                                                                                <button
+                                                                                    onClick={() => solicitarEditarSubSector(sector.id, subsector.id, subsector.nombre)}
+                                                                                    className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <VscEdit />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)}
+                                                                                    className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <RiDeleteBinLine />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex justify-between items-center group">
+                                                                            <p>{parte.nombre}</p>
+                                                                            <div className="flex gap-4">
+                                                                                <button
+                                                                                    onClick={() => solicitarEditarParte(sector.id, subsector.id, parte.id, parte.nombre)}
+                                                                                    className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <VscEdit />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)}
+                                                                                    className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <RiDeleteBinLine />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex justify-between items-center group">
+                                                                            <p>{elemento.nombre}</p>
+                                                                            <div className="flex gap-4">
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        solicitarEditarElemento(sector.id, subsector.id, parte.id, elemento.id, elemento.nombre)
+                                                                                    }
+                                                                                    className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <VscEdit />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)}
+                                                                                    className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <RiDeleteBinLine />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex flex-col justify-center">
+                                                                            <div className="flex justify-between">
+                                                                                <div>
+                                                                                    <p>-</p>
+                                                                                    <p className="text-red-500">-</p>
+                                                                                </div>
+                                                                                <div className="flex gap-4 group">
+                                                                                    {lote.ppiId && (
+                                                                                        <button
+                                                                                            onClick={() =>
+                                                                                                confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)
+                                                                                            }
+                                                                                            className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                        >
+                                                                                            <RiDeleteBinLine />
+                                                                                        </button>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </li>
+                                                                )
+                                                        )
+                                                        : (
+                                                            <li
+                                                                key={`${parte.id}-sin-elemento`}
+                                                                className="py-4 rounded-lg p-4 mb-4 md:mb-0 md:grid md:grid-cols-4"
+                                                            >
+                                                                <div className="flex justify-between items-center group">
+                                                                    <p>{subsector.nombre}</p>
+                                                                    <div className="flex gap-4">
+                                                                        <button
+                                                                            onClick={() => solicitarEditarSubSector(sector.id, subsector.id, subsector.nombre)}
+                                                                            className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                        >
+                                                                            <VscEdit />
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)}
+                                                                            className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                        >
+                                                                            <RiDeleteBinLine />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex justify-between items-center group">
+                                                                    <p>{parte.nombre}</p>
+                                                                    <div className="flex gap-4">
+                                                                        <button
+                                                                            onClick={() => solicitarEditarParte(sector.id, subsector.id, parte.id, parte.nombre)}
+                                                                            className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                        >
+                                                                            <VscEdit />
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)}
+                                                                            className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                        >
+                                                                            <RiDeleteBinLine />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                <p className="px-4 ">-</p>
+                                                                <div className="flex flex-col justify-center">
+                                                                    <div className="flex justify-between">
+                                                                        <div>
+                                                                            <p>-</p>
+                                                                            <p className="text-red-500">-</p>
+                                                                        </div>
+                                                                        <div className="flex gap-4 group">
+                                                                            {lote.ppiId && (
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)
+                                                                                    }
+                                                                                    className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <RiDeleteBinLine />
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </li>
+                                                        )
+                                                )
+                                                : (
+                                                    <li
+                                                        key={`${subsector.id}-sin-parte`}
+                                                        className="py-4 rounded-lg p-4 mb-4 md:mb-0 md:grid md:grid-cols-4"
+                                                    >
+                                                        <div className="flex justify-between items-center group">
+                                                            <p>{subsector.nombre}</p>
                                                             <div className="flex gap-4">
                                                                 <button
                                                                     onClick={() => solicitarEditarSubSector(sector.id, subsector.id, subsector.nombre)}
-                                                                    className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                    className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
                                                                 >
                                                                     <VscEdit />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)}
-                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
+                                                                    className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
                                                                 >
                                                                     <RiDeleteBinLine />
                                                                 </button>
                                                             </div>
                                                         </div>
-                                                        <div className="flex justify-between items-center px-4 gap-1 group cursor-pointer w-full">
-                                                            <p className="font-semibold">{parte.nombre}</p>
-                                                            <div className="flex gap-4">
-                                                                <button
-                                                                    onClick={() => solicitarEditarParte(sector.id, subsector.id, parte.id, parte.nombre)}
-                                                                    className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <VscEdit />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)}
-                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <RiDeleteBinLine />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex justify-between items-center px-4 gap-1 group cursor-pointer w-full">
-                                                            <p className="font-semibold">{elemento.nombre}</p>
-                                                            <div className="flex gap-4">
-                                                                <button
-                                                                    onClick={() => solicitarEditarElemento(sector.id, subsector.id, parte.id, elemento.id, elemento.nombre)}
-                                                                    className="text-gray-600 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <VscEdit />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)}
-                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <RiDeleteBinLine />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col justify-between px-4 group w-full">
+                                                        <p className="px-4 ">-</p>
+                                                        <p className="px-4 ">-</p>
+                                                        <div className="flex flex-col justify-center">
                                                             <div className="flex justify-between">
                                                                 <div>
-                                                                    <p className="font-medium text-sky-500">Lote: {lote.nombre}</p>
-                                                                    <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
-                                                                        {lote.ppiNombre ? `PPI: ${lote.ppiNombre}` : 'Ppi sin Asignar'}
-                                                                    </p>
+                                                                    <p>-</p>
+                                                                    <p className="text-red-500">-</p>
                                                                 </div>
-                                                                <div className="mt-2">
+                                                                <div className="flex gap-4 group">
                                                                     {lote.ppiId && (
-                                                                        <div className='flex gap-4'>
-                                                                            <button
-                                                                                onClick={() =>
-                                                                                    solicitarEditarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id, lote)
-                                                                                }
-                                                                                className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                            >
-                                                                                <VscEdit />
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() =>
-                                                                                    confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)
-                                                                                }
-                                                                                className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                            >
-                                                                                <RiDeleteBinLine />
-                                                                            </button>
-                                                                        </div>
+                                                                        <button
+                                                                            onClick={() =>
+                                                                                confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)
+                                                                            }
+                                                                            className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                        >
+                                                                            <RiDeleteBinLine />
+                                                                        </button>
                                                                     )}
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div className='border-b-2'></div>
-                                                </>
-                                            ))
-                                            : (
-                                                <>
-                                                    <div key={`${elemento.id}-sin-lote`} className="xl:grid xl:grid-cols-5 items-center py-2 flex flex-col xl:flex-row border-b xl:border-none text-sm xl:text-md">
-                                                        <div className="flex justify-between items-center px-4 w-full gap-1 group cursor-pointer">
-                                                            <p className="font-semibold">{sector.nombre}</p>
-                                                            <div className="flex gap-4">
-                                                                <button
-                                                                    onClick={() => solicitarEditarSector(sector.id, sector.nombre)}
-                                                                    className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <VscEdit />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => solicitarEliminarSector(sector.id)}
-                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <RiDeleteBinLine />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex justify-between items-center px-4 w-full gap-1 group cursor-pointer">
-                                                            <p className="font-semibold">{subsector.nombre}</p>
-                                                            <div className="flex gap-4">
-                                                                <button
-                                                                    onClick={() => solicitarEditarSubSector(sector.id, subsector.id, subsector.nombre)}
-                                                                    className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <VscEdit />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => confirmarDeleteSubSector(sector.id, subsector.id)}
-                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <RiDeleteBinLine />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex justify-between items-center px-4 w-full gap-1 group cursor-pointer">
-                                                            <p className="font-semibold">{parte.nombre}</p>
-                                                            <div className="flex gap-4">
-                                                                <button
-                                                                    onClick={() => solicitarEditarParte(sector.id, subsector.id, parte.id, parte.nombre)}
-                                                                    className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <VscEdit />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => confirmarDeleteParte(sector.id, subsector.id, parte.id)}
-                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <RiDeleteBinLine />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex justify-between items-center px-4 w-full gap-1 group cursor-pointer">
-                                                            <p className="font-semibold">{elemento.nombre}</p>
-                                                            <div className="flex gap-4">
-                                                                <button
-                                                                    onClick={() => solicitarEditarElemento(sector.id, subsector.id, parte.id, elemento.id, elemento.nombre)}
-                                                                    className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <VscEdit />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => confirmarDeleteElemento(sector.id, subsector.id, parte.id, elemento.id)}
-                                                                    className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                >
-                                                                    <RiDeleteBinLine />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col justify-between px-4 group w-full">
-                                                            <div className="flex justify-between">
-                                                                <div>
-                                                                    <p className="font-medium text-sky-500">Lote: {lote.nombre || 'Sin asignar'}</p>
-                                                                    <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
-                                                                        {lote.ppiNombre ? `PPI: ${lote.ppiNombre}` : 'Ppi sin Asignar'}
-                                                                    </p>
-                                                                </div>
-                                                                <div className="mt-2">
-                                                                    {lote.ppiId && (
-                                                                        <div className='flex gap-4'>
-                                                                            <button
-                                                                                onClick={() =>
-                                                                                    solicitarEditarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id, lote)
-                                                                                }
-                                                                                className="text-gray-500 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                            >
-                                                                                <VscEdit />
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() =>
-                                                                                    confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)
-                                                                                }
-                                                                                className="text-amber-900 text-sm xl:opacity-0 xl:group-hover:opacity-100"
-                                                                            >
-                                                                                <RiDeleteBinLine />
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className='border-b-2'></div>
-                                                </>
-                                            )
-                                    )
-                                )
-                            )
-                        )}
+                                                    </li>
+                                                )
+                                        )}
+                                    </ul>
+                                )}
+                            </div>
+                        ))}
                     </div>
+
+
+
+
                 </div>
 
 

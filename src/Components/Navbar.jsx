@@ -153,10 +153,10 @@ const Navbar = () => {
                 <div className="flex flex-col items-start gap-2">
                   <div className='flex gap-2 items-center text-gray-500 mt-2'>
                     <FaUserAlt className='hidden xl:block'/>
-                    <p className='ps-3 font-medium text-gray-300'>{userNombre || 'Usuario'}</p>
+                    <p className='ps-3 font-medium text-gray-400'>{userNombre || 'Usuario'}</p>
                   </div>
                   <button 
-                    className="bg-sky-500 text-white px-4 py-2 rounded-lg w-full text-left"
+                    className="bg-gray-200 text-gray-500 font-medium px-4 py-2 rounded-lg w-1/2 text-left"
                     onClick={toggleLogoutConfirmation}
                   >
                     {showLogoutConfirmation ? <span className='flex items-center'><IoIosSettings />&nbsp;Cerrar Menú</span> : <span>Salir</span>}
@@ -186,7 +186,7 @@ const Navbar = () => {
 const NavLink = ({ to, linkName, activeLink, handleLinkClick }) => {
   const isActive = to === activeLink;
   const borderColorClass = isActive ? 'border-sky-600' : 'border-transparent';
-  const textColorClass = isActive ? 'text-sky-600' : 'text-gray-300';
+  const textColorClass = isActive ? 'text-sky-600' : 'text-gray-500';
 
   return (
     <Link

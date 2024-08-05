@@ -8,6 +8,10 @@ body {
     height: 100%;
 
 }
+
+.bg-blue {
+    background-color: #0067ff;
+}
 /* Selectores especificos */
 .contenedor_principal {
     display: flex;

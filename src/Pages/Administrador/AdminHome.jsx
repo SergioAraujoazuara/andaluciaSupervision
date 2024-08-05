@@ -49,7 +49,7 @@ function AdminHome() {
     };
     const idProyecto = localStorage.getItem('proyecto')
     return (
-        <div className='min-h-screen container mx-auto px-14 py-5 text-gray-500'>
+        <div className='min-h-screen container mx-auto xl:px-14 py-2 text-gray-500'>
 
             <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
 

@@ -85,8 +85,8 @@ function Home() {
           <div className="relative" key={p.id}>
             <img src={ImagenHome} alt="Sustainable Building" className="w-full h-screen object-cover object-center md:object-top lg:object-center" />
             <div className="absolute inset-0 bg-black bg-opacity-45"></div>
-            <div className="absolute inset-0 flex flex-col items-start justify-start px-10 pr-20 md:px-20 lg:px-40 xl:px-20 2xl:px-40">
-              <div className='text-white bg-sky-600 bg-opacity-70 mt-20 ml-4 md:ml-20 rounded-2xl shadow-xl w-full md:w-[700px] px-6 md:px-16 py-6'>
+            <div className="absolute inset-0 flex flex-col items-start justify-start ">
+              <div className='text-white bg-sky-600 bg-opacity-70 mt-20 mx-8  xl:mx-40 xl:my-20 rounded-2xl shadow-xl w-full w-[288px]  xl:w-[700px] px-12 py-8'>
                 <div className="text-3xl md:text-6xl font-bold text-white mb-2">{p.nombre_corto}</div>
                 <p className="text-lg md:text-2xl mt-4">{p.obra}</p>
                 <p className="text-lg md:text-2xl mt-1">{p.tramo}</p>

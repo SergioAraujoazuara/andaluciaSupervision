@@ -139,9 +139,9 @@ function Elemento() {
     };
 
     return (
-        <div className='container mx-auto min-h-screen px-14 py-5'>
+        <div className='container mx-auto min-h-screen xl:px-14 py-2'>
 
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded-xl shadow-md text-base'>
+            <div className='flex items-center justify-between bg-white px-5 py-3 rounded-xl shadow-md text-base'>
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'/'}>
@@ -156,7 +156,7 @@ function Elemento() {
 
                 <div className='flex items-center gap-4'>
                     <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
-                    <div className='px-4 bg-sky-600 text-white rounded-full'>
+                    <div className='px-4 bg-sky-500 text-white rounded-md'>
                         <Link to={'/visor_inspeccion'}>
                             <button className='text-white flex items-center gap-3'>
                                 <span className='text-2xl'><SiBim /> </span>
@@ -167,7 +167,7 @@ function Elemento() {
             </div>
 
             <div>
-                <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white p-4 rounded-xl shadow-md'>
+                <div className='flex flex-col items-start justify-center mt-2 bg-white p-4 rounded-xl shadow-md'>
                     <div className='w-full mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4 text-sm'>
                         <div className="relative flex items-center">
                             <input
@@ -254,10 +254,12 @@ function Elemento() {
                         </button>
                     </div>
 
-
+                    <div className='font-medium w-full bg-sky-500 text-white py-2 px-6 rounded-t-xl'>
+                        <h2>Elementos de inspección</h2>
+                    </div>
 
                     <div className="w-full rounded-xl">
-                        <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded-md'>
+                        <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200'>
                             {showSector &&
                                 <div className='text-left font-medium text-gray-600 sm:block hidden px-2'>
                                     Sector
@@ -277,13 +279,13 @@ function Elemento() {
                             return avanceB - avanceA; // Orden descendente: de mayor a menor avance
                         }).map((l, i) => (
                             <Link to={`/tablaPpi/${l.id}/${l.ppiNombre}`} onClick={() => handleCaptrurarTrazabilidad(l)} key={i}>
-                                <div className='w-full grid grid-cols-1 xl:grid-cols-12 gap-1 items-center text-sm cursor-pointer p-5 border-b-2 font-normal text-gray-600 hover:bg-gray-100'>
+                                <div className='w-full grid grid-cols-1 xl:grid-cols-12 gap-1 items-center text-sm cursor-pointer p-5 border border-b-2  font-normal text-gray-600 hover:bg-gray-100'>
                                     {showSector &&
                                         <div className='w-full xl:col-span-1 flex xl:block gap-2 px-2'>
                                             <p className='xl:hidden font-medium'>Sector: </p>{l.sectorNombre}
                                         </div>
                                     }
-                                    <div className='w-full xl:col-span-2 flex xl:block gap-2 px-6'>
+                                    <div className='w-full xl:col-span-2 flex xl:block gap-2 px-2'>
                                         <p className='xl:hidden font-medium'>Sub sector: </p>{l.subSectorNombre}
                                     </div>
                                     <div className='w-full xl:col-span-1 flex xl:block gap-2 px-2'>
@@ -307,10 +309,10 @@ function Elemento() {
                                         </div>
                                     </div>
                                     <div className='w-full xl:col-span-2 px-2'>
-                                    {
+                                        {
                                             l.totalSubactividades > 0 ? (
                                                 <div className='text-start flex flex-col items-start gap-3'>
-                                                     {`${l.actividadesAptas || 0}/${l.totalSubactividades} `}
+                                                    {`${l.actividadesAptas || 0}/${l.totalSubactividades} `}
                                                     ({((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%)
                                                     <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '100%' }}>
                                                         <div

@@ -1418,7 +1418,7 @@ function TablaPpi() {
     // Columnas visibles
 
     return (
-        <div className='container mx-auto min-h-screen p-5 xl:px-12 py-5 text-gray-500 text-sm'>
+        <div className='container mx-auto min-h-screen xl:px-12 py-3 text-gray-500 text-sm'>
             {showConfirmModalRepetida && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-gray-800 opacity-75"></div>
@@ -1623,10 +1623,6 @@ function TablaPpi() {
                                 <p>{lote}</p>
                             </div>
 
-                            <div className='flex gap-1 items-center'>
-                                <p className='text-sm'>- </p>
-                                {/* <p className='text-xs xl:text-sm text-amber-600'>{ppiNombre}</p> */}
-                            </div>
 
                         </div>
                     </Link>
@@ -1641,8 +1637,8 @@ function TablaPpi() {
 
 
 
-            <div className='flex flex-col mt-5'>
-                <div className='bg-gray-100'>
+            <div className='flex flex-col mt-4'>
+                <div className='bg-gray-100 px-2 xl:px-0'>
                     {ppi ? (
                         <div className='flex flex-col xl:flex-row gap-3 justify-center xl:justify-between items-center'>
                             <div className='flex gap-4 flex-row xl:flex-row  bg-gray-200 rounded-lg px-5 py-3'>
@@ -1726,7 +1722,7 @@ function TablaPpi() {
                 </div>
 
                 {view === 'table' ? (
-                    <div className='flex gap-3 flex-col mt-5 bg-white rounded-xl shadow-md'>
+                    <div className='flex gap-3 flex-col px-3 xl:p-0 mt-3'>
                         <div className="w-full rounded-xl overflow-x-auto">
                             <div>
                                 <div className="w-full bg-sky-500 text-gray-100 text-xs xl:text-sm font-medium py-3 px-3 grid grid-cols-24 items-center">
@@ -1764,7 +1760,7 @@ function TablaPpi() {
                                         ...actividad.subactividades
                                             .filter(subactividad => filter === 'Todos' || subactividad.resultadoInspeccion === filter)
                                             .map((subactividad, indexSubactividad) => (
-                                                <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-24 items-center border-b border-gray-200 text-sm px-4 py-3">
+                                                <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="grid grid-cols-24 items-center bg-white border-b border-gray-200 text-sm px-4 py-3">
                                                     <div className="col-span-2 xl:col-span-1">
                                                         {subactividad.version}
                                                     </div>
