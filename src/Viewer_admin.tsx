@@ -268,8 +268,8 @@ export default function Viewer_admin() {
 
     return (
 
-        <div className="container mx-auto min-h-screen text-gray-500 px-4 xl:px-14 py-5">
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+        <div className="container mx-auto min-h-screen text-gray-500 xl:px-14 py-2">
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 xl:rounded xl:rounded-xl shadow-md text-base'>
 
                 <div className='flex items-center gap-2'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
@@ -294,13 +294,13 @@ export default function Viewer_admin() {
             </div>
 
 
-            <div className='grid xl:grid-cols-2 grid-cols-1 gap-4 mt-4'>
+            <div className='grid xl:grid-cols-2 grid-cols-1 gap-4 mt-4 px-4 xl:p-0'>
 
 
 
                 <div className=''>
                     <div className="bg-white rounded-lg mb-4">
-                        <div className="bg-sky-600 text-white px-4 py-2 font-bold text-gray-500 rounded-t-lg">Elemento seleccionado</div>
+                        <div className="bg-sky-500 text-white px-4 py-2 font-bold text-gray-500 rounded-t-lg">Elemento seleccionado</div>
                         <div className='text-sm px-4 py-3 flex flex-col gap-3'>
                             <p><strong className='text-gray-500'>Global id:</strong> <span className='font-normal bg-gray-400 rounded-lg px-4 py-1 text-white text-sm'>{selectedGlobalId || 'Sin seleccionar'}</span></p>
 
@@ -312,7 +312,7 @@ export default function Viewer_admin() {
 
 
                     <div className="bg-white rounded-lg mb-4">
-                        <div className="bg-sky-600 px-4 py-2 font-bold text-white rounded-t-lg">Lotes disponibles</div>
+                        <div className="bg-sky-500 px-4 py-2 font-bold text-white rounded-t-lg">Lotes disponibles</div>
                         <div className="flex justify-between items-center px-4 py-3">
                             <div className="flex-grow pr-2">
                                 <select onChange={handleSelectLote} value={selectedLote}

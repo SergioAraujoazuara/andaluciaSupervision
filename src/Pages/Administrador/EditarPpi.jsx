@@ -291,18 +291,15 @@ function EditarPpi() {
     };
 
     return (
-        <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500 text-sm'>
+        <div className='container mx-auto min-h-screen xl:px-14 py-2 text-gray-500 text-sm'>
             {/* Navigation section */}
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 xl:rounded xl:rounded-xl shadow-md text-base'>
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'/admin'}>
                         <h1 className='text-gray-500'>Administración</h1>
                     </Link>
-                    <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-                    <Link to={'/verPpis'}>
-                        <h1 className='text-gray-500'>Plantillas PPI</h1>
-                    </Link>
+                    
                     <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                     <Link to={'#'}>
                         <h1 className='font-medium text-amber-600'>Editar PPI</h1>
@@ -312,7 +309,7 @@ function EditarPpi() {
                     <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
                 </div>
             </div>
-            <div className='flex gap-3 flex-col mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
+            <div className='flex gap-3 flex-col mt-5 bg-white px-4 rounded rounded-xl shadow-md'>
                 <h2 className='flex items-center gap-1 text-base'><strong className='text-amber-500 text-2xl font-medium'>*</strong>Selecciona la celda en la tabla y edita los valores</h2>
                 <form onSubmit={handleSubmit}>
                     <div className='col-span-12 mb-4 mt-4'>
@@ -333,11 +330,11 @@ function EditarPpi() {
                     <div className='w-full bg-gray-300 grid grid-cols-12 text-sm items-center font-medium'>
                         <div className="py-3 px-2 text-left col-span-1 ">Nº</div>
                         <div className="py-3 px-2 text-left whitespace-normal col-span-3 ">Actividad</div>
-                        <div className="py-3 px-2 text-left whitespace-normal col-span-3">Criterio de aceptación</div>
-                        <div className="py-3 px-2 text-left whitespace-normal col-span-1">Documentación de referencia</div>
-                        <div className="py-3 px-2 text-left col-span-2">Tipo de inspección</div>
-                        <div className="py-3 px-2 text-left col-span-1">Punto</div>
-                        <div className="py-3 px-2 text-left col-span-1">Responsable</div>
+                        <div className="py-3 px-2 text-left whitespace-normal xl:col-span-3 col-span-8">Criterio de aceptación</div>
+                        <div className="py-3 px-2 text-left whitespace-normal col-span-1 xl:block hidden">Documentación de referencia</div>
+                        <div className="py-3 px-2 text-left col-span-2 xl:block hidden">Tipo de inspección</div>
+                        <div className="py-3 px-2 text-left col-span-1 xl:block hidden">Punto</div>
+                        <div className="py-3 px-2 text-left col-span-1 xl:block hidden">Responsable</div>
                     </div>
                     {/* Iterar sobre actividades para generar inputs */}
                     {editPpi.actividades.map((actividad, actividadIndex) => (
@@ -366,7 +363,7 @@ function EditarPpi() {
                                     <div className='w-full bg-gray-100 grid grid-cols-12 text-sm'>
                                         <div className='col-span-1'>
                                             <input
-                                                className='w-full p-2 border bg-gray-50'
+                                                className='w-full px-1 border bg-gray-50 h-full text-xs'
                                                 type="text"
                                                 value={subactividad.numero || ''}
                                                 onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'numero')}
@@ -380,7 +377,7 @@ function EditarPpi() {
                                                 onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'nombre')}
                                             />
                                         </div>
-                                        <div className='col-span-3'>
+                                        <div className='xl:col-span-3 col-span-8'>
                                             <input
                                                 className='w-full p-2 border'
                                                 type="text"
@@ -388,7 +385,7 @@ function EditarPpi() {
                                                 onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'criterio_aceptacion')}
                                             />
                                         </div>
-                                        <div className='col-span-1'>
+                                        <div className='col-span-1 xl:block hidden'>
                                             <input
                                                 className='w-full p-2 border'
                                                 type="text"
@@ -396,7 +393,7 @@ function EditarPpi() {
                                                 onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'documentacion_referencia')}
                                             />
                                         </div>
-                                        <div className='col-span-2'>
+                                        <div className='col-span-2 xl:block hidden'>
                                             <input
                                                 className='w-full p-2 border'
                                                 type="text"
@@ -404,7 +401,7 @@ function EditarPpi() {
                                                 onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'tipo_inspeccion')}
                                             />
                                         </div>
-                                        <div className='col-span-1'>
+                                        <div className='col-span-1 xl:block hidden'>
                                             <input
                                                 className='w-full p-2 border'
                                                 type="text"
@@ -412,7 +409,7 @@ function EditarPpi() {
                                                 onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'punto')}
                                             />
                                         </div>
-                                        <div className='col-span-1'>
+                                        <div className='col-span-1 xl:block hidden'>
                                             <input
                                                 className='w-full p-2 border'
                                                 type="text"

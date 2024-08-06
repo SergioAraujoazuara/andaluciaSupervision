@@ -77,8 +77,8 @@ function VerPpis() {
 
 
     return (
-        <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500'>
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+        <div className='container mx-auto min-h-screen xl:px-14 py-2 text-gray-500'>
+            <div className='flex gap-2 items-center justify-between bg-white px-4 py-3 xl:rounded xl:rounded-xl shadow-md text-base'>
 
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
@@ -102,7 +102,7 @@ function VerPpis() {
 
 
             <div>
-                <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
+                <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white p-5 rounded rounded-xl shadow-md'>
 
 
 
@@ -153,7 +153,7 @@ function VerPpis() {
 
 
                     </div>
-                    <div className='flex gap-2 mt-2'>
+                    <div className='flex gap-2 mt-2 xl:block hidden'>
                         <p className=' px-4 py-2 rounded-lg'> Crear nuevo ppi: </p>
                         <Link to={'/agregarPpi'}>
 

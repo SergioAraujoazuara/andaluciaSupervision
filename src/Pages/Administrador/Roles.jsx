@@ -80,21 +80,21 @@ function AdminPanel() {
             alert('Seleccione un usuario para actualizar.');
             return;
         }
-    
+
         const userDocRef = doc(db, 'usuarios', selectedUserId);
         const updates = {
             role: newRole,
         };
-    
+
         // Si hay una imagen nueva, añádela al documento
         if (signatureImage) updates.signature = signatureImage;
-    
+
         await updateDoc(userDocRef, updates);
         setNewRole(''); // Reset role selection
         setSignatureImage(''); // Reset image state
         setShowSuccessModal(true);
     };
-    
+
 
     // Cerrar el modal de éxito
     const handleCloseSuccessModal = () => {
@@ -107,9 +107,9 @@ function AdminPanel() {
     };
 
     return (
-        <div className='container mx-auto min-h-screen'>
+        <div className="container mx-auto min-h-screen text-gray-500 xl:px-14 py-2">
 
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base mt-5'>
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
 
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
@@ -132,44 +132,38 @@ function AdminPanel() {
                 </div>
 
             </div>
-            <div className="bg-white p-8 mt-6">
-                <div className="grid grid-cols-1 lg:grid-cols-6 gap-20">
+            <div className="bg-white p-4 mt-2">
+                <div className="grid grid-cols-1 xl:grid-cols-6 xl:gap-20 gap-5">
                     <div className='col-span-4'>
-                        <h2 className="text-lg font-semibold mb-4 ps-4">Lista de Usuarios</h2>
-                        <div className="overflow-y-auto max-h-80 lg:max-h-full rounded-xl p-4">
-                            <table className="w-full rounded-lg overflow-hidden"> {/* Agrega rounded-lg para bordes redondeados */}
-                                <thead>
-                                    <tr className="bg-gray-100">
-                                        <th className="px-4 py-2 text-left">Nombre</th>
-                                        <th className="px-4 py-2 text-left">Email</th>
-                                        <th className="px-4 py-2 text-left">Rol</th>
-                                        <th className="px-4 py-2 text-center">Firma</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {users.map((user, index) => (
-                                        <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                                            <td className="px-4 py-2">{user.nombre}</td>
-                                            <td className="px-4 py-2">{user.email}</td>
-                                            <td className="px-4 py-2">{user.role}</td>
-                                            <td className="px-4 py-2 flex items-center justify-center ">
-                                                {user.signature ? (
-                                                    <img className='w-16' src={user.signature} alt="firma" />
-                                                ) : (
-                                                    <p>Sin firma</p>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <h2 className="bg-sky-500 text-white text-lg font-semibold px-4 py-1 rounded-t-lg">Lista de Usuarios</h2>
+                        <div className="overflow-y-auto max-h-80 lg:max-h-full rounded-xl">
+                            <div className="space-y-4">
+                                {users.map((user, index) => (
+                                    <div key={index} className="bg-white p-4 rounded-lg shadow-md flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                                        <div>
+                                            <h3 className="text-lg font-semibold">{user.nombre}</h3>
+                                            <p className="text-sm text-gray-600">{user.email}</p>
+                                            <p className="text-sm text-gray-600">{user.role}</p>
+                                        </div>
+                                        <div className="flex items-center justify-center mt-2 lg:mt-0">
+                                            {user.signature ? (
+                                                <img className='w-16' src={user.signature} alt="firma" />
+                                            ) : (
+                                                <p>Sin firma</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
 
-                    <div className='col-span-2'>
+
+                    <div className='xl:col-span-2 col-span-4 w full'>
                         <div className="bg-gray-100 rounded-md p-4">
-                            <h2 className="text-lg font-semibold mb-4">Actualizar Rol</h2>
+                        <h2 className="bg-sky-500 text-white text-lg font-semibold px-4 py-1 rounded-t-lg">Actualizar Roles</h2>
+                            <h2 className="text-lg font-semibold mb-4"></h2>
                             <select
                                 value={selectedUserId}
                                 onChange={(e) => setSelectedUserId(e.target.value)}
@@ -200,7 +194,7 @@ function AdminPanel() {
 
                             <button
                                 onClick={handleRoleUpdate}
-                                className="text-white mt-4 flex items-center gap-3 text-lg font-semibold bg-amber-600 py-2 px-6 rounded-xl shadow-md transition duration-300 ease-in-out hover:bg-amber-700 hover:shadow-lg hover:-translate-y-1"
+                                className="text-white text-sm mt-4 flex items-center gap-3 text-lg font-semibold bg-amber-600 py-2 px-6 rounded-xl shadow-md transition duration-300 ease-in-out hover:bg-amber-700 hover:shadow-lg hover:-translate-y-1"
                             >
                                 <span className='text-white text-xl transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>  Guardar
                             </button>

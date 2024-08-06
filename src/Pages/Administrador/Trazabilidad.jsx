@@ -1293,13 +1293,13 @@ function Trazabilidad() {
 
 
     return (
-        <div className='container mx-auto min-h-screen px-3 xl:px-14 py-5 text-gray-500'>
+        <div className='container mx-auto min-h-screen py-2 xl:px-14 text-gray-500'>
             {/* Encabezado */}
 
 
 
 
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 xl:rounded xl:rounded-xl shadow-md text-base'>
 
                 <div className='flex items-center gap-2'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
@@ -1326,7 +1326,7 @@ function Trazabilidad() {
 
 
             {/* Contenido */}
-            <div className='flex gap-3 flex-col mt-5 bg-white p-3 rounded rounded-xl shadow-md'>
+            <div className='flex gap-3 flex-col mt-4 bg-white xl:p-4 px-4 rounded rounded-xl shadow-md'>
 
 
 
@@ -1342,19 +1342,22 @@ function Trazabilidad() {
                             <div className="flex flex-col items-start gap-3">
                                 <p className='text-md bg-gray-200 font-medium text-gray-500 rounded-md px-3 py-2 flex items-center gap-2 w-full'>1. Sector</p>
                                 <div className="flex flex-col xl:flex-row items-center w-full">
-                                    <input
-                                        placeholder='Nuevo sector'
-                                        type="text"
-                                        className='border px-3 py-1 rounded-lg w-full'
-                                        value={sectorInput}
-                                        onChange={(e) => setSectorInput(e.target.value)}
-                                    />
-                                    <button
-                                        onClick={agregarSector}
-                                        className="flex justify-center w-full xl:w-20  xl:ml-2 mt-2 xl:mt-0 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
-                                    >
-                                        <IoMdAddCircle className='text-sm' />
-                                    </button>
+                                    <div className='w-full flex gap-2'>
+                                        <input
+                                            placeholder='Nuevo sector'
+                                            type="text"
+                                            className='border px-3 py-1 rounded-lg w-full'
+                                            value={sectorInput}
+                                            onChange={(e) => setSectorInput(e.target.value)}
+                                        />
+                                        <button
+                                            onClick={agregarSector}
+                                            className="flex justify-center w-40 xl:w-20  xl:ml-2 xl:mt-0 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                        >
+                                            <IoMdAddCircle className='text-sm' />
+                                        </button>
+                                    </div>
+
                                 </div>
                                 <div className="flex flex-col items-start gap-3 w-full">
 
@@ -1377,7 +1380,7 @@ function Trazabilidad() {
                                 <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>2. Sub sector</p>
 
 
-                                <div className="flex flex-col xl:flex-row items-center w-full">
+                                <div className="flex flex gap-2 xl:flex-row items-center w-full">
 
                                     <input
                                         placeholder='Nuevo sub sector: '
@@ -1389,7 +1392,7 @@ function Trazabilidad() {
                                     />
                                     <button
                                         onClick={() => agregarSubsector(selectedSector)}
-                                        className="w-full xl:w-20  flex justify-center xl:ml-2 mt-2 xl:mt-0 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                        className="w-40 xl:w-20  flex justify-center xl:ml-2 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                     >
                                         <IoMdAddCircle className='text-sm' />
                                     </button>
@@ -1420,10 +1423,10 @@ function Trazabilidad() {
                             <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>3. Parte</p>
 
 
-                            <div className="flex flex-col xl:flex-row items-center w-full">
+                            <div className="flex gap-2 xl:flex-row items-center w-full">
 
                                 <input
-                                    placeholder='Agregar nuevo parte: '
+                                    placeholder='Nuevo parte: '
                                     type="text"
                                     id="parte"
                                     className='border px-3 py-1 rounded-lg w-full'
@@ -1432,7 +1435,7 @@ function Trazabilidad() {
                                 />
                                 <button
                                     onClick={handleAgregarParte}
-                                    className="w-full xl:w-20  flex justify-center xl:ml-2 mt-2 xl:mt-0 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                    className="w-40 xl:w-20  flex justify-center xl:ml-2  bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                 >
                                     <IoMdAddCircle className='text-sm' />
                                 </button>
@@ -1455,10 +1458,10 @@ function Trazabilidad() {
 
                             <div className='flex flex-col col-span-24 xl:col-span-5 gap-3    mt-5 xl:mt-0'>
                                 <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>4. Elemento</p>
-                                <div className="flex flex-col xl:flex-row items-center w-full">
+                                <div className="flex gap-2 xl:flex-row items-center w-full">
 
                                     <input
-                                        placeholder='Agregar nuevo elemento: '
+                                        placeholder='Nuevo elemento: '
                                         type="text"
                                         id="elemento"
                                         className='border px-3 py-1 rounded-lg w-full'
@@ -1467,7 +1470,7 @@ function Trazabilidad() {
                                     />
                                     <button
                                         onClick={() => agregarElemento(selectedParte)} // Asegúrate de tener un estado selectedParte para manejar la parte seleccionada
-                                        className="w-full xl:w-20  flex justify-center xl:ml-2 mt-2 xl:mt-0 bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                        className="w-40 xl:w-20  flex justify-center bg-sky-500 hover:bg-sky-600 text-white text-lg font-medium py-2 px-4 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                     >
                                         <IoMdAddCircle className='text-sm' />
                                     </button>
@@ -1514,7 +1517,7 @@ function Trazabilidad() {
                                 <div className='flex flex-col gap-3 col-span-6'>
 
                                     <input
-                                        placeholder='Agregar nuevo lote: '
+                                        placeholder='Nuevo lote: '
                                         type="text"
                                         id="lote"
                                         className='border px-3 py-1 rounded-lg w-full'
@@ -1534,7 +1537,7 @@ function Trazabilidad() {
                                     </select>
 
                                     <input
-                                        placeholder='Agregar pk inicial: '
+                                        placeholder='Pk inicial: '
                                         type="text"
                                         id="pkInicial"
                                         className='border px-3 py-1 rounded-lg w-full'
@@ -1542,7 +1545,7 @@ function Trazabilidad() {
                                         onChange={(e) => setPkInicialInput(e.target.value)}
                                     />
                                     <input
-                                        placeholder='Agregar pk final: '
+                                        placeholder='Pk final: '
                                         type="text"
                                         id="pkFinal"
                                         className='border px-3 py-1 rounded-lg w-full'
@@ -1563,20 +1566,26 @@ function Trazabilidad() {
 
 
 
-                                <div className='col-span-6 xl:px-5'>
+                                <div className=' col-span-6 xl:px-5'>
                                     <p className='font-medium flex items-center gap-3'><span className='text-amber-600'>*</span>Para guardar trazabilidad selecciona un item en el desplegable y posteriormente agrega la información en cada campo.</p>
-                                    <button
-                                        onClick={() => agregarLote(selectedElemento)}
-                                        className="w-full xl:w-60 text-white mt-6 flex justify-center items-center gap-3 font-semibold bg-amber-600 hover:bg-amber-700 py-2 px-6 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
-                                    >
-                                        <span className='text-white text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
-                                        Guardar trazabilidad
-                                    </button>
+
+                                    <div className='flex gap-6'>
+                                        <button
+                                            onClick={() => agregarLote(selectedElemento)}
+                                            className="w-60 xl:h-14 h-10 text-white xl:px-8 mt-4 flex justify-center items-center gap-3 font-semibold bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                        >
+                                            <span className='text-white text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
+                                            Guardar trazabilidad
+                                        </button>
 
 
 
-                                    <Link to={'/visorAdmin'}><button className="w-full xl:w-60 text-white text-2xl mt-3 flex justify-center items-center gap-3 font-semibold bg-sky-500 hover:bg-sky-600 py-2 px-6 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"><SiBim /></button></Link>
+                                        <Link to={'/visorAdmin'}>
+                                            <button className="w-20 xl:w-20 xl:h-14 h-10 text-white text-3xl mt-4 flex justify-center items-center gap-3 font-semibold bg-sky-500 hover:bg-sky-600 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"><SiBim /></button></Link>
+                                        
+                                    </div>
                                     <p className=' flex items-center gap-2 mt-4'><span className='text-amber-600 text-xl'> *</span>Asigna el globalId dentro del modelo BIM</p>
+
 
                                 </div>
 
@@ -1616,7 +1625,7 @@ function Trazabilidad() {
                                 key={sector.id}
                                 className={`flex flex-wrap items-center ${index % 2 === 0 ? 'bg-gray-100' : 'bg-gray-50'} md:flex-row flex-col`}
                             >
-                                <div className="xl:bg-transparent bg-sky-500 text-gray-100 xl:text-gray-500 font-medium px-4 py-3 md:w-1/5 w-full group cursor-pointer flex justify-between">
+                                <div className="xl:bg-transparent bg-sky-500 rounded-t-lg text-gray-100 xl:text-gray-500 font-medium px-4 py-3 md:w-1/5 w-full group cursor-pointer flex justify-between">
                                     <p className='w-full text-lg'>{sector.nombre}</p>
                                     <div className="flex gap-4">
                                         <button

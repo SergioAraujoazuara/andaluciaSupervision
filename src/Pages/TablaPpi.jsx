@@ -1637,7 +1637,7 @@ function TablaPpi() {
 
 
 
-            <div className='flex flex-col mt-4'>
+            <div className='flex flex-col mt-4 px-4 xl:px-0'>
                 <div className='bg-gray-100 px-2 xl:px-0'>
                     {ppi ? (
                         <div className='flex flex-col xl:flex-row gap-3 justify-center xl:justify-between items-center'>

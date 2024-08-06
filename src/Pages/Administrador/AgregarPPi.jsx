@@ -192,7 +192,7 @@ function PlantillaPpi() {
 
     return (
         <>
-            <div className='container mx-auto min-h-screen px-14 py-5 text-gray-500 text-sm'>
+            <div className='container mx-auto min-h-screen xl:px-14 py-2 text-gray-500 text-sm'>
                 <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
                     <div className='flex gap-2 items-center'>
                         <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
