@@ -9,20 +9,17 @@ import { FaFilePdf } from "react-icons/fa6"; // Importa los íconos para "Apto" 
 import { GoHomeFill } from "react-icons/go";
 import { FaArrowRight } from "react-icons/fa";
 import { IoCloseCircle } from "react-icons/io5";
-import { SiReacthookform } from "react-icons/si";
 import { FaQuestionCircle } from "react-icons/fa";
-import { VscError } from "react-icons/vsc";
-import jsPDF from 'jspdf';
+import { FaRegEdit } from "react-icons/fa";
+import { FaImage } from 'react-icons/fa';
+import { TiLockClosedOutline } from "react-icons/ti";
 import logo from './assets/tpf_logo_azul.png'
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import FormularioInspeccion from './Components/FormularioInspeccion';
-import Trazabilidad from './Pages/Administrador/Trazabilidad'
-import TrazabilidadBim from './Pages/Administrador/TrazabiidadBim';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import Pdf_final from './Pages/Pdf_final';
 import { FcInspection } from "react-icons/fc";
 import imageCompression from 'browser-image-compression';
-import { GrNotes } from "react-icons/gr";
 import { IoArrowBackCircle } from "react-icons/io5";
 import { useAuth } from './context/authContext';
 
@@ -40,6 +37,228 @@ interface Lote {
 }
 
 export default function ViewerInspeccion() {
+    const handleRepetirInspeccion = async () => {
+        if (!ppi || !subactividadToRepeat) return;
+
+        const [actividadIndex, subactividadIndex] = subactividadToRepeat.split('-').slice(1).map(Number);
+
+        let nuevoPpi = { ...ppi };
+        let subactividadSeleccionada = { ...nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] };
+
+        // Generar un nuevo ID para el registro duplicado
+        const nuevoIdRegistroFormulario = doc(collection(db, "registros")).id;
+
+        // Obtener los datos actuales
+        const duplicadoId = await duplicarRegistro(subactividadSeleccionada.idRegistroFormulario, nuevoIdRegistroFormulario);
+
+        if (!duplicadoId) {
+            console.error("Error duplicando el registro en Firestore.");
+            return;
+        }
+
+        // Obtener la versión más alta para la actividad específica
+        const subactividadesMismaActividad = nuevoPpi.actividades[actividadIndex].subactividades
+            .filter(subact => subact.numero === subactividadSeleccionada.numero);
+
+        // Verificar si la subactividad es "no apta" y tiene una versión rechazada
+        const rejectedSubactividad = subactividadesMismaActividad.find(subact => subact.motivoVersion === 'rechazada');
+
+        let newEditVersion;
+        let newRejectedVersion;
+
+        // Caso 1: Si existe una subactividad rechazada
+        if (rejectedSubactividad) {
+            // Usar la versión de la subactividad rechazada para la subactividad editada
+            newEditVersion = rejectedSubactividad.version;
+
+            // Determinar el nuevo número de versión para la subactividad rechazada
+            newRejectedVersion = (parseInt(rejectedSubactividad.version) + 1).toString();
+
+            // Actualizar la subactividad rechazada con el nuevo número de versión
+            rejectedSubactividad.version = newRejectedVersion;
+
+            // Caso 2: Si no existe una subactividad rechazada
+        } else {
+            // Usar la versión más alta actual + 1 para la subactividad editada
+            newEditVersion = (Math.max(...subactividadesMismaActividad.map(subact => parseInt(subact.version))) + 1).toString();
+        }
+
+
+
+        // Crear la nueva subactividad con los valores editados
+        let nuevaSubactividadEditada = {
+            ...subactividadSeleccionada,
+            nombre: subactividadSeleccionada.nombre,
+            criterio_aceptacion: subactividadSeleccionada.criterio_aceptacion,
+            documentacion_referencia: subactividadSeleccionada.documentacion_referencia,
+            tipo_inspeccion: subactividadSeleccionada.tipo_inspeccion,
+            punto: subactividadSeleccionada.punto,
+            responsable: subactividadSeleccionada.responsable,
+            comentario: comentario, // PASO 2 actualizar el input de comentario
+            observaciones: formularioData.observaciones, // PASO 2 actualizar el input de observaciones
+            edited: true,  // Marcar como editada
+            resultadoInspeccion: subactividadSeleccionada.resultadoInspeccion,
+            idRegistroFormulario: nuevoIdRegistroFormulario,  // Asignar el nuevo ID del registro duplicado
+            version: newEditVersion, // Asignar la nueva versión para la subactividad editada
+            active: true, // Esta es la versión activa
+            originalId: subactividadSeleccionada.originalId || subactividadSeleccionada.idRegistroFormulario, // Mantener el ID original
+            motivoVersion: 'editada',  // Actualizar el campo aquí
+        };
+
+        let subAct = subactividadSeleccionada.motivoVersion;
+        let resultadoInspeccion = subactividadSeleccionada.resultadoInspeccion;
+
+        // Logs basados en las condiciones
+        if (subAct === 'original' && resultadoInspeccion === 'Apto') {
+
+            nuevaSubactividadEditada = {
+                ...nuevaSubactividadEditada,
+                motivoVersion: 'editada',
+            };
+        }
+
+        if (subAct === 'rechazada' && resultadoInspeccion === 'Apto') {
+
+            nuevaSubactividadEditada = {
+                ...nuevaSubactividadEditada,
+                version: (parseInt(newEditVersion) + 1).toString(), // Asignar la nueva versión para la subactividad editada
+                motivoVersion: 'editada',
+            };
+        }
+
+
+
+        // Actualizar la subactividad seleccionada para que no esté activa
+        nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = {
+            ...subactividadSeleccionada,
+            active: false // Marcar la versión anterior como no activa
+        };
+
+        // Añadir la nueva subactividad con los valores editados después de la original
+        nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividadEditada);
+
+        // Actualizar el nuevo registro con las imágenes y observaciones si hay nuevas imágenes
+        const registroDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
+        const updateData = {
+            edited: true,  // Marcar como editada
+            version: nuevaSubactividadEditada.version,
+            active: true, // Esta es la versión activa
+            originalId: nuevaSubactividadEditada.originalId,
+            motivoVersion: 'editada',  // Actualizar el campo aquí
+            observaciones: formularioData.observaciones,
+            comentario: comentario,
+            imagen: imagen || imagen1Url,
+            imagen2: imagen2 || imagen2Url,
+        };
+        if (subactividadSeleccionada.imagen) updateData.imagen = subactividadSeleccionada.imagen;
+        if (subactividadSeleccionada.imagen2) updateData.imagen2 = subactividadSeleccionada.imagen2;
+        await updateDoc(registroDocRef, updateData);
+
+        await actualizarFormularioEnFirestore(nuevoPpi);
+
+
+
+        setPpi(nuevoPpi);
+        setShowConfirmModalRepetida(false);
+    };
+    const duplicarRegistro = async (idRegistroFormulario, nuevoIdRegistroFormulario) => {
+        try {
+            const docRef = doc(db, "registros", idRegistroFormulario);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const nuevoDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
+                await setDoc(nuevoDocRef, {
+                    ...data,
+                    edited: false,
+                    idRegistroReferencia: idRegistroFormulario,
+                    fechaHoraActual: new Date().toISOString(),
+                    active: true,
+                    version: (parseInt(data.version) + 1).toString(),
+                    originalId: data.originalId || idRegistroFormulario,
+                });
+
+                return nuevoIdRegistroFormulario;
+            } else {
+                console.log("No se encontró el documento con el ID:", idRegistroFormulario);
+                return null;
+            }
+        } catch (error) {
+            console.error("Error al duplicar el documento:", error);
+            return null;
+        }
+    };
+    const [actividadNombre, setActividadNombre] = useState('');
+    const [criterioAceptacion, setCriterioAceptacion] = useState('');
+    const [docReferencia, setDocReferencia] = useState('');
+    const [tipoInspeccion, setTipoInspeccion] = useState('');
+    const [punto, setPunto] = useState('');
+    const [responsable, setResponsable] = useState('');
+    const [aptoNoapto, setAptoNoapto] = useState('');
+    const [nombre_usuario_edit, setNombre_usuario_edit] = useState('');
+    const [subActividadReference, setSubActividadreference] = useState({})
+
+    const [idRegistroImagen, setIdRegistroImagen] = useState('')
+    const [imagen1Url, setImagen1Url] = useState('');
+    const [imagen2Url, setImagen2Url] = useState('');
+    const [imagenEdit, setImagenEdit] = useState('');
+    const [imagen2Edit, setImagen2Edit] = useState('');
+
+    const [formularioData, setFormularioData] = useState({});
+    const [showConfirmModalRepetida, setShowConfirmModalRepetida] = useState(false);
+    const [subactividadToRepeat, setSubactividadToRepeat] = useState(null);
+    const [subactividadSeleccionada, setSubactividadSeleccionada] = useState(null);
+
+    const openConfirmModal = async (subactividadId) => {
+        setSubactividadToRepeat(subactividadId);
+
+        const [actividadIndex, subactividadIndex] = subactividadId.split('-').slice(1).map(Number);
+        const subactividad = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
+
+        setIdRegistroImagen(subactividad);
+
+        // Comprobar sub actividad
+        setSubActividadreference(subactividad);
+
+        // Obtener el documento del formulario desde Firestore
+        const formularioData = await obtenerDatosFormulario(subactividad.idRegistroFormulario);
+
+
+        setSubactividadSeleccionada(subactividad);
+        setActividadNombre(subactividad.nombre || '');
+        setCriterioAceptacion(subactividad.criterio_aceptacion || '');
+        setDocReferencia(subactividad.documentacion_referencia || '');
+        setTipoInspeccion(subactividad.tipo_inspeccion || '');
+        setPunto(subactividad.punto || '');
+        setResponsable(subactividad.responsable || '');
+        setAptoNoapto(subactividad.resultadoInspeccion || '');
+        setNombre_usuario_edit(subactividad.nombre_usuario || '');
+        setComentario(subactividad.comentario || '');
+        setFormularioData({ ...formularioData, observaciones: subactividad.observaciones || '' });
+        // Establecer las URLs de las imágenes en el estado
+        setImagen1Url(formularioData.imagen || '');
+        setImagen2Url(formularioData.imagen2 || '');
+        setShowConfirmModalRepetida(true);
+
+
+    };
+    const obtenerDatosFormulario = async (idRegistroFormulario) => {
+        try {
+            const docRef = doc(db, "registros", idRegistroFormulario);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                return docSnap.data();
+            } else {
+                console.log("No se encontró el documento con el ID:", idRegistroFormulario);
+                return null;
+            }
+        } catch (error) {
+            console.error("Error al obtener el documento:", error);
+            return null;
+        }
+    };
     const [modelCount, setModelCount] = useState(0);
     const [lotes, setLotes] = useState<Lote[]>([]);
     const [selectedGlobalId, setSelectedGlobalId] = useState<string | null>(null);
@@ -298,16 +517,16 @@ export default function ViewerInspeccion() {
 
     };
 
-    
-
-    
 
 
 
 
 
 
-    
+
+
+
+
 
 
     // agregar cometarios
@@ -1277,7 +1496,7 @@ export default function ViewerInspeccion() {
                                                             {subactividad.nombre}
                                                         </div>
 
-                                                        <div className="col-span-2 p-1 flex justify-center cursor-pointer" >
+                                                        <div className="col-span-1 p-1 flex justify-center cursor-pointer" >
                                                             {subactividad.resultadoInspeccion ? (
                                                                 subactividad.resultadoInspeccion === "Apto" ? (
                                                                     <span
@@ -1317,7 +1536,17 @@ export default function ViewerInspeccion() {
                                                             ) : null}
                                                         </div>
 
-                                                        
+                                                        <div className="col-span-1 p-1 flex justify-start cursor-pointer" >
+                                                            {subactividad.formularioEnviado ? (
+
+                                                                <button
+                                                                    onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                                    className="text-gray-500 font-bold text-xl"
+                                                                >
+                                                                    <FaRegEdit />
+                                                                </button>
+                                                            ) : null}
+                                                        </div>
 
 
 
@@ -1679,6 +1908,181 @@ export default function ViewerInspeccion() {
                         </div>
                     </div>
 
+                </div>
+            )}
+
+{showConfirmModalRepetida && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-gray-800 opacity-75"></div>
+                    <div className="relative bg-white rounded-lg shadow-lg w-full max-w-lg mx-auto overflow-hidden">
+
+                        <div className="p-8 overflow-y-auto max-h-[80vh]">
+                            <div className="text-center flex items-center justify-between mb-4">
+                                <h2 className="text-2xl font-medium">Editar inspección</h2>
+                                <button
+                                    onClick={() => {
+                                        setShowConfirmModalRepetida(false)
+                                        setImagenEdit('')
+                                        setImagen2Edit('')
+                                    }}
+                                    className="text-3xl text-gray-500 hover:text-gray-700 transition-colors duration-300"
+                                >
+                                    <IoCloseCircle />
+                                </button>
+                            </div>
+
+                            <div className='w-full border-b-2 mb-5'></div>
+                            {subactividadSeleccionada && (
+                                <div className="mb-6">
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Actividad</label>
+                                        <input
+                                            readOnly
+                                            type="text"
+                                            value={actividadNombre}
+                                            className="mt-1 p-2 w-full bg-gray-200 border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Criterio de aceptación</label>
+                                        <input
+                                            readOnly
+                                            type="text"
+                                            value={criterioAceptacion}
+                                            className="mt-1 p-2 w-full bg-gray-200 border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Documentación de referencia</label>
+                                        <input
+                                            readOnly
+                                            type="text"
+                                            value={docReferencia}
+                                            className="mt-1 p-2 w-full bg-gray-200  border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Tipo de inspección</label>
+                                        <input
+                                            readOnly
+                                            type="text"
+                                            value={tipoInspeccion}
+                                            className="mt-1 p-2 w-full bg-gray-200  border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Punto</label>
+                                        <input
+                                            readOnly
+                                            type="text"
+                                            value={punto}
+                                            className="mt-1 p-2 w-full bg-gray-200  border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Responsable</label>
+                                        <input
+                                            readOnly
+                                            type="text"
+                                            value={responsable}
+                                            className="mt-1 p-2 w-full bg-gray-200  border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Nombre</label>
+                                        <input
+                                            readOnly
+                                            type="text"
+                                            value={nombre_usuario_edit}
+                                            className="mt-1 p-2 w-full bg-gray-200  border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
+
+
+
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 flex gap-1"><span className='text-gray-400 text-lg'><TiLockClosedOutline /></span>Resultado inspección:</label>
+                                        <input
+                                            readOnly
+                                            type="text"
+                                            value={aptoNoapto}
+                                            onChange={(e) => setAptoNoapto(e.target.value)}
+                                            className="mt-1 p-2 w-full bg-gray-200  border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700">Comentarios inspección</label>
+                                        <textarea
+                                            value={comentario}
+                                            onChange={(e) => setComentario(e.target.value)}
+                                            className="mt-1 p-2 w-full border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                        />
+                                    </div>
+                                    {formularioData && (
+                                        <>
+                                            <div className="mb-4">
+                                                <label className="block text-sm font-medium text-gray-700 flex gap-1 items-center">
+                                                    <span><FaImage className="text-gray-500 mr-2" /></span>Imagen 1
+                                                </label>
+                                                <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                               
+                                            
+                                                    imagen1Url && <img src={imagen1Url} alt="Imagen 1" className="mt-2" />
+                                                
+                                            </div>
+
+                                            <div className="mb-4">
+                                                <label className="block text-sm font-medium text-gray-700 flex gap-1 items-center">
+                                                    <span><FaImage className="text-gray-500 mr-2" /></span>Imagen 1
+                                                </label>
+                                                <input onChange={handleImagenChange2} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                                {imagen2Edit ? (
+                                                    <img src={imagen2Edit} alt="Imagen 1" className="mt-2" />
+                                                ) : (
+                                                    imagen1Url && <img src={imagen1Url} alt="Imagen 1" className="mt-2" />
+                                                )}
+                                            </div>
+
+                                            <div className="mb-4">
+                                                <label className="block text-sm text-gray-500">Observaciones del informe</label>
+                                                <textarea
+                                                    value={formularioData.observaciones}
+                                                    onChange={(e) => setFormularioData({ ...formularioData, observaciones: e.target.value })}
+                                                    className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm"
+                                                />
+
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                            <div className="flex justify-center gap-4">
+                                <button
+                                    onClick={handleRepetirInspeccion}
+                                    className="bg-amber-700 hover:bg-amber-800 px-4 py-2 rounded-md shadow-md text-white font-medium"
+                                >
+                                    Actualizar
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowConfirmModalRepetida(false)
+                                        setImagenEdit('')
+                                        setImagen2Edit('')
+                                    }}
+                                    className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-md shadow-md text-white font-medium"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 

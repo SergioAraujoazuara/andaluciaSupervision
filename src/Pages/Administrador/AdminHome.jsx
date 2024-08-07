@@ -13,6 +13,7 @@ import { FaArrowAltCircleRight } from "react-icons/fa";
 import { FaCircleUser } from "react-icons/fa6";
 import { FaRegUserCircle } from "react-icons/fa";
 import { useAuth } from '../../context/authContext';
+import ViewerComponent from '../../ViewerComponent';
 
 
 function AdminHome() {

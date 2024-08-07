@@ -81,7 +81,7 @@ const ViewerComponent = React.memo(({ setSelectedGlobalId, setSelectedNameBim })
                     
               
                     
-                    console.log(globalId); // Esto debería mostrarte el GlobalId
+                    console.log(globalId, 'global id'); // Esto debería mostrarte el GlobalId
                     console.log(name); // Esto debería mostrarte el Name
                     
                     // Aquí llamarías a cualquier función de callback o manejo con globalId y nameElement

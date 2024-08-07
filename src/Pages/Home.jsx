@@ -80,6 +80,7 @@ function Home() {
 
   return (
     <div className='min-h-screen text-gray-500'>
+      
       <div className='flex flex-col gap-3'>
         {proyectos.map((p) => (
           <div className="relative" key={p.id}>
