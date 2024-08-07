@@ -78,7 +78,7 @@ function VerPpis() {
 
     return (
         <div className='container mx-auto min-h-screen xl:px-14 py-2 text-gray-500'>
-            <div className='flex gap-2 items-center justify-between bg-white px-4 py-3 xl:rounded xl:rounded-xl shadow-md text-base'>
+            <div className='flex gap-2 items-center justify-between px-4 py-3 text-base'>
 
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
@@ -90,6 +90,7 @@ function VerPpis() {
                         <h1 className='text-amber-500 font-medium'>Plantillas PPI</h1>
                     </Link>
                 </div>
+               
 
 
                 <div className='flex items-center'>
@@ -99,24 +100,26 @@ function VerPpis() {
 
             </div>
 
+            <div className='w-full border-b-2 border-gray-200'></div>
+
 
 
             <div>
-                <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white p-5 rounded rounded-xl shadow-md'>
+                <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white px-5 '>
 
 
 
 
-                    <div class="w-full rounded rounded-xl">
+                    <div class="w-full rounded rounded-t-xl">
 
 
 
 
                         <div className="overflow-x-auto relative shadow-md sm:rounded-lg ">
                             <div className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                <div className="text-sm text-gray-700 dark:bg-gray-700 dark:text-gray-400 bg-gray-200">
+                                <div className="text-sm text-gray-700 dark:bg-gray-700 dark:text-gray-400 bg-gray-200 rounded-t-lg">
                                     <div>
-                                        <div scope="col" className="py-3 px-4 font-medium">
+                                        <div scope="col" className="py-3 px-4 font-medium rounded-t-lg">
                                             Nombre Ppi
                                         </div>
                                     </div>

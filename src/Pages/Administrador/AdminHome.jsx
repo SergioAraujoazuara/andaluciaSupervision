@@ -51,7 +51,7 @@ function AdminHome() {
     return (
         <div className='min-h-screen container mx-auto xl:px-14 py-2 text-gray-500 mb-10'>
 
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 xl:rounded xl:rounded-xl shadow-md text-base'>
+            <div className='flex gap-2 items-center justify-between px-5 py-3 text-md'>
 
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
@@ -70,9 +70,11 @@ function AdminHome() {
 
             </div>
 
+            <div className='w-full border-b-2 border-gray-200'></div>
+
 
             <div>
-                <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white py-2 rounded rounded-xl shadow-md'>
+                <div className='flex gap-3 flex-col items-start justify-center mt-5 py-2'>
 
 
 
@@ -97,9 +99,9 @@ function AdminHome() {
                                         <div className=' flex items-center text-gray-600'>
                                             <span ><IoCreateOutline className='xl:w-[100px] xl:h-[100px] w-[70px] h-[70px]' /></span>
                                         </div>
-                                        <div className='sm:col-span-9 text-center xl:text-start flex flex-col justify-center items-center xl:items-start sm:justify-center text-base font-medium'>
+                                        <div className='sm:col-span-9 text-center text-lg xl:text-start flex flex-col justify-center items-center xl:items-start sm:justify-center text-base font-medium'>
                                             <p className='flex items-center gap-2'>
-                                                <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight />
+                                                <span className='text-amber-500 text-lg transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight />
                                                 </span>Administrar proyecto
                                             </p>
                                             <p className='mt-4 font-normal text-sm xl:text-lg'>Creación y configuración del proyecto,
@@ -127,7 +129,7 @@ function AdminHome() {
                                             <span ><MdOutlineEditLocation className='xl:w-[100px] xl:h-[100px] w-[70px] h-[70px]' /></span>
                                         </div>
                                         <div className='sm:col-span-9 xl:text-start text-center flex flex-col justify-center xl:items-start items-center sm:justify-center text-base font-medium'>
-                                            <p className='flex items-center gap-2'>  <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>Plantillas PPI</p>
+                                            <p className='flex items-center gap-2 text-lg'>  <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>Plantillas PPI</p>
                                             <p className='mt-4 font-normal text-sm xl:text-lg'>Creación y edición de plantillas de puntos de inspección (PPI).
 
                                             </p>
@@ -146,7 +148,7 @@ function AdminHome() {
                                                 <span ><FaRegUserCircle className='xl:w-[100px] xl:h-[100px] w-[70px] h-[70px]' /></span>
                                             </div>
                                             <div className='sm:col-span-9 flex flex-col justify-center xl:items-start items-center text-center xl:text-start sm:justify-center text-base font-medium'>
-                                                <p className='flex items-center gap-2'>  <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>Roles de usuarios</p>
+                                                <p className='flex items-center gap-2 text-lg'>  <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>Roles de usuarios</p>
                                                 <p className='mt-4 font-normal text-sm xl:text-lg'>Asignar y editar roles a los usuarios registrados del proyecto:
 
                                                 </p>

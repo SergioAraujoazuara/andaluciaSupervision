@@ -1604,7 +1604,7 @@ function TablaPpi() {
 
 
 
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-xs xl:text-sm'>
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 text-xs xl:text-sm'>
                 <div className='flex flex-wrap gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'/'}>
@@ -1635,7 +1635,7 @@ function TablaPpi() {
 
             </div>
 
-
+            <div className='w-full border-b-2 border-gray-200'></div>
 
             <div className='flex flex-col mt-4 px-4 xl:px-0'>
                 <div className='bg-gray-100 px-2 xl:px-0'>
@@ -2003,10 +2003,10 @@ function TablaPpi() {
 
 
             {modalFormulario && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
+                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center px-4">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
-                    <div className="mx-auto w-[600px] h-[600px] modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto px-12 py-8"
+                    <div className="xl:flex xl:flex-col xl:justify-center xl:w-[600px] xl:h-[800px] h-[600px] modal-container bg-white rounded-lg shadow-lg z-50 overflow-y-auto px-8 py-2"
                     >
 
 
@@ -2065,14 +2065,14 @@ function TablaPpi() {
                                     <textarea id="comentario" value={comentario} onChange={(e) => setComentario(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
                                 </div>
                                 <div className="mb-4 mt-4">
-                                    <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium mb-2">Seleccionar imagen</label>
+                                    <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium">Seleccionar imagen</label>
                                     <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                     {imagen && (
                                         <img src={imagen} />
                                     )}
                                 </div>
                                 <div className="">
-                                    <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium mb-2">Seleccionar imagen 2</label>
+                                    <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium">Seleccionar imagen 2</label>
                                     <input onChange={handleImagenChange2} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                     {imagen2 && (
                                         <img src={imagen2} />
@@ -2126,7 +2126,7 @@ function TablaPpi() {
                 <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center p-11">
                     <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
 
-                    <div className="mx-auto w-[700px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
+                    <div className="mx-auto w-[700px] modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-8"
                     >
                         <button
                             onClick={closeModalConfirmacion}

@@ -42,9 +42,9 @@ function Login() {
 
   return (
     <div className="flex h-screen bg-gray-200">
-      <div className="w-full h-2/3 max-w-4xl mx-auto flex bg-white rounded-2xl shadow-2xl overflow-hidden ">
+      <div className="w-full h-2/3 max-w-4xl mx-auto flex rounded-lg overflow-hidden ">
 
-        <div className="md:w-1/2 bg-sky-600 text-white flex flex-col justify-center px-10 pb-10">
+        <div className="xl:w-1/2  bg-sky-600 text-white flex flex-col justify-center px-10 pb-10 xl:flex hidden">
           
           <div className='flex justify-center'>
           <img src={Logo_solo} width={150} alt="logo" className="mb-5" />
@@ -63,7 +63,7 @@ function Login() {
           
         </div>
 
-        <div className="md:w-1/2 flex p-10 flex-col justify-center bg-gray-100">
+        <div className="xl:w-1/2 w-full flex p-10 flex-col justify-center bg-gray-100">
           <div className="text-center mb-5">
 
             <h1 className="text-3xl font-semibold text-gray-500 my-4">Login</h1>

@@ -1299,7 +1299,7 @@ function Trazabilidad() {
 
 
 
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 xl:rounded xl:rounded-xl shadow-md text-base'>
+            <div className='flex gap-2 items-center justify-between px-5 py-3 text-base'>
 
                 <div className='flex items-center gap-2'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
@@ -1313,6 +1313,7 @@ function Trazabilidad() {
                         <h1 className='font-medium text-amber-600'>Trazabilidad </h1>
                     </Link>
                 </div>
+                
 
 
 
@@ -1322,11 +1323,11 @@ function Trazabilidad() {
                 </div>
 
             </div>
-
+            <div className='w-full border-b-2 border-gray-200'></div>
 
 
             {/* Contenido */}
-            <div className='flex gap-3 flex-col mt-4 bg-white xl:p-4 px-4 rounded rounded-xl shadow-md'>
+            <div className='flex gap-3 flex-col mt-5 bg-white xl:p-4 px-4 rounded rounded-xl shadow-md'>
 
 
 
@@ -1609,7 +1610,7 @@ function Trazabilidad() {
 
                     </div>
                 </div>
-
+                
                 <div className="mt-5">
                     <div className="hidden xl:flex bg-gray-200 rounded-t-lg font-medium">
                         <p className="px-4 py-2 w-1/5">Sector</p>

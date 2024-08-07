@@ -141,7 +141,7 @@ function Elemento() {
     return (
         <div className='container mx-auto min-h-screen xl:px-14 py-2'>
 
-            <div className='flex items-center justify-between bg-white px-5 py-3 rounded-xl shadow-md text-base'>
+            <div className='flex items-center justify-between bg-white px-5 py-3 text-base'>
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'/'}>
@@ -166,8 +166,10 @@ function Elemento() {
                 </div>
             </div>
 
+            <div className='w-full border-b-2 border-gray-200'></div>
+
             <div>
-                <div className='flex flex-col items-start justify-center mt-2 bg-white p-4 rounded-xl shadow-md'>
+                <div className='flex flex-col items-start justify-center mt-2 bg-white p-4 rounded-xl'>
                     <div className='w-full mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4 text-sm'>
                         <div className="relative flex items-center">
                             <input
@@ -254,8 +256,8 @@ function Elemento() {
                         </button>
                     </div>
 
-                    <div className='font-medium w-full bg-sky-500 text-white py-2 px-6 rounded-t-xl'>
-                        <h2>Elementos de inspección</h2>
+                    <div className='font-medium w-full bg-sky-500 text-white py-3 px-6 rounded-t-xl'>
+                        <h2>Elementos de la inspección (PPI)</h2>
                     </div>
 
                     <div className="w-full rounded-xl">

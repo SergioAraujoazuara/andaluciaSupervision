@@ -269,7 +269,7 @@ export default function Viewer_admin() {
     return (
 
         <div className="container mx-auto min-h-screen text-gray-500 xl:px-14 py-2">
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 xl:rounded xl:rounded-xl shadow-md text-base'>
+            <div className='flex gap-2 items-center justify-between px-5 py-3 text-base'>
 
                 <div className='flex items-center gap-2'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
@@ -293,8 +293,10 @@ export default function Viewer_admin() {
 
             </div>
 
+            <div className='w-full border-b-2 border-gray-200'></div>
 
-            <div className='grid xl:grid-cols-2 grid-cols-1 gap-4 mt-4 px-4 xl:p-0'>
+
+            <div className='grid xl:grid-cols-2 grid-cols-1 gap-4 mt-5 px-4 xl:p-0'>
 
 
 
@@ -349,7 +351,7 @@ export default function Viewer_admin() {
                         {selectedLote ? (
                             <>
                                 <div className="bg-gray-100 rounded-lg">
-                                    <div className="bg-sky-600 px-4 py-2 font-bold text-white rounded-t-lg">Información del Lote</div>
+                                    <div className="bg-sky-500 px-4 py-2 font-bold text-white rounded-t-lg">Información del Lote</div>
                                     <div className='text-sm px-4 py-2'>
                                         <div className="flex items-center justify-between">
                                             <p className={`font-medium ps-1 ${selectedLote?.globalId ? 'text-green-600' : 'text-amber-600'}`}>

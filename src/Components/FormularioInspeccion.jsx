@@ -268,8 +268,8 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
 
             {
                 mostrarConfirmacion && (
-                    <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-800 bg-opacity-90 text-gray-500 fonmt-medium text-center">
-                        <div className="mx-auto w-[600px] h-[600px]  modal-container bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto px-12 py-8">
+                    <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-800 bg-opacity-90 text-gray-500 fonmt-medium text-center p-4">
+                        <div className="mx-auto w-[600px] h-[600px]  bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto px-8 py-8">
 
                             <div>
                                 {resultadoInspeccion && (
@@ -281,7 +281,7 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
                                             <p className="text-lg font-medium mt-2">
                                                 Se guardará la inspección y no podrás modificarla
                                             </p>
-                                            <h2 className="font-medium text-start">
+                                            <h2 className="font-medium text-center text-yellow-600 mt-2">
                                                 * Revisa los datos y comprueba que todo está correcto
                                             </h2>
                                         </div>
@@ -402,8 +402,8 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
             }
 
             {mostrarConfirmacionAdicional && (
-                <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-900 bg-opacity-80">
-                    <div className="bg-white flex flex-col items-center p-6 rounded-lg shadow-md w-80">
+                <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-900 bg-opacity-90 p-4">
+                    <div className="bg-white w-[600px] flex flex-col items-center p-6 rounded-lg shadow-md w-80">
                         <div className="text-center">
                             <p className="text-2xl font-semibold mb-4">
                                 Resultado:{' '}
@@ -417,7 +417,7 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
                             </p>
                         </div>
                         <div className="flex gap-4 w-full">
-                            <button onClick={handleConfirmacionFinal} className="w-full bg-sky-600 hover:bg-sky-700 text-white py-2 rounded-lg transition duration-150">
+                            <button onClick={handleConfirmacionFinal} className="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-lg transition duration-150">
                                 Confirmar
                             </button>
                             <button onClick={() => {

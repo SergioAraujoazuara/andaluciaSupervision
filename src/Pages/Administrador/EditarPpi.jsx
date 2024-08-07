@@ -293,7 +293,7 @@ function EditarPpi() {
     return (
         <div className='container mx-auto min-h-screen xl:px-14 py-2 text-gray-500 text-sm'>
             {/* Navigation section */}
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 xl:rounded xl:rounded-xl shadow-md text-base'>
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3  text-base'>
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'/admin'}>
@@ -309,7 +309,8 @@ function EditarPpi() {
                     <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
                 </div>
             </div>
-            <div className='flex gap-3 flex-col mt-5 bg-white px-4 rounded rounded-xl shadow-md'>
+            <div className='w-full border-b-2 border-gray-200 rounded-lg'></div>
+            <div className='flex gap-3 flex-col mt-5 bg-white px-4'>
                 <h2 className='flex items-center gap-1 text-base'><strong className='text-amber-500 text-2xl font-medium'>*</strong>Selecciona la celda en la tabla y edita los valores</h2>
                 <form onSubmit={handleSubmit}>
                     <div className='col-span-12 mb-4 mt-4'>
@@ -327,7 +328,7 @@ function EditarPpi() {
                             Añadir Actividad
                         </button>
                     </div>
-                    <div className='w-full bg-gray-300 grid grid-cols-12 text-sm items-center font-medium'>
+                    <div className='w-full bg-gray-300 grid grid-cols-12 text-sm items-center font-medium rounded-t-lg'>
                         <div className="py-3 px-2 text-left col-span-1 ">Nº</div>
                         <div className="py-3 px-2 text-left whitespace-normal col-span-3 ">Actividad</div>
                         <div className="py-3 px-2 text-left whitespace-normal xl:col-span-3 col-span-8">Criterio de aceptación</div>
@@ -360,7 +361,7 @@ function EditarPpi() {
                             {/* Iterar sobre subactividades para generar inputs */}
                             {actividad.subactividades && actividad.subactividades.map((subactividad, subactividadIndex) => (
                                 <div key={`subactividad-${subactividadIndex}`}>
-                                    <div className='w-full bg-gray-100 grid grid-cols-12 text-sm'>
+                                    <div className='w-full grid grid-cols-12 text-sm'>
                                         <div className='col-span-1'>
                                             <input
                                                 className='w-full px-1 border bg-gray-50 h-full text-xs'

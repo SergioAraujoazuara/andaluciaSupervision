@@ -84,9 +84,9 @@ function Home() {
         {proyectos.map((p) => (
           <div className="relative" key={p.id}>
             <img src={ImagenHome} alt="Sustainable Building" className="w-full h-screen object-cover object-center md:object-top lg:object-center" />
-            <div className="absolute inset-0 bg-black bg-opacity-45"></div>
-            <div className="absolute inset-0 flex flex-col items-start justify-start xl:p-20 px-4 py-20">
-              <div className='text-gray-700 bg-white bg-opacity-75 rounded-2xl shadow-xl w-full max-w-md md:max-w-lg lg:max-w-2xl p-6'>
+            <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+            <div className="absolute inset-0 flex flex-col items-start justify-start xl:px-60 px-4 py-20">
+              <div className='text-gray-700 bg-white bg-opacity-85 rounded-2xl shadow-xl w-full xl:max-w-2xl p-6'>
                 <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-700 mb-2">{p.nombre_corto}</div>
                 <p className="text-lg md:text-xl lg:text-2xl mt-4">{p.obra}</p>
                 <p className="text-lg md:text-xl lg:text-2xl mt-1">{p.tramo}</p>

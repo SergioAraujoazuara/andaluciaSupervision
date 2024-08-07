@@ -109,7 +109,7 @@ function AdminPanel() {
     return (
         <div className="container mx-auto min-h-screen text-gray-500 xl:px-14 py-2">
 
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3  text-base'>
 
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
@@ -132,7 +132,9 @@ function AdminPanel() {
                 </div>
 
             </div>
-            <div className="bg-white p-4 mt-2">
+
+            <div className='w-full border-b-2 border-gray-200'></div>
+            <div className="bg-white p-4 mt-2 text-sm">
                 <div className="grid grid-cols-1 xl:grid-cols-6 xl:gap-20 gap-5">
                     <div className='col-span-4'>
                         <h2 className="bg-sky-500 text-white text-lg font-semibold px-4 py-1 rounded-t-lg">Lista de Usuarios</h2>
@@ -145,7 +147,7 @@ function AdminPanel() {
                                             <p className="text-sm text-gray-600">{user.email}</p>
                                             <p className="text-sm text-gray-600">{user.role}</p>
                                         </div>
-                                        <div className="flex items-center justify-center mt-2 lg:mt-0">
+                                        <div className="flex items-center justify-start mt-2 lg:mt-0">
                                             {user.signature ? (
                                                 <img className='w-16' src={user.signature} alt="firma" />
                                             ) : (
@@ -161,7 +163,7 @@ function AdminPanel() {
 
 
                     <div className='xl:col-span-2 col-span-4 w full'>
-                        <div className="bg-gray-100 rounded-md p-4">
+                        <div className="rounded-md p-4">
                         <h2 className="bg-sky-500 text-white text-lg font-semibold px-4 py-1 rounded-t-lg">Actualizar Roles</h2>
                             <h2 className="text-lg font-semibold mb-4"></h2>
                             <select

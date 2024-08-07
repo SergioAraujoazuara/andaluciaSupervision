@@ -104,17 +104,17 @@ const Register = () => {
 
   return (
     <div className="flex h-screen bg-gray-200">
-      <div className="w-full h-2/3 max-w-4xl mx-auto  mb-56 bg-white rounded-2xl shadow-2xl overflow-hidden flex">
+      <div className="w-full h-2/3 max-w-4xl mx-auto mb-56 rounded-lg overflow-hidden flex bg-gray-100">
 
 
 
-        <div className="md:w-1/2 p-10 flex flex-col justify-center">
+        <div className="md:w-1/2 w-full p-10 flex flex-col items-center justify-center">
           <div className="text-center mb-5">
 
             <h1 className="text-3xl font-semibold text-gray-700 my-4">Registro</h1>
           </div>
-          <form onSubmit={handleSubmit} className="max-w-xl mx-auto">
-            <div className="flex flex-col mb-4">
+          <form onSubmit={handleSubmit} className="max-w-xl mx-auto ">
+            <div className="flex flex-col mb-4 ">
               <div className="relative">
                 <MdDriveFileRenameOutline className="absolute left-0 top-0 m-3" />
                 <input
@@ -188,7 +188,7 @@ const Register = () => {
           {showModal && <AlertaRegister message={error} closeModal={closeModal} />}
         </div>
 
-        <div className="md:w-1/2 bg-sky-600 text-white flex flex-col justify-center px-10 pb-10">
+        <div className="md:w-1/2 bg-sky-600 text-white xl:flex hidden flex-col justify-center px-10 pb-10">
 
           <div className='flex justify-center'>
             <img src={Logo_solo} width={150} alt="logo" className="mb-5" />
