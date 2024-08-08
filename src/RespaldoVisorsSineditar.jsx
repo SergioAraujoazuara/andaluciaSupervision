@@ -1685,8 +1685,3 @@ export default function ViewerInspeccion() {
         </div>
     );
 }
-
-
-
-
-

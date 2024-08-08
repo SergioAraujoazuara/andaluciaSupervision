@@ -80,12 +80,22 @@ const Navbar = () => {
 
                 {(userRol === 'admin' || userRol === 'usuario') && (
                   <NavLink
+                    to="/visor_inspeccion"
+                    linkName="Visor BIM"
+                    activeLink={activeLink}
+                    handleLinkClick={handleLinkClick}
+                  />
+                )}
+
+                {(userRol === 'admin' || userRol === 'usuario') && (
+                  <NavLink
                     to="/admin"
                     linkName="Administración"
                     activeLink={activeLink}
                     handleLinkClick={handleLinkClick}
                   />
                 )}
+
               </div>
             )}
           </div>
@@ -94,7 +104,7 @@ const Navbar = () => {
               <>
                 <div className='hidden sm:flex items-center font-medium text-gray-500 pr-5 gap-5 text-base'>
                   <div className='flex gap-2 items-center text-gray-500'>
-                    <FaUserAlt className=' hidden xl:block'/>
+                    <FaUserAlt className=' hidden xl:block' />
                     <p className=' hidden xl:block'>{userNombre || 'Usuario'}</p>
                   </div>
                   <div className="relative bg-sky-500 text-white px-4 py-2 rounded-lg">
@@ -152,10 +162,10 @@ const Navbar = () => {
               {user && (
                 <div className="flex flex-col items-start gap-2">
                   <div className='flex gap-2 items-center text-gray-500 mt-2'>
-                    <FaUserAlt className='hidden xl:block'/>
+                    <FaUserAlt className='hidden xl:block' />
                     <p className='ps-3 font-medium text-gray-400'>{userNombre || 'Usuario'}</p>
                   </div>
-                  <button 
+                  <button
                     className="bg-gray-200 text-gray-500 font-medium px-4 py-2 rounded-lg w-1/2 text-left"
                     onClick={toggleLogoutConfirmation}
                   >
