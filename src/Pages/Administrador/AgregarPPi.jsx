@@ -121,7 +121,8 @@ function PlantillaPpi() {
             await addDoc(collection(db, 'ppis'), {
                 nombre,
                 actividades,
-                totalSubactividades // Guardar el total de subactividades en el documento
+                totalSubactividades,
+                version: 0
             });
 
             // Restablecer el estado al estado inicial después de agregar el documento

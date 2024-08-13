@@ -109,10 +109,10 @@ function VerPpis() {
                 <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white px-5 '>
 
                     <div>
-                        
-                        <p className='flex text-sm gap-2 underline'>
-                            <span className='flex items-center gap-2'><IoAlertCircleSharp className='text-yellow-500 text-xl'/>Atencion! </span>
-                            Al editar el PPI, los cambios no se actualizarán en las inspecciones ya realizadas. Si se modifica un PPI con una inspección en curso, 
+
+                        <p className='flex xl:flex-row flex-col text-sm gap-2 underline'>
+                            <span className='flex items-center gap-2'><IoAlertCircleSharp className='text-yellow-500 text-xl' />Atencion! </span>
+                            Al editar el PPI, los cambios no se actualizarán en las inspecciones ya realizadas. Si se modifica un PPI con una inspección en curso,
                             deberás realizar la inspección completa nuevamente.
                         </p>
                     </div>
@@ -123,43 +123,62 @@ function VerPpis() {
 
 
 
-                        <div className="overflow-x-auto relative shadow-md sm:rounded-lg ">
+                        <div className="overflow-x-auto relative">
                             <div className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                <div className="text-sm text-gray-700 dark:bg-gray-700 dark:text-gray-400 bg-gray-200 rounded-t-lg">
-                                    <div>
-                                        <div scope="col" className="py-3 px-4 font-medium rounded-t-lg">
-                                            Nombre Ppi
-                                        </div>
+                                {/* Header */}
+                                <div className="hidden sm:block bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-400 rounded-t-lg">
+                                    <div className="grid grid-cols-12 py-3 px-4 font-medium">
+                                        <div className="col-span-1">Versión</div>
+                                        <div className="col-span-10">Nombre PPI</div>
+                                        <div className="col-span-1 text-center">Acciones</div>
                                     </div>
                                 </div>
+
+                                {/* Body */}
                                 <div>
-                                    {ppis.map((p, index) => (
+                                    {ppis
+                                        .sort((a, b) => {
+                                            // Comparar nombres alfabéticamente
+                                            if (a.nombre.toLowerCase() < b.nombre.toLowerCase()) return -1;
+                                            if (a.nombre.toLowerCase() > b.nombre.toLowerCase()) return 1;
 
-                                        <div key={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                            // Si los nombres son iguales, comparar las versiones (de menor a mayor)
+                                            return a.version - b.version;
+                                        })
+                                        .map((p, index) => (
+                                            <div key={index} className="border-b dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 sm:bg-white sm:dark:bg-gray-800">
+                                                <div className="sm:hidden bg-white dark:bg-gray-800 p-4 mb-4">
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <p className="text-lg font-bold text-gray-900 dark:text-white">V-{p.version}</p>
+                                                        <button className='text-xl text-amber-700' onClick={() => mostrarModalEliminar(p.id)}>
+                                                            <MdDeleteOutline />
+                                                        </button>
+                                                    </div>
+                                                    <Link to={`/editarPpi/${p.id}`} className="text-sm text-gray-700 dark:text-gray-400">
+                                                        {p.nombre}
+                                                    </Link>
+                                                </div>
 
-
-
-                                            <div className='grid grid-cols-12 px-4 py-3'>
-                                                <Link to={`/editarPpi/${p.id}`} className='col-span-11'>
-                                                    <p >{p.nombre}</p>
-                                                </Link>
-
-
-                                                <button className='text-xl col-span-1 text-amber-700' onClick={() => mostrarModalEliminar(p.id)}><MdDeleteOutline /></button>
-
-
-
-
+                                                <div className="hidden sm:grid grid-cols-12 px-4 py-3">
+                                                    <div className="col-span-1">V-{p.version}</div>
+                                                    <Link to={`/editarPpi/${p.id}`} className='col-span-10'>
+                                                        <div className='flex gap-4'>
+                                                            <p>{p.nombre}</p>
+                                                        </div>
+                                                    </Link>
+                                                    <div className="col-span-1 text-center">
+                                                        <button className='text-xl text-amber-700' onClick={() => mostrarModalEliminar(p.id)}>
+                                                            <MdDeleteOutline />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-
-
-
-                                        </div>
-
-                                    ))}
+                                        ))}
                                 </div>
+
                             </div>
                         </div>
+
 
 
 

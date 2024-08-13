@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../../firebase_config';
-import { getDoc, doc, updateDoc, getDocs, collection, query, where, writeBatch  } from 'firebase/firestore';
+import { getDoc, doc, addDoc, collection } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 import { Link } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
-import { BsClipboardCheck } from "react-icons/bs";
-import { GrDocumentTest } from "react-icons/gr";
 import { IoArrowBackCircle } from "react-icons/io5";
 
 function EditarPpi() {
@@ -65,177 +63,30 @@ function EditarPpi() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Incrementar la versión
             const updatedData = {
                 ...editPpi,
-                totalSubactividades: totalSubactividades
+                totalSubactividades: totalSubactividades,
+                version: (editPpi.version || 0) + 1
             };
             console.log('Datos PPI actualizados antes de guardar:', updatedData);
 
-            // Buscar lote por nombre de PPI
-            await buscarLotePorNombrePpi(updatedData.nombre, updatedData, totalSubactividades);
+            // Crear una copia del PPI en la colección 'ppis'
+            await addDoc(collection(db, 'ppis'), updatedData);
 
-            // Actualizar el PPI en la colección 'ppis'
-            await updateDoc(doc(db, 'ppis', id), updatedData);
-
-            console.log('PPI actualizado exitosamente.');
+            console.log('Nueva versión del PPI creada exitosamente.');
             setShowSuccessModal(true); // Mostrar modal de éxito
         } catch (error) {
-            console.error('Error al actualizar el PPI:', error);
+            console.error('Error al crear la nueva versión del PPI:', error);
         }
     };
-    const buscarLotePorNombrePpi = async (nombrePpi, updatedPpiData, newTotalSubactividades) => {
-        try {
-            // Definir un objeto base para las subactividades
-            const baseSubactividad = {
-                punto: '',
-                idRegistroFormulario: '',
-                tipo_inspeccion: '',
-                criterio_aceptacion: '',
-                nombre: '',
-                fecha: '',
-                comentario: '',
-                resultadoInspeccion: '',
-                version: 0,
-                responsable: '',
-                documentacion_referencia: '',
-                numero: '',
-                firma: '',
-                nombre_usuario: '',
-                formularioEnviado: false
-            };
-    
-            // Buscar el lote por el nombre del PPI
-            const lotesQuery = query(collection(db, 'lotes'), where('ppiNombre', '==', nombrePpi));
-            const lotesSnapshot = await getDocs(lotesQuery);
-    
-            if (lotesSnapshot.empty) {
-                console.log('No se encontró ningún lote con el nombre proporcionado.');
-                return;
-            }
-    
-            // Batch write
-            const batch = writeBatch(db);
-    
-            // Iterar sobre cada lote encontrado
-            for (const loteDoc of lotesSnapshot.docs) {
-                const loteId = loteDoc.id;
-                console.log('Nombre del lote encontrado:', loteDoc.data().nombre);
-    
-                // Acceder a la subcolección inspecciones dentro del lote
-                const inspeccionesQuery = query(collection(db, `lotes/${loteId}/inspecciones`), where('nombre', '==', nombrePpi));
-                const inspeccionesSnapshot = await getDocs(inspeccionesQuery);
-    
-                if (inspeccionesSnapshot.empty) {
-                    console.log('No se encontró ninguna inspección con el nombre proporcionado en el lote.');
-                    continue;
-                }
-    
-                // Agregar la actualización del lote al batch
-                const loteDocRef = doc(db, 'lotes', loteId);
-                batch.update(loteDocRef, {
-                    totalSubactividades: newTotalSubactividades
-                });
-    
-                // Iterar sobre cada inspección encontrada
-                inspeccionesSnapshot.docs.forEach((inspeccionDoc) => {
-                    const inspeccionId = inspeccionDoc.id;
-                    const inspeccionData = inspeccionDoc.data();
-    
-                    console.log('Datos de la inspección antes de actualizar:', JSON.stringify(inspeccionData, null, 2));
-    
-                    // Combinar las nuevas subactividades con las existentes
-                    updatedPpiData.actividades.forEach((actividad, actividadIndex) => {
-                        if (!inspeccionData.actividades) {
-                            inspeccionData.actividades = [];
-                        }
-    
-                        console.log(`Procesando actividad ${actividadIndex}:`, actividad);
-    
-                        if (!inspeccionData.actividades[actividadIndex]) {
-                            inspeccionData.actividades[actividadIndex] = {
-                                ...actividad,
-                                subactividades: actividad.subactividades.map(subactividad => ({ ...baseSubactividad, ...subactividad }))
-                            };
-                        } else {
-                            // Asegurar que la lista de subactividades exista
-                            if (!inspeccionData.actividades[actividadIndex].subactividades) {
-                                inspeccionData.actividades[actividadIndex].subactividades = [];
-                            }
-    
-                            actividad.subactividades.forEach((subactividad, subactividadIndex) => {
-                                console.log(`Procesando subactividad ${subactividadIndex} de la actividad ${actividadIndex}:`, subactividad);
-    
-                                const existingSubactividad = inspeccionData.actividades[actividadIndex].subactividades[subactividadIndex] || {};
-    
-                                // Mezclar los datos existentes con los nuevos datos, asegurándose de que no haya valores undefined
-                                const mergedSubactividad = {
-                                    punto: subactividad.punto || existingSubactividad.punto || '',
-                                    idRegistroFormulario: subactividad.idRegistroFormulario || existingSubactividad.idRegistroFormulario || '',
-                                    tipo_inspeccion: subactividad.tipo_inspeccion || existingSubactividad.tipo_inspeccion || '',
-                                    criterio_aceptacion: subactividad.criterio_aceptacion || existingSubactividad.criterio_aceptacion || '',
-                                    nombre: subactividad.nombre || existingSubactividad.nombre || '',
-                                    fecha: subactividad.fecha || existingSubactividad.fecha || '',
-                                    comentario: subactividad.comentario || existingSubactividad.comentario || '',
-                                    resultadoInspeccion: subactividad.resultadoInspeccion || existingSubactividad.resultadoInspeccion || '',
-                                    version: subactividad.version || existingSubactividad.version || 0,
-                                    responsable: subactividad.responsable || existingSubactividad.responsable || '',
-                                    documentacion_referencia: subactividad.documentacion_referencia || existingSubactividad.documentacion_referencia || '',
-                                    numero: subactividad.numero || existingSubactividad.numero || '',
-                                    firma: subactividad.firma || existingSubactividad.firma || '',
-                                    nombre_usuario: subactividad.nombre_usuario || existingSubactividad.nombre_usuario || '',
-                                    formularioEnviado: subactividad.formularioEnviado !== undefined ? subactividad.formularioEnviado : (existingSubactividad.formularioEnviado !== undefined ? existingSubactividad.formularioEnviado : false)
-                                };
-    
-                                // Si el existingSubactividad tiene formularioEnviado como true, se mantiene como true
-                                if (existingSubactividad.formularioEnviado) {
-                                    mergedSubactividad.formularioEnviado = true;
-                                }
-    
-                                console.log('Valores después de la mezcla:', mergedSubactividad);
-    
-                                inspeccionData.actividades[actividadIndex].subactividades[subactividadIndex] = mergedSubactividad;
-                            });
-                        }
-                    });
-    
-                    // Agregar la actualización de la inspección al batch
-                    const inspeccionDocRef = doc(db, `lotes/${loteId}/inspecciones`, inspeccionId);
-                    batch.update(inspeccionDocRef, {
-                        ...inspeccionData,
-                        totalSubactividades: newTotalSubactividades
-                    });
-                });
-            }
-    
-            // Ejecutar el batch
-            await batch.commit();
-    
-            console.log('Lote e inspecciones actualizados exitosamente.');
-        } catch (error) {
-            console.error('Error al buscar y actualizar la inspección y el lote:', error);
-        }
-    };
-    
-    
-    
-    
-    
 
-    
-
-    
-    
-    const updateTotalSubactividades = async (increment) => {
-        const newTotalSubactividades = totalSubactividades + increment;
-        setTotalSubactividades(newTotalSubactividades);
-
-        const updatedPpiData = {
-            ...editPpi,
-            totalSubactividades: newTotalSubactividades
-        };
-
-        await updateDoc(doc(db, 'ppis', id), updatedPpiData);
-        await buscarLotePorNombrePpi(editPpi.nombre, updatedPpiData, newTotalSubactividades);
+    const updateTotalSubactividades = (increment) => {
+        setTotalSubactividades(prevTotal => prevTotal + increment);
+        setEditPpi(prevState => ({
+            ...prevState,
+            totalSubactividades: prevState.totalSubactividades + increment
+        }));
     };
 
     const addActividad = () => {
@@ -452,7 +303,7 @@ function EditarPpi() {
                                         </h3>
                                         <div className="mt-2">
                                             <p className="text-sm text-gray-500">
-                                                El PPI ha sido actualizado exitosamente
+                                                La nueva versión del PPI ha sido creada exitosamente.
                                             </p>
                                         </div>
                                     </div>
