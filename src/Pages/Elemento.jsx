@@ -12,7 +12,8 @@ import GraficaProgresoGeneral from '../Graficas/GraficaProgresoGeneral';
 import GraficaAptosPorSector from '../Graficas/GraficaAptosPorSector ';
 import GraficaNoAptosPorSector from '../Graficas/GraficaNoAptosPorSector ';
 import ResumenPorNivel from '../Graficas/ResumenPorNivel';
-
+import TargetCard from '../Graficas/TargetCard';
+import LeafletMap from '../Graficas/LeafletMap';
 
 function Elemento() {
     const navigate = useNavigate();
@@ -32,7 +33,7 @@ function Elemento() {
     });
     const [isTableView, setIsTableView] = useState(true);
     const [showSector, setShowSector] = useState(true);
-    const [activeView, setActiveView] = useState('tabla'); 
+    const [activeView, setActiveView] = useState('tabla');
 
     const [uniqueValues, setUniqueValues] = useState({
         sector: [],
@@ -173,7 +174,6 @@ function Elemento() {
         return filteredLotes
             .filter(l => l[nivel] === valor)
             .reduce((sum, lote) => sum + (lote.actividadesNoAptas || 0), 0);
-            
     };
 
     const calcularProgresoPorNivel = (nivel, valor) => {
@@ -194,7 +194,7 @@ function Elemento() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-white p-4 rounded-b-lg shadow-md">
                 {uniqueValues[nivel].map((valor, index) => {
                     const progreso = calcularProgresoPorNivel(`${nivel}Nombre`, valor);
-    
+
                     return (
                         <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
                             <div className="flex items-center justify-between mb-4">
@@ -249,7 +249,6 @@ function Elemento() {
             </div>
         </div>
     );
-    
 
     const totalLotes = lotes.filter(l => l.ppiNombre).length;
     const lotesIniciados = lotes.filter(l =>
@@ -261,6 +260,60 @@ function Elemento() {
 
     const totalAptos = datosAptosPorSector.slice(1).reduce((sum, sector) => sum + sector[1], 0);
     const totalNoAptos = datosNoAptosPorSector.slice(1).reduce((sum, sector) => sum + sector[1], 0);
+
+
+    const calcularPorcentajeInspeccionesCompletadas = () => {
+        if (totalLotes === 0) return 0;
+        return ((lotesIniciados / totalLotes) * 100).toFixed(2);
+    };
+
+    const porcentajeInspeccionesCompletadas = calcularPorcentajeInspeccionesCompletadas();
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    const totalSubactividadesInspeccionadas = filteredLotes.reduce((sum, lote) => sum + (lote.totalSubactividades || 0), 0);
+    const totalSubactividadesAptas = filteredLotes.reduce((sum, lote) => sum + (lote.actividadesAptas || 0), 0);
+
+    const calcularPorcentajeElementosAptos = () => {
+        if (totalSubactividadesInspeccionadas === 0) return 0;
+        return ((totalSubactividadesAptas / totalSubactividadesInspeccionadas) * 100).toFixed(2);
+    };
+
+    const porcentajeElementosAptos = calcularPorcentajeElementosAptos();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    const totalInspecciones = lotes.length; // Total de lotes o inspecciones disponibles
+    const inspeccionesPendientes = totalInspecciones - lotesIniciados;
+
+    const calcularPorcentajeInspeccionesPendientes = () => {
+        if (totalLotes === 0) return 0;
+        return ((inspeccionesPendientes / totalLotes) * 100).toFixed(2);
+    };
+
+    const porcentajeInspeccionesPendientes = calcularPorcentajeInspeccionesPendientes();
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    const calcularProgresoGeneralObra = () => {
+        const totalProgreso = filteredLotes.reduce((sum, lote) => {
+            const progresoLote = (lote.actividadesAptas || 0) / (lote.totalSubactividades || 1);
+            return sum + progresoLote;
+        }, 0);
+
+        if (filteredLotes.length === 0) return 0;
+        return ((totalProgreso / filteredLotes.length) * 100).toFixed(2);
+    };
+
+    const progresoGeneralObra = calcularProgresoGeneralObra();
+
+
+
+    const isSectorSelected = filters.sector !== '';
+
 
     return (
         <div className='container mx-auto min-h-screen xl:px-14 py-2'>
@@ -390,20 +443,6 @@ function Elemento() {
                     </div>
 
                     <div className='flex justify-between items-center my-4'>
-                        <div className='flex gap-5'>
-                            <div className='flex gap-2'>
-                                <span>Total de lotes:</span><h3>{totalLotes}</h3>
-                            </div>
-                            <div className='flex gap-2'>
-                                <span>Inspecciones iniciadas:</span><h3>{lotesIniciados}</h3>
-                            </div>
-                            <div className='flex gap-2'>
-                                <span>Total Aptos:</span><h3>{totalAptos}</h3>
-                            </div>
-                            <div className='flex gap-2'>
-                                <span>Total No Aptos:</span><h3>{totalNoAptos}</h3>
-                            </div>
-                        </div>
                         <button
                             className='flex items-center text-sm text-white bg-blue-500 px-4 py-2 rounded-md hover:bg-blue-600'
                             onClick={toggleView}
@@ -447,7 +486,7 @@ function Elemento() {
                                             <p className='xl:hidden font-ligth'>Elemento: </p>{l.elementoNombre}</div>
                                         <div className='w-full xl:col-span-2 xl:text-start flex flex-col xl:flex-row xl:justify-start px-2 gap-2'>
                                             <div className='w-full xl:w-auto'><p className='font-ligth'>Pk Inicial: {l.pkInicial || '-'}</p></div>
-                                            <div className='w-full xl:w-auto'><p className='font-ligth'>Pk Final: {l.pkFinal ||'-'}</p></div>
+                                            <div className='w-full xl:w-auto'><p className='font-ligth'>Pk Final: {l.pkFinal || '-'}</p></div>
                                         </div>
                                         <div className='w-full flex flex-col items-start justify-center xl:col-span-3 px-2'>
                                             <div className='flex gap-2 items-center'>
@@ -466,11 +505,11 @@ function Elemento() {
                                                         {((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%</div>
                                                     <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '100%' }}>
                                                         <div style={{
-                                                                background: '#d97706',
-                                                                height: '100%',
-                                                                borderRadius: '8px',
-                                                                width: `${((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%`
-                                                            }}
+                                                            background: '#d97706',
+                                                            height: '100%',
+                                                            borderRadius: '8px',
+                                                            width: `${((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%`
+                                                        }}
                                                         />
                                                     </div>
                                                     <div>
@@ -504,11 +543,11 @@ function Elemento() {
                                                 </div>
                                                 <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '100%' }}>
                                                     <div style={{
-                                                            background: '#d97706',
-                                                            height: '100%',
-                                                            borderRadius: '8px',
-                                                            width: `${((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%`
-                                                        }}
+                                                        background: '#d97706',
+                                                        height: '100%',
+                                                        borderRadius: '8px',
+                                                        width: `${((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%`
+                                                    }}
                                                     />
                                                 </div>
                                             </div>
@@ -522,7 +561,6 @@ function Elemento() {
             )}
 
             {activeView === 'graficas' && (
-
                 <div className='flex flex-col items-start justify-center mt-2 bg-white p-4 rounded-xl shadow-lg'>
                     <div className='w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4 text-sm'>
                         <div className="relative flex items-center">
@@ -546,61 +584,7 @@ function Elemento() {
                                 <option key={index} value={value}>{value}</option>
                             ))}
                         </select>
-                        <select
-                            name="subSector"
-                            className="w-full p-2 border border-gray-300 rounded-lg"
-                            value={filters.subSector}
-                            onChange={handleSelectChange}
-                        >
-                            <option value="">Sub Sector</option>
-                            {uniqueValues.subSector.map((value, index) => (
-                                <option key={index} value={value}>{value}</option>
-                            ))}
-                        </select>
-                        <select
-                            name="parte"
-                            className="w-full p-2 border border-gray-300 rounded-lg"
-                            value={filters.parte}
-                            onChange={handleSelectChange}
-                        >
-                            <option value="">Parte</option>
-                            {uniqueValues.parte.map((value, index) => (
-                                <option key={index} value={value}>{value}</option>
-                            ))}
-                        </select>
-                        <select
-                            name="elemento"
-                            className="w-full p-2 border border-gray-300 rounded-lg"
-                            value={filters.elemento}
-                            onChange={handleSelectChange}
-                        >
-                            <option value="">Elemento</option>
-                            {uniqueValues.elemento.map((value, index) => (
-                                <option key={index} value={value}>{value}</option>
-                            ))}
-                        </select>
-                        <select
-                            name="lote"
-                            className="w-full p-2 border border-gray-300 rounded-lg"
-                            value={filters.lote}
-                            onChange={handleSelectChange}
-                        >
-                            <option value="">Lote</option>
-                            {uniqueValues.lote.map((value, index) => (
-                                <option key={index} value={value}>{value}</option>
-                            ))}
-                        </select>
-                        <select
-                            name="ppi"
-                            className="w-full p-2 border border-gray-300 rounded-lg"
-                            value={filters.ppi}
-                            onChange={handleSelectChange}
-                        >
-                            <option value="">PPI</option>
-                            {uniqueValues.ppi.map((value, index) => (
-                                <option key={index} value={value}>{value}</option>
-                            ))}
-                        </select>
+
                         <button
                             className="w-full p-2 bg-gray-500 text-white rounded-lg flex items-center justify-center gap-2"
                             onClick={handleClearFilters}
@@ -609,45 +593,84 @@ function Elemento() {
                             Borrar filtros
                         </button>
                     </div>
-                    <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-4'>
-                        <GraficaProgresoGeneral progresoGeneral={progresoGeneral} />
-                        <GraficaAptosPorSector datosAptosPorSector={datosAptosPorSector} />
-                        <GraficaNoAptosPorSector datosNoAptosPorSector={datosNoAptosPorSector} />
+
+                    <div className='w-full'>
+                        <div className='my-5 flex gap-5'>
+                            <TargetCard
+                                title="Progreso de avance"
+                                value={`${progresoGeneralObra}%`}
+                            />
+
+                            {!isSectorSelected && (
+                                <>
+                                    <TargetCard title="Inspecciones totales" value={totalLotes} />
+                                    <TargetCard title="Inspecciones iniciadas" value={lotesIniciados} />
+                                    <TargetCard title="Porcentaje Inspecciones iniciadas" value={`${porcentajeInspeccionesCompletadas}%`} />
+                                </>
+                            )}
+
+                            <TargetCard
+                                title="Elementos Aptos"
+                                value={
+                                    <div className='w-full'>
+                                        <div>{porcentajeElementosAptos} %</div>
+                                    </div>
+                                }
+                            />
+                            <TargetCard
+                                title="Inspecciones pendientes (sin iniciar)"
+                                value={
+                                    <div className='w-full'>
+                                       
+                                        <div>{`${inspeccionesPendientes} / ${totalInspecciones}`}</div>
+                                       
+                                    </div>
+                                }
+                                messagge={`${porcentajeInspeccionesPendientes} %`}
+                                
+                            />
+                        </div>
+
+
+                        <div className='w-full grid grid-cols-3'>
+                            <div className='col-span-1'>
+                                <LeafletMap />
+                            </div>
+
+                            <div className='col-span-2'>
+                                <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-4'>
+                                    <GraficaProgresoGeneral progresoGeneral={progresoGeneral} />
+                                    <GraficaAptosPorSector datosAptosPorSector={datosAptosPorSector} />
+                                    <GraficaNoAptosPorSector datosNoAptosPorSector={datosNoAptosPorSector} />
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                     {/* Usa el nuevo componente para renderizar el resumen por nivel */}
-                     <ResumenPorNivel 
-                        nivel="sector" 
-                        titulo="Sector" 
-                        uniqueValues={uniqueValues} 
-                        calcularProgresoPorNivel={calcularProgresoPorNivel} 
-                        contarAptos={contarAptos} 
-                        contarNoAptos={contarNoAptos} 
-                    />
-                    <ResumenPorNivel 
-                        nivel="subSector" 
-                        titulo="Subsector" 
-                        uniqueValues={uniqueValues} 
-                        calcularProgresoPorNivel={calcularProgresoPorNivel} 
-                        contarAptos={contarAptos} 
-                        contarNoAptos={contarNoAptos} 
-                    />
-                    <ResumenPorNivel 
-                        nivel="parte" 
-                        titulo="Parte" 
-                        uniqueValues={uniqueValues} 
-                        calcularProgresoPorNivel={calcularProgresoPorNivel} 
-                        contarAptos={contarAptos} 
-                        contarNoAptos={contarNoAptos} 
-                    />
-                    <ResumenPorNivel 
-                        nivel="elemento" 
-                        titulo="Elemento" 
-                        uniqueValues={uniqueValues} 
-                        calcularProgresoPorNivel={calcularProgresoPorNivel} 
-                        contarAptos={contarAptos} 
-                        contarNoAptos={contarNoAptos} 
-                    />
+                    {/* Usa el nuevo componente para renderizar el resumen por nivel */}
+                    {(filters.sector ? (
+    <ResumenPorNivel
+        nivel="sector"
+        titulo={`Resumen del Sector: ${filters.sector}`}
+        uniqueValues={{
+            sector: uniqueValues.sector.filter(sector => sector === filters.sector)
+        }}
+        calcularProgresoPorNivel={(nivel, valor) => calcularProgresoPorNivel('sectorNombre', valor)}
+        contarAptos={(nivel, valor) => contarAptos('sectorNombre', valor)}
+        contarNoAptos={(nivel, valor) => contarNoAptos('sectorNombre', valor)}
+    />
+) : (
+    <ResumenPorNivel
+        nivel="sector"
+        titulo="Resumen de Todos los Sectores"
+        uniqueValues={uniqueValues}
+        calcularProgresoPorNivel={calcularProgresoPorNivel}
+        contarAptos={contarAptos}
+        contarNoAptos={contarNoAptos}
+    />
+))}
+
+
                 </div>
             )}
         </div>

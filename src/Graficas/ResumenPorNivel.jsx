@@ -3,15 +3,15 @@ import React from 'react';
 const ResumenPorNivel = ({ nivel, titulo, uniqueValues, calcularProgresoPorNivel, contarAptos, contarNoAptos }) => {
     return (
         <div className="w-full mb-8">
-            <h3 className="w-full bg-sky-600 text-white text-lg font-semibold px-4 py-2 rounded-t-lg">{titulo}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-white p-4 rounded-b-lg shadow-md">
+            {/* <h3 className="w-full bg-sky-600 text-white text-lg font-semibold px-4 py-2 rounded-t-lg">{titulo}</h3> */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                 {uniqueValues[nivel].map((valor, index) => {
                     const progreso = calcularProgresoPorNivel(`${nivel}Nombre`, valor);
 
                     return (
-                        <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
+                        <div key={index} className="bg-gray-200 border border-gray-300 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
                             <div className="flex items-center justify-between mb-4">
-                                <span className="text-md font-semibold text-gray-700">{valor}</span>
+                                <span className="text-md font-semibold text-gray-00">{valor}</span>
                                 <div className="relative w-10 h-10">
                                     <svg viewBox="0 0 36 36" className="w-full h-full">
                                         <path
