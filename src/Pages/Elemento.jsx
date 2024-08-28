@@ -287,26 +287,35 @@ function Elemento() {
                     </Link>
                 </div>
                 <div className='flex items-center gap-4'>
-                    <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
-                    <div className='px-4 bg-sky-500 text-white rounded-md'>
-                        <Link to={'/visor_inspeccion'}>
-                            <button className='text-white flex items-center gap-3'>
-                                <span className='text-2xl'><SiBim /> </span>
-                            </button>
-                        </Link>
+
+                    <div className='flex gap-3'>
+
+                        <button
+                            className="px-4 py-2 bg-gray-300 rounded-full text-gray-700 hover:bg-gray-400 transition-colors"
+                            onClick={() => setActiveView('tabla')}
+                        >
+                            <FaTable />
+                        </button>
+                        <button
+                            className="px-4 py-2 bg-gray-300 rounded-full text-gray-700 hover:bg-gray-400 transition-colors"
+                            onClick={() => setActiveView('graficas')}
+                        >
+                            <FaChartPie />
+                        </button>
+                        <div >
+                            <Link to={'/visor_inspeccion'}>
+                                <button className='text-white bg-sky-600 flex items-center px-4 py-2 rounded-lg'>
+                                    <span className='text-2xl'><SiBim /> </span>
+                                </button>
+                            </Link>
+
+                        </div>
                     </div>
-                    <button
-                        className="ml-4 p-2 bg-gray-300 rounded-full text-gray-700 hover:bg-gray-400 transition-colors"
-                        onClick={() => setActiveView('tabla')}
-                    >
-                        <FaTable />
-                    </button>
-                    <button
-                        className="ml-4 p-2 bg-gray-300 rounded-full text-gray-700 hover:bg-gray-400 transition-colors"
-                        onClick={() => setActiveView('graficas')}
-                    >
-                        <FaChartPie />
-                    </button>
+
+
+
+                    <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
+
                 </div>
             </div>
 
@@ -325,16 +334,7 @@ function Elemento() {
                         onClearFilters={handleClearFilters}
                     />
 
-                    {/* Botón para alternar entre vista de tabla y tarjetas */}
-                    <div className='flex justify-between items-center my-4'>
-                        <button
-                            className='flex items-center text-sm text-white bg-blue-500 px-4 py-2 rounded-md hover:bg-blue-600'
-                            onClick={toggleView}
-                        >
-                            {isTableView ? <FaThLarge /> : <FaTable />}
-                            {isTableView ? " Ver como Tarjetas" : " Ver como Tabla"}
-                        </button>
-                    </div>
+
 
                     {/* Componente VistaTabla para mostrar los lotes en tabla o tarjetas */}
                     <VistaTabla

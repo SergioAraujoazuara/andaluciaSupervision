@@ -2,8 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const VistaTabla = ({ filteredLotes, showSector, handleCaptrurarTrazabilidad, isTableView }) => {
-    return isTableView ? (
-        <div className="w-full rounded-xl">
+    return  (
+        <div className="w-full rounded-xl mt-5">
             <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200'>
                 {showSector &&
                     <div className='text-left font-medium text-gray-600 sm:block hidden px-2'>
@@ -69,38 +69,6 @@ const VistaTabla = ({ filteredLotes, showSector, handleCaptrurarTrazabilidad, is
                                 </div>
                             ) : "Inspección no iniciada"}
                         </div>
-                    </div>
-                </Link>
-            ))}
-        </div>
-    ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredLotes.map((l, i) => (
-                <Link to={`/tablaPpi/${l.id}/${l.ppiNombre}`} onClick={() => handleCaptrurarTrazabilidad(l)} key={i}>
-                    <div className="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200">
-                        <h3 className="text-lg font-bold mb-2">{l.nombre}</h3>
-                        <p className="text-gray-600">Sector: {l.sectorNombre}</p>
-                        <p className="text-gray-600">Subsector: {l.subSectorNombre}</p>
-                        <p className="text-gray-600">Parte: {l.parteNombre}</p>
-                        <p className="text-gray-600">Elemento: {l.elementoNombre}</p>
-                        <p className="text-gray-600">PK: {l.pkInicial || '-'} - {l.pkFinal || '-'}</p>
-                        <p className="mt-2 text-gray-600">Aptos: {l.actividadesAptas || 0}</p>
-                        <p className="mt-2 text-gray-600">No Aptos: {l.actividadesNoAptas || 0}</p>
-                        {l.totalSubactividades > 0 ? (
-                            <div className="mt-4">
-                                <div className="font-medium text-gray-600">
-                                    Progreso: {((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%
-                                </div>
-                                <div style={{ background: '#e0e0e0', borderRadius: '8px', height: '20px', width: '100%' }}>
-                                    <div style={{
-                                        background: '#d97706',
-                                        height: '100%',
-                                        borderRadius: '8px',
-                                        width: `${((l.actividadesAptas || 0) / l.totalSubactividades * 100).toFixed(2)}%`
-                                    }} />
-                                </div>
-                            </div>
-                        ) : <p className="text-gray-500 mt-4">Inspección no iniciada</p>}
                     </div>
                 </Link>
             ))}
