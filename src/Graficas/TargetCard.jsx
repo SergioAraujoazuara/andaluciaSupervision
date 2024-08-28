@@ -1,17 +1,42 @@
 import React from 'react';
+import { FaSitemap } from "react-icons/fa6";
+import { FaCalendarCheck } from "react-icons/fa6";
+import { FaRegCheckCircle } from "react-icons/fa";
 
-const PowerBiCard = ({ title, value, messagge }) => {
+const PowerBiCard = ({ title, value, message }) => {
   return (
-    <div className="flex flex-col justify-center items-center text-center w-60 h-26 items-center bg-gray-200 
-    rounded-lg shadow-lg p-4">
-      <div className="text-sm font-semibold text-gray-600 mb-2">
-        {title}
-      </div>
-      <div className="text-2xl font-bold text-gray-900">
+    <div className="flex flex-col justify-center items-center text-center px-8 py-4 bg-gray-200
+    rounded-lg shadow-lg">
+      <div className="text-sm font-semibold text-gray-600 flex items-center gap-2">
+        <span>
+          {title == "Items inspeccionados:" ? (
+            <FaSitemap />
+          ) : (
+            ""
+          )}
+
+          {title == "Inspecciones finalizadas:" ? (
+            <FaCalendarCheck />
+          ) : (
+            ""
+          )}
+          {title == "Inspecciones iniciadas:" ? (
+            <FaRegCheckCircle />
+          ) : (
+            ""
+          )}
+        </span>
+
+        <span>{title}</span>
+        
+
         {value}
       </div>
-      <div className="text-md font-light text-gray-600">
-        {messagge}
+      <div className="text-2xl font-bold text-gray-900">
+
+      </div>
+      <div className="text-md font-light text-gray-600  text-sm mt-2">
+        {message}
       </div>
     </div>
   );

@@ -3,7 +3,8 @@ import { Chart } from "react-google-charts";
 
 const GraficaNoAptosPorSector = ({ datosNoAptosPorSector }) => {
     // Lista de colores pastel (uno por cada sector)
-    const colors = ['#2F4F4F', '#4682B4', '#708090', '#B0C4DE', '#556B2F', '#6B8E23', '#A9A9A9', '#778899'];
+    const colors = ['#F4A8A8', '#EFB7B7', '#F8C6C6', '#F9D5D5', '#F3A1A1', '#F7B3B3', '#FAC0C0', '#F5E0E0'];
+
 
     // Transformar los datos para que cada sector tenga su propio color
     const data = [
@@ -12,7 +13,7 @@ const GraficaNoAptosPorSector = ({ datosNoAptosPorSector }) => {
     ];
 
     return (
-        <div className='bg-white p-4 rounded-lg shadow-lg'>
+        <div className='bg-gray-200 p-4 rounded-lg shadow-lg'>
             <Chart
                 chartType="BarChart"
                 data={data}

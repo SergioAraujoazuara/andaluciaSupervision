@@ -3,7 +3,9 @@ import { Chart } from "react-google-charts";
 
 const GraficaAptosPorSector = ({ datosAptosPorSector }) => {
     // Lista de colores empresariales (uno por cada sector)
-    const colors = ['#2F4F4F', '#4682B4', '#708090', '#B0C4DE', '#556B2F', '#6B8E23', '#A9A9A9', '#778899'];
+    const colors = ['#A8D5BA', '#B8E2C8', '#C9EAD3', '#D4F1D4', '#E1F8E7', '#C7E2B5', '#B3D6A2', '#9CCFA2'];
+
+
 
     // Transformar datos para que cada sector tenga su propia columna con un valor correspondiente
     const data = [
@@ -12,7 +14,7 @@ const GraficaAptosPorSector = ({ datosAptosPorSector }) => {
     ];
 
     return (
-        <div className='bg-white p-4 rounded-lg shadow-lg'>
+        <div className='bg-gray-200 p-4 rounded-lg shadow-lg'>
             <Chart
                 chartType="BarChart"
                 data={data}

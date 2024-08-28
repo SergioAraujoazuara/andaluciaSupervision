@@ -18,6 +18,7 @@ import LeafletMap from '../Graficas/LeafletMap';
 import FiltrosDashboard from '../Components/Filtros/FiltrosDashboard';
 import FiltrosTabla from '../Components/Filtros/FiltrosTabla';
 import VistaTabla from '../Components/Vistas/VistaTabla';
+import TimelineAptos from '../Graficas/TimeLineAptos';
 
 function Elemento() {
     // Navegación para regresar a la página principal
@@ -269,6 +270,26 @@ function Elemento() {
 
     const progresoGeneralObra = calcularProgresoGeneralObra();
 
+
+    // Función para contar las inspecciones terminadas (todas las subactividades son aptas)
+    const contarInspeccionesTerminadas = () => {
+        return filteredLotes.filter(lote => {
+            // Consideramos que una inspección está terminada si todas las subactividades son aptas
+            return lote.totalSubactividades > 0 &&
+                lote.actividadesAptas === lote.totalSubactividades;
+        }).length;
+    };
+
+    // Obtener el número de inspecciones terminadas
+    const inspeccionesTerminadas = contarInspeccionesTerminadas();
+
+    // Calcular el porcentaje de inspecciones completadas
+    const porcentajeInspeccionesTerminadas = totalLotes > 0
+        ? ((inspeccionesTerminadas / totalLotes) * 100).toFixed(2)
+        : 0;
+
+
+
     // Verifica si se seleccionó un sector específico
     const isSectorSelected = filters.sector !== '';
 
@@ -363,67 +384,49 @@ function Elemento() {
                         <div className='my-5 flex gap-5'>
                             {/* TargetCards para mostrar métricas generales */}
                             <TargetCard
-                                title="Progreso de avance"
+                                title="Items inspeccionados:"
                                 value={`${progresoGeneralObra}%`}
                             />
 
                             {!isSectorSelected && (
                                 <>
-                                    <TargetCard title="Inspecciones totales" value={totalLotes} />
-                                    <TargetCard
-                                        title="Inspecciones iniciadas"
+
+                                    <TargetCard title="Inspecciones finalizadas:"
                                         value={
-                                            <div className="w-full text-center">
-                                                <div>{`${lotesIniciados}/${totalInspecciones} (${porcentajeInspeccionesCompletadas} %)`}</div>
+                                            <div>{inspeccionesTerminadas}</div>
+                                        }
+                                        message={
+                                            <div>{`Inspecciones totales: ${totalLotes}`}</div>
+                                        } />
 
-
-                                            </div>
+                                    <TargetCard
+                                        title="Inspecciones iniciadas:"
+                                        value={
+                                                <div>{`${lotesIniciados}`}</div>
+                                        }
+                                        message={
+                                            <div>{`Porcentaje: ${porcentajeInspeccionesCompletadas} %`}</div>
                                         }
                                     />
 
                                 </>
                             )}
 
-                            <TargetCard
-                                title="Elementos Aptos"
-                                value={
-                                    <div className='w-full'>
-                                        <div>{porcentajeElementosAptos} %</div>
-                                    </div>
-                                }
-                            />
-
-                            {!isSectorSelected && (
-                                <>
-                                    <TargetCard
-                                        title="Inspecciones sin iniciar"
-                                        value={
-                                            <div className='w-full'>
-
-                                                <div>{`${inspeccionesPendientes}/${totalInspecciones} (${porcentajeInspeccionesPendientes} %)`}</div>
-                                            </div>
-                                        }
 
 
-                                    />
-                                </>
-                            )}
+
+
+
+
 
                         </div>
 
                         {/* Gráficos y mapa */}
-                        <div className='w-full grid grid-cols-3'>
-                            <div className='col-span-1'>
-                                <LeafletMap />
-                            </div>
-
-                            <div className='col-span-2'>
-                                <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-4'>
-                                    <GraficaProgresoGeneral progresoGeneral={progresoGeneral} />
-                                    <GraficaAptosPorSector datosAptosPorSector={datosAptosPorSector} />
-                                    <GraficaNoAptosPorSector datosNoAptosPorSector={datosNoAptosPorSector} />
-                                </div>
-                            </div>
+                        <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-4'>
+                            
+                            <GraficaAptosPorSector datosAptosPorSector={datosAptosPorSector} />
+                            <GraficaNoAptosPorSector datosNoAptosPorSector={datosNoAptosPorSector} />
+                            <TimelineAptos filteredLotes={filteredLotes} />
                         </div>
                     </div>
 
