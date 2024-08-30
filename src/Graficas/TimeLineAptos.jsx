@@ -1,51 +1,85 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore'; // Importación correcta de Firestore
-import { db } from '../../firebase_config'; // Asegúrate de que la ruta a tu configuración de Fir
 import { Chart } from 'react-google-charts';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase_config'; 
 
-const CompanyPerformanceChart = ({ filteredLotes, getInspections }) => { // Usar filteredLotes como prop
+const CompanyPerformanceChart = ({ filteredLotes }) => {
     const [datosSubactividades, setDatosSubactividades] = useState([]);
     const [sectorSeleccionado, setSectorSeleccionado] = useState('Todos');
 
-    // useEffect para cargar los lotes desde Firestore cuando se monta el componente
-    useEffect(() => {
-        fetchInspections();
-    }, [filteredLotes]); // Añadir filteredLotes como dependencia
-
-    // Función para obtener los lotes desde Firestore
-    const fetchInspections = async () => {
+    // Función para obtener los campos 'fecha', 'resultadoInspeccion', y 'sector' de todas las subactividades de todas las inspecciones
+    const obtenerDatosSubactividades = async (arrayLotes) => {
         try {
-            if (Array.isArray(filteredLotes) && filteredLotes.length > 0) {  // Verificar que `filteredLotes` sea un array válido
-                const lotesData = await getInspections(filteredLotes); // Usar la función importada con `filteredLotes`
-                setDatosSubactividades(lotesData); // Guardar los lotes en el estado
-            } else {
-                console.error('Error: filteredLotes no es un array válido o está vacío.');
-            }
+            const promesasLotes = arrayLotes.map(async (lote) => {
+                const inspeccionesRef = collection(db, `lotes/${lote.id}/inspecciones`);
+                const inspeccionesSnapshot = await getDocs(inspeccionesRef);
+                const sector = lote.sectorNombre;
+
+                return inspeccionesSnapshot.docs.flatMap((doc) => {
+                    const inspeccionData = doc.data();
+                    if (inspeccionData.actividades && Array.isArray(inspeccionData.actividades)) {
+                        return inspeccionData.actividades.flatMap((actividad) => {
+                            if (actividad.subactividades && Array.isArray(actividad.subactividades)) {
+                                return actividad.subactividades
+                                    .filter((subactividad) => subactividad.fecha && subactividad.resultadoInspeccion)
+                                    .map(({ fecha, resultadoInspeccion }) => ({ fecha, resultadoInspeccion, sector }));
+                            }
+                            return [];
+                        });
+                    }
+                    return [];
+                });
+            });
+
+            const resultados = (await Promise.all(promesasLotes)).flat();
+            setDatosSubactividades(resultados);
         } catch (error) {
-            console.error('Error al obtener los lotes:', error);
+            console.error('Error al obtener los datos de subactividades:', error);
         }
     };
 
-    // Función para agrupar y contar los resultados "Apto" y "No Apto" por fecha y sector
+    useEffect(() => {
+        if (filteredLotes.length > 0) {
+            obtenerDatosSubactividades(filteredLotes);
+        }
+    }, [filteredLotes]);
+
+    // Función para agrupar y contar los resultados "Apto" y "No apto" por fecha y sector
     const procesarDatos = () => {
         const datosPorSector = {};
+        const acumuladoPorSector = {};
 
         datosSubactividades.forEach(({ fecha, resultadoInspeccion, sector }) => {
+            if (!fecha || !resultadoInspeccion || !sector) {
+                console.error('Datos incompletos:', { fecha, resultadoInspeccion, sector });
+                return;
+            }
+
             if (!datosPorSector[sector]) {
-                datosPorSector[sector] = [['Fecha', 'Apto', 'No Apto']];
+                datosPorSector[sector] = [['Fecha', 'Apto', 'No apto']];
+                acumuladoPorSector[sector] = { 'Apto': 0, 'No apto': 0 };
+            }
+
+            if (resultadoInspeccion === 'Apto' || resultadoInspeccion === 'No apto') {
+                acumuladoPorSector[sector][resultadoInspeccion] += 1;
             }
 
             const fechaEncontrada = datosPorSector[sector].find(row => row[0] === fecha);
 
             if (fechaEncontrada) {
-                if (resultadoInspeccion === 'Apto') {
-                    fechaEncontrada[1] += 1;
-                } else {
-                    fechaEncontrada[2] += 1;
-                }
+                fechaEncontrada[1] = acumuladoPorSector[sector]['Apto'];
+                fechaEncontrada[2] = acumuladoPorSector[sector]['No apto'];
             } else {
-                datosPorSector[sector].push([fecha, resultadoInspeccion === 'Apto' ? 1 : 0, resultadoInspeccion === 'No Apto' ? 1 : 0]);
+                datosPorSector[sector].push([fecha, acumuladoPorSector[sector]['Apto'], acumuladoPorSector[sector]['No apto']]);
             }
+        });
+
+        // Log para verificar los datos de "Apto", "No apto" y la fecha
+        Object.keys(datosPorSector).forEach(sector => {
+            console.log(`Sector: ${sector}`);
+            datosPorSector[sector].forEach(row => {
+                console.log(`Fecha: ${row[0]}, Apto: ${row[1]}, No apto: ${row[2]}`);
+            });
         });
 
         return datosPorSector;
@@ -57,10 +91,10 @@ const CompanyPerformanceChart = ({ filteredLotes, getInspections }) => { // Usar
     // Combinar los datos de todos los sectores
     const combinarDatos = () => {
         const sectores = Object.keys(datosProcesados);
-        if (sectores.length === 0) return [['Fecha', 'Sector 1 Apto', 'Sector 1 No Apto', 'Sector 2 Apto', 'Sector 2 No Apto', 'Sector 3 Apto', 'Sector 3 No Apto', 'Sector 4 Apto', 'Sector 4 No Apto']];
+        if (sectores.length === 0) return [['Fecha', 'Sector 1 Apto', 'Sector 1 No apto', 'Sector 2 Apto', 'Sector 2 No apto', 'Sector 3 Apto', 'Sector 3 No apto', 'Sector 4 Apto', 'Sector 4 No apto']];
 
         const fechas = [...new Set(datosSubactividades.map(item => item.fecha))]; // Obtener todas las fechas únicas
-        const datosCombinados = [['Fecha', ...sectores.flatMap(sector => [`${sector} Apto`, `${sector} No Apto`])]];
+        const datosCombinados = [['Fecha', ...sectores.flatMap(sector => [`${sector} Apto`, `${sector} No apto`])]];
 
         fechas.forEach((fecha) => {
             const fila = [fecha];
@@ -91,7 +125,7 @@ const CompanyPerformanceChart = ({ filteredLotes, getInspections }) => { // Usar
     };
 
     // Seleccionar datos para mostrar según el sector
-    const datosParaMostrar = sectorSeleccionado === 'Todos' ? combinarDatos() : datosProcesados[sectorSeleccionado] || [['Fecha', 'Apto', 'No Apto']];
+    const datosParaMostrar = sectorSeleccionado === 'Todos' ? combinarDatos() : datosProcesados[sectorSeleccionado] || [['Fecha', 'Apto', 'No apto']];
     
     // Calcular el maxValue dinámicamente
     const maxValue = calcularMaxValue(datosParaMostrar);
@@ -100,11 +134,15 @@ const CompanyPerformanceChart = ({ filteredLotes, getInspections }) => { // Usar
     const options = {
         title: `Resultados de ${sectorSeleccionado} a lo largo del tiempo`,
         hAxis: { title: 'Fecha', format: 'yyyy-MM-dd' },
-        vAxis: { title: 'Cantidad', minValue: 0, maxValue: maxValue, format: '0' }, // Configurar maxValue
+        vAxis: { title: 'Cantidad', minValue: 0, maxValue: maxValue, format: '0' },
         legend: { position: 'top' },
         colors: sectorSeleccionado === 'Todos'
             ? ['#14b8a6', '#f87171', '#6b7280', '#10b981', '#6366f1', '#f97316', '#3b82f6', '#f43f5e']
-            : ['#14b8a6', '#f87171'], // Diferentes colores para "Todos" y sectores individuales
+            : ['#14b8a6', '#f87171'],
+        series: {
+            0: { color: '#14b8a6' },
+            1: { color: '#f87171' }
+        }
     };
 
     // Manejar cambios en el filtro de sector
@@ -123,7 +161,7 @@ const CompanyPerformanceChart = ({ filteredLotes, getInspections }) => { // Usar
                 </select>
             </div>
 
-            {/* Gráfico de líneas para "Apto" y "No Apto" en el mismo gráfico */}
+            {/* Gráfico de líneas para "Apto" y "No apto" en el mismo gráfico */}
             <Chart
                 chartType="LineChart"
                 width="100%"
