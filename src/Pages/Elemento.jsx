@@ -20,7 +20,7 @@ import FiltrosTabla from '../Components/Filtros/FiltrosTabla';
 import VistaTabla from '../Components/Vistas/VistaTabla';
 import TimelineAptos from '../Graficas/TimeLineAptos';
 import GraficaLotesPorSector from '../Graficas/GraficasLotesPorSector';
-import TotalNoAptosPorSector from '../Graficas/TarjetaNoAptosPorSector';
+import TarjetaNoAptosPorSector from '../Graficas/TarjetaNoAptosPorSector';
 
 // Importar funciones de utilidades
 import { getLotes } from '../Functions/getLotes'; // Importar la función de obtención de lotes
@@ -414,12 +414,7 @@ function Elemento() {
 
                                 </>
                             )}
-                            <TargetCardNoApto
-                                title="Total No Aptos"
-                                value={sectorSeleccionado === 'Todos' ? totalNoAptos : noAptosPorSector[sectorSeleccionado] || 0}
-                                message={`Inspecciones no aptas en ${sectorSeleccionado === 'Todos' ? 'todos los sectores' : `el sector ${sectorSeleccionado}`}`}
-                                icon={''}
-                            />
+                           <TarjetaNoAptosPorSector  filteredLotes={filteredLotes}/>
 
 
 
