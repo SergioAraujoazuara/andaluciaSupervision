@@ -19,6 +19,15 @@ import FiltrosDashboard from '../Components/Filtros/FiltrosDashboard';
 import FiltrosTabla from '../Components/Filtros/FiltrosTabla';
 import VistaTabla from '../Components/Vistas/VistaTabla';
 import TimelineAptos from '../Graficas/TimeLineAptos';
+import GraficaLotesPorSector from '../Graficas/GraficasLotesPorSector';
+import TotalNoAptosPorSector from '../Graficas/TarjetaNoAptosPorSector';
+
+// Importar funciones de utilidades
+import { getLotes } from '../Functions/getLotes'; // Importar la función de obtención de lotes
+import { getInspections } from '../Functions/getInspections'; // Importar la función de obtención de inspecciones
+import { getNoAptos } from '../Functions/getNoAptos'; // Importar la función de obtención de inspecciones
+import TargetCardNoApto from '../Graficas/TargetCardNoApto';
+
 
 function Elemento() {
     // Navegación para regresar a la página principal
@@ -51,21 +60,19 @@ function Elemento() {
         ppi: []
     }); // Almacena los valores únicos para cada filtro
 
-    // useEffect para cargar los lotes desde Firestore cuando se monta el componente
+    // Estados para "No Aptos"
+    const [noAptosPorSector, setNoAptosPorSector] = useState({});
+    const [totalNoAptos, setTotalNoAptos] = useState(0);
+    const [sectorSeleccionado, setSectorSeleccionado] = useState('Todos');
+
     useEffect(() => {
-        obtenerLotes();
+        fetchLotes();
     }, []);
 
-    // Función para obtener los lotes desde Firestore
-    const obtenerLotes = async () => {
+    const fetchLotes = async () => {
         try {
-            const lotesCollectionRef = collection(db, "lotes");
-            const lotesSnapshot = await getDocs(lotesCollectionRef);
-            const lotesData = lotesSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setLotes(lotesData); // Guardar los lotes en el estado
+            const lotesData = await getLotes();
+            setLotes(lotesData);
             setUniqueValues({
                 sector: getUniqueValues(lotesData, 'sectorNombre'),
                 subSector: getUniqueValues(lotesData, 'subSectorNombre'),
@@ -73,12 +80,25 @@ function Elemento() {
                 elemento: getUniqueValues(lotesData, 'elementoNombre'),
                 lote: getUniqueValues(lotesData, 'nombre'),
                 ppi: getUniqueValues(lotesData, 'ppiNombre')
-            }); // Guardar valores únicos para los filtros
+            });
+
+            // Obtener y calcular "No Aptos" utilizando la función `getNoAptos`
+        const { noAptosPorSector, totalNoAptos } = await getNoAptos(lotesData);
+
+        // Aquí agregamos el console.log para ver el conteo de inspecciones no aptas
+        console.log('No Aptos por Sector:', noAptosPorSector);
+        console.log('Total No Aptos:', totalNoAptos);
+            setNoAptosPorSector(noAptosPorSector);
+            setTotalNoAptos(totalNoAptos);
         } catch (error) {
             console.error('Error al obtener los lotes:', error);
         }
     };
 
+    // Función para obtener valores únicos de una propiedad específica de los lotes
+    const getUniqueValues = (data, key) => {
+        return [...new Set(data.map(item => item[key]))];
+    };
     // Función para manejar la trazabilidad de los lotes seleccionados y guardar en localStorage
     const handleCaptrurarTrazabilidad = (l) => {
         localStorage.setItem('sector', l.sectorNombre || '');
@@ -119,15 +139,6 @@ function Elemento() {
         setFilterText(''); // Limpiar el texto de filtro
     };
 
-    // Función para alternar entre vista de tabla y tarjetas
-    const toggleView = () => {
-        setIsTableView(!isTableView);
-    };
-
-    // Función para obtener valores únicos de una propiedad específica de los lotes
-    const getUniqueValues = (data, key) => {
-        return [...new Set(data.map(item => item[key]))];
-    };
 
     // Filtrado de lotes según los filtros y el texto de búsqueda
     const filteredLotes = lotes.filter(l =>
@@ -151,7 +162,6 @@ function Elemento() {
         return (progresoTotal / totalLotes).toFixed(2);
     };
 
-    const progresoGeneral = calcularProgresoGeneral(); // Progreso general de la obra
 
     // Obtención de datos de actividades aptas por sector
     const obtenerDatosAptosPorSector = () => {
@@ -223,7 +233,7 @@ function Elemento() {
     const datosNoAptosPorSector = obtenerDatosNoAptosPorSector();
 
     const totalAptos = datosAptosPorSector.slice(1).reduce((sum, sector) => sum + sector[1], 0);
-    const totalNoAptos = datosNoAptosPorSector.slice(1).reduce((sum, sector) => sum + sector[1], 0);
+    // const totalNoAptos = datosNoAptosPorSector.slice(1).reduce((sum, sector) => sum + sector[1], 0);
 
     console.log(totalNoAptos)
 
@@ -244,7 +254,6 @@ function Elemento() {
         return ((totalSubactividadesAptas / totalSubactividadesInspeccionadas) * 100).toFixed(2);
     };
 
-    const porcentajeElementosAptos = calcularPorcentajeElementosAptos();
 
     // Cálculo del porcentaje de inspecciones pendientes
     const totalInspecciones = lotes.length; // Total de lotes o inspecciones disponibles
@@ -255,7 +264,6 @@ function Elemento() {
         return ((inspeccionesPendientes / totalLotes) * 100).toFixed(2);
     };
 
-    const porcentajeInspeccionesPendientes = calcularPorcentajeInspeccionesPendientes();
 
     // Cálculo del progreso general de la obra
     const calcularProgresoGeneralObra = () => {
@@ -282,12 +290,6 @@ function Elemento() {
 
     // Obtener el número de inspecciones terminadas
     const inspeccionesTerminadas = contarInspeccionesTerminadas();
-
-    // Calcular el porcentaje de inspecciones completadas
-    const porcentajeInspeccionesTerminadas = totalLotes > 0
-        ? ((inspeccionesTerminadas / totalLotes) * 100).toFixed(2)
-        : 0;
-
 
 
     // Verifica si se seleccionó un sector específico
@@ -388,6 +390,7 @@ function Elemento() {
                                 value={`${progresoGeneralObra}%`}
                             />
 
+
                             {!isSectorSelected && (
                                 <>
 
@@ -402,7 +405,7 @@ function Elemento() {
                                     <TargetCard
                                         title="Inspecciones iniciadas:"
                                         value={
-                                                <div>{`${lotesIniciados}`}</div>
+                                            <div>{`${lotesIniciados}`}</div>
                                         }
                                         message={
                                             <div>{`Porcentaje: ${porcentajeInspeccionesCompletadas} %`}</div>
@@ -411,6 +414,12 @@ function Elemento() {
 
                                 </>
                             )}
+                            <TargetCardNoApto
+                                title="Total No Aptos"
+                                value={sectorSeleccionado === 'Todos' ? totalNoAptos : noAptosPorSector[sectorSeleccionado] || 0}
+                                message={`Inspecciones no aptas en ${sectorSeleccionado === 'Todos' ? 'todos los sectores' : `el sector ${sectorSeleccionado}`}`}
+                                icon={''}
+                            />
 
 
 
@@ -422,11 +431,13 @@ function Elemento() {
                         </div>
 
                         {/* Gráficos y mapa */}
-                        <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-4'>
-                            
+                        <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-4'>
+
                             <GraficaAptosPorSector datosAptosPorSector={datosAptosPorSector} />
                             <GraficaNoAptosPorSector datosNoAptosPorSector={datosNoAptosPorSector} />
-                            <TimelineAptos filteredLotes={filteredLotes} />
+                            <TimelineAptos filteredLotes={filteredLotes} getInspections={getInspections} />
+                            <GraficaLotesPorSector lotes={lotes} filteredLotes={filteredLotes} />
+
                         </div>
                     </div>
 

@@ -3,7 +3,8 @@ import { FaSitemap } from "react-icons/fa6";
 import { FaCalendarCheck } from "react-icons/fa6";
 import { FaRegCheckCircle } from "react-icons/fa";
 
-const PowerBiCard = ({ title, value, message }) => {
+const TargetCard = ({ title, value, message }) => {
+  
   return (
     <div className="flex flex-col justify-center items-center text-center px-8 py-4 bg-gray-200
     rounded-lg shadow-lg">
@@ -42,4 +43,4 @@ const PowerBiCard = ({ title, value, message }) => {
   );
 };
 
-export default PowerBiCard;
+export default TargetCard;

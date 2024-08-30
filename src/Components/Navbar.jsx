@@ -86,6 +86,14 @@ const Navbar = () => {
                     handleLinkClick={handleLinkClick}
                   />
                 )}
+                {/* {(userRol === 'admin' || userRol === 'usuario') && (
+                  <NavLink
+                    to="/dashboard"
+                    linkName="Dashboard"
+                    activeLink={activeLink}
+                    handleLinkClick={handleLinkClick}
+                  />
+                )} */}
 
                 {(userRol === 'admin' || userRol === 'usuario') && (
                   <NavLink
