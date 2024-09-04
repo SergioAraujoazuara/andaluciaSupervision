@@ -377,8 +377,7 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
 
                                         handleConfirmarEnvio()
                                         setMostrarConfirmacion(false);
-                                        setImagen('')
-                                        setImagen2('')
+                                        
                                     }}
                                     className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                                 >
