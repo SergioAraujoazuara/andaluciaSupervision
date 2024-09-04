@@ -19,35 +19,35 @@ const Register = () => {
   const handleImagenChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-        try {
-            const options = {
-                maxSizeMB: 0.2,
-                maxWidthOrHeight: 500,
-                useWebWorker: true,
-            };
-            const compressedFile = await imageCompression(file, options);
-            console.log(`Tamaño del archivo comprimido: ${compressedFile.size} bytes`);
+      try {
+        const options = {
+          maxSizeMB: 0.2,
+          maxWidthOrHeight: 500,
+          useWebWorker: true,
+        };
+        const compressedFile = await imageCompression(file, options);
+        console.log(`Tamaño del archivo comprimido: ${compressedFile.size} bytes`);
 
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const imgElement = document.createElement("img");
-                imgElement.src = reader.result;
-                imgElement.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    canvas.width = imgElement.width;
-                    canvas.height = imgElement.height;
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
-                    const pngDataUrl = canvas.toDataURL("image/png");
-                    setSignature(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
-                };
-            };
-            reader.readAsDataURL(compressedFile);
-        } catch (error) {
-            console.error('Error durante la compresión de la segunda imagen:', error);
-        }
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const imgElement = document.createElement("img");
+          imgElement.src = reader.result;
+          imgElement.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = imgElement.width;
+            canvas.height = imgElement.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
+            const pngDataUrl = canvas.toDataURL("image/png");
+            setSignature(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
+          };
+        };
+        reader.readAsDataURL(compressedFile);
+      } catch (error) {
+        console.error('Error durante la compresión de la segunda imagen:', error);
+      }
     }
-};
+  };
 
   const [newUser, setNewUser] = useState({
     name: '',
@@ -71,6 +71,13 @@ const Register = () => {
       setShowModal(true);
       return;
     }
+
+     // Verificar si se ha cargado una imagen
+     if (!signature) {
+      setError('Es necesario subir una imagen de firma.');
+      setShowModal(true);
+      return;
+  }
 
     try {
       const authResult = await signup(newUser.email, newUser.password);
@@ -100,7 +107,7 @@ const Register = () => {
     setShowModal(false);
   };
 
-  
+
 
   return (
     <div className="flex h-screen bg-gray-200">
@@ -169,11 +176,17 @@ const Register = () => {
 
             <div className="flex flex-col mb-6">
               <div className="relative">
+                <div className='flex gap-2 items-center w-full'>
+                  <p className='text-gray-600'>Firma de usuario
+                    </p>
+                    <p className='text-amber-600 text-sm'>(* Requerido)</p>
+                </div>
+
                 <input
                   type="file"
                   onChange={handleImagenChange}
                   accept="image/*"
-                  className="mb-4"
+                  className="mb-4 mt-2"
                 />
               </div>
             </div>
