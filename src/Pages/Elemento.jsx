@@ -24,7 +24,7 @@ import TarjetaNoAptosPorSector from '../Graficas/TarjetaNoAptosPorSector';
 
 // Importar funciones de utilidades
 import { getLotes } from '../Functions/GetLotes'; // Importar la función de obtención de lotes
-import { getInspections } from '../Functions/getInspections'; // Importar la función de obtención de inspecciones
+import { getInspections } from '../Functions/GetInspections'; // Importar la función de obtención de inspecciones
 import { getNoAptos } from '../Functions/getNoAptos'; // Importar la función de obtención de inspecciones
 
 
