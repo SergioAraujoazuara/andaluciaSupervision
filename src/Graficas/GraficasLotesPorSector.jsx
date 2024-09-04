@@ -5,6 +5,9 @@ const GraficaLotesPorSector = ({ filteredLotes }) => {
   const [datosLotesPorSector, setDatosLotesPorSector] = useState([]);
   const [sectorSeleccionado, setSectorSeleccionado] = useState('Todos'); // Estado para el filtro de sector
 
+  // Lista de colores para las barras
+  const colors = ['#fcd34d', '#7dd3fc', '#a5b4fc', '#f9a8d4', '#5eead4', '#bef264', '#fca5a5', '#fdba74'];
+
   // Función para calcular el número de lotes por sector
   const calcularLotesPorSector = () => {
     const lotesPorSector = {};
@@ -21,9 +24,9 @@ const GraficaLotesPorSector = ({ filteredLotes }) => {
     });
 
     // Formatear datos para Google Charts
-    const data = [['Sector', 'Número de Lotes']];
-    Object.entries(lotesPorSector).forEach(([sector, count]) => {
-      data.push([sector, count]);
+    const data = [['Sector', 'Número de Lotes', { role: 'style' }]];  // Añadir la columna para estilos de color
+    Object.entries(lotesPorSector).forEach(([sector, count], index) => {
+      data.push([sector, count, `color: ${colors[index % colors.length]}`]);  // Asignar color de forma cíclica
     });
 
     return data;
@@ -56,13 +59,11 @@ const GraficaLotesPorSector = ({ filteredLotes }) => {
   };
 
   return (
-    <div className='bg-gray-200 p-4 rounded-lg shadow-lg'>
-      
-      
+    <div className='bg-gray-100 p-4 rounded-lg shadow-lg'>
       {/* Filtro de sector */}
-      <div className='mb-4'>
-        
-        <select id='sector-select' className='rounded-lg p-1 bg-gray-100' value={sectorSeleccionado} onChange={handleSectorChange}>
+      <div className='flex justify-between items-center w-full mb-1'>
+        <p className='font-medium'>Lotes por sector</p>
+        <select id='sector-select' className='rounded-lg p-1 bg-gray-200' value={sectorSeleccionado} onChange={handleSectorChange}>
           {obtenerSectoresUnicos().map(sector => (
             <option key={sector} value={sector}>{sector}</option>
           ))}
@@ -76,11 +77,10 @@ const GraficaLotesPorSector = ({ filteredLotes }) => {
         height="250px"
         data={datosLotesPorSector}
         options={{
-          title: 'Número de Lotes por Sector',
           hAxis: { title: 'Sector' },
           vAxis: { title: 'Número de Lotes', minValue: 0, maxValue: maxValue, format: '0' }, // Configurar maxValue dinámicamente
           legend: { position: 'none' },
-          colors: ['#14b8a6'],
+          backgroundColor: '#f3f4f6', // Fondo del gráfico completo
         }}
       />
     </div>

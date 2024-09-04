@@ -9,6 +9,7 @@ import { FaUserAlt, FaDoorOpen, FaBars } from "react-icons/fa";
 import { ImExit } from "react-icons/im";
 import { IoIosSettings } from "react-icons/io";
 
+
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -77,23 +78,24 @@ const Navbar = () => {
                     handleLinkClick={handleLinkClick}
                   />
                 )}
-
                 {(userRol === 'admin' || userRol === 'usuario') && (
-                  <NavLink
-                    to="/visor_inspeccion"
-                    linkName="Visor BIM"
-                    activeLink={activeLink}
-                    handleLinkClick={handleLinkClick}
-                  />
-                )}
-                {/* {(userRol === 'admin' || userRol === 'usuario') && (
                   <NavLink
                     to="/dashboard"
                     linkName="Dashboard"
                     activeLink={activeLink}
                     handleLinkClick={handleLinkClick}
                   />
-                )} */}
+                )}
+
+                {(userRol === 'admin' || userRol === 'usuario') && (
+                  <NavLink
+                    to="/visor_inspeccion"
+                    linkName="BIM"
+                    activeLink={activeLink}
+                    handleLinkClick={handleLinkClick}
+                  />
+                )}
+                
 
                 {(userRol === 'admin' || userRol === 'usuario') && (
                   <NavLink
@@ -103,6 +105,7 @@ const Navbar = () => {
                     handleLinkClick={handleLinkClick}
                   />
                 )}
+                
 
               </div>
             )}
@@ -210,7 +213,7 @@ const NavLink = ({ to, linkName, activeLink, handleLinkClick }) => {
     <Link
       to={to}
       onClick={() => handleLinkClick(to)}
-      className={`block px-3 py-2 rounded-md text-base font-medium ${borderColorClass} ${textColorClass}`}
+      className={`block px-3 py-2 rounded-md text-sm font-medium ${borderColorClass} ${textColorClass}`}
     >
       {linkName}
     </Link>

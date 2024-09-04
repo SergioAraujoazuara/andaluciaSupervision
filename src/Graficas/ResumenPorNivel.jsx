@@ -9,7 +9,7 @@ const ResumenPorNivel = ({ nivel, titulo, uniqueValues, calcularProgresoPorNivel
                     const progreso = calcularProgresoPorNivel(`${nivel}Nombre`, valor);
 
                     return (
-                        <div key={index} className="bg-gray-200 border border-gray-300 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
+                        <div key={index} className="bg-gray-100 rounded-lg p-4 shadow-xl hover:shadow-lg transition-shadow">
                             <div className="flex items-center justify-between mb-4">
                                 <span className="text-md font-semibold text-gray-00">{valor}</span>
                                 <div className="relative w-10 h-10">
@@ -26,7 +26,7 @@ const ResumenPorNivel = ({ nivel, titulo, uniqueValues, calcularProgresoPorNivel
                                             d="M18 2.0845
                                             a 15.9155 15.9155 0 0 1 0 31.831"
                                             fill="none"
-                                            stroke="#34d399"
+                                            stroke="#f59e0b"
                                             strokeWidth="4"
                                             strokeDasharray={`${progreso}, 100`}
                                         />
@@ -38,18 +38,18 @@ const ResumenPorNivel = ({ nivel, titulo, uniqueValues, calcularProgresoPorNivel
                             </div>
                             <div className="text-sm">
                                 <div className="flex justify-between mb-1">
-                                    <span className="font-medium text-green-600">Aptos:</span>
+                                    <span className="font-medium text-teal-500">Aptos:</span>
                                     <span>{contarAptos(`${nivel}Nombre`, valor)}</span>
                                 </div>
                                 <div className="flex justify-between mb-1">
-                                    <span className="font-medium text-red-600">No Aptos:</span>
+                                    <span className="font-medium text-red-400">No Aptos:</span>
                                     <span>{contarNoAptos(`${nivel}Nombre`, valor)}</span>
                                 </div>
                             </div>
                             <div className="mt-4">
                                 <div className="w-full bg-gray-300 h-2 rounded-full">
                                     <div
-                                        className="bg-sky-600 h-2 rounded-full"
+                                        className="bg-teal-500 h-2 rounded-full"
                                         style={{
                                             width: `${progreso}%`
                                         }}

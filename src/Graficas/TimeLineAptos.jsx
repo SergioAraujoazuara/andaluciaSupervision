@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Chart } from 'react-google-charts';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase_config'; 
+import { db } from '../../firebase_config';
+import { RiLoader2Line } from "react-icons/ri";
 
 const CompanyPerformanceChart = ({ filteredLotes }) => {
     const [datosSubactividades, setDatosSubactividades] = useState([]);
     const [sectorSeleccionado, setSectorSeleccionado] = useState('Todos');
+    const [loading, setLoading] = useState(true);  // Estado de carga
+    const [error, setError] = useState(null);  // Estado de error
 
-    // Función para obtener los campos 'fecha', 'resultadoInspeccion', y 'sector' de todas las subactividades de todas las inspecciones
     const obtenerDatosSubactividades = async (arrayLotes) => {
         try {
+            setLoading(true); // Inicia la carga
             const promesasLotes = arrayLotes.map(async (lote) => {
                 const inspeccionesRef = collection(db, `lotes/${lote.id}/inspecciones`);
                 const inspeccionesSnapshot = await getDocs(inspeccionesRef);
@@ -35,6 +38,9 @@ const CompanyPerformanceChart = ({ filteredLotes }) => {
             setDatosSubactividades(resultados);
         } catch (error) {
             console.error('Error al obtener los datos de subactividades:', error);
+            setError('Error al cargar los datos. Intenta nuevamente.'); // Guarda el error
+        } finally {
+            setLoading(false); // Finaliza la carga
         }
     };
 
@@ -44,7 +50,6 @@ const CompanyPerformanceChart = ({ filteredLotes }) => {
         }
     }, [filteredLotes]);
 
-    // Función para agrupar y contar los resultados "Apto" y "No apto" por fecha y sector
     const procesarDatos = () => {
         const datosPorSector = {};
         const acumuladoPorSector = {};
@@ -74,26 +79,16 @@ const CompanyPerformanceChart = ({ filteredLotes }) => {
             }
         });
 
-        // Log para verificar los datos de "Apto", "No apto" y la fecha
-        Object.keys(datosPorSector).forEach(sector => {
-            console.log(`Sector: ${sector}`);
-            datosPorSector[sector].forEach(row => {
-                console.log(`Fecha: ${row[0]}, Apto: ${row[1]}, No apto: ${row[2]}`);
-            });
-        });
-
         return datosPorSector;
     };
 
-    // Obtener los datos procesados para el gráfico
     const datosProcesados = procesarDatos();
 
-    // Combinar los datos de todos los sectores
     const combinarDatos = () => {
         const sectores = Object.keys(datosProcesados);
         if (sectores.length === 0) return [['Fecha', 'Sector 1 Apto', 'Sector 1 No apto', 'Sector 2 Apto', 'Sector 2 No apto', 'Sector 3 Apto', 'Sector 3 No apto', 'Sector 4 Apto', 'Sector 4 No apto']];
 
-        const fechas = [...new Set(datosSubactividades.map(item => item.fecha))]; // Obtener todas las fechas únicas
+        const fechas = [...new Set(datosSubactividades.map(item => item.fecha))];
         const datosCombinados = [['Fecha', ...sectores.flatMap(sector => [`${sector} Apto`, `${sector} No apto`])]];
 
         fechas.forEach((fecha) => {
@@ -108,12 +103,11 @@ const CompanyPerformanceChart = ({ filteredLotes }) => {
         return datosCombinados;
     };
 
-    // Calcular el valor máximo para el eje Y con un margen adicional
     const calcularMaxValue = (datos) => {
         let maxValue = 0;
         datos.forEach((row, index) => {
-            if (index > 0) { // Saltar la primera fila (encabezados)
-                const valores = row.slice(1); // Omitir la columna de fecha
+            if (index > 0) {
+                const valores = row.slice(1);
                 valores.forEach(valor => {
                     if (valor > maxValue) {
                         maxValue = valor;
@@ -121,39 +115,53 @@ const CompanyPerformanceChart = ({ filteredLotes }) => {
                 });
             }
         });
-        return maxValue + 5; // Sumar 5 al valor máximo
+        return maxValue + 5;
     };
 
-    // Seleccionar datos para mostrar según el sector
     const datosParaMostrar = sectorSeleccionado === 'Todos' ? combinarDatos() : datosProcesados[sectorSeleccionado] || [['Fecha', 'Apto', 'No apto']];
-    
-    // Calcular el maxValue dinámicamente
+
     const maxValue = calcularMaxValue(datosParaMostrar);
 
-    // Configuración del gráfico
+    // Generar dinámicamente las opciones de series
+    const generarSeries = (datos) => {
+        const seriesOptions = {};
+        datos[0].slice(1).forEach((_, index) => { // Empezar desde 1 para saltar la columna de 'Fecha'
+            if (index % 2 === 0) { // Indices pares para "Apto"
+                seriesOptions[index] = { color: '#14b8a6' }; // Verde para "Apto"
+            } else { // Indices impares para "No apto"
+                seriesOptions[index] = { color: '#f87171' }; // Rojo para "No apto"
+            }
+        });
+        return seriesOptions;
+    };
+
+    // Usar la función para generar las opciones de las series
     const options = {
-        title: `Resultados de ${sectorSeleccionado} a lo largo del tiempo`,
         hAxis: { title: 'Fecha', format: 'yyyy-MM-dd' },
         vAxis: { title: 'Cantidad', minValue: 0, maxValue: maxValue, format: '0' },
-        legend: { position: 'top' },
-        colors: sectorSeleccionado === 'Todos'
-            ? ['#14b8a6', '#f87171', '#6b7280', '#10b981', '#6366f1', '#f97316', '#3b82f6', '#f43f5e']
-            : ['#14b8a6', '#f87171'],
-        series: {
-            0: { color: '#14b8a6' },
-            1: { color: '#f87171' }
+        legend: { position: 'none' }, // Elimina la leyenda
+        colors: ['#6ee7b7', '#fca5a5'], // Colores principales
+        series: generarSeries(datosParaMostrar), // Configurar series dinámicamente
+        backgroundColor: '#f3f4f6', // Fondo del gráfico completo
+        chartArea: {
+            left: 50,   // Espacio a la izquierda
+            right: 30,  // Espacio a la derecha
+            top: 20,    // Espacio en la parte superior
+            bottom: 60, // Espacio en la parte inferior
+            width: '80%',  // Ancho del área del gráfico
+            height: '70%'  // Altura del área del gráfico
         }
     };
 
-    // Manejar cambios en el filtro de sector
     const handleSectorChange = (e) => {
         setSectorSeleccionado(e.target.value);
     };
 
     return (
-        <div className='bg-gray-200 p-4 rounded-lg shadow-lg'>
-            <div className='mb-4'>
-                <select id='sector-select' className='rounded-lg p-1 bg-gray-100' value={sectorSeleccionado} onChange={handleSectorChange}>
+        <div className='bg-gray-100 p-4 rounded-lg shadow-lg'>
+            <div className='flex justify-between items-center w-full mb-1'>
+                <p className='font-medium'>Timeline apto/no apto</p>
+                <select id='sector-select' className='rounded-lg p-1 bg-gray-200' value={sectorSeleccionado} onChange={handleSectorChange}>
                     <option value='Todos'>Todos</option>
                     {Object.keys(datosProcesados).map(sector => (
                         <option key={sector} value={sector}>{sector}</option>
@@ -161,14 +169,23 @@ const CompanyPerformanceChart = ({ filteredLotes }) => {
                 </select>
             </div>
 
-            {/* Gráfico de líneas para "Apto" y "No apto" en el mismo gráfico */}
-            <Chart
-                chartType="LineChart"
-                width="100%"
-                height="250px"
-                data={datosParaMostrar}
-                options={options}
-            />
+            {/* Mostrar mensaje de carga, error o gráfico */}
+            {loading ? (
+                <div className='w-full h-full flex items-start pt-20 justify-center'>
+                    <RiLoader2Line className='text-4xl' />
+                </div>
+
+            ) : error ? (
+                <p>{error}</p>
+            ) : (
+                <Chart
+                    chartType="LineChart"
+                    width="100%"
+                    height="250px"
+                    data={datosParaMostrar}
+                    options={options}
+                />
+            )}
         </div>
     );
 };
