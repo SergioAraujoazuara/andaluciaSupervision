@@ -20,6 +20,7 @@ import FormularioInspeccion from './Components/FormularioInspeccion';
 import Pdf_final from './Components/Pdf_final';
 import GrocIA from './Components/GrocIA.jsx';
 import Dashboard from './Pages/Dashboard.jsx';
+import Auscultacion from './Pages/Auscultacion.jsx';
 
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
     { path: '/visor_inspeccion', element: <Viewer_inspeccion />, roles: ['admin', 'usuario'] },
     { path: '/elemento/:id', element: <Elemento />, roles: ['admin', 'usuario'] },
     { path: '/dashboard', element: <Dashboard />, roles: ['admin', 'usuario'] },
+    { path: '/auscultacion', element: <Auscultacion />, roles: ['admin', 'usuario'] },
     { path: '/tablaPpi', element: <TablaPpi />, roles: ['admin', 'usuario'] },
     { path: '/tablaPpi/:idLote/:ppiNombre', element: <TablaPpi />, roles: ['admin', 'usuario'] },
     { path: '/editarPpi/:id', element: <EditarPpi />, roles: ['admin', 'usuario'] },

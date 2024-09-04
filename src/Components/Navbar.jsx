@@ -95,7 +95,16 @@ const Navbar = () => {
                     handleLinkClick={handleLinkClick}
                   />
                 )}
-                
+
+                {(userRol === 'admin' || userRol === 'usuario') && (
+                  <NavLink
+                    to="/auscultacion"
+                    linkName="Auscultación"
+                    activeLink={activeLink}
+                    handleLinkClick={handleLinkClick}
+                  />
+                )}
+
 
                 {(userRol === 'admin' || userRol === 'usuario') && (
                   <NavLink
@@ -105,7 +114,7 @@ const Navbar = () => {
                     handleLinkClick={handleLinkClick}
                   />
                 )}
-                
+
 
               </div>
             )}
