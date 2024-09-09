@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase_config';
 import { RxCrossCircled } from "react-icons/rx";
+import { RiCalendarCloseLine } from "react-icons/ri";
 
 const TotalNoAptosPorSector = ({ filteredLotes }) => {
     const [datosSubactividades, setDatosSubactividades] = useState([]);
@@ -106,13 +107,14 @@ const TotalNoAptosPorSector = ({ filteredLotes }) => {
     }, [datosSubactividades]);
 
     return (
-        <div className='bg-gray-200 p-4 rounded-lg shadow-lg flex items-center justify-center h-full'>
+        <div className='bg-gray-200 text-md p-4 rounded-lg shadow-lg flex items-center justify-center h-full'>
             <div className="flex items-center justify-center">
-                <div className="text-sm font-semibold text-gray-600 flex items-center gap-2 p-2">
-                    <RxCrossCircled className='text-gray-600 text-lg'/>
-                    <div className="font-bold text-gray-600">
-                        Total de inspecciones <span className='text-red-900'>no apto: {'\u00A0'}</span> 
-                        {sectorSeleccionado === 'Todos' ? totalNoAptos : noAptosPorSector[sectorSeleccionado] || 0}
+                <div className="font-medium text-gray-600 flex flex-col items-center justify-center gap-1 p-2">
+                    <RiCalendarCloseLine className='text-gray-600 text-3xl'/>
+                    <div className="text-gray-600 flex flex-col justify-center items-center">
+                        <p>Total de inspecciones</p> 
+                        <p>No apto: {'\u00A0'} {sectorSeleccionado === 'Todos' ? totalNoAptos : noAptosPorSector[sectorSeleccionado] || 0}</p> 
+                        
                     </div>
                 </div>
             </div>

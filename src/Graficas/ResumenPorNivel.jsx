@@ -2,14 +2,14 @@ import React from 'react';
 
 const ResumenPorNivel = ({ nivel, titulo, uniqueValues, calcularProgresoPorNivel, contarAptos, contarNoAptos }) => {
     return (
-        <div className="w-full mb-8">
+        <div className="w-full mb-8 ">
             {/* <h3 className="w-full bg-sky-600 text-white text-lg font-semibold px-4 py-2 rounded-t-lg">{titulo}</h3> */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 ">
                 {uniqueValues[nivel].map((valor, index) => {
                     const progreso = calcularProgresoPorNivel(`${nivel}Nombre`, valor);
 
                     return (
-                        <div key={index} className="bg-gray-100 rounded-lg p-4 shadow-xl hover:shadow-lg transition-shadow">
+                        <div key={index} className="bg-gray-100 text-gray-500 rounded-lg p-4 shadow-xl hover:shadow-lg transition-shadow bg-gray-100">
                             <div className="flex items-center justify-between mb-4">
                                 <span className="text-md font-semibold text-gray-00">{valor}</span>
                                 <div className="relative w-10 h-10">
@@ -26,11 +26,11 @@ const ResumenPorNivel = ({ nivel, titulo, uniqueValues, calcularProgresoPorNivel
                                             d="M18 2.0845
                                             a 15.9155 15.9155 0 0 1 0 31.831"
                                             fill="none"
-                                            stroke="#f59e0b"
+                                            stroke="#2dd4bf"
                                             strokeWidth="4"
                                             strokeDasharray={`${progreso}, 100`}
                                         />
-                                        <text x="18" y="20.35" className="text-xs" fill="#333" textAnchor="middle" dominantBaseline="middle">
+                                        <text x="18" y="20.35" className="text-xs font-medium text-gray-400" fill="#6b7280" textAnchor="middle" dominantBaseline="middle">
                                             {progreso}%
                                         </text>
                                     </svg>

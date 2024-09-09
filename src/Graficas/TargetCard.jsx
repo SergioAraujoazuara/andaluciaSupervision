@@ -4,40 +4,43 @@ import { FaCalendarCheck } from "react-icons/fa6";
 import { FaRegCheckCircle } from "react-icons/fa";
 
 const TargetCard = ({ title, value, message }) => {
-  
+
   return (
     <div className="flex flex-col justify-center items-center text-center px-8 py-4 bg-gray-200
     rounded-lg shadow-lg">
-      <div className="text-sm font-semibold text-gray-600 flex items-center gap-2">
+      <div className="text-md font-medium text-gray-600 flex flex-col items-center gap-1">
         <span>
           {title == "Items inspeccionados:" ? (
-            <FaSitemap />
+            <FaSitemap className='text-2xl' />
           ) : (
             ""
           )}
 
           {title == "Inspecciones finalizadas:" ? (
-            <FaCalendarCheck />
+            <FaCalendarCheck className='text-2xl' />
           ) : (
             ""
           )}
           {title == "Inspecciones iniciadas:" ? (
-            <FaRegCheckCircle />
+            <FaRegCheckCircle className='text-2xl' />
           ) : (
             ""
           )}
         </span>
 
-        <span>{title}</span>
-        
+        <div className='flex gap-2'>
 
-        {value}
-      </div>
-      <div className="text-2xl font-bold text-gray-900">
+          <span>{title}</span>
 
-      </div>
-      <div className="text-md font-light text-gray-600  text-sm mt-2">
-        {message}
+
+          {value}
+
+
+        </div>
+        <div className="text-md font-light text-gray-600  text-sm">
+          {message}
+        </div>
+
       </div>
     </div>
   );
