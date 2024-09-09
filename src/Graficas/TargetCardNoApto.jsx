@@ -1,6 +1,6 @@
 import React from 'react';
 import TargetCard from '../Graficas/TargetCard'; // Asegúrate de tener este componente para reutilizar estilos o contenido si es necesario
-import { RxCrossCircled } from "react-icons/rx";
+import { RiCalendarCloseLine } from "react-icons/ri";
 
 const TargetCardNoApto = ({ title, value, message, icon }) => {
     return (
@@ -8,7 +8,7 @@ const TargetCardNoApto = ({ title, value, message, icon }) => {
             {/* Icono y título */}
             <div className="text-sm font-semibold text-gray-600 flex items-center gap-2">
                 <span>
-                    <RxCrossCircled className='text-red-800 text-lg'/> {/* Mostrar el icono proporcionado */}
+                    <RiCalendarCloseLine className='text-red-800 text-lg'/> {/* Mostrar el icono proporcionado */}
                 </span>
                 <span className='text-red-800'>{title}: </span>
                 <span className='text-red-800'> {value}</span>

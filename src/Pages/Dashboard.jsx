@@ -8,16 +8,13 @@ import { SiBim } from "react-icons/si";
 import { useNavigate } from 'react-router-dom';
 import { IoArrowBackCircle } from "react-icons/io5";
 
+
 // Importación de componentes personalizados
-import GraficaProgresoGeneral from '../Graficas/GraficaProgresoGeneral';
 import GraficaAptosPorSector from '../Graficas/GraficaAptosPorSector ';
 import GraficaNoAptosPorSector from '../Graficas//GraficaNoAptosPorSector ';
 import ResumenPorNivel from '../Graficas/ResumenPorNivel';
 import TargetCard from '../Graficas/TargetCard';
-import LeafletMap from '../Graficas/LeafletMap';
 import FiltrosDashboard from '../Components/Filtros/FiltrosDashboard';
-import FiltrosTabla from '../Components/Filtros/FiltrosTabla';
-import VistaTabla from '../Components/Vistas/VistaTabla';
 import TimelineAptos from '../Graficas/TimeLineAptos';
 import GraficaLotesPorSector from '../Graficas/GraficasLotesPorSector';
 import TarjetaNoAptosPorSector from '../Graficas/TarjetaNoAptosPorSector';
@@ -26,7 +23,7 @@ import TarjetaNoAptosPorSector from '../Graficas/TarjetaNoAptosPorSector';
 import { getLotes } from '../Functions/getLotes'; // Importar la función de obtención de lotes
 import { getInspections } from '../Functions/getInspections'; // Importar la función de obtención de inspecciones
 import { getNoAptos } from '../Functions/getNoAptos'; // Importar la función de obtención de inspecciones
-import TargetCardNoApto from '../Graficas/TargetCardNoApto';
+import AptoNoApto from '../Graficas/AptoNoapto';
 
 
 function Elemento() {
@@ -83,11 +80,11 @@ function Elemento() {
             });
 
             // Obtener y calcular "No Aptos" utilizando la función `getNoAptos`
-        const { noAptosPorSector, totalNoAptos } = await getNoAptos(lotesData);
+            const { noAptosPorSector, totalNoAptos } = await getNoAptos(lotesData);
 
-        // Aquí agregamos el console.log para ver el conteo de inspecciones no aptas
-        console.log('No Aptos por Sector:', noAptosPorSector);
-        console.log('Total No Aptos:', totalNoAptos);
+            // Aquí agregamos el console.log para ver el conteo de inspecciones no aptas
+            console.log('No Aptos por Sector:', noAptosPorSector);
+            console.log('Total No Aptos:', totalNoAptos);
             setNoAptosPorSector(noAptosPorSector);
             setTotalNoAptos(totalNoAptos);
         } catch (error) {
@@ -331,87 +328,94 @@ function Elemento() {
             <div className='w-full border-b-2 border-gray-200'></div>
 
             <div className='flex flex-col items-start justify-center mt-2 bg-white p-4 rounded-xl shadow-lg'>
-                    {/* Filtros para la vista de gráficos */}
-                    <FiltrosDashboard
-                        filters={filters}
-                        uniqueValues={uniqueValues}
-                        filterText={filterText}
-                        onFilterChange={handleFilterChange}
-                        onSelectChange={handleSelectChange}
-                        onClearFilters={handleClearFilters}
-                    />
+                {/* Filtros para la vista de gráficos */}
+                <FiltrosDashboard
+                    filters={filters}
+                    uniqueValues={uniqueValues}
+                    filterText={filterText}
+                    onFilterChange={handleFilterChange}
+                    onSelectChange={handleSelectChange}
+                    onClearFilters={handleClearFilters}
+                />
 
-                    <div className='w-full'>
-                        <div className='my-5 flex gap-5'>
-                            {/* TargetCards para mostrar métricas generales */}
-                            <TargetCard
-                                title="Items inspeccionados:"
-                                value={`${progresoGeneralObra}%`}
-                            />
+                <div className='w-full'>
+                    <div className='my-5 grid grid-cols-4 gap-5'>
+                        {/* TargetCards para mostrar métricas generales */}
+                        <TargetCard
+                            title="Items inspeccionados:"
+                            value={`${progresoGeneralObra}%`}
+                        />
 
 
-                            {!isSectorSelected && (
-                                <>
+                        {!isSectorSelected && (
+                            <>
 
-                                    <TargetCard title="Inspecciones finalizadas:"
-                                        value={
-                                            <div>{inspeccionesTerminadas}</div>
-                                        }
-                                        message={
-                                            <div>{`Inspecciones totales: ${totalLotes}`}</div>
-                                        } />
+                                <TargetCard title="Inspecciones finalizadas:"
+                                    value={
+                                        <div>{inspeccionesTerminadas}</div>
+                                    }
+                                    message={
+                                        <div>{`Inspecciones totales: ${totalLotes}`}</div>
+                                    } />
 
-                                    <TargetCard
-                                        title="Inspecciones iniciadas:"
-                                        value={
-                                            <div>{`${lotesIniciados}`}</div>
-                                        }
-                                        message={
-                                            <div>{`Porcentaje: ${porcentajeInspeccionesCompletadas} %`}</div>
-                                        }
-                                    />
+                                <TargetCard
+                                    title="Inspecciones iniciadas:"
+                                    value={
+                                        <div>{`${lotesIniciados}`}</div>
+                                    }
+                                    message={
+                                        <div>{`Porcentaje: ${porcentajeInspeccionesCompletadas} %`}</div>
+                                    }
+                                />
 
-                                </>
-                            )}
-                           <TarjetaNoAptosPorSector  filteredLotes={filteredLotes}/>
-                        </div>
-
-                        {/* Gráficos y mapa */}
-                        <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-4'>
-
-                            <GraficaAptosPorSector datosAptosPorSector={datosAptosPorSector} />
-                            <GraficaNoAptosPorSector filteredLotes={filteredLotes}  datosNoAptosPorSector={datosNoAptosPorSector} />
-                            <TimelineAptos filteredLotes={filteredLotes} getInspections={getInspections} />
-                            <GraficaLotesPorSector lotes={lotes} filteredLotes={filteredLotes} />
-
-                        </div>
+                            </>
+                        )}
+                        <TarjetaNoAptosPorSector filteredLotes={filteredLotes} />
                     </div>
 
-                    {/* Resumen por nivel */}
-                    {(filters.sector ? (
-                        <ResumenPorNivel
-                            nivel="sector"
-                            titulo={`Resumen del Sector: ${filters.sector}`}
-                            uniqueValues={{
-                                sector: uniqueValues.sector.filter(sector => sector === filters.sector)
-                            }}
-                            calcularProgresoPorNivel={(nivel, valor) => calcularProgresoPorNivel('sectorNombre', valor)}
-                            contarAptos={(nivel, valor) => contarAptos('sectorNombre', valor)}
-                            contarNoAptos={(nivel, valor) => contarNoAptos('sectorNombre', valor)}
-                        />
-                    ) : (
-                        <ResumenPorNivel
-                            nivel="sector"
-                            titulo="Resumen de Todos los Sectores"
-                            uniqueValues={uniqueValues}
-                            calcularProgresoPorNivel={calcularProgresoPorNivel}
-                            contarAptos={contarAptos}
-                            contarNoAptos={contarNoAptos}
-                        />
-                    ))}
+                    {/* Gráficos y mapa */}
+                    <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-4'>
+
+                        <div className='col-span-2'><TimelineAptos filteredLotes={filteredLotes} getInspections={getInspections}/></div>
+                        <div className='col-span-1'><AptoNoApto datosAptosPorSector={datosAptosPorSector} filteredLotes={filteredLotes} /></div>
+                        <div className='col-span-1'><GraficaLotesPorSector lotes={lotes} filteredLotes={filteredLotes} /></div>
+
+                        
+                        
+                        {/* <GraficaAptosPorSector datosAptosPorSector={datosAptosPorSector} />
+                        <GraficaNoAptosPorSector filteredLotes={filteredLotes} datosNoAptosPorSector={datosNoAptosPorSector} /> */}
+
+                        
+
+
+                    </div>
                 </div>
 
-           
+                {/* Resumen por nivel */}
+                {(filters.sector ? (
+                    <ResumenPorNivel
+                        nivel="sector"
+                        titulo={`Resumen del Sector: ${filters.sector}`}
+                        uniqueValues={{
+                            sector: uniqueValues.sector.filter(sector => sector === filters.sector)
+                        }}
+                        calcularProgresoPorNivel={(nivel, valor) => calcularProgresoPorNivel('sectorNombre', valor)}
+                        contarAptos={(nivel, valor) => contarAptos('sectorNombre', valor)}
+                        contarNoAptos={(nivel, valor) => contarNoAptos('sectorNombre', valor)}
+                    />
+                ) : (
+                    <ResumenPorNivel
+                        nivel="sector"
+                        titulo="Resumen de Todos los Sectores"
+                        uniqueValues={uniqueValues}
+                        calcularProgresoPorNivel={calcularProgresoPorNivel}
+                        contarAptos={contarAptos}
+                        contarNoAptos={contarNoAptos}
+                    />
+                ))}
+            </div>
+
+
         </div>
     );
 }

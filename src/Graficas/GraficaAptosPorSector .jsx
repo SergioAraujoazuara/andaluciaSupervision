@@ -63,7 +63,7 @@ const GraficaAptosPorSector = ({ datosAptosPorSector }) => {
                     backgroundColor: '#f3f4f6', // Fondo del gráfico completo
                 }}
                 width="100%"
-                height="250px"
+                height="200px"
             />
         </div>
     );
