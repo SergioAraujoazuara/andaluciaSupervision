@@ -1690,7 +1690,7 @@ function TablaPpi() {
                                         </select>
 
                                         <select value={filter} onChange={handleFilterChange} className="bg-white border rounded-md px-4 py-2">
-                                            <option value="Todos">Resultado</option>
+                                            <option value="Todos">Estatus</option>
                                             <option value="Apto" className='text-green-500'>Apto</option>
                                             <option value="No apto" className='text-red-600'>No Apto</option>
                                         </select>
@@ -1725,7 +1725,7 @@ function TablaPpi() {
                     <div className='flex gap-3 flex-col px-3 xl:p-0 mt-3'>
                         <div className="w-full rounded-xl overflow-x-auto">
                             <div>
-                                <div className="w-full bg-sky-500 text-gray-100 text-xs xl:text-sm font-medium py-3 px-3 grid grid-cols-24 items-center">
+                                <div className="w-full bg-sky-600 text-gray-100 text-xs xl:text-sm font-medium py-3 px-3 grid grid-cols-24 items-center">
                                     <div className='col-span-2 xl:col-span-1'>V</div>
                                     <div className='col-span-2 xl:col-span-1  px-2'>Nº</div>
                                     <div className="col-span-10 xl:col-span-3 flex items-center justify-start text-xs px-5">Actividad</div>
@@ -1863,7 +1863,7 @@ function TablaPpi() {
                                         .filter(subactividad => filter === 'Todos' || subactividad.resultadoInspeccion === filter)
                                         .map((subactividad, indexSubactividad) => (
                                             <div key={`subactividad-${indexActividad}-${indexSubactividad}`} className="bg-white rounded-lg shadow-md h-full flex flex-col">
-                                                <div className="flex gap-2 items-center bg-sky-500 text-gray-100 text-md py-1 h-20 px-6 font-medium rounded-t-lg">
+                                                <div className="flex gap-2 items-center bg-sky-600 text-gray-100 text-md py-1 h-20 px-6 font-medium rounded-t-lg">
                                                     <span>{subactividad.numero}</span>
                                                     <span>{subactividad.nombre}</span>
                                                 </div>
@@ -2003,16 +2003,14 @@ function TablaPpi() {
 
 
             {modalFormulario && (
-                <div className="fixed inset-0 z-50 overflow-auto flex justify-center items-center px-4">
-                    <div className="modal-overlay absolute w-full h-full bg-gray-800 opacity-90"></div>
+                <div className="fixed inset-0 z-50 flex justify-center items-center overflow-auto px-4">
+                     <div className="absolute inset-0 bg-gray-800 opacity-90"></div>
 
-                    <div className="xl:flex xl:flex-col xl:justify-center xl:w-[600px] xl:h-[800px] h-[600px] modal-container bg-white rounded-lg shadow-lg z-50 overflow-y-auto px-8 py-2"
-                    >
-
-
+                    {/* Contenedor del modal */}
+        <div className="relative bg-white rounded-lg shadow-lg z-50 w-full max-w-lg lg:max-w-2xl xl:max-w-3xl h-auto max-h-[90vh] p-8 overflow-y-auto">
                         <div className="my-6">
                             <div className='flex justify-between items-center mb-4'>
-                                <h2 className='text-center font-medium text-2xl text-gray-400 '>Formulario</h2>
+                                <h2 className='text-center font-medium text-2xl text-gray-400 w-full text-center'>Formulario</h2>
 
                                 <button
                                     onClick={() => {

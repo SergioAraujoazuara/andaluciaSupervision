@@ -24,6 +24,7 @@ import { getLotes } from '../Functions/getLotes'; // Importar la función de obt
 import { getInspections } from '../Functions/getInspections'; // Importar la función de obtención de inspecciones
 import { getNoAptos } from '../Functions/getNoAptos'; // Importar la función de obtención de inspecciones
 import AptoNoApto from '../Graficas/AptoNoapto';
+import ModalResumenSector from '../Graficas/ModalResumenSector';
 
 
 function Elemento() {
@@ -292,6 +293,23 @@ function Elemento() {
     // Verifica si se seleccionó un sector específico
     const isSectorSelected = filters.sector !== '';
 
+
+
+
+    // Modal de cards sector
+    const [isModalOpen, setIsModalOpen] = useState(false); 
+    // Función para abrir el modal
+    const handleOpenModal = (sector) => {
+        setSectorSeleccionado(sector); // Establece el sector seleccionado
+        setIsModalOpen(true); // Abre el modal
+    };
+
+    // Función para cerrar el modal
+    const handleCloseModal = () => {
+        setIsModalOpen(false); // Cierra el modal
+        setSectorSeleccionado(''); // Reinicia el sector seleccionado
+    };
+
     return (
         <div className='container mx-auto min-h-screen xl:px-14 py-2'>
             {/* Barra de navegación */}
@@ -339,27 +357,28 @@ function Elemento() {
                 />
 
                 <div className='w-full'>
-                    <div className='my-5 grid grid-cols-4 gap-5'>
+                    <div className='my-5 grid xl:grid-cols-4 grid-cols-1 gap-5'>
                         {/* TargetCards para mostrar métricas generales */}
                         <TargetCard
-                            title="Items inspeccionados:"
+                            title="Inspecciones realizadas:"
                             value={`${progresoGeneralObra}%`}
                         />
+                         <TarjetaNoAptosPorSector filteredLotes={filteredLotes} />
 
 
                         {!isSectorSelected && (
                             <>
 
-                                <TargetCard title="Inspecciones finalizadas:"
+                                <TargetCard title="Lotes finalizados:"
                                     value={
                                         <div>{inspeccionesTerminadas}</div>
                                     }
                                     message={
-                                        <div>{`Inspecciones totales: ${totalLotes}`}</div>
+                                        <div>{`Lotes totales: ${totalLotes}`}</div>
                                     } />
 
                                 <TargetCard
-                                    title="Inspecciones iniciadas:"
+                                    title="Lotes iniciados:"
                                     value={
                                         <div>{`${lotesIniciados}`}</div>
                                     }
@@ -370,15 +389,15 @@ function Elemento() {
 
                             </>
                         )}
-                        <TarjetaNoAptosPorSector filteredLotes={filteredLotes} />
+                       
                     </div>
 
                     {/* Gráficos y mapa */}
-                    <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-4'>
+                    <div className='grid grid-cols-1 xl:grid-cols-4 gap-4 mb-4'>
 
-                        <div className='col-span-2'><TimelineAptos filteredLotes={filteredLotes} getInspections={getInspections}/></div>
-                        <div className='col-span-1'><AptoNoApto datosAptosPorSector={datosAptosPorSector} filteredLotes={filteredLotes} /></div>
-                        <div className='col-span-1'><GraficaLotesPorSector lotes={lotes} filteredLotes={filteredLotes} /></div>
+                        <div className='xl:col-span-2'><TimelineAptos filteredLotes={filteredLotes} getInspections={getInspections}/></div>
+                        <div className='xl:col-span-1'><AptoNoApto datosAptosPorSector={datosAptosPorSector} filteredLotes={filteredLotes} /></div>
+                        <div className='xl:col-span-1'><GraficaLotesPorSector lotes={lotes} filteredLotes={filteredLotes} /></div>
 
                         
                         
@@ -391,28 +410,26 @@ function Elemento() {
                     </div>
                 </div>
 
-                {/* Resumen por nivel */}
-                {(filters.sector ? (
-                    <ResumenPorNivel
-                        nivel="sector"
-                        titulo={`Resumen del Sector: ${filters.sector}`}
-                        uniqueValues={{
-                            sector: uniqueValues.sector.filter(sector => sector === filters.sector)
-                        }}
-                        calcularProgresoPorNivel={(nivel, valor) => calcularProgresoPorNivel('sectorNombre', valor)}
-                        contarAptos={(nivel, valor) => contarAptos('sectorNombre', valor)}
-                        contarNoAptos={(nivel, valor) => contarNoAptos('sectorNombre', valor)}
-                    />
-                ) : (
-                    <ResumenPorNivel
-                        nivel="sector"
-                        titulo="Resumen de Todos los Sectores"
-                        uniqueValues={uniqueValues}
-                        calcularProgresoPorNivel={calcularProgresoPorNivel}
-                        contarAptos={contarAptos}
-                        contarNoAptos={contarNoAptos}
-                    />
-                ))}
+                 {/* Resumen por nivel */}
+            <ResumenPorNivel
+                nivel="sector"
+                titulo="Resumen de Todos los Sectores"
+                uniqueValues={uniqueValues} // Asegúrate de pasar los valores únicos correctamente
+                calcularProgresoPorNivel={calcularProgresoPorNivel}
+                contarAptos={contarAptos}
+                contarNoAptos={contarNoAptos}
+                onClick={handleOpenModal} // Pasa la función como prop
+            />
+
+            {/* Modal de Resumen de Sector */}
+            <ModalResumenSector
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                sectorSeleccionado={sectorSeleccionado}
+                datosAptosPorSector={datosAptosPorSector} filteredLotes={filteredLotes} lotes={lotes}
+                getInspections={getInspections}
+                calcularProgresoPorNivel={calcularProgresoPorNivel}
+            />
             </div>
 
 

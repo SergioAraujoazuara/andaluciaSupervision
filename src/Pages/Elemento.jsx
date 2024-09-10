@@ -313,7 +313,7 @@ function Elemento() {
 
                     <div className='flex gap-3'>
 
-                        <button
+                        {/* <button
                             className="px-4 py-2 bg-gray-300 rounded-full text-gray-700 hover:bg-gray-400 transition-colors"
                             onClick={() => setActiveView('tabla')}
                         >
@@ -324,7 +324,7 @@ function Elemento() {
                             onClick={() => setActiveView('graficas')}
                         >
                             <FaChartPie />
-                        </button>
+                        </button> */}
                         <div >
                             <Link to={'/visor_inspeccion'}>
                                 <button className='text-white bg-sky-600 flex items-center px-4 py-2 rounded-lg'>

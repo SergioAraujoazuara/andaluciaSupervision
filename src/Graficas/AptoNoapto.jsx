@@ -3,6 +3,7 @@ import { Chart } from "react-google-charts";
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase_config';
 import { MdFullscreen, MdFullscreenExit } from 'react-icons/md'; // Importar íconos
+import { IoIosCloseCircle } from "react-icons/io";
 
 const AptoNoApto = ({ datosAptosPorSector, filteredLotes }) => {
     // Estados del componente
@@ -172,13 +173,13 @@ const AptoNoApto = ({ datosAptosPorSector, filteredLotes }) => {
             {/* Modal para pantalla completa */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-4xl h-5/6 relative overflow-hidden flex flex-col justify-between">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-4xl xl:h-5/6 h-4/6 relative overflow-hidden flex flex-col justify-between">
                         {/* Botón de cerrar */}
-                        <button
+                        <IoIosCloseCircle
                             onClick={toggleModal}
-                            className="absolute top-4 right-4 bg-gray-400 text-white px-3 py-2 rounded hover:bg-gray-500 transition">
+                            className="absolute top-4 right-2 text-2xl">
                             Cerrar
-                        </button>
+                        </IoIosCloseCircle>
 
                         {/* Título y selector de sector */}
                         <div className='flex flex-col gap-4 justify-center items-center w-full mb-4'>
