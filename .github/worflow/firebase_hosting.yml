@@ -23,9 +23,9 @@ jobs:
       - name: Build
         # Asegúrate de que las variables de entorno estén disponibles durante el proceso de build
         env:
-          VITE_GROQ_API_KEY: ${{ secrets.VITE_GROQ_API_KEY }}
+          VITE_GROQ_API_KEY: ${{ secrets.VITE_GROQ_API_KEY }}  # Correctamente configurado
         run: npm run build
- 
+        
       - name: Set Channel ID for Preview Deployments
         if: github.ref != 'refs/heads/main'
         run: echo "CHANNEL_ID=$(echo ${GITHUB_REF#refs/heads/} | sed 's/[^a-zA-Z0-9]/-/g')-preview" >> $GITHUB_ENV
