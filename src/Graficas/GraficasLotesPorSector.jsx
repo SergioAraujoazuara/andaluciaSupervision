@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Chart } from 'react-google-charts';
 import { MdFullscreen, MdFullscreenExit } from 'react-icons/md'; // Importar íconos
+import { IoIosCloseCircle } from "react-icons/io";
 
 const GraficaLotesPorSector = ({ filteredLotes }) => {
   const [datosLotesPorSector, setDatosLotesPorSector] = useState([]);
@@ -70,7 +71,7 @@ const GraficaLotesPorSector = ({ filteredLotes }) => {
       {/* Filtro de sector */}
       <div className='flex flex-col gap-2 justify-between items-center w-full mb-1'>
         <div className='w-full bg-gray-200 p-2 rounded-t-xl flex justify-between items-center'>
-          <p className='font-medium flex-grow text-center'>Comparativa sectores</p>
+          <p className='font-medium flex-grow text-center'>Lotes por sector</p>
           {/* Botón de pantalla completa */}
           <MdFullscreen onClick={toggleModal} className='cursor-pointer text-gray-600 text-2xl hover:text-gray-800 transition' />
         </div>
@@ -103,19 +104,19 @@ const GraficaLotesPorSector = ({ filteredLotes }) => {
       {/* Modal para pantalla completa */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-4xl h-5/6 relative overflow-hidden flex flex-col justify-between">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-4xl xl:h-5/6 h-4/6 relative overflow-hidden flex flex-col justify-between">
             {/* Botón de cerrar */}
-            <button
-              onClick={toggleModal}
-              className="absolute top-4 right-4 bg-gray-400 text-white px-3 py-2 rounded hover:bg-gray-500 transition">
-              Cerrar
-            </button>
+            <IoIosCloseCircle
+                            onClick={toggleModal}
+                            className="absolute top-4 right-2 text-2xl">
+                            
+                        </IoIosCloseCircle>
 
             {/* Título y selector de sector */}
             <div className='flex flex-col gap-4 justify-center items-center w-full mb-4'>
               <div className='flex justify-between items-center w-full mb-4 px-4'>
                 {/* Título centrado */}
-                <p className='font-bold text-2xl flex-grow text-center'>Comparativa sectores</p>
+                <p className='font-bold text-2xl flex-grow text-center'>Lotes por sector</p>
               </div>
 
               {/* Selector de sectores dentro del modal */}

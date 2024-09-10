@@ -96,14 +96,14 @@ const Navbar = () => {
                   />
                 )}
 
-                {(userRol === 'admin' || userRol === 'usuario') && (
+                {/* {(userRol === 'admin' || userRol === 'usuario') && (
                   <NavLink
                     to="/auscultacion"
                     linkName="Auscultación"
                     activeLink={activeLink}
                     handleLinkClick={handleLinkClick}
                   />
-                )}
+                )} */}
 
 
                 {(userRol === 'admin' || userRol === 'usuario') && (
@@ -127,7 +127,7 @@ const Navbar = () => {
                     <FaUserAlt className=' hidden xl:block' />
                     <p className=' hidden xl:block'>{userNombre || 'Usuario'}</p>
                   </div>
-                  <div className="relative bg-sky-500 text-white px-4 py-2 rounded-lg">
+                  <div className="relative bg-sky-600 text-white px-4 py-2 rounded-lg">
                     <button className="flex items-center text-md" onClick={toggleLogoutConfirmation}>
                       {showLogoutConfirmation ? <span className='text-xl flex items-center'><IoIosSettings /></span> : <span className='text-md'>Salir</span>}
                     </button>

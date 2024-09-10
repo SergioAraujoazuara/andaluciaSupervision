@@ -1453,7 +1453,7 @@ export default function ViewerInspeccion() {
                 <div className="xl:w-1/2 w-full xl:pr-5">
                     {selectedLote ? (
                         <div className="rounded-lg]">
-                            <div className="bg-sky-500 px-5 py-2 font-bold text-white text-lg rounded-t-lg">Información del Lote</div>
+                            <div className="bg-sky-600 px-5 py-2 font-bold text-white text-lg rounded-t-lg">Información del Lote</div>
 
                             <div className='px-5 py-5 text-sm grid grid-cols-2 bg-white shadow-lg rounded-lg  text-gray-500'>
 
@@ -1473,7 +1473,7 @@ export default function ViewerInspeccion() {
 
                             </div>
                             <div className="overflow-y-auto h-[500px]">
-                                <div className="bg-sky-500 px-4 py-2 font-bold text-white mt-3 rounded-t-lg">Avance de la inspección</div>
+                                <div className="bg-sky-600 px-4 py-2 font-bold text-white mt-3 rounded-t-lg">Avance de la inspección</div>
                                 <div className="w-full bg-gray-300 text-gray-500 text-xs xl:text-sm font-medium py-3 px-3 grid grid-cols-24 items-center">
                                     <div className="col-span-1 xl:col-span-2 text-center">V</div>
                                     <div className="col-span-1 xl:col-span-1 px-2 text-center">Nº</div>
@@ -1543,7 +1543,7 @@ export default function ViewerInspeccion() {
                     ) : (
                         <div>
 
-                            <div className="bg-sky-500 font-medium px-5 py-2 rounded-t-lg text-lg  text-white">
+                            <div className="bg-sky-600 font-medium px-5 py-2 rounded-t-lg text-lg  text-white">
                                 Elemento seleccionado
                             </div>
 
@@ -1571,7 +1571,7 @@ export default function ViewerInspeccion() {
                     )}
                 </div>
                 <div className='xl:w-1/2 w-full'>
-                    <div className="bg-sky-500 px-5 py-2 font-bold text-white text-lg rounded-t-lg">Visor BIM</div>
+                    <div className="bg-sky-600 px-5 py-2 font-bold text-gray-200 text-lg rounded-t-lg">Visor BIM</div>
                     <div id="viewerContainer" style={viewerContainerStyle}></div>
                     <div className='bg-white px-4 py-2 mb-2 rounded-xl mt-4 '>
                         {actividadesAptas && (

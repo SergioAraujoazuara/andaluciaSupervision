@@ -10,18 +10,18 @@ const TargetCard = ({ title, value, message }) => {
     rounded-lg shadow-lg">
       <div className="text-md font-medium text-gray-600 flex flex-col items-center gap-1">
         <span>
-          {title == "Items inspeccionados:" ? (
+          {title == "Inspecciones realizadas:" ? (
             <FaSitemap className='text-2xl' />
           ) : (
             ""
           )}
 
-          {title == "Inspecciones finalizadas:" ? (
+          {title == "Lotes finalizados:" ? (
             <FaCalendarCheck className='text-2xl' />
           ) : (
             ""
           )}
-          {title == "Inspecciones iniciadas:" ? (
+          {title == "Lotes iniciados:" ? (
             <FaRegCheckCircle className='text-2xl' />
           ) : (
             ""

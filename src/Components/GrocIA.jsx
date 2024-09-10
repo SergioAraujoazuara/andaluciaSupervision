@@ -13,7 +13,7 @@ const GrocIA = ({ loteInfo, setInputGroc, setLocalObservaciones }) => {
     };
 
     // Código de configuración GROQ IA
-    const GROQ_API_KEY = import.meta.env.VITE_API_KEY;
+    const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
     const groq = new Groq({ apiKey: GROQ_API_KEY, dangerouslyAllowBrowser: true });
 
     // Variable que debe conectar con el input del front
@@ -31,11 +31,15 @@ const GrocIA = ({ loteInfo, setInputGroc, setLocalObservaciones }) => {
             messages: [
                 {
                     role: "user",
-                    content: `Eres un experto en supervisiones de obra. Redacta los siguientes puntos ${content}. No comiences el mensaje con saludos ni explicaciones. 
-                    El texto será el contenido de un informe de supervisión para el cliente final, el tono tiene que ser formal e impersonal. `,
+                    content: `Eres un experto en supervisiones de obra. Redacta solo los siguientes puntos ${content}, no incluyas mas puntos que no sean los anteriores,
+                    ni incluyas mas información sobre actividades que no te haya facilitado,
+                    no comiences el mensaje con saludos ni explicaciones. 
+                    No incluyas titulos, subtitulos, separacion de parrafos.
+                    El texto será el contenido de un informe de supervisión para el cliente final, el tono tiene que ser formal e impersonal. 
+                    No alucines en el resultado`,
                 },
             ],
-            model: "llama3-8b-8192",
+            model: "llama-3.1-8b-instant",
         });
     }
 

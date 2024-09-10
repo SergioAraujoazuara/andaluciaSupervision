@@ -1,17 +1,20 @@
 import React from 'react';
 
-const ResumenPorNivel = ({ nivel, titulo, uniqueValues, calcularProgresoPorNivel, contarAptos, contarNoAptos }) => {
+const ResumenPorNivel = ({ nivel, titulo, uniqueValues, calcularProgresoPorNivel, contarAptos, contarNoAptos, onClick }) => {
     return (
-        <div className="w-full mb-8 ">
-            {/* <h3 className="w-full bg-sky-600 text-white text-lg font-semibold px-4 py-2 rounded-t-lg">{titulo}</h3> */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 ">
+        <div className="w-full mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                 {uniqueValues[nivel].map((valor, index) => {
                     const progreso = calcularProgresoPorNivel(`${nivel}Nombre`, valor);
 
                     return (
-                        <div key={index} className="bg-gray-100 text-gray-500 rounded-lg p-4 shadow-xl hover:shadow-lg transition-shadow bg-gray-100">
+                        <div 
+                            key={index} 
+                            className="bg-gray-100 text-gray-500 rounded-lg p-4 shadow-xl hover:shadow-lg transition-shadow cursor-pointer" // Añade cursor-pointer
+                            onClick={() => onClick(valor)} // Llama a la función onClick con el valor del sector
+                        >
                             <div className="flex items-center justify-between mb-4">
-                                <span className="text-md font-semibold text-gray-00">{valor}</span>
+                                <span className="text-md font-semibold text-gray-900">{valor}</span>
                                 <div className="relative w-10 h-10">
                                     <svg viewBox="0 0 36 36" className="w-full h-full">
                                         <path

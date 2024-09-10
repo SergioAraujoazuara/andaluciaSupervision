@@ -269,7 +269,7 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
             {
                 mostrarConfirmacion && (
                     <div className="fixed inset-0 z-50 flex justify-center items-center bg-gray-800 bg-opacity-90 text-gray-500 fonmt-medium text-center p-4">
-                        <div className="mx-auto w-[600px] h-[600px]  bg-white mx-auto rounded-lg shadow-lg z-50 overflow-y-auto px-8 py-8">
+                        <div className="relative bg-white rounded-lg shadow-lg z-50 w-full max-w-lg lg:max-w-2xl xl:max-w-3xl h-auto max-h-[90vh] p-8 overflow-y-auto">
 
                             <div>
                                 {resultadoInspeccion && (

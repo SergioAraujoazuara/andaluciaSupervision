@@ -302,7 +302,7 @@ export default function Viewer_admin() {
 
                 <div className=''>
                     <div className="bg-white rounded-lg mb-4">
-                        <div className="bg-sky-500 text-white px-4 py-2 font-bold text-gray-500 rounded-t-lg">Elemento seleccionado</div>
+                        <div className="bg-sky-600 text-white px-4 py-2 font-bold text-gray-500 rounded-t-lg">Elemento seleccionado</div>
                         <div className='text-sm px-4 py-3 flex flex-col gap-3'>
                             <p><strong className='text-gray-500'>Global id:</strong> <span className='font-normal bg-gray-400 rounded-lg px-4 py-1 text-white text-sm'>{selectedGlobalId || 'Sin seleccionar'}</span></p>
 
@@ -314,7 +314,7 @@ export default function Viewer_admin() {
 
 
                     <div className="bg-white rounded-lg mb-4">
-                        <div className="bg-sky-500 px-4 py-2 font-bold text-white rounded-t-lg">Lotes disponibles</div>
+                        <div className="bg-sky-600 px-4 py-2 font-bold text-white rounded-t-lg">Lotes disponibles</div>
                         <div className="flex justify-between items-center px-4 py-3">
                             <div className="flex-grow pr-2">
                                 <select onChange={handleSelectLote} value={selectedLote}
@@ -351,7 +351,7 @@ export default function Viewer_admin() {
                         {selectedLote ? (
                             <>
                                 <div className="bg-gray-100 rounded-lg">
-                                    <div className="bg-sky-500 px-4 py-2 font-bold text-white rounded-t-lg">Información del Lote</div>
+                                    <div className="bg-sky-600 px-4 py-2 font-bold text-white rounded-t-lg">Información del Lote</div>
                                     <div className='text-sm px-4 py-2'>
                                         <div className="flex items-center justify-between">
                                             <p className={`font-medium ps-1 ${selectedLote?.globalId ? 'text-green-600' : 'text-amber-600'}`}>
