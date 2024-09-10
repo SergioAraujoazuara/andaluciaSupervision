@@ -5,6 +5,7 @@ import { db } from '../../firebase_config';
 import { RiLoader2Line } from "react-icons/ri";
 import { MdFullscreen } from "react-icons/md";
 import { IoIosCloseCircle } from "react-icons/io";
+
 const CompanyPerformanceChart = ({ filteredLotes }) => {
     const [datosSubactividades, setDatosSubactividades] = useState([]);
     const [sectorSeleccionado, setSectorSeleccionado] = useState('Todos');
@@ -94,19 +95,22 @@ const CompanyPerformanceChart = ({ filteredLotes }) => {
     const datosProcesados = procesarDatos();
 
     const combinarDatos = () => {
-        const sectores = Object.keys(datosProcesados);
-        if (sectores.length === 0) return [['Fecha', 'Apto', 'No apto']];
-
         const fechas = [...new Set(datosSubactividades.map(item => item.fecha))];
-        const datosCombinados = [['Fecha', ...sectores.flatMap(sector => [`${sector} Apto`, `${sector} No apto`])]];
+        const datosCombinados = [['Fecha', 'Apto', 'No apto']];
 
         fechas.forEach((fecha) => {
-            const fila = [fecha];
-            sectores.forEach((sector) => {
-                const datosFecha = datosProcesados[sector].find(row => row[0] === fecha) || [fecha, 0, 0];
-                fila.push(datosFecha[1], datosFecha[2]);
+            let totalApto = 0;
+            let totalNoApto = 0;
+
+            Object.keys(datosProcesados).forEach((sector) => {
+                const datosFecha = datosProcesados[sector].find(row => row[0] === fecha);
+                if (datosFecha) {
+                    totalApto += datosFecha[1];
+                    totalNoApto += datosFecha[2];
+                }
             });
-            datosCombinados.push(fila);
+
+            datosCombinados.push([fecha, totalApto, totalNoApto]);
         });
 
         return datosCombinados;
@@ -170,7 +174,6 @@ const CompanyPerformanceChart = ({ filteredLotes }) => {
         setIsModalOpen(!isModalOpen);  // Función para abrir/cerrar el modal
     };
 
-
     return (
         <div className='bg-gray-100 rounded-lg shadow-lg text-gray-500'>
             <div className='flex flex-col gap-2 justify-between items-center w-full mb-1'>
@@ -183,7 +186,6 @@ const CompanyPerformanceChart = ({ filteredLotes }) => {
                     <MdFullscreen onClick={toggleModal} className='cursor-pointer text-xl' />
                 </div>
             </div>
-
 
             <div className='py-2 px-4 flex flex-col items-center'>
                 <div>
@@ -269,12 +271,7 @@ const CompanyPerformanceChart = ({ filteredLotes }) => {
                     </div>
                 </div>
             )}
-
-
-
         </div>
-
-
     );
 };
 

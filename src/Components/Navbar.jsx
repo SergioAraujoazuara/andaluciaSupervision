@@ -54,7 +54,7 @@ const Navbar = () => {
   const isAuthTabs = location.pathname === '/authTabs';
 
   return (
-    <nav className="bg-gray-100 shadow">
+    <nav className="bg-teal-400 shadow">
       <div className="container mx-auto ps-0 pr-4 xl:px-10">
         <div className="flex justify-between items-center h-24">
           <div className="flex items-center gap-10">
