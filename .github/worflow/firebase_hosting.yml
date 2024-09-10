@@ -20,16 +20,10 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Paso de depuración de variables de entorno para verificar si el secreto se está estableciendo correctamente
-      - name: Debug Environment Variables
-        run: echo "VITE_GROQ: $VITE_GROQ"
-        env:
-          VITE_GROQ: ${{ secrets.VITE_GROQ }}  # Asegúrate de que esta línea esté configurada correctamente
-
       - name: Build
         # Asegúrate de que las variables de entorno estén disponibles durante el proceso de build
         env:
-          VITE_GROQ: ${{ secrets.VITE_GROQ }}
+          VITE_GROQ_API_KEY: ${{ secrets.VITE_GROQ }}  # Aquí asegúrate de que el nombre del secreto sea el correcto y esté definido en GitHub Secrets
         run: npm run build
 
       - name: Set Channel ID for Preview Deployments
