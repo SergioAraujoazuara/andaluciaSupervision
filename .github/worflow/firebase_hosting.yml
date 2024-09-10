@@ -8,9 +8,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:  # Configurar variables de entorno globales
-      VITE_GROQ_API_KEY: ${{ secrets.VITE_GROQ_API_KEY }}  # Correctamente configurado
-      
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -25,7 +22,7 @@ jobs:
  
       - name: Build
         run: npm run build
-        
+ 
       - name: Set Channel ID for Preview Deployments
         if: github.ref != 'refs/heads/main'
         run: echo "CHANNEL_ID=$(echo ${GITHUB_REF#refs/heads/} | sed 's/[^a-zA-Z0-9]/-/g')-preview" >> $GITHUB_ENV
@@ -44,8 +41,10 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
+
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_INSPECCION_65654 }}'
-          projectId: inspeccionadif-65654
+
+          projectId:  inspeccionadif-65654
           channelId: ${{ env.CHANNEL_ID }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
