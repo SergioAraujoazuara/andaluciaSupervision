@@ -13,9 +13,9 @@ const GrocIA = ({ loteInfo, setInputGroc, setLocalObservaciones }) => {
     };
 
     // Código de configuración GROQ IA
-    const GROQ = import.meta.env.VITE_GROQ;
+    const GROQ = "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";
     const groq = new Groq({ apiKey: GROQ, dangerouslyAllowBrowser: true });
-    console.log(GROQ, '********************* GROC')
+    
 
     // Variable que debe conectar con el input del front
     const main = async (content) => {
