@@ -346,7 +346,7 @@ function Elemento() {
 
             {/* Condicional para mostrar la vista de tabla */}
             {activeView === 'tabla' && (
-                <div className='flex flex-col items-start justify-center mt-2 bg-white p-4 rounded-xl shadow-lg'>
+                <div className='flex flex-col items-start justify-center mt-2 bg-white p-4 rounded-xl'>
                     {/* Filtros para la vista de tabla */}
                     <FiltrosTabla
                         filters={filters}
@@ -368,6 +368,8 @@ function Elemento() {
                     />
                 </div>
             )}
+
+            
 
             {/* Condicional para mostrar la vista de gráficos */}
             {activeView === 'graficas' && (

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 const VistaTabla = ({ filteredLotes, showSector, handleCaptrurarTrazabilidad, isTableView }) => {
     return  (
         <div className="w-full rounded-xl mt-5">
-            <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200'>
+            <div className='grid sm:grid-cols-12 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-200 rounded-t-xl'>
                 {showSector &&
                     <div className='text-left font-medium text-gray-600 sm:block hidden px-2'>
                         Sector

@@ -345,7 +345,7 @@ function Elemento() {
 
             <div className='w-full border-b-2 border-gray-200'></div>
 
-            <div className='flex flex-col items-start justify-center mt-2 bg-white p-4 rounded-xl shadow-lg'>
+            <div className='flex flex-col items-start justify-center mt-2 bg-white p-4 rounded-xl'>
                 {/* Filtros para la vista de gráficos */}
                 <FiltrosDashboard
                     filters={filters}
