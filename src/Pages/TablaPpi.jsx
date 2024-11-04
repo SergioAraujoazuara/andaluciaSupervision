@@ -27,6 +27,7 @@ import imageCompression from 'browser-image-compression';
 import { IoArrowBackCircle } from "react-icons/io5";
 import { useAuth } from '../context/authContext';
 import { TiLockClosedOutline } from "react-icons/ti";
+import PdfListViewer from '../Components/FeatureSendMail/PdfListViewer';
 
 
 function TablaPpi() {
@@ -1705,6 +1706,8 @@ function TablaPpi() {
                                         </button>
                                     </div>
 
+                                    <div><PdfListViewer/></div>
+
                                 </div>
 
                                 <div className='flex-col xl:flex-row gap-2 flex items-start xl:items-center'>
@@ -1964,9 +1967,6 @@ function TablaPpi() {
                 )}
 
             </div>
-
-
-
 
 
 
@@ -2305,6 +2305,8 @@ function TablaPpi() {
                                 allowPdfGeneration={allowPdfGeneration}
                                 setAllowPdfGeneration={setAllowPdfGeneration}
                                 setShowConfirmModal={setShowConfirmModal}
+                                user= {user}
+                                userName= {userName}
                             />
                         </div>
 

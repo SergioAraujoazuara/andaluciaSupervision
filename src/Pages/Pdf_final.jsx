@@ -3,6 +3,8 @@ import { Document, Page, Text, View, StyleSheet, Image, pdf } from '@react-pdf/r
 import { PDFDocument } from 'pdf-lib';
 import { MdAttachFile } from "react-icons/md";
 import { FaFilePdf } from "react-icons/fa6";
+import { sendEmail } from '../Components/FeatureSendMail/emaiService';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const styles = StyleSheet.create({
     page: {
@@ -87,7 +89,7 @@ const styles = StyleSheet.create({
     },
 });
 
-const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, imagenPath2, setShowConfirmModal }) => {
+const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, imagenPath2, setShowConfirmModal, user, userName }) => {
     const [pdfBlob, setPdfBlob] = useState(null);
     const [loading, setLoading] = useState(true);
     const [additionalFiles, setAdditionalFiles] = useState([]);
@@ -104,11 +106,99 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         setShowConfirmationModal(false);
     };
 
-    const confirmPDFCreation = () => {
-        combinePDFs();
-        closeConfirmationModal();
-        setShowConfirmModal(false)
+    // Inicializa Firebase Storage
+    const storage = getStorage();
+
+    const uploadPdfToFirebase = async (pdfBytes, filename) => {
+        // Obtén la fecha y hora locales en formato legible (YYYYMMDD_HHMMSS)
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+
+        const formattedDate = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+        const uniqueFilename = `${filename}_${formattedDate}.pdf`;
+        const storageRef = ref(storage, `inspeccion/informes/pdf/${uniqueFilename}`);
+        const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+        // Metadatos con la fecha de subida en UTC (opcional para mantener una referencia de la hora global)
+        const metadata = {
+            customMetadata: {
+                uploadDate: date.toISOString(), // La fecha en UTC para referencia
+            },
+        };
+
+        try {
+            await uploadBytes(storageRef, pdfBlob, metadata);
+            const downloadURL = await getDownloadURL(storageRef);
+            console.log('Archivo subido exitosamente:', downloadURL);
+            return downloadURL;
+        } catch (error) {
+            console.error('Error al subir el archivo:', error);
+        }
     };
+
+
+
+
+
+
+    const confirmPDFCreation = async () => {
+        try {
+            // Combina PDFs y sube el resultado a Firebase
+            const downloadURL = await combinePDFs(); // Asegúrate de que `combinePDFs` retorne la URL
+            closeConfirmationModal();
+            setShowConfirmModal(false);
+            // Descarga el PDF automáticamente
+            downloadPDF(downloadURL, `${ppiname}_${lote}`);
+            // Envía el correo con la URL del PDF
+            sendEmail(nombreProyecto, ppi.nombre, obra, tramo, userName, user.email, downloadURL);
+            console.log('Correo enviado con éxito:', { nombreProyecto, ppi: ppi.nombre, obra, tramo, userName, userEmail: user.email, downloadURL });
+        } catch (error) {
+            console.error('Error al crear o subir el PDF:', error);
+        }
+    };
+    const downloadPDF = (downloadURL) => {
+        const link = document.createElement('a');
+        link.href = downloadURL;
+        link.target = '_blank'; // Abre en una nueva pestaña o ventana
+        link.click();
+    };
+    
+
+
+    const combinePDFs = async () => {
+        if (!pdfBlob) {
+            console.error("Falta el PDF inicial.");
+            return;
+        }
+
+        const mergedPdf = await PDFDocument.create();
+        const pdfBytes = await pdfBlob.arrayBuffer();
+        const existingPdfDoc = await PDFDocument.load(pdfBytes);
+
+        const copiedPages = await mergedPdf.copyPages(existingPdfDoc, existingPdfDoc.getPageIndices());
+        copiedPages.forEach(page => mergedPdf.addPage(page));
+
+        if (additionalFiles.length > 0) {
+            for (const file of additionalFiles) {
+                const arrayBuffer = await readFileAsArrayBuffer(file.file);
+                const newPdfDoc = await PDFDocument.load(arrayBuffer);
+                const newPages = await mergedPdf.copyPages(newPdfDoc, newPdfDoc.getPageIndices());
+                newPages.forEach(page => mergedPdf.addPage(page));
+            }
+        }
+
+        const finalPdfBytes = await mergedPdf.save();
+
+        // Sube el PDF a Firebase Storage y devuelve la URL
+        const filename = `${ppiname}_${lote}.pdf`;
+        return await uploadPdfToFirebase(finalPdfBytes, filename);
+    };
+
 
     const addMoreFiles = () => {
         setAdditionalFiles([...additionalFiles, { id: Date.now(), file: null }]);
@@ -226,31 +316,7 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         generatePdfBlob();
     }, []);
 
-    const combinePDFs = async () => {
-        if (!pdfBlob) {
-            console.error("Falta el PDF inicial.");
-            return;
-        }
 
-        const mergedPdf = await PDFDocument.create();
-        const pdfBytes = await pdfBlob.arrayBuffer();
-        const existingPdfDoc = await PDFDocument.load(pdfBytes);
-
-        const copiedPages = await mergedPdf.copyPages(existingPdfDoc, existingPdfDoc.getPageIndices());
-        copiedPages.forEach(page => mergedPdf.addPage(page));
-
-        if (additionalFiles.length > 0) {
-            for (const file of additionalFiles) {
-                const arrayBuffer = await readFileAsArrayBuffer(file.file);
-                const newPdfDoc = await PDFDocument.load(arrayBuffer);
-                const newPages = await mergedPdf.copyPages(newPdfDoc, newPdfDoc.getPageIndices());
-                newPages.forEach(page => mergedPdf.addPage(page));
-            }
-        }
-
-        const finalPdfBytes = await mergedPdf.save();
-        downloadPDF(finalPdfBytes, `${ppiname}_${lote}`);
-    };
 
     const readFileAsArrayBuffer = (file) => {
         return new Promise((resolve, reject) => {
@@ -265,13 +331,13 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         });
     };
 
-    const downloadPDF = (pdfBytes, filename) => {
-        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = filename;
-        link.click();
-    };
+    // const downloadPDF = (pdfBytes, filename) => {
+    //     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    //     const link = document.createElement('a');
+    //     link.href = URL.createObjectURL(blob);
+    //     link.download = filename;
+    //     link.click();
+    // };
 
     if (loading) {
         return (

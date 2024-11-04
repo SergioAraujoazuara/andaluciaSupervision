@@ -21,6 +21,7 @@ import Pdf_final from './Components/Pdf_final';
 import GrocIA from './Components/GrocIA.jsx';
 import Dashboard from './Pages/Dashboard.jsx';
 import Auscultacion from './Pages/Auscultacion.jsx';
+import SendMail from './Components/FeatureSendMail/SendMail.jsx';
 
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
     { path: '/', element: <Home /> },
     { path: '/authTabs', element: <AuthTabs /> },
     { path: '/groc', element: <GrocIA /> },
+    { path: '/sendEmail', element: <SendMail /> }
   ];
 
   const adminRoutes = [
