@@ -1104,7 +1104,7 @@ function TablaPpi() {
 
             // Agregar la segunda imagen y su enlace si existe
             if (documentoFormulario.imagen2) {
-                await embedBase64Image(documentoFormulario.imagen2, 50, currentY -10, 400, 300);
+                await embedBase64Image(documentoFormulario.imagen2, 50, currentY - 10, 400, 300);
                 currentY -= 310;  // Ajustar currentY para dejar espacio justo debajo de la imagen
 
                 // Agregar el enlace de Google Maps correspondiente a la segunda imagen
@@ -1200,36 +1200,41 @@ function TablaPpi() {
     const handleImageChange = async (e, setImageState, setEditState, setImageNameState, imageIdentifier) => {
         const file = e.target.files[0];
         if (!file) return;
-
+    
         // Guardar el identificador de la imagen (ej. "imagen" o "imagen2") en el estado
         setImageNameState(imageIdentifier);
         console.log("Identificador de la imagen:", imageIdentifier); // Console log para verificar el identificador
-
+    
         try {
-            // Procesar la imagen
-            const compressedFile = await compressImage(file);
-            const dataUrl = await convertToDataURL(compressedFile);
-            const resizedDataUrl = await resizeImage(dataUrl);
-
-            setImageState(resizedDataUrl);
-            setEditState(resizedDataUrl);
-
-            // Obtener las coordenadas y crear el objeto final
-            const coordenadas = await obtenerGeolocalizacion();
-            const objetoImagen = {
-                nombre: imageIdentifier,
-                ...coordenadas
-            };
-            // Actualizar el estado para incluir el nuevo objeto de imagen
-            setImagenDataCoordinates((prevData) => [...prevData, objetoImagen]);
-
-
-            console.log("Objeto de imagen con coordenadas:", objetoImagen); // Ver en la consola
-
+            if (isCampo) {
+                // Si "campo" está seleccionado, procesar la imagen y obtener las coordenadas
+                const compressedFile = await compressImage(file);
+                const dataUrl = await convertToDataURL(compressedFile);
+                const resizedDataUrl = await resizeImage(dataUrl);
+    
+                setImageState(resizedDataUrl);
+                setEditState(resizedDataUrl);
+    
+                // Obtener las coordenadas y crear el objeto final
+                const coordenadas = await obtenerGeolocalizacion();
+                const objetoImagen = {
+                    nombre: imageIdentifier,
+                    ...coordenadas
+                };
+    
+                // Actualizar el estado para incluir el nuevo objeto de imagen
+                setImagenDataCoordinates((prevData) => [...prevData, objetoImagen]);
+    
+                console.log("Objeto de imagen con coordenadas:", objetoImagen); // Ver en la consola
+            } else if (isOficina) {
+                // Si "oficina" está seleccionado, solo mostrar el mensaje en consola
+                console.log("Agrega manualmente las coordenadas");
+            }
         } catch (error) {
             console.error('Error durante la compresión o procesamiento de la imagen o al obtener geolocalización:', error);
         }
     };
+    
 
 
 
@@ -1270,10 +1275,30 @@ function TablaPpi() {
     };
 
 
+    // Lugar de la inspeccion
 
+    const [isCampo, setIsCampo] = useState(false);
+    const [isOficina, setIsOficina] = useState(false);
+
+    const handleCampoChange = (e) => {
+        setIsCampo(e.target.checked);
+        if (e.target.checked) {
+            setIsOficina(false); // Desmarcar Oficina si Campo es seleccionado
+        }
+    };
+
+    const handleOficinaChange = (e) => {
+        setIsOficina(e.target.checked);
+        if (e.target.checked) {
+            setIsCampo(false); // Desmarcar Campo si Oficina es seleccionada
+        }
+    };
+
+    
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     const [showConfirmModalRepetida, setShowConfirmModalRepetida] = useState(false);
     const [subactividadToRepeat, setSubactividadToRepeat] = useState(null);
@@ -2092,6 +2117,10 @@ function TablaPpi() {
                             </div>
                             <div className='w-full border-b-2 mb-5'></div>
 
+
+
+
+
                             <label htmlFor="resultadoInspeccion" className="block font-medium text-gray-500 flex items-center gap-2">
                                 <span className='text-lg'></span> Resultado de la inspección:
                             </label>
@@ -2126,10 +2155,36 @@ function TablaPpi() {
                                     </label>
                                 </div>
 
+                                
+
                                 <div className="my-4">
                                     <label htmlFor="comentario" className="block text-gray-500 text-sm font-medium mb-2">Comentarios de la inspección</label>
                                     <textarea id="comentario" value={comentario} onChange={(e) => setComentario(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
                                 </div>
+
+                                <div className="form-group mt-5">
+                                    <label>Tipo de inspección:</label>
+                                    <div className='mt-2'>
+                                        <input
+                                            type="checkbox"
+                                            id="campo"
+                                            checked={isCampo}
+                                            onChange={handleCampoChange}
+                                        />
+                                        <label htmlFor="campo" className='ms-2'>Campo</label>
+                                    </div>
+                                    <div>
+                                        <input
+                                            type="checkbox"
+                                            id="oficina"
+                                            checked={isOficina}
+                                            onChange={handleOficinaChange}
+                                        />
+                                        <label htmlFor="oficina" className='ms-2'>Oficina</label>
+                                    </div>
+                                </div>
+
+
                                 <div className="mb-4 mt-4">
                                     <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium">Seleccionar imagen</label>
                                     <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
