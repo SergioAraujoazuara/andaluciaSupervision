@@ -534,8 +534,7 @@ function TablaPpi() {
             resultadoInspeccion: resultadoInspeccion,
             formulario: formulario,
             imagen: imagen, // Incluyendo la primera imagen comprimida
-            imagen2: imagen2,
-            coordenadas: imagenDataCoordinates
+            imagen2: imagen2
         };
 
         // Convertir datos a JSON y medir el tamaño
@@ -1066,60 +1065,38 @@ function TablaPpi() {
             currentY = currentPage.getSize().height;
 
             // Agregar imágenes al lado del nombre del proyecto
-            await embedImage(imagenPath2, 380, currentY - 58, 80, 45); // Ajusta las coordenadas y dimensiones según sea necesario
-            await embedImage(imagenPath, 490, currentY - 55, 70, 35); // Ajusta las coordenadas y dimensiones según sea necesario
+            await embedImage(imagenPath2, 380, height - 58, 80, 45); // Ajusta las coordenadas y dimensiones según sea necesario
+            await embedImage(imagenPath, 490, height - 55, 70, 35); // Ajusta las coordenadas y dimensiones según sea necesario
 
-            // Agregar el título
+
+            // Primero, asegurémonos de que todos los elementos anteriores estén correctamente posicionados
             let result = addText(titulo, 40, currentY - 35, 12, boldFont, currentPage);
             currentPage = result.page;
             currentY = result.lastY;
 
-            // Agregar el nombre del proyecto
             result = addText(nombreProyecto, 40, currentY - 15, 12, boldFont, currentPage);
             currentPage = result.page;
             currentY = result.lastY;
 
-            // Agregar líneas horizontales
             addHorizontalLine(40, currentY - 11, 555, 1, "#000000", currentPage);
+
             addHorizontalLine(40, currentY - 50, 555, 30, "#e2e8f0", currentPage);
 
-            // Agregar título de "Imágenes adjuntas"
-            result = addText("Imágenes adjuntas: ", 50, currentY - 53, 11, boldFont, currentPage);
+            result = addText("Imagenes adjuntas: ", 50, currentY - 53, 11, boldFont, currentPage);
             currentPage = result.page;
             currentY = result.lastY;
 
-            // Agregar la primera imagen y su enlace si existe
+            // Agregar la primera imagen si existe
             if (documentoFormulario.imagen) {
-                await embedBase64Image(documentoFormulario.imagen, 50, currentY - 30, 400, 300);
-                currentY -= 340;  // Ajustar currentY para dejar espacio justo debajo de la imagen
-
-                // Agregar el enlace de Google Maps correspondiente a la primera imagen
-                const link1 = documentoFormulario.coordenadas[0]?.link || "";
-                if (link1) {
-                    result = addText(`Ver en Google Maps: ${link1}`, 50, currentY, 9, regularFont, currentPage);
-                    currentPage = result.page;
-                    currentY = result.lastY - 10; // Reducir espacio después del enlace
-                }
+                await embedBase64Image(documentoFormulario.imagen, 50, currentY - 40, 400, 300);
+                currentY -= 320;  // Ajustar el currentY para la siguiente imagen, incluyendo un espacio adicional
             }
 
-            // Agregar la segunda imagen y su enlace si existe
+            // Agregar la segunda imagen si existe
             if (documentoFormulario.imagen2) {
-                await embedBase64Image(documentoFormulario.imagen2, 50, currentY -10, 400, 300);
-                currentY -= 310;  // Ajustar currentY para dejar espacio justo debajo de la imagen
-
-                // Agregar el enlace de Google Maps correspondiente a la segunda imagen
-                const link2 = documentoFormulario.coordenadas[1]?.link || "";
-                if (link2) {
-                    result = addText(`Ver en Google Maps: ${link2}`, 50, currentY, 9, regularFont, currentPage);
-                    currentPage = result.page;
-                    currentY = result.lastY - 10; // Reducir espacio después del enlace
-                }
+                await embedBase64Image(documentoFormulario.imagen2, 50, currentY - 40, 400, 300);
             }
         }
-
-
-
-
 
 
 
@@ -1149,131 +1126,86 @@ function TablaPpi() {
     const [imagen2, setImagen2] = useState('');
     const [imagenEdit, setImagenEdit] = useState('');
     const [imagen2Edit, setImagen2Edit] = useState('');
-    const [imagen1Nombre, setImagen1Nombre] = useState('imagen1');
-    const [imagen2Nombre, setImagen2Nombre] = useState('imagen2');
-    const [imagenDataCoordinates, setImagenDataCoordinates] = useState([]);
 
 
-    const compressionOptions = {
-        maxSizeMB: 0.3,
-        maxWidthOrHeight: 1200,
-        useWebWorker: true,
-    };
-
-    // Función para comprimir la imagen
-    const compressImage = async (file) => {
-        return await imageCompression(file, compressionOptions);
-    };
-
-    // Función para convertir archivo a Data URL
-    const convertToDataURL = (file) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    };
-
-    // Función para redimensionar la imagen en un canvas
-    const resizeImage = (dataUrl) => {
-        return new Promise((resolve) => {
-            const img = document.createElement("img");
-            img.src = dataUrl;
-            img.onload = () => {
-                const canvas = document.createElement("canvas");
-                const maxSize = Math.max(img.width, img.height);
-                const scaleFactor = maxSize > 500 ? 500 / maxSize : 1;
-
-                canvas.width = img.width * scaleFactor;
-                canvas.height = img.height * scaleFactor;
-
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                resolve(canvas.toDataURL("image/png"));
-            };
-        });
-    };
-
-
-    // Función modularizada de manejo de imágenes
-    const handleImageChange = async (e, setImageState, setEditState, setImageNameState, imageIdentifier) => {
+    const handleImagenChange = async (e) => {
         const file = e.target.files[0];
-        if (!file) return;
-
-        // Guardar el identificador de la imagen (ej. "imagen" o "imagen2") en el estado
-        setImageNameState(imageIdentifier);
-        console.log("Identificador de la imagen:", imageIdentifier); // Console log para verificar el identificador
-
-        try {
-            // Procesar la imagen
-            const compressedFile = await compressImage(file);
-            const dataUrl = await convertToDataURL(compressedFile);
-            const resizedDataUrl = await resizeImage(dataUrl);
-
-            setImageState(resizedDataUrl);
-            setEditState(resizedDataUrl);
-
-            // Obtener las coordenadas y crear el objeto final
-            const coordenadas = await obtenerGeolocalizacion();
-            const objetoImagen = {
-                nombre: imageIdentifier,
-                ...coordenadas
-            };
-            // Actualizar el estado para incluir el nuevo objeto de imagen
-            setImagenDataCoordinates((prevData) => [...prevData, objetoImagen]);
-
-
-            console.log("Objeto de imagen con coordenadas:", objetoImagen); // Ver en la consola
-
-        } catch (error) {
-            console.error('Error durante la compresión o procesamiento de la imagen o al obtener geolocalización:', error);
+        if (file) {
+            try {
+                const options = {
+                    maxSizeMB: 0.3, // Tamaño máximo en MB
+                    maxWidthOrHeight: 1200, // Ajusta la imagen al tamaño máximo manteniendo la relación de aspecto
+                    useWebWorker: true, // Usa un web worker para la compresión en un hilo de fondo
+                };
+                const compressedFile = await imageCompression(file, options);
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const imgElement = document.createElement("img");
+                    imgElement.src = reader.result;
+                    imgElement.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        const maxSize = Math.max(imgElement.width, imgElement.height);
+                        if (maxSize > 500) {
+                            const scaleFactor = 500 / maxSize;
+                            canvas.width = imgElement.width * scaleFactor;
+                            canvas.height = imgElement.height * scaleFactor;
+                        } else {
+                            canvas.width = imgElement.width;
+                            canvas.height = imgElement.height;
+                        }
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+                        const pngDataUrl = canvas.toDataURL("image/png");
+                        setImagen(pngDataUrl); // Almacenar la imagen PNG en el estado
+                        setImagenEdit(pngDataUrl); // Almacenar la imagen PNG en el estado
+                    };
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (error) {
+                console.error('Error durante la compresión de la imagen:', error);
+            }
         }
     };
 
-
-
-    // Función específica para manejar la primera imagen
-    const handleImagenChange = (e) => {
-        handleImageChange(e, setImagen, setImagenEdit, setImagen1Nombre, "imagen")
-    };
-
-    // Función específica para manejar la segunda imagen
-    const handleImagenChange2 = (e) => handleImageChange(e, setImagen2, setImagen2Edit, setImagen2Nombre, "imagen2");
-
-
-    ///!!!! Coordenadas
-
-    const obtenerGeolocalizacion = () => {
-        return new Promise((resolve, reject) => {
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const coordenadas = {
-                            latitud: position.coords.latitude,
-                            longitud: position.coords.longitude,
-                            link: `https://www.google.com/maps/search/?api=1&query=${position.coords.latitude},${position.coords.longitude}`
-                        };
-                        console.log(coordenadas); // Mostrar el objeto con latitud, longitud y link en la consola
-                        resolve(coordenadas); // Retornar el objeto con latitud, longitud y enlace de Google Maps
-                    },
-                    (error) => {
-                        console.error("Error al obtener la geolocalización:", error);
-                        reject(error); // En caso de error, rechaza la promesa
-                    }
-                );
-            } else {
-                console.error("La geolocalización no está disponible en este navegador.");
-                reject(new Error("La geolocalización no está disponible en este navegador."));
+    const handleImagenChange2 = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            try {
+                const options = {
+                    maxSizeMB: 0.3,
+                    maxWidthOrHeight: 1200,
+                    useWebWorker: true,
+                };
+                const compressedFile = await imageCompression(file, options);
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const imgElement = document.createElement("img");
+                    imgElement.src = reader.result;
+                    imgElement.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        const maxSize = Math.max(imgElement.width, imgElement.height);
+                        if (maxSize > 500) {
+                            const scaleFactor = 500 / maxSize;
+                            canvas.width = imgElement.width * scaleFactor;
+                            canvas.height = imgElement.height * scaleFactor;
+                        } else {
+                            canvas.width = imgElement.width;
+                            canvas.height = imgElement.height;
+                        }
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+                        const pngDataUrl = canvas.toDataURL("image/png");
+                        setImagen2(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
+                        setImagen2Edit(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
+                    };
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (error) {
+                console.error('Error durante la compresión de la segunda imagen:', error);
             }
-        });
+        }
     };
 
-
-
-
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     const [showConfirmModalRepetida, setShowConfirmModalRepetida] = useState(false);
     const [subactividadToRepeat, setSubactividadToRepeat] = useState(null);
@@ -1624,7 +1556,7 @@ function TablaPpi() {
                                                 {imagen2Edit ? (
                                                     <img src={imagen2Edit} alt="Imagen 1" className="mt-2" />
                                                 ) : (
-                                                    imagen2Url && <img src={imagen2Url} alt="Imagen 1" className="mt-2" />
+                                                    imagen1Url && <img src={imagen1Url} alt="Imagen 1" className="mt-2" />
                                                 )}
                                             </div>
 
@@ -1774,7 +1706,7 @@ function TablaPpi() {
                                         </button>
                                     </div>
 
-                                    <div><PdfListViewer /></div>
+                                    <div><PdfListViewer/></div>
 
                                 </div>
 
@@ -2072,10 +2004,10 @@ function TablaPpi() {
 
             {modalFormulario && (
                 <div className="fixed inset-0 z-50 flex justify-center items-center overflow-auto px-4">
-                    <div className="absolute inset-0 bg-gray-800 opacity-90"></div>
+                     <div className="absolute inset-0 bg-gray-800 opacity-90"></div>
 
                     {/* Contenedor del modal */}
-                    <div className="relative bg-white rounded-lg shadow-lg z-50 w-full max-w-lg lg:max-w-2xl xl:max-w-3xl h-auto max-h-[90vh] p-8 overflow-y-auto">
+        <div className="relative bg-white rounded-lg shadow-lg z-50 w-full max-w-lg lg:max-w-2xl xl:max-w-3xl h-auto max-h-[90vh] p-8 overflow-y-auto">
                         <div className="my-6">
                             <div className='flex justify-between items-center mb-4'>
                                 <h2 className='text-center font-medium text-2xl text-gray-400 w-full text-center'>Formulario</h2>
@@ -2373,8 +2305,8 @@ function TablaPpi() {
                                 allowPdfGeneration={allowPdfGeneration}
                                 setAllowPdfGeneration={setAllowPdfGeneration}
                                 setShowConfirmModal={setShowConfirmModal}
-                                user={user}
-                                userName={userName}
+                                user= {user}
+                                userName= {userName}
                             />
                         </div>
 
