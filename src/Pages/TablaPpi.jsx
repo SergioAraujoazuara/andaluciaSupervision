@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase_config';
 import { getDoc, getDocs, query, collection, where, doc, updateDoc, increment, addDoc, or, setDoc } from 'firebase/firestore';
@@ -28,6 +28,7 @@ import { IoArrowBackCircle } from "react-icons/io5";
 import { useAuth } from '../context/authContext';
 import { TiLockClosedOutline } from "react-icons/ti";
 import PdfListViewer from '../Components/FeatureSendMail/PdfListViewer';
+import Mapa from '../Components/Geolocalizacion/Mapa';
 
 
 function TablaPpi() {
@@ -553,6 +554,11 @@ function TablaPpi() {
 
             setObservaciones('')
             setComentario('')
+            setImagenDataCoordinates([])
+            setImagen('')
+            setImagen2('')
+            setIsAuto(false)
+            setIsManual(false)
 
             return docRef.id; // Devolver el ID del documento creado
 
@@ -1196,45 +1202,41 @@ function TablaPpi() {
     };
 
 
-    // Función modularizada de manejo de imágenes
     const handleImageChange = async (e, setImageState, setEditState, setImageNameState, imageIdentifier) => {
         const file = e.target.files[0];
         if (!file) return;
-    
+
         // Guardar el identificador de la imagen (ej. "imagen" o "imagen2") en el estado
         setImageNameState(imageIdentifier);
         console.log("Identificador de la imagen:", imageIdentifier); // Console log para verificar el identificador
-    
+
         try {
-            if (isCampo) {
-                // Si "campo" está seleccionado, procesar la imagen y obtener las coordenadas
-                const compressedFile = await compressImage(file);
-                const dataUrl = await convertToDataURL(compressedFile);
-                const resizedDataUrl = await resizeImage(dataUrl);
-    
-                setImageState(resizedDataUrl);
-                setEditState(resizedDataUrl);
-    
-                // Obtener las coordenadas y crear el objeto final
+            // Procesar la imagen
+            const compressedFile = await compressImage(file);
+            const dataUrl = await convertToDataURL(compressedFile);
+            const resizedDataUrl = await resizeImage(dataUrl);
+
+            setImageState(resizedDataUrl);
+            setEditState(resizedDataUrl);
+
+            // Si las coordenadas son automáticas, obtenemos las coordenadas automáticamente
+            if (isAuto) {
                 const coordenadas = await obtenerGeolocalizacion();
                 const objetoImagen = {
                     nombre: imageIdentifier,
                     ...coordenadas
                 };
-    
-                // Actualizar el estado para incluir el nuevo objeto de imagen
+                // Actualizar el estado para incluir el nuevo objeto de imagen con las coordenadas automáticas
                 setImagenDataCoordinates((prevData) => [...prevData, objetoImagen]);
-    
-                console.log("Objeto de imagen con coordenadas:", objetoImagen); // Ver en la consola
-            } else if (isOficina) {
-                // Si "oficina" está seleccionado, solo mostrar el mensaje en consola
-                console.log("Agrega manualmente las coordenadas");
+                console.log("Objeto de imagen con coordenadas automáticas:", objetoImagen); // Ver en la consola
+            } else if (isManual) {
+                // Si las coordenadas son manuales, solo mostramos el mensaje
+                console.log("Debes de agregar las coordenadas manualmente, Sergio.");
             }
         } catch (error) {
             console.error('Error durante la compresión o procesamiento de la imagen o al obtener geolocalización:', error);
         }
     };
-    
 
 
 
@@ -1275,26 +1277,49 @@ function TablaPpi() {
     };
 
 
-    // Lugar de la inspeccion
+    // auto y manual
 
-    const [isCampo, setIsCampo] = useState(false);
-    const [isOficina, setIsOficina] = useState(false);
+    const [isAuto, setIsAuto] = useState(true); // Coordenadas automáticas
+    const [isManual, setIsManual] = useState(false); // Coordenadas manuales
 
-    const handleCampoChange = (e) => {
-        setIsCampo(e.target.checked);
-        if (e.target.checked) {
-            setIsOficina(false); // Desmarcar Oficina si Campo es seleccionado
-        }
+
+
+    // Función para manejar la selección de coordenadas (automáticas o manuales)
+const handleSelectCoordenadas = (option) => {
+    if (option === 'auto') {
+        setIsAuto(true);
+        setIsManual(false);
+        console.log("Seleccionaste coordenadas automáticas");
+    } else if (option === 'manual') {
+        setIsAuto(false);
+        setIsManual(true);
+        console.log("Seleccionaste coordenadas manuales");
+    }
+};
+
+    // Función para manejar la selección de coordenadas
+    const handleSelectCoordinates = (coords, imageIdentifier) => {
+        console.log(`${imageIdentifier} seleccionada con coordenadas:`, coords);
+
+        // Crear el objeto con las coordenadas y la información adicional
+        const objetoImagen = {
+            nombre: imageIdentifier, // Nombre de la imagen (imagen1 o imagen2)
+            latitud: coords.latitude,
+            longitud: coords.longitude,
+            link: `https://www.google.com/maps/search/?api=1&query=${coords.latitude},${coords.longitude}`
+        };
+
+        // Actualizar el estado y la referencia para almacenar las coordenadas de la imagen seleccionada
+        setImagenDataCoordinates(prevState => {
+            const updatedCoordinates = [...prevState, objetoImagen];
+            imagenDataCoordinatesRef.current = updatedCoordinates; // Actualiza la referencia con el valor actualizado
+            return updatedCoordinates; // Retorna el nuevo estado actualizado
+        });
+
+        console.log("Objeto de imagen con coordenadas:", objetoImagen); // Mostrar en consola
     };
 
-    const handleOficinaChange = (e) => {
-        setIsOficina(e.target.checked);
-        if (e.target.checked) {
-            setIsCampo(false); // Desmarcar Campo si Oficina es seleccionada
-        }
-    };
-
-    
+    const imagenDataCoordinatesRef = useRef([]);
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1313,6 +1338,7 @@ function TablaPpi() {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 const nuevoDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
+                console.log(imagenDataCoordinatesRef.current)
                 await setDoc(nuevoDocRef, {
                     ...data,
                     edited: false,
@@ -1321,7 +1347,15 @@ function TablaPpi() {
                     active: true,
                     version: (parseInt(data.version) + 1).toString(),
                     originalId: data.originalId || idRegistroFormulario,
+                    coordenadas: imagenDataCoordinatesRef.current
                 });
+                console.log(data)
+
+
+                setImagenDataCoordinates([])
+                setIsAuto(false)
+                setIsManual(false)
+
 
                 return nuevoIdRegistroFormulario;
             } else {
@@ -1518,7 +1552,7 @@ function TablaPpi() {
                     <div className="absolute inset-0 bg-gray-800 opacity-75"></div>
                     <div className="relative bg-white rounded-lg shadow-lg w-full max-w-lg mx-auto overflow-hidden">
 
-                        <div className="p-8 overflow-y-auto max-h-[80vh]">
+                        <div className="p-8 overflow-auto h-[80vh]">
                             <div className="text-center flex items-center justify-between mb-4">
                                 <h2 className="text-2xl font-medium">Editar inspección</h2>
                                 <button
@@ -1526,6 +1560,11 @@ function TablaPpi() {
                                         setShowConfirmModalRepetida(false)
                                         setImagenEdit('')
                                         setImagen2Edit('')
+                                        setImagenDataCoordinates([])
+                                        setImagen('')
+                                        setImagen2('')
+                                        setIsAuto(false)
+                                        setIsManual(false)
                                     }}
                                     className="text-3xl text-gray-500 hover:text-gray-700 transition-colors duration-300"
                                 >
@@ -1629,15 +1668,43 @@ function TablaPpi() {
                                     </div>
                                     {formularioData && (
                                         <>
+                                            <div className="mb-4 mt-4">
+                                                <label className="block text-gray-500 text-sm font-medium">Editar geolocalización de imagenes</label>
+                                                <p><strong className='text-amber-500'>*</strong>Agregar las coordenadas manualmente</p>
+                                                <div className="flex gap-4 mt-4">
+    <button
+        onClick={() => handleSelectCoordenadas('auto')}
+        className={`px-4 py-2 rounded-full text-sm font-medium border ${
+            isAuto ? "bg-blue-500 text-white border-blue-500" : "bg-gray-200 text-gray-700 border-gray-300"
+        }`}
+    >
+        Automática
+    </button>
+    <button
+        onClick={() => handleSelectCoordenadas('manual')}
+        className={`px-4 py-2 rounded-full text-sm font-medium border ${
+            isManual ? "bg-blue-500 text-white border-blue-500" : "bg-gray-200 text-gray-700 border-gray-300"
+        }`}
+    >
+        Manual
+    </button>
+</div>
+                                            </div>
                                             <div className="mb-4">
                                                 <label className="block text-sm font-medium text-gray-700 flex gap-1 items-center">
                                                     <span><FaImage className="text-gray-500 mr-2" /></span>Imagen 1
                                                 </label>
                                                 <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                                 {imagenEdit ? (
-                                                    <img src={imagenEdit} alt="Imagen 1" className="mt-2" />
+                                                    <img src={imagenEdit} alt="Imagen 1" className="mt-2 " />
                                                 ) : (
                                                     imagen1Url && <img src={imagen1Url} alt="Imagen 1" className="mt-2" />
+                                                )}
+                                                {isManual && (
+                                                    <Mapa
+                                                        onSelect={handleSelectCoordinates}
+                                                        imageIdentifier="imagen1"
+                                                    />
                                                 )}
                                             </div>
 
@@ -1650,6 +1717,12 @@ function TablaPpi() {
                                                     <img src={imagen2Edit} alt="Imagen 1" className="mt-2" />
                                                 ) : (
                                                     imagen2Url && <img src={imagen2Url} alt="Imagen 1" className="mt-2" />
+                                                )}
+                                                {isManual && (
+                                                    <Mapa
+                                                        onSelect={handleSelectCoordinates}
+                                                        imageIdentifier="imagen2"
+                                                    />
                                                 )}
                                             </div>
 
@@ -1678,6 +1751,11 @@ function TablaPpi() {
                                         setShowConfirmModalRepetida(false)
                                         setImagenEdit('')
                                         setImagen2Edit('')
+                                        setImagenDataCoordinates([])
+                                        setImagen('')
+                                        setImagen2('')
+                                        setIsAuto(false)
+                                        setIsManual(false)
                                     }}
                                     className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-md shadow-md text-white font-medium"
                                 >
@@ -2110,16 +2188,17 @@ function TablaPpi() {
                                         handleCloseModal()
                                         setImagen('')
                                         setImagen2('')
+                                        setImagenDataCoordinates([])
+                                        setImagen('')
+                                        setImagen2('')
+                                        setIsAuto(false)
+                                        setIsManual(false)
                                     }}
                                     className="text-3xl text-gray-500 hover:text-gray-700 transition-colors duration-300">
                                     <IoCloseCircle />
                                 </button>
                             </div>
                             <div className='w-full border-b-2 mb-5'></div>
-
-
-
-
 
                             <label htmlFor="resultadoInspeccion" className="block font-medium text-gray-500 flex items-center gap-2">
                                 <span className='text-lg'></span> Resultado de la inspección:
@@ -2155,41 +2234,43 @@ function TablaPpi() {
                                     </label>
                                 </div>
 
-                                
-
                                 <div className="my-4">
                                     <label htmlFor="comentario" className="block text-gray-500 text-sm font-medium mb-2">Comentarios de la inspección</label>
                                     <textarea id="comentario" value={comentario} onChange={(e) => setComentario(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
                                 </div>
 
-                                <div className="form-group mt-5">
-                                    <label>Tipo de inspección:</label>
-                                    <div className='mt-2'>
-                                        <input
-                                            type="checkbox"
-                                            id="campo"
-                                            checked={isCampo}
-                                            onChange={handleCampoChange}
-                                        />
-                                        <label htmlFor="campo" className='ms-2'>Campo</label>
-                                    </div>
-                                    <div>
-                                        <input
-                                            type="checkbox"
-                                            id="oficina"
-                                            checked={isOficina}
-                                            onChange={handleOficinaChange}
-                                        />
-                                        <label htmlFor="oficina" className='ms-2'>Oficina</label>
-                                    </div>
+                                <div className="mb-4 mt-4">
+                                    <label className="block text-gray-500 text-sm font-medium">Geolocalización de las imagenes</label>
+                                    <div className="flex gap-4 mt-4">
+    <button
+        onClick={() => handleSelectCoordenadas('auto')}
+        className={`px-4 py-2 rounded-full text-sm font-medium border ${
+            isAuto ? "bg-blue-500 text-white border-blue-500" : "bg-gray-200 text-gray-700 border-gray-300"
+        }`}
+    >
+        Automática
+    </button>
+    <button
+        onClick={() => handleSelectCoordenadas('manual')}
+        className={`px-4 py-2 rounded-full text-sm font-medium border ${
+            isManual ? "bg-blue-500 text-white border-blue-500" : "bg-gray-200 text-gray-700 border-gray-300"
+        }`}
+    >
+        Manual
+    </button>
+</div>
                                 </div>
-
-
                                 <div className="mb-4 mt-4">
                                     <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium">Seleccionar imagen</label>
                                     <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                     {imagen && (
                                         <img src={imagen} />
+                                    )}
+                                    {isManual && (
+                                        <Mapa
+                                            onSelect={handleSelectCoordinates}
+                                            imageIdentifier="imagen1"
+                                        />
                                     )}
                                 </div>
                                 <div className="">
@@ -2198,7 +2279,15 @@ function TablaPpi() {
                                     {imagen2 && (
                                         <img src={imagen2} />
                                     )}
+                                    {isManual && (
+                                        <Mapa
+                                            onSelect={handleSelectCoordinates}
+                                            imageIdentifier="imagen2"
+                                        />
+                                    )}
                                 </div>
+
+
                             </div>
                         </div>
 
@@ -2221,6 +2310,9 @@ function TablaPpi() {
 
                             setImagen={setImagen}
                             setImagen2={setImagen2}
+                            setImagenDataCoordinates={setImagenDataCoordinates}
+                            setIsAuto={setIsAuto}
+                            setIsManual={setIsManual}
                             setResultadoInspeccion={setResultadoInspeccion}
                             enviarDatosARegistros={enviarDatosARegistros}
 

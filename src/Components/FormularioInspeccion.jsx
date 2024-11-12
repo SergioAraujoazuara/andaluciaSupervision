@@ -10,7 +10,10 @@ import { db } from '../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 import GrocIA from './GrocIA';
 
-function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones, formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros }) {
+function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones, formulario, crearVariableFormularioTrue, handleConfirmarEnviotablaPpi, 
+    handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, 
+    comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion, enviarDatosARegistros,
+    setIsAuto, setIsManual, setImagenDataCoordinates }) {
 
     const { id } = useParams()
     const idLote = localStorage.getItem('loteId');
@@ -262,6 +265,9 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
                             setModalConfirmacionInforme(false)
                             setImagen('')
                             setImagen2('')
+                            setImagenDataCoordinates([])
+                            setIsAuto(false)
+                            setIsManual(false)
                         }}>Cancelar </button>
                 </div>
             </form>
@@ -389,6 +395,9 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
                                         setMostrarConfirmacion(false)
                                         setImagen('')
                                         setImagen2('')
+                                        setImagenDataCoordinates([])
+                                        setIsAuto(false)
+                                        setIsManual(false)
                                     }}
                                     className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                                 >
@@ -423,6 +432,9 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
                                 setMostrarConfirmacionAdicional(false)
                                 setImagen('')
                                 setImagen2('')
+                                setImagenDataCoordinates([])
+                                setIsAuto(false)
+                                setIsManual(false)
                             }}
                                 className="w-full bg-gray-400 hover:bg-gray-500 text-white py-2 rounded-lg transition duration-150">
                                 Cancelar
