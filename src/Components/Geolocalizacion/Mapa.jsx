@@ -19,17 +19,18 @@ const Mapa = ({ onSelect, imageIdentifier }) => {
     };
 
     return (
-        <div className="w-full mt-2 z-0">
-    <div className="h-52 w-full z-0">
-        <MapContainer center={[41.3851, 2.1734]} zoom={13} style={{ height: "100%", width: "100%" }}>
-            <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
-            <MapClickHandler />
-        </MapContainer>
+        <div className="w-full mt-2">
+        <div className="h-52 w-full relative -z-0">
+            <MapContainer center={[41.3851, 2.1734]} zoom={13} style={{ height: "100%", width: "100%" }}>
+                <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <MapClickHandler />
+            </MapContainer>
+        </div>
     </div>
-</div>
+    
 
 
     );

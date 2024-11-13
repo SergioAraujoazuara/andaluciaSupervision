@@ -44,7 +44,7 @@ const PdfListViewer = () => {
 
     return (
         <div>
-            <button onClick={openModal} className="bg-red-500 text-white px-4 py-2 rounded">
+            <button onClick={openModal} className="bg-red-700 text-white px-4 py-2 rounded-lg">
                 Ver PDFs
             </button>
             {showModal && (

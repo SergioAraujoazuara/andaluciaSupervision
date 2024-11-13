@@ -266,7 +266,7 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
                             setImagen('')
                             setImagen2('')
                             setImagenDataCoordinates([])
-                            setIsAuto(false)
+                            setIsAuto(true)
                             setIsManual(false)
                         }}>Cancelar </button>
                 </div>
@@ -396,7 +396,7 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
                                         setImagen('')
                                         setImagen2('')
                                         setImagenDataCoordinates([])
-                                        setIsAuto(false)
+                                        setIsAuto(true)
                                         setIsManual(false)
                                     }}
                                     className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -433,7 +433,7 @@ function FormularioInspeccion({ username, setImagen, setImagen2, onObservaciones
                                 setImagen('')
                                 setImagen2('')
                                 setImagenDataCoordinates([])
-                                setIsAuto(false)
+                                setIsAuto(true)
                                 setIsManual(false)
                             }}
                                 className="w-full bg-gray-400 hover:bg-gray-500 text-white py-2 rounded-lg transition duration-150">

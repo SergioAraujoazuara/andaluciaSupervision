@@ -557,7 +557,7 @@ function TablaPpi() {
             setImagenDataCoordinates([])
             setImagen('')
             setImagen2('')
-            setIsAuto(false)
+            setIsAuto(true)
             setIsManual(false)
 
             return docRef.id; // Devolver el ID del documento creado
@@ -1096,13 +1096,13 @@ function TablaPpi() {
 
             // Agregar la primera imagen y su enlace si existe
             if (documentoFormulario.imagen) {
-                await embedBase64Image(documentoFormulario.imagen, 50, currentY - 30, 400, 300);
+                await embedBase64Image(documentoFormulario.imagen, 50, currentY - 35, 400, 300);
                 currentY -= 340;  // Ajustar currentY para dejar espacio justo debajo de la imagen
 
                 // Agregar el enlace de Google Maps correspondiente a la primera imagen
                 const link1 = documentoFormulario.coordenadas[0]?.link || "";
                 if (link1) {
-                    result = addText(`Ver en Google Maps: ${link1}`, 50, currentY, 9, regularFont, currentPage);
+                    result = addText(`Ver en Google Maps: ${link1}`, 50, currentY-10, 9, regularFont, currentPage);
                     currentPage = result.page;
                     currentY = result.lastY - 10; // Reducir espacio después del enlace
                 }
@@ -1110,13 +1110,13 @@ function TablaPpi() {
 
             // Agregar la segunda imagen y su enlace si existe
             if (documentoFormulario.imagen2) {
-                await embedBase64Image(documentoFormulario.imagen2, 50, currentY - 10, 400, 300);
+                await embedBase64Image(documentoFormulario.imagen2, 50, currentY - 15, 400, 300);
                 currentY -= 310;  // Ajustar currentY para dejar espacio justo debajo de la imagen
 
                 // Agregar el enlace de Google Maps correspondiente a la segunda imagen
                 const link2 = documentoFormulario.coordenadas[1]?.link || "";
                 if (link2) {
-                    result = addText(`Ver en Google Maps: ${link2}`, 50, currentY, 9, regularFont, currentPage);
+                    result = addText(`Ver en Google Maps: ${link2}`, 50, currentY -20, 9, regularFont, currentPage);
                     currentPage = result.page;
                     currentY = result.lastY - 10; // Reducir espacio después del enlace
                 }
@@ -1285,17 +1285,17 @@ function TablaPpi() {
 
 
     // Función para manejar la selección de coordenadas (automáticas o manuales)
-const handleSelectCoordenadas = (option) => {
-    if (option === 'auto') {
-        setIsAuto(true);
-        setIsManual(false);
-        console.log("Seleccionaste coordenadas automáticas");
-    } else if (option === 'manual') {
-        setIsAuto(false);
-        setIsManual(true);
-        console.log("Seleccionaste coordenadas manuales");
-    }
-};
+    const handleSelectCoordenadas = (option) => {
+        if (option === 'auto') {
+            setIsAuto(true);
+            setIsManual(false);
+            console.log("Seleccionaste coordenadas automáticas");
+        } else if (option === 'manual') {
+            setIsAuto(false);
+            setIsManual(true);
+            console.log("Seleccionaste coordenadas manuales");
+        }
+    };
 
     // Función para manejar la selección de coordenadas
     const handleSelectCoordinates = (coords, imageIdentifier) => {
@@ -1353,7 +1353,7 @@ const handleSelectCoordenadas = (option) => {
 
 
                 setImagenDataCoordinates([])
-                setIsAuto(false)
+                setIsAuto(true)
                 setIsManual(false)
 
 
@@ -1563,7 +1563,7 @@ const handleSelectCoordenadas = (option) => {
                                         setImagenDataCoordinates([])
                                         setImagen('')
                                         setImagen2('')
-                                        setIsAuto(false)
+                                        setIsAuto(true)
                                         setIsManual(false)
                                     }}
                                     className="text-3xl text-gray-500 hover:text-gray-700 transition-colors duration-300"
@@ -1672,23 +1672,21 @@ const handleSelectCoordenadas = (option) => {
                                                 <label className="block text-gray-500 text-sm font-medium">Editar geolocalización de imagenes</label>
                                                 <p><strong className='text-amber-500'>*</strong>Agregar las coordenadas manualmente</p>
                                                 <div className="flex gap-4 mt-4">
-    <button
-        onClick={() => handleSelectCoordenadas('auto')}
-        className={`px-4 py-2 rounded-full text-sm font-medium border ${
-            isAuto ? "bg-blue-500 text-white border-blue-500" : "bg-gray-200 text-gray-700 border-gray-300"
-        }`}
-    >
-        Automática
-    </button>
-    <button
-        onClick={() => handleSelectCoordenadas('manual')}
-        className={`px-4 py-2 rounded-full text-sm font-medium border ${
-            isManual ? "bg-blue-500 text-white border-blue-500" : "bg-gray-200 text-gray-700 border-gray-300"
-        }`}
-    >
-        Manual
-    </button>
-</div>
+                                                    <button
+                                                        onClick={() => handleSelectCoordenadas('auto')}
+                                                        className={`px-4 py-2 rounded-full text-sm font-medium border ${isAuto ? "bg-blue-500 text-white border-blue-500" : "bg-gray-200 text-gray-700 border-gray-300"
+                                                            }`}
+                                                    >
+                                                        Automática
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleSelectCoordenadas('manual')}
+                                                        className={`px-4 py-2 rounded-full text-sm font-medium border ${isManual ? "bg-blue-500 text-white border-blue-500" : "bg-gray-200 text-gray-700 border-gray-300"
+                                                            }`}
+                                                    >
+                                                        Manual
+                                                    </button>
+                                                </div>
                                             </div>
                                             <div className="mb-4">
                                                 <label className="block text-sm font-medium text-gray-700 flex gap-1 items-center">
@@ -1754,7 +1752,7 @@ const handleSelectCoordenadas = (option) => {
                                         setImagenDataCoordinates([])
                                         setImagen('')
                                         setImagen2('')
-                                        setIsAuto(false)
+                                        setIsAuto(true)
                                         setIsManual(false)
                                     }}
                                     className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-md shadow-md text-white font-medium"
@@ -2191,7 +2189,7 @@ const handleSelectCoordenadas = (option) => {
                                         setImagenDataCoordinates([])
                                         setImagen('')
                                         setImagen2('')
-                                        setIsAuto(false)
+                                        setIsAuto(true)
                                         setIsManual(false)
                                     }}
                                     className="text-3xl text-gray-500 hover:text-gray-700 transition-colors duration-300">
@@ -2242,23 +2240,21 @@ const handleSelectCoordenadas = (option) => {
                                 <div className="mb-4 mt-4">
                                     <label className="block text-gray-500 text-sm font-medium">Geolocalización de las imagenes</label>
                                     <div className="flex gap-4 mt-4">
-    <button
-        onClick={() => handleSelectCoordenadas('auto')}
-        className={`px-4 py-2 rounded-full text-sm font-medium border ${
-            isAuto ? "bg-blue-500 text-white border-blue-500" : "bg-gray-200 text-gray-700 border-gray-300"
-        }`}
-    >
-        Automática
-    </button>
-    <button
-        onClick={() => handleSelectCoordenadas('manual')}
-        className={`px-4 py-2 rounded-full text-sm font-medium border ${
-            isManual ? "bg-blue-500 text-white border-blue-500" : "bg-gray-200 text-gray-700 border-gray-300"
-        }`}
-    >
-        Manual
-    </button>
-</div>
+                                        <button
+                                            onClick={() => handleSelectCoordenadas('auto')}
+                                            className={`px-4 py-2 rounded-full text-sm font-medium border ${isAuto ? "bg-blue-500 text-white border-blue-500" : "bg-gray-200 text-gray-700 border-gray-300"
+                                                }`}
+                                        >
+                                            Automática
+                                        </button>
+                                        <button
+                                            onClick={() => handleSelectCoordenadas('manual')}
+                                            className={`px-4 py-2 rounded-full text-sm font-medium border ${isManual ? "bg-blue-500 text-white border-blue-500" : "bg-gray-200 text-gray-700 border-gray-300"
+                                                }`}
+                                        >
+                                            Manual
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="mb-4 mt-4">
                                     <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium">Seleccionar imagen</label>
