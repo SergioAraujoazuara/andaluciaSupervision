@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase_config';
 import { getDoc, getDocs, query, collection, where, doc, updateDoc, increment, addDoc, or, setDoc } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
-import { FaArrowRight } from "react-icons/fa";
+import { FaArrowRight, FaBan, FaExclamationCircle } from "react-icons/fa";
 import { IoCloseCircle } from "react-icons/io5";
 import { IoMdAddCircle } from "react-icons/io";
 import { FaFilePdf } from "react-icons/fa6";
@@ -28,7 +28,7 @@ import { IoArrowBackCircle } from "react-icons/io5";
 import { useAuth } from '../context/authContext';
 import { TiLockClosedOutline } from "react-icons/ti";
 import PdfListViewer from '../Components/FeatureSendMail/PdfListViewer';
-import Mapa from '../Components/Geolocalizacion/Mapa';
+import Mapa from '../Components/Geolocalizacion/Mapa'
 
 
 function TablaPpi() {
@@ -88,7 +88,7 @@ function TablaPpi() {
                 // Asegúrate de que este paso esté ajustado a cómo manejas los datos en tu aplicación
                 if (inspeccionesData.length > 0) {
                     setPpi(inspeccionesData[0]);
-                    console.log(inspeccionesData[0])
+                    console.log(inspeccionesData[0], ' inspeccionessssssss')
                     setPpiNombre(inspeccionesData[0].nombre) // O maneja múltiples inspecciones según sea necesario
                 } else {
 
@@ -1102,7 +1102,7 @@ function TablaPpi() {
                 // Agregar el enlace de Google Maps correspondiente a la primera imagen
                 const link1 = documentoFormulario.coordenadas[0]?.link || "";
                 if (link1) {
-                    result = addText(`Ver en Google Maps: ${link1}`, 50, currentY-10, 9, regularFont, currentPage);
+                    result = addText(`Ver en Google Maps: ${link1}`, 50, currentY - 10, 9, regularFont, currentPage);
                     currentPage = result.page;
                     currentY = result.lastY - 10; // Reducir espacio después del enlace
                 }
@@ -1116,7 +1116,7 @@ function TablaPpi() {
                 // Agregar el enlace de Google Maps correspondiente a la segunda imagen
                 const link2 = documentoFormulario.coordenadas[1]?.link || "";
                 if (link2) {
-                    result = addText(`Ver en Google Maps: ${link2}`, 50, currentY -20, 9, regularFont, currentPage);
+                    result = addText(`Ver en Google Maps: ${link2}`, 50, currentY - 20, 9, regularFont, currentPage);
                     currentPage = result.page;
                     currentY = result.lastY - 10; // Reducir espacio después del enlace
                 }
@@ -1347,7 +1347,7 @@ function TablaPpi() {
                     active: true,
                     version: (parseInt(data.version) + 1).toString(),
                     originalId: data.originalId || idRegistroFormulario,
-                    coordenadas: imagenDataCoordinatesRef.current
+                    coordenadas: imagenDataCoordinatesRef.current,
                 });
                 console.log(data)
 
@@ -1451,6 +1451,8 @@ function TablaPpi() {
 
 
 
+
+
     const [actividadNombre, setActividadNombre] = useState('');
     const [criterioAceptacion, setCriterioAceptacion] = useState('');
     const [docReferencia, setDocReferencia] = useState('');
@@ -1543,7 +1545,93 @@ function TablaPpi() {
     };
 
 
-    // Columnas visibles
+    const [isFinishInspectionModalOpen, setIsFinishInspectionModalOpen] = useState(false);
+    const [inspectionToFinish, setInspectionToFinish] = useState(null);
+
+    // Función para verificar si la subactividad es la versión más reciente
+    const isLatestVersion = (actividadIndex, subactividad) => {
+        // Obtener todas las versiones de la misma subactividad
+        const allVersions = ppi.actividades[actividadIndex].subactividades
+            .filter(s => s.numero === subactividad.numero)
+            .map(s => parseInt(s.version, 10));
+
+        // Encontrar la versión más alta
+        const latestVersion = Math.max(...allVersions);
+
+        // Comparar la versión actual con la más alta
+        return parseInt(subactividad.version, 10) === latestVersion;
+    };
+
+    // Abrir el modal solo si la subactividad es la más reciente
+    const openFinishInspectionModal = (actividadIndex, subactividadIndex) => {
+        const actividad = ppi.actividades[actividadIndex];
+        const subactividad = actividad.subactividades[subactividadIndex];
+
+        if (isLatestVersion(actividadIndex, subactividad)) {
+            setInspectionToFinish({ actividadIndex, subactividadIndex, ...subactividad });
+            setIsFinishInspectionModalOpen(true);
+        } else {
+            console.log("No puedes terminar esta inspección, selecciona la versión más reciente.");
+        }
+    };
+
+    // Confirmar la acción y alternar el estado de "terminada" en Firestore
+    const confirmFinishInspection = async () => {
+        try {
+            const { actividadIndex, subactividadIndex } = inspectionToFinish;
+            const ppiRef = doc(db, "lotes", idLote, "inspecciones", ppi.docId);
+    
+            // Obtener los datos actuales del documento
+            const docSnap = await getDoc(ppiRef);
+            if (!docSnap.exists()) {
+                console.error("No se encontró el documento.");
+                return;
+            }
+    
+            // Copiar los datos existentes
+            const existingData = docSnap.data();
+            const currentStatus = existingData.actividades[actividadIndex].subactividades[subactividadIndex].terminada;
+    
+            // Alternar el estado de terminada
+            existingData.actividades[actividadIndex].subactividades[subactividadIndex] = {
+                ...existingData.actividades[actividadIndex].subactividades[subactividadIndex],
+                terminada: !currentStatus, // Alterna el valor de terminada
+            };
+    
+            // Guardar los datos actualizados en Firestore
+            await updateDoc(ppiRef, { actividades: existingData.actividades });
+    
+            // Actualizar el estado local de ppi para reflejar el cambio sin recargar la página
+            setPpi((prevPpi) => {
+                const updatedActividades = [...prevPpi.actividades];
+                updatedActividades[actividadIndex].subactividades[subactividadIndex] = {
+                    ...updatedActividades[actividadIndex].subactividades[subactividadIndex],
+                    terminada: !currentStatus,
+                };
+                return { ...prevPpi, actividades: updatedActividades };
+            });
+    
+            console.log("Subactividad actualizada:", existingData.actividades[actividadIndex].subactividades[subactividadIndex]);
+    
+            // Cerrar el modal y limpiar el estado
+            setIsFinishInspectionModalOpen(false);
+            setInspectionToFinish(null);
+        } catch (error) {
+            console.error("Error al actualizar la subactividad en Firestore:", error);
+        }
+    };
+    
+
+    // Cerrar el modal de confirmación sin actualizar
+    const closeFinishInspectionModal = () => {
+        setIsFinishInspectionModalOpen(false);
+        setInspectionToFinish(null);
+    };
+
+
+
+
+
 
     return (
         <div className='container mx-auto min-h-screen xl:px-12 py-3 text-gray-500 text-sm'>
@@ -1908,10 +1996,11 @@ function TablaPpi() {
                                     <div className="col-span-2 xl:col-span-2 hidden xl:flex">Responsable</div>
                                     <div className="col-span-2 xl:col-span-2 hidden xl:block ">Nombre</div>
                                     <div className="col-span-4 xl:col-span-2 hidden xl:block ">Fecha</div>
-                                    <div className="col-span-3  hidden xl:flex">Comentarios</div>
-                                    <div className="col-span-4 xl:col-span-1 ">Estado</div>
-                                    <div className="col-span-3 xl:col-span-1 ">Informe</div>
+                                    <div className="col-span-2  hidden xl:flex">Comentarios</div>
+                                    <div className="col-span-4 xl:col-span-1">Result.</div>
+                                    <div className="col-span-3 xl:col-span-1 ">Pdf</div>
                                     <div className="col-span-3 xl:col-span-1 ">Editar</div>
+                                    <div className="col-span-3 xl:col-span-1 ">Estado</div>
                                 </div>
 
                                 <div>
@@ -1963,7 +2052,7 @@ function TablaPpi() {
                                                     <div className="col-span-4 xl:col-span-2 hidden xl:block block">
                                                         {subactividad.fecha || ''}
                                                     </div>
-                                                    <div className="col-span-3 xl:col-span-3 hidden xl:block">
+                                                    <div className="col-span-3 xl:col-span-2 hidden xl:block">
                                                         {subactividad.comentario || ''}
                                                     </div>
                                                     <div className="col-span-4 xl:col-span-1 text-center">
@@ -2003,16 +2092,84 @@ function TablaPpi() {
                                                             </p>
                                                         ) : null}
                                                     </div>
-                                                    <div className="col-span-3 xl:col-span-1 block bg-white cursor-pointer flex justify-center">
+                                                    <div className="col-span-3 xl:col-span-1 block  cursor-pointer flex justify-start ps-2">
                                                         {subactividad.formularioEnviado ? (
-                                                            <button
-                                                                onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                                className="text-gray-500 font-bold text-xl"
-                                                            >
-                                                                <FaRegEdit />
-                                                            </button>
+                                                            // Verificar si esta subactividad es la versión más reciente para su número
+                                                            ppi.actividades
+                                                                .flatMap((actividad) => actividad.subactividades)
+                                                                .filter((sub) => sub.numero === subactividad.numero)
+                                                                .reduce((max, sub) => (sub.version > max ? sub.version : max), 0) === subactividad.version && !subactividad.terminada ? (
+                                                                <button
+                                                                    onClick={() => openConfirmModal(`apto-${indexActividad}-${indexSubactividad}`)}
+                                                                    className="text-gray-500 font-bold text-lg"
+                                                                >
+                                                                    <FaRegEdit />
+                                                                </button>
+                                                            ) : (
+                                                                // Versiones anteriores o terminadas muestran un check
+                                                                <FaCheckCircle className="text-gray-400 text-lg" />
+                                                            )
                                                         ) : null}
                                                     </div>
+
+
+                                                    <div>
+                                                        {/* Botón para abrir el modal de confirmación para terminar la inspección */}
+                                                        <div className="col-span-3 xl:col-span-1 block bg-white cursor-pointer flex justify-center">
+                                                            {subactividad.formularioEnviado ? (
+                                                                subactividad.terminada ? (
+                                                                    <button
+                                                                        onClick={() => openFinishInspectionModal(indexActividad, indexSubactividad)}
+                                                                        className="bg-green-500 text-white px-2 py-1 font-bold text-xs rounded-lg"
+                                                                    >
+                                                                        Terminada
+                                                                    </button>
+                                                                ) : (
+                                                                    isLatestVersion(indexActividad, subactividad) && (
+                                                                        <button
+                                                                            onClick={() => openFinishInspectionModal(indexActividad, indexSubactividad)}
+                                                                            className="bg-yellow-500 text-white px-2 py-1  font-bold text-xs rounded-lg"
+                                                                        >
+                                                                            Pendiente
+                                                                        </button>
+                                                                    )
+                                                                )
+                                                            ) : null}
+                                                        </div>
+
+                                                        {/* Modal de confirmación para terminar la inspección */}
+                                                        {isFinishInspectionModalOpen && (
+                                                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-800 bg-opacity-75">
+                                                                <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+                                                                    <h2 className="text-xl font-semibold mb-4">
+                                                                        {inspectionToFinish?.terminada ? "Confirmación para regresar a pendiente" : "Confirmación para terminar la inspección"}
+                                                                    </h2>
+                                                                    <p className="text-gray-600 mb-6">
+                                                                        {inspectionToFinish?.terminada
+                                                                            ? "¿Estás seguro de que deseas marcar esta inspección como pendiente?"
+                                                                            : "¿Estás seguro de que deseas marcar esta inspección como terminada?"}
+                                                                    </p>
+                                                                    <div className="flex justify-end gap-4">
+                                                                    <button
+                                                                            onClick={confirmFinishInspection}
+                                                                            className={`font-bold py-2 px-4 rounded ${inspectionToFinish?.terminada ? "bg-yellow-500" : "bg-green-600"} text-white`}
+                                                                        >
+                                                                            {inspectionToFinish?.terminada ? "Regresar a pendiente" : "Terminar inspección"}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={closeFinishInspectionModal}
+                                                                            className="bg-gray-500 text-white font-bold py-2 px-4 rounded"
+                                                                        >
+                                                                            Cancelar
+                                                                        </button>
+                                                                        
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+
 
                                                 </div>
                                             ))

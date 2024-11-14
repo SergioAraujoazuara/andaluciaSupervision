@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { db } from '../../firebase_config';
+import { db } from '../../../firebase_config';
 import { getDoc, getDocs, query, collection, where, doc, updateDoc, increment } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 import { FaArrowRight } from "react-icons/fa";
@@ -9,7 +9,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { IoWarningOutline } from "react-icons/io5";
 import { PiWarningCircleLight } from "react-icons/pi";
 import { IoMdAddCircle } from "react-icons/io";
-import FormularioInspeccion from '../Components/FormularioInspeccion'
+import FormularioInspeccion from '../../Components/FormularioInspeccion'
 
 function TablaPpi() {
     const generatePDF = async () => {
@@ -1196,7 +1196,7 @@ import jsPDF from 'jspdf';
 import logo from '../assets/tpf_logo_azul.png'
 import { IoIosWarning } from "react-icons/io";
 import imageCompression from 'browser-image-compression';
-import { db } from '../../firebase_config';
+import { db } from '../../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc } from 'firebase/firestore';
 
 function FormularioInspeccion({ handleConfirmarEnvioPdf, setMensajeExitoInspeccion, setModalConfirmacionInforme, setModalFormulario, marcarFormularioComoEnviado, resultadoInspeccion, comentario, setComentario, firma, fechaHoraActual, handleCloseModal, ppiNombre, nombreResponsable, setResultadoInspeccion }) {

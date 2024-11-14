@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase_config'; // Ajusta esta importación según tu configuración
+import { db } from '../../../firebase_config'; // Ajusta esta importación según tu configuración
 
 function Elemento() {
     const { id } = useParams(); // ID del proyecto

@@ -66,7 +66,8 @@ function PlantillaPpi() {
                     idRegistroFormulario: '',
                     resultadoInspeccion: '',
                     active: true,
-                    motivoVersion: 'original' // Añadir active: true
+                    motivoVersion: 'original',
+                    terminada: false // Añade el campo terminada
                 }
             ]
         }
@@ -104,7 +105,8 @@ function PlantillaPpi() {
             idRegistroFormulario: '',
             resultadoInspeccion: '',
             active: true,
-            motivoVersion: 'original'
+            motivoVersion: 'original',
+            terminada: false // Añade el campo terminada
         });
         setActividades(newActividades);
     };
@@ -148,7 +150,8 @@ function PlantillaPpi() {
                             idRegistroFormulario: '',
                             resultadoInspeccion: '',
                             active: true,
-                            motivoVersion: 'original'
+                            motivoVersion: 'original',
+                            terminada: false // Resetea el campo `terminada`
                         }
                     ]
                 }
@@ -184,7 +187,8 @@ function PlantillaPpi() {
                     idRegistroFormulario: '',
                     resultadoInspeccion: '',
                     active: true,
-                    motivoVersion: "original"
+                    motivoVersion: "original",
+                    terminada: false // Resetea el campo `terminada`
                 }
             ]
         };

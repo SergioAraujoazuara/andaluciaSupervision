@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { db } from '../../firebase_config';
+import { db } from '../../../firebase_config';
 import { getDoc, getDocs, query, collection, where, doc, updateDoc, increment, addDoc, or } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 import { FaArrowRight } from "react-icons/fa";
@@ -10,14 +10,14 @@ import { FaFilePdf } from "react-icons/fa6";
 import { FaQuestionCircle } from "react-icons/fa";
 import { FaCheckCircle } from "react-icons/fa";
 import { FcInspection } from "react-icons/fc";
-import FormularioInspeccion from '../Components/FormularioInspeccion'
+import FormularioInspeccion from '../../Components/FormularioInspeccion'
 import logo from '../assets/tpf_logo_azul.png'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import Pdf_final from './Pdf_final';
+import Pdf_final from '../Pdf_final';
 import imageCompression from 'browser-image-compression';
 
 import { IoArrowBackCircle } from "react-icons/io5";
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../../context/authContext';
 
 
 function TablaPpi() {
