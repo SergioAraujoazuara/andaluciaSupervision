@@ -301,7 +301,7 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                                                 ?
                                                 <Text style={styles.tableCell}>Terminada</Text>
                                                 :
-                                                <Text style={styles.tableCell}>Pendiente</Text>
+                                                <Text style={styles.tableCell}>{sub.resultadoInspeccion === 'No apto'? '': 'Pendiente'}</Text>
                                             }</Text></View>
                                         </View>
                                         <View style={styles.divider} key={`divider_sub_${index}_${subIndex}`} />
