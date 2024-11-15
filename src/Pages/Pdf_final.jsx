@@ -167,7 +167,7 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         link.target = '_blank'; // Abre en una nueva pestaña o ventana
         link.click();
     };
-    
+
 
 
     const combinePDFs = async () => {
@@ -252,6 +252,7 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                             <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Fecha</Text></View>
                             <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Firma</Text></View>
                             <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Comentarios</Text></View>
+                            <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Resultado</Text></View>
                             <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Estado</Text></View>
                         </View>
                         {ppi && ppi.actividades.map((actividad, index) => (
@@ -296,6 +297,12 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                                                     {sub.resultadoInspeccion}
                                                 </Text>
                                             </View>
+                                            <View style={styles.tableCol}><Text style={styles.tableCell}>{sub.terminada
+                                                ?
+                                                <Text style={styles.tableCell}>Terminada</Text>
+                                                :
+                                                <Text style={styles.tableCell}>Pendiente</Text>
+                                            }</Text></View>
                                         </View>
                                         <View style={styles.divider} key={`divider_sub_${index}_${subIndex}`} />
                                     </>

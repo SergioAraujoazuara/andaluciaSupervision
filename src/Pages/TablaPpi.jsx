@@ -1580,27 +1580,27 @@ function TablaPpi() {
         try {
             const { actividadIndex, subactividadIndex } = inspectionToFinish;
             const ppiRef = doc(db, "lotes", idLote, "inspecciones", ppi.docId);
-    
+
             // Obtener los datos actuales del documento
             const docSnap = await getDoc(ppiRef);
             if (!docSnap.exists()) {
                 console.error("No se encontró el documento.");
                 return;
             }
-    
+
             // Copiar los datos existentes
             const existingData = docSnap.data();
             const currentStatus = existingData.actividades[actividadIndex].subactividades[subactividadIndex].terminada;
-    
+
             // Alternar el estado de terminada
             existingData.actividades[actividadIndex].subactividades[subactividadIndex] = {
                 ...existingData.actividades[actividadIndex].subactividades[subactividadIndex],
                 terminada: !currentStatus, // Alterna el valor de terminada
             };
-    
+
             // Guardar los datos actualizados en Firestore
             await updateDoc(ppiRef, { actividades: existingData.actividades });
-    
+
             // Actualizar el estado local de ppi para reflejar el cambio sin recargar la página
             setPpi((prevPpi) => {
                 const updatedActividades = [...prevPpi.actividades];
@@ -1608,11 +1608,15 @@ function TablaPpi() {
                     ...updatedActividades[actividadIndex].subactividades[subactividadIndex],
                     terminada: !currentStatus,
                 };
+
                 return { ...prevPpi, actividades: updatedActividades };
             });
-    
+
+            // Actualizar el contador de terminadas
+            setTerminadasCount((prevCount) => currentStatus ? prevCount - 1 : prevCount + 1);
+
             console.log("Subactividad actualizada:", existingData.actividades[actividadIndex].subactividades[subactividadIndex]);
-    
+
             // Cerrar el modal y limpiar el estado
             setIsFinishInspectionModalOpen(false);
             setInspectionToFinish(null);
@@ -1620,7 +1624,9 @@ function TablaPpi() {
             console.error("Error al actualizar la subactividad en Firestore:", error);
         }
     };
-    
+
+
+
 
     // Cerrar el modal de confirmación sin actualizar
     const closeFinishInspectionModal = () => {
@@ -1628,6 +1634,21 @@ function TablaPpi() {
         setInspectionToFinish(null);
     };
 
+
+    // Contador terminadas
+
+    const [terminadasCount, setTerminadasCount] = useState(0);
+
+
+    useEffect(() => {
+        if (ppi && ppi.actividades) {
+            const newTerminadasCount = ppi.actividades.reduce((count, actividad) => {
+                return count + actividad.subactividades.filter(subactividad => subactividad.terminada).length;
+            }, 0);
+
+            setTerminadasCount(newTerminadasCount); // Actualizamos el estado
+        }
+    }, [ppi]);
 
 
 
@@ -1896,42 +1917,58 @@ function TablaPpi() {
             <div className='w-full border-b-2 border-gray-200'></div>
 
             <div className='flex flex-col mt-4 px-4 xl:px-0'>
-                <div className='bg-gray-100 px-2 xl:px-0'>
+                <div className=' px-2 xl:px-0'>
                     {ppi ? (
-                        <div className='flex flex-col xl:flex-row gap-3 justify-center xl:justify-between items-center'>
-                            <div className='flex gap-4 flex-row xl:flex-row  bg-gray-200 rounded-lg px-5 py-3'>
-                                <div className='flex gap-2 items-center '>
-                                    <span className='text-green-500 text-xl'><AiOutlineCheckCircle /></span>
-                                    <p className='font-medium text-md'>
-                                        Inspecciones aptas: <span>{actividadesAptas || 0}</span>
-                                    </p>
+                        <>
+                            <div className='flex flex-col xl:flex-row gap-3 justify-center xl:justify-between items-center'>
+                                <div className='flex gap-14 flex-row xl:flex-row xl:justify-between  bg-gray-200 w-full rounded-lg px-5 py-3'>
+                                    <div className='flex gap-8'>
+                                        <div className='flex gap-2 items-center '>
+                                            <span className='text-green-500 text-xl'><AiOutlineCheckCircle /></span>
+                                            <p className='font-medium text-md'>
+                                                Inspecciones aptas: <span>{actividadesAptas || 0}</span>
+                                            </p>
+                                        </div>
+
+                                        <div className='flex gap-2 items-center '>
+                                            <span className='text-amber-600 text-xl'><FaWpforms /></span>
+                                            <p className='font-medium font-medium text-md'>
+                                                Inspecciones totales: <span>{totalSubactividades || 0}</span>
+                                            </p>
+                                        </div>
+                                        <div className='flex gap-2 items-center '>
+                                            <span className='text-blue-500 text-xl'><AiOutlineCheckCircle /></span>
+                                            <p className='font-medium text-md'>
+                                                Inspecciones terminadas: <span>{terminadasCount || 0}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+
+
+
+                                    <div className=''>
+                                        {actividadesAptas === totalSubactividades && terminadasCount === totalSubactividades && (
+                                            <button
+                                                onClick={() => setShowConfirmModal(true)}
+                                                className="bg-amber-600 text-white font-medium py-2 px-4 rounded-lg"
+                                            >
+                                                <p className='flex gap-2 items-center'><FaFilePdf />Terminar inspección</p>
+                                            </button>
+                                        )}
+                                    </div>
+
+
+
                                 </div>
 
-                                <div className='flex gap-2 items-center '>
-                                    <span className='text-amber-600 text-xl'><FaWpforms /></span>
-                                    <p className='font-medium font-medium text-md'>
-                                        Inspecciones totales: <span>{totalSubactividades || 0}</span>
-                                    </p>
-                                </div>
-                                <div className=''>
-                                    {difActividades === 0 && (
-                                        <button
-                                            onClick={() => setShowConfirmModal(true)}
-                                            className="bg-amber-600 text-white font-medium py-1 px-4 rounded-lg"
-                                        >
-                                            <p className='flex gap-2 items-center'><FaFilePdf />Terminar inspección</p>
-                                        </button>
-                                    )}
-                                </div>
+
+
+
                             </div>
-
-                            <div className='flex gap-2 flex-col xl:flex-row items-center xl:items-start'>
-                                <div className='flex gap-2 flex items-center font-medium text-md'>
+                            <div className='flex gap-2 flex-col xl:flex-row xl:justify-between items-center xl:items-start my-5'>
 
 
-                                </div>
-
-                                <div className='flex-col xl:flex-row gap-2 flex items-center xl:items-center'>
+                                <div className='flex-col xl:flex-row gap-5 flex items-center xl:items-center'>
 
                                     <select value={activityFilter} onChange={handleActivityFilterChange} className="bg-white border rounded-md px-4 py-2">
                                         {activityOptions.map(option => (
@@ -1939,7 +1976,7 @@ function TablaPpi() {
                                         ))}
                                     </select>
 
-                                    <div className='flex gap-3'>
+                                    <div className='flex gap-5'>
                                         <select value={responsableFilter} onChange={handleResponsableFilterChange} className="bg-white border rounded-md px-4 py-2">
                                             <option value="Todos">Responsable</option>
                                             {ppi && [...new Set(ppi.actividades.flatMap(actividad => actividad.subactividades.map(subactividad => subactividad.responsable)))].map(responsable => (
@@ -1954,7 +1991,10 @@ function TablaPpi() {
                                         </select>
                                     </div>
 
-                                    <div className='flex gap-3'>
+                                </div>
+                                <div className='flex gap-5 pr-6'>
+
+                                    <div className='flex gap-5'>
                                         <button onClick={showTableView} className={`flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2 ${view === 'table' ? 'bg-yellow-600 text-gray-100' : 'bg-gray-200'}`}>
                                             <span><FaTable /></span>Tabla
                                         </button>
@@ -1967,15 +2007,10 @@ function TablaPpi() {
 
                                 </div>
 
-                                <div className='flex-col xl:flex-row gap-2 flex items-start xl:items-center'>
 
-
-                                </div>
 
                             </div>
-
-
-                        </div>
+                        </>
                     ) : (
                         <div>Cargando...</div>
                     )}
@@ -2142,7 +2177,7 @@ function TablaPpi() {
                                                             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-800 bg-opacity-75">
                                                                 <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
                                                                     <h2 className="text-xl font-semibold mb-4">
-                                                                        {inspectionToFinish?.terminada ? "Confirmación para regresar a pendiente" : "Confirmación para terminar la inspección"}
+                                                                        {inspectionToFinish?.terminada ? "¿Regresar a pendiente?" : "¿Terminar la inspección?"}
                                                                     </h2>
                                                                     <p className="text-gray-600 mb-6">
                                                                         {inspectionToFinish?.terminada
@@ -2150,7 +2185,7 @@ function TablaPpi() {
                                                                             : "¿Estás seguro de que deseas marcar esta inspección como terminada?"}
                                                                     </p>
                                                                     <div className="flex justify-end gap-4">
-                                                                    <button
+                                                                        <button
                                                                             onClick={confirmFinishInspection}
                                                                             className={`font-bold py-2 px-4 rounded ${inspectionToFinish?.terminada ? "bg-yellow-500" : "bg-green-600"} text-white`}
                                                                         >
@@ -2162,7 +2197,7 @@ function TablaPpi() {
                                                                         >
                                                                             Cancelar
                                                                         </button>
-                                                                        
+
                                                                     </div>
                                                                 </div>
                                                             </div>
