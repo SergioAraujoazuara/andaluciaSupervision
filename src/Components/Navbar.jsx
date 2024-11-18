@@ -96,6 +96,15 @@ const Navbar = () => {
                   />
                 )}
 
+                {(userRol === 'admin' || userRol === 'usuario') && (
+                  <NavLink
+                    to="/parteObra"
+                    linkName="Parte de obra"
+                    activeLink={activeLink}
+                    handleLinkClick={handleLinkClick}
+                  />
+                )}
+
                 {/* {(userRol === 'admin' || userRol === 'usuario') && (
                   <NavLink
                     to="/auscultacion"

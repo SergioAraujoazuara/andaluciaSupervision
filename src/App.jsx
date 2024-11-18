@@ -22,6 +22,8 @@ import GrocIA from './Components/GrocIA.jsx';
 import Dashboard from './Pages/Dashboard.jsx';
 import Auscultacion from './Pages/Auscultacion.jsx';
 import SendMail from './Components/FeatureSendMail/SendMail.jsx';
+import ParteObra from './Pages/ParteObra/ParteObra.jsx';
+import GestionOpciones from './Pages/ParteObra/GestionOpciones.jsx';
 
 
 function App() {
@@ -51,6 +53,13 @@ function App() {
     { path: '/editarPpi/:id', element: <EditarPpi />, roles: ['admin', 'usuario'] },
     { path: '/formularioInspeccion/:idLote/:id', element: <FormularioInspeccion />, roles: ['admin', 'usuario'] },
     { path: '/pdf_final', element: <Pdf_final />, roles: ['admin', 'usuario'] },
+
+    // Parte de obra
+    { path: '/parteObra', element: <ParteObra />, roles: ['admin', 'usuario'] },
+    { path: '/opcionesFormulario', element: <GestionOpciones />, roles: ['admin', 'usuario'] },
+
+
+
   ];
 
   return (
