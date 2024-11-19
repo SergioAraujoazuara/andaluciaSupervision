@@ -9,6 +9,7 @@ import {
   updateCampo,
   updateValor,
 } from "../../Pages/ParteObra/Helpers/firebaseHelpers";
+import GestionPlantillas from "./GestionPlantillas";
 
 const GestionOpciones = () => {
   const [nuevoCampo, setNuevoCampo] = useState("");
@@ -292,6 +293,7 @@ const GestionOpciones = () => {
           </div>
         ))}
       </div>
+      <GestionPlantillas/>
     </div>
   );
 };
