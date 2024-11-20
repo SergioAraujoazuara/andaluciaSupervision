@@ -11,6 +11,25 @@ import {
 } from "../../Pages/ParteObra/Helpers/firebaseHelpers";
 import GestionPlantillas from "./GestionPlantillas";
 
+const normalizeForValidation = (str) => {
+  return str
+    .toLowerCase() // Convertir a minúsculas
+    .replace(/[^\w]/g, "") // Eliminar caracteres especiales (todo lo que no sea letra, número o guion bajo)
+    .replace(/\s+/g, ""); // Eliminar espacios
+};
+
+const capitalizeWords = (str) => {
+  return str
+    .toLowerCase() // Asegurarse de que todo esté en minúsculas
+    .replace(/\b\w/g, (match) => match.toUpperCase()); // Primera letra de cada palabra en mayúscula
+};
+
+
+// Capitalizar primera letra
+const capitalizeFirstLetter = (str) => {
+  return str.charAt(0).toUpperCase() + str.slice(1); // Primera letra mayúscula
+};
+
 const GestionOpciones = () => {
   const [nuevoCampo, setNuevoCampo] = useState("");
   const [valorCampo, setValorCampo] = useState("");
@@ -56,8 +75,16 @@ const GestionOpciones = () => {
   };
 
   const handleAddCampo = async () => {
+    const nuevoCampoNormalizado = normalizeForValidation(nuevoCampo);
+  
+    if (campos.some((campo) => normalizeForValidation(campo.nombre) === nuevoCampoNormalizado)) {
+      mostrarModal("El campo ya existe.", "error");
+      return;
+    }
+  
     try {
-      const nuevosCampos = await addCampo(docId, campos, nuevoCampo);
+      const campoCapitalizado = capitalizeWords(nuevoCampo); // Capitalizar antes de guardar
+      const nuevosCampos = await addCampo(docId, campos, campoCapitalizado);
       setCampos(nuevosCampos);
       setNuevoCampo("");
       mostrarModal("Campo agregado correctamente.", "success");
@@ -65,10 +92,20 @@ const GestionOpciones = () => {
       mostrarModal(error.message, "error");
     }
   };
+  
 
   const handleAddValor = async () => {
+    const valorNormalizado = normalizeForValidation(valorCampo);
+  
+    const campo = campos.find((campo) => campo.id === campoSeleccionado);
+    if (campo && campo.valores.some((valor) => normalizeForValidation(valor.valor) === valorNormalizado)) {
+      mostrarModal("El valor ya existe en este campo.", "error");
+      return;
+    }
+  
     try {
-      const nuevosCampos = await addValor(docId, campos, campoSeleccionado, valorCampo);
+      const valorCapitalizado = capitalizeWords(valorCampo); // Capitalizar antes de guardar
+      const nuevosCampos = await addValor(docId, campos, campoSeleccionado, valorCapitalizado);
       setCampos(nuevosCampos);
       setValorCampo("");
       mostrarModal("Valor agregado correctamente al campo.", "success");
@@ -76,6 +113,7 @@ const GestionOpciones = () => {
       mostrarModal(error.message, "error");
     }
   };
+  
 
   const handleDeleteCampo = (campoId) =>
     mostrarModal("¿Estás seguro de que deseas eliminar este campo?", "warning", async () => {
@@ -100,6 +138,13 @@ const GestionOpciones = () => {
     });
 
   const handleUpdateCampo = async (campoId) => {
+    const nombreNormalizado = normalizeForValidation(nombreEditado);
+
+    if (campos.some((campo) => normalizeForValidation(campo.nombre) === nombreNormalizado)) {
+      mostrarModal("El nombre del campo ya existe.", "error");
+      return;
+    }
+
     try {
       const nuevosCampos = await updateCampo(docId, campos, campoId, nombreEditado);
       setCampos(nuevosCampos);
@@ -111,6 +156,14 @@ const GestionOpciones = () => {
   };
 
   const handleUpdateValor = async (campoId, valorId) => {
+    const valorNormalizado = normalizeForValidation(valorEditado);
+
+    const campo = campos.find((campo) => campo.id === campoId);
+    if (campo && campo.valores.some((valor) => normalizeForValidation(valor.valor) === valorNormalizado)) {
+      mostrarModal("El valor ya existe en este campo.", "error");
+      return;
+    }
+
     try {
       const nuevosCampos = await updateValor(docId, campos, campoId, valorId, valorEditado);
       setCampos(nuevosCampos);
@@ -138,9 +191,6 @@ const GestionOpciones = () => {
                   : "text-red-600"
               }`}
             >
-              {tipoModal === "success" && <FaCheck className="inline mr-2" />}
-              {tipoModal === "warning" && <FaExclamationCircle className="inline mr-2" />}
-              {tipoModal === "error" && <FaExclamationCircle className="inline mr-2" />}
               {mensajeModal}
             </h3>
             <div className="flex justify-center gap-4">
@@ -195,7 +245,7 @@ const GestionOpciones = () => {
             <option value="">-- Seleccionar Campo --</option>
             {campos?.map((campo) => (
               <option key={campo.id} value={campo.id}>
-                {campo.nombre}
+                {capitalizeFirstLetter(campo.nombre)}
               </option>
             ))}
           </select>
@@ -236,7 +286,9 @@ const GestionOpciones = () => {
               </div>
             ) : (
               <div className="flex justify-between items-center mb-2">
-                <h4 className="text-lg font-semibold text-indigo-600">{campo.nombre}</h4>
+                <h4 className="text-lg font-semibold text-indigo-600">
+                  {capitalizeFirstLetter(campo.nombre)}
+                </h4>
                 <div className="flex gap-2">
                   <FaEdit
                     className="text-gray-600 cursor-pointer hover:text-gray-800"
@@ -272,7 +324,7 @@ const GestionOpciones = () => {
                   </li>
                 ) : (
                   <li key={valor.id} className="flex justify-between items-center">
-                    <span>{valor.valor}</span>
+                    <span>{capitalizeFirstLetter(valor.valor)}</span>
                     <div className="flex gap-2">
                       <FaEdit
                         className="text-gray-600 cursor-pointer hover:text-gray-800"
@@ -293,7 +345,7 @@ const GestionOpciones = () => {
           </div>
         ))}
       </div>
-      <GestionPlantillas/>
+      <GestionPlantillas />
     </div>
   );
 };

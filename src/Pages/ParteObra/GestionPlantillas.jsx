@@ -3,6 +3,21 @@ import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "firebase
 import { db } from "../../../firebase_config";
 import { FaCheckCircle, FaExclamationTriangle, FaTimesCircle } from "react-icons/fa";
 
+// Función para normalizar datos para validación
+const normalizeForValidation = (str) => {
+  return str
+    .toLowerCase()
+    .replace(/[^\w]/g, "") // Eliminar caracteres especiales
+    .replace(/\s+/g, ""); // Eliminar espacios
+};
+
+// Función para capitalizar las palabras
+const capitalizeWords = (str) => {
+  return str
+    .toLowerCase()
+    .replace(/\b\w/g, (match) => match.toUpperCase());
+};
+
 const GestionPlantillas = () => {
   const [plantillas, setPlantillas] = useState([]);
   const [campos, setCampos] = useState([]);
@@ -57,13 +72,18 @@ const GestionPlantillas = () => {
   };
 
   const handleCrearPlantilla = async () => {
-    if (!nuevaPlantilla.trim()) {
-      mostrarModal("El nombre de la plantilla no puede estar vacío.");
+    const nombreNormalizado = normalizeForValidation(nuevaPlantilla);
+
+    if (
+      !nuevaPlantilla.trim() ||
+      plantillas.some((plantilla) => normalizeForValidation(plantilla.nombre) === nombreNormalizado)
+    ) {
+      mostrarModal("El nombre de la plantilla ya existe o es inválido.");
       return;
     }
 
     const plantilla = {
-      nombre: nuevaPlantilla,
+      nombre: capitalizeWords(nuevaPlantilla),
       campos: camposSeleccionados,
     };
 
@@ -107,8 +127,21 @@ const GestionPlantillas = () => {
   const handleActualizarPlantilla = async () => {
     if (!plantillaEditando) return;
 
+    const nombreNormalizado = normalizeForValidation(nuevaPlantilla);
+
+    if (
+      plantillas.some(
+        (plantilla) =>
+          plantilla.id !== plantillaEditando.id &&
+          normalizeForValidation(plantilla.nombre) === nombreNormalizado
+      )
+    ) {
+      mostrarModal("El nombre de la plantilla ya existe.");
+      return;
+    }
+
     const plantillaActualizada = {
-      nombre: nuevaPlantilla,
+      nombre: capitalizeWords(nuevaPlantilla),
       campos: camposSeleccionados,
     };
 
