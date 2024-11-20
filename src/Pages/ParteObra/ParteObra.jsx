@@ -5,15 +5,12 @@ import { db, storage } from "../../../firebase_config";
 import { BsClipboardData } from "react-icons/bs";
 import GestionOpciones from "./GestionOpciones";
 import TablaRegistros from "./TablaRegistros";
+import imageCompression from "browser-image-compression"; // Importa la librería de compresión
 
 const ParteObra = () => {
   const [formData, setFormData] = useState({
-    tipo: "",
     observaciones: "",
     imagenes: [],
-    geolocalizacion: null,
-    motivo: "",
-    estado: "Abierto",
     fechaHora: "",
   });
 
@@ -34,7 +31,6 @@ const ParteObra = () => {
           ...doc.data(),
         }));
 
-        // Reordenar plantillas: Parte de obra primero y luego alfabéticamente
         const ordenadas = [
           ...plantillasCargadas.filter((p) => p.nombre === "Parte de obra"),
           ...plantillasCargadas.filter((p) => p.nombre !== "Parte de obra").sort((a, b) =>
@@ -85,44 +81,54 @@ const ParteObra = () => {
       .replace(/\s+/g, "");
   };
 
+  // Función para comprimir la imagen
   const compressImage = async (file) => {
     const options = {
       maxSizeMB: 0.3,
       maxWidthOrHeight: 1920,
       useWebWorker: true,
     };
+    console.log("Compresion de imagen iniciada", file);
     return await imageCompression(file, options);
   };
 
+  // Función para subir la imagen a Firebase Storage
   const uploadImageWithMetadata = async (file, index) => {
+    console.log("Subida de imagen iniciada", file);
     try {
       const storageRef = ref(storage, `imagenes/${Date.now()}_${index}`);
       const metadata = {
         contentType: file.type,
       };
       await uploadBytes(storageRef, file, metadata);
-      return await getDownloadURL(storageRef);
+      const url = await getDownloadURL(storageRef);
+      console.log("Imagen subida con éxito y URL obtenida:", url);
+      return url;
     } catch (error) {
       console.error("Error al subir la imagen:", error);
       throw error;
     }
   };
 
+  // Función para manejar la selección de archivos
   const handleFileChange = async (e, index) => {
     const files = [...formData.imagenes];
     const file = e.target.files[0];
 
     if (file) {
+      console.log("Archivo seleccionado:", file);
       try {
-        const compressedFile = await compressImage(file);
+        const compressedFile = await compressImage(file); // Comprimir la imagen
         files[index] = compressedFile;
-        setFormData({ ...formData, imagenes: files });
+        setFormData({ ...formData, imagenes: files }); // Actualizar el estado con la imagen comprimida
+        console.log("Imagen comprimida:", compressedFile);
       } catch (error) {
         console.error("Error al procesar la imagen:", error);
       }
     }
   };
 
+  // Función para manejar el envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -134,14 +140,17 @@ const ParteObra = () => {
     }
 
     try {
+      console.log("Enviando datos...");
       const imageUrls = await Promise.all(
         formData.imagenes.map(async (image, index) => {
           if (image) {
-            return await uploadImageWithMetadata(image, index);
+            console.log(`Subiendo imagen ${index + 1}...`);
+            return await uploadImageWithMetadata(image, index); // Subir la imagen y obtener su URL
           }
           return null;
         })
       );
+      console.log("URLs de imágenes obtenidas:", imageUrls);
 
       const formDataCamelCase = Object.keys(formData).reduce((acc, key) => {
         const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
@@ -160,12 +169,8 @@ const ParteObra = () => {
       setModalVisible(true);
 
       setFormData({
-        tipo: "",
         observaciones: "",
         imagenes: [],
-        geolocalizacion: null,
-        motivo: "",
-        estado: "Abierto",
         fechaHora: "",
       });
     } catch (error) {
@@ -310,7 +315,7 @@ const ParteObra = () => {
       </div>
 
       <GestionOpciones />
-      <TablaRegistros/>
+      <TablaRegistros />
     </div>
   );
 };

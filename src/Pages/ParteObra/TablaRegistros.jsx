@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../firebase_config";
 import { db } from "../../../firebase_config";
+import { doc, updateDoc } from "firebase/firestore";
+import imageCompression from "browser-image-compression"; // Importa la librería de compresión
+
 
 const TablaRegistros = () => {
   const [plantillas, setPlantillas] = useState([]);
@@ -12,6 +17,63 @@ const TablaRegistros = () => {
   const [valoresFiltro, setValoresFiltro] = useState({});
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
+
+  // Función para comprimir la imagen
+  const compressImage = async (file) => {
+    const options = {
+      maxSizeMB: 0.3,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    };
+    console.log("Compresion de imagen iniciada", file);
+    return await imageCompression(file, options);
+  };
+
+  // Función para subir la imagen a Firebase Storage
+  const uploadImageWithMetadata = async (file, index) => {
+    console.log("Subida de imagen iniciada", file);
+    try {
+      const storageRef = ref(storage, `imagenes/${Date.now()}_${index}`);
+      const metadata = {
+        contentType: file.type,
+      };
+      await uploadBytes(storageRef, file, metadata);
+      const url = await getDownloadURL(storageRef);
+      console.log("Imagen subida con éxito y URL obtenida:", url);
+      return url;
+    } catch (error) {
+      console.error("Error al subir la imagen:", error);
+      throw error;
+    }
+  };
+
+  const handleImageEdit = async (e, index) => {
+    const file = e.target.files[0]; // Obtener la imagen seleccionada
+    if (file) {
+      console.log(`Imagen seleccionada en el índice ${index}:`, file);
+  
+      try {
+        // Comprimir la imagen
+        const compressedFile = await compressImage(file);
+        console.log(`Imagen comprimida en el índice ${index}:`, compressedFile);
+  
+        // Subir la imagen a Firebase Storage
+        const imageUrl = await uploadImageWithMetadata(compressedFile, index);
+        console.log(`URL de la imagen subida en el índice ${index}:`, imageUrl);
+  
+        // Actualizar el estado local con la nueva URL de la imagen
+        const updatedRegistro = { ...registroSeleccionado };
+        updatedRegistro.imagenes[index] = imageUrl; // Reemplazar la imagen en la posición correspondiente
+        setRegistroSeleccionado(updatedRegistro); // Actualizar el estado con el nuevo registro
+  
+        console.log(`Registro actualizado con la nueva imagen en el índice ${index}:`, updatedRegistro);
+  
+      } catch (error) {
+        console.error(`Error al procesar la imagen en el índice ${index}:`, error);
+      }
+    }
+  };
+  
 
   useEffect(() => {
     const cargarPlantillas = async () => {
@@ -96,7 +158,7 @@ const TablaRegistros = () => {
 
   useEffect(() => {
     let registrosFiltrados = registrosPorPlantilla[plantillaSeleccionada] || [];
-  
+
     // Filtrar por valores seleccionados en los campos
     Object.keys(valoresFiltro).forEach((campo) => {
       if (valoresFiltro[campo] && campo !== "observaciones") { // Excluir Observaciones de este filtro
@@ -108,14 +170,14 @@ const TablaRegistros = () => {
         );
       }
     });
-  
+
     // Filtrar por rango de fechas
     if (fechaInicio || fechaFin) {
       const fechaInicioObj = fechaInicio ? new Date(fechaInicio) : null;
       const fechaFinObj = fechaFin
         ? new Date(fechaFin).setHours(23, 59, 59, 999) // Asegurar incluir todo el día
         : null;
-  
+
       registrosFiltrados = registrosFiltrados.filter((registro) => {
         const fechaRegistro = new Date(registro.fechaHora);
         return (
@@ -124,7 +186,7 @@ const TablaRegistros = () => {
         );
       });
     }
-  
+
     // Filtro de búsqueda de texto para el campo Observaciones
     if (valoresFiltro["observaciones"]) {
       const textoBusqueda = valoresFiltro["observaciones"].toLowerCase().trim();
@@ -132,11 +194,11 @@ const TablaRegistros = () => {
         registro.observaciones?.toLowerCase().includes(textoBusqueda) // Verifica coincidencias parciales
       );
     }
-  
+
     setRegistrosFiltrados(registrosFiltrados);
   }, [valoresFiltro, registrosPorPlantilla, plantillaSeleccionada, fechaInicio, fechaFin]);
-  
-  
+
+
 
 
   const toCamelCase = (str) => {
@@ -178,6 +240,57 @@ const TablaRegistros = () => {
     }));
   };
 
+
+  // Modales
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState(""); // Contenido dinámico del modal
+
+const [alertModalVisible, setAlertModalVisible] = useState(false); // Modal de alerta
+const [alertMessage, setAlertMessage] = useState("");  // Mensaje de la alerta
+
+  // Editar modal
+  const [registroSeleccionado, setRegistroSeleccionado] = useState(null);
+
+  const handleGuardar = async () => {
+    try {
+      console.log("Guardando el registro actualizado:", registroSeleccionado);
+  
+      // Asegúrate de que las imágenes han sido subidas y actualizadas en el estado
+      const updatedRegistro = { ...registroSeleccionado };
+  
+      // Si se han subido nuevas imágenes, debes actualizarlas en Firestore
+      const docRef = doc(db, `${toCamelCase(plantillaSeleccionada)}Form`, registroSeleccionado.id);
+  
+      // Actualiza el documento con las nuevas imágenes y los valores modificados
+      await updateDoc(docRef, updatedRegistro);
+  
+      console.log("Documento actualizado correctamente");
+  
+      // Actualizar el estado localmente en registrosFiltrados para reflejar el cambio
+      setRegistrosFiltrados((prevRegistros) =>
+        prevRegistros.map((registro) =>
+          registro.id === updatedRegistro.id ? updatedRegistro : registro
+        )
+      );
+  
+      setAlertMessage("El registro se actualizó correctamente.");
+      setAlertModalVisible(true);
+  
+      setModalVisible(false);
+    } catch (error) {
+      console.error("Error al actualizar el documento:", error);
+  
+      setAlertMessage("Hubo un error al actualizar el registro.");
+      setAlertModalVisible(true);
+    }
+  };
+  
+  
+  
+  
+  
+  
+
   return (
     <div className="p-8 max-w-7xl mx-auto bg-white shadow-lg rounded-lg">
       <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Registros de Formularios</h1>
@@ -192,8 +305,8 @@ const TablaRegistros = () => {
               cargarRegistros(plantilla.nombre);
             }}
             className={`px-6 py-2 rounded-md font-semibold shadow-md ${plantillaSeleccionada === plantilla.nombre
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-800"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-800"
               } hover:bg-blue-500 transition`}
           >
             {plantilla.nombre}
@@ -247,19 +360,19 @@ const TablaRegistros = () => {
             </div>
           </div>
           {/* Input de búsqueda para Observaciones */}
-<div className="flex flex-col mb-4">
-  <label className="text-sm font-semibold text-gray-600 mb-2">Buscar en Observaciones</label>
-  <input
-    type="text"
-    value={valoresFiltro["observaciones"] || ""}
-    onChange={(e) => handleFiltroCambio("observaciones", e.target.value)}
-    placeholder="Escribe para buscar..."
-    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-  />
-</div>
+          <div className="flex flex-col mb-4">
+            <label className="text-sm font-semibold text-gray-600 mb-2">Buscar en Observaciones</label>
+            <input
+              type="text"
+              value={valoresFiltro["observaciones"] || ""}
+              onChange={(e) => handleFiltroCambio("observaciones", e.target.value)}
+              placeholder="Escribe para buscar..."
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+            />
+          </div>
 
         </div>
-        
+
       )}
 
 
@@ -282,6 +395,9 @@ const TablaRegistros = () => {
                         {capitalizeFirstLetter(columna)}
                       </th>
                     ))}
+                    <th className="border border-gray-300 px-4 py-2 text-left text-sm text-gray-700">
+                      Acciones
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -296,9 +412,36 @@ const TablaRegistros = () => {
                           {registro[columna] || ""}
                         </td>
                       ))}
+                      {/* Columna de acciones */}
+                      <td className="border px-4 py-2 text-gray-800">
+                        <button
+                          className="px-4 py-2 bg-green-500 text-white rounded-md mr-2"
+                          onClick={() => {
+                            console.log("Registro seleccionado:", registro); // Aquí imprimimos el registro en la consola
+                            setRegistroSeleccionado(registro); // Asegúrate de que 'registro' tiene las imágenes
+                            setModalContent("Editar");
+                            setModalVisible(true);
+                          }}
+
+
+                        >
+                          Editar
+                        </button>
+                        <button
+                          className="px-4 py-2 bg-red-500 text-white rounded-md"
+                          onClick={() => {
+                            setModalContent("Eliminar");
+                            setModalVisible(true);
+                          }}
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+
                     </tr>
                   ))}
                 </tbody>
+
               </table>
             </div>
           ) : (
@@ -308,7 +451,127 @@ const TablaRegistros = () => {
           )}
         </>
       )}
+
+      {modalVisible && modalContent === "Editar" && registroSeleccionado && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-md shadow-md w-96 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-bold mb-4 text-center">Editar Registro</h2>
+
+            {/* Mostrar campos del registro */}
+            {Object.keys(registroSeleccionado)
+              .filter((campo) => campo !== "imagenes") // Excluimos las imágenes para tratarlas por separado
+              .map((campo, index) => {
+                // Normalizamos el nombre del campo a minúsculas para comparación
+                const campoDinamico = camposFiltrados.find(c => c.nombre.toLowerCase() === campo.toLowerCase());
+
+                return (
+                  <div key={index} className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-600 mb-2">
+                      {capitalizeFirstLetter(campo)}
+                    </label>
+
+                    {/* Si el campo tiene valores posibles, se muestra un select */}
+                    {campoDinamico && campoDinamico.valores.length > 0 ? (
+                      <select
+                        value={registroSeleccionado[campo] || ""}
+                        onChange={(e) =>
+                          setRegistroSeleccionado((prev) => ({
+                            ...prev,
+                            [campo]: e.target.value,
+                          }))
+                        }
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      >
+                        <option value="">Seleccionar</option>
+                        {campoDinamico.valores.map((valor) => (
+                          <option key={valor.id} value={valor.valor}>
+                            {valor.valor}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      // Si no tiene valores posibles, se muestra un input de texto
+                      <input
+                        type="text"
+                        value={registroSeleccionado[campo] || ""}
+                        onChange={(e) =>
+                          setRegistroSeleccionado((prev) => ({
+                            ...prev,
+                            [campo]: e.target.value,
+                          }))
+                        }
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+
+            {/* Mostrar y cargar imágenes */}
+            <div className="mb-4">
+  <label className="block text-sm font-semibold text-gray-600 mb-2">
+    Imágenes
+  </label>
+  {registroSeleccionado.imagenes && registroSeleccionado.imagenes.map((imagen, index) => (
+    <div key={index} className="flex items-center gap-2 mb-2">
+      <img
+        src={imagen} // Mostrar la imagen
+        alt={`Imagen ${index + 1}`}
+        className="w-16 h-16 object-cover rounded-md border"
+      />
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => handleImageEdit(e, index)} // Llamar a la función de edición
+        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200"
+      />
     </div>
+  ))}
+</div>
+
+
+            <div className="flex justify-end">
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded-md mr-2"
+                onClick={handleGuardar} // Llamamos a la función de guardar aquí
+              >
+                Guardar
+              </button>
+
+              <button
+                className="px-4 py-2 bg-gray-500 text-white rounded-md"
+                onClick={() => setModalVisible(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+{alertModalVisible && (
+  <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+    <div className="bg-white p-6 rounded-md shadow-md w-96 max-h-[90vh] overflow-y-auto">
+      <h2 className="text-lg font-bold mb-4 text-center">Actualización</h2>
+      <p className="text-sm text-center text-gray-600 mb-4">{alertMessage}</p>
+      <div className="flex justify-end">
+        <button
+          className="px-4 py-2 bg-blue-500 text-white rounded-md"
+          onClick={() => setAlertModalVisible(false)} // Cierra el modal de alerta
+        >
+          Aceptar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+    </div>
+
+
+
   );
 };
 
