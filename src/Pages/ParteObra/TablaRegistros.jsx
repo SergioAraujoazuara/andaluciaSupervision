@@ -10,6 +10,8 @@ const TablaRegistros = () => {
   const [plantillaSeleccionada, setPlantillaSeleccionada] = useState("");
   const [camposFiltrados, setCamposFiltrados] = useState([]);
   const [valoresFiltro, setValoresFiltro] = useState({});
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
 
   useEffect(() => {
     const cargarPlantillas = async () => {
@@ -63,24 +65,23 @@ const TablaRegistros = () => {
   }, [plantillaSeleccionada, plantillas]);
 
   const cargarRegistros = async (plantilla) => {
-    // Si ya están en registrosPorPlantilla, no hace falta volver a cargarlos
     if (registrosPorPlantilla[plantilla]) {
       console.log(`Usando registros guardados localmente para la plantilla: ${plantilla}`);
       setRegistrosFiltrados(registrosPorPlantilla[plantilla]);
       return;
     }
-  
+
     console.log(`Realizando consulta a Firestore para la plantilla: ${plantilla}`);
-  
+
     setLoading(true);
-  
+
     try {
       const nombreColeccion = `${toCamelCase(plantilla)}Form`;
       const refColeccion = collection(db, nombreColeccion);
-  
+
       const snapshot = await getDocs(refColeccion);
       const documentos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  
+
       setRegistrosPorPlantilla((prev) => ({
         ...prev,
         [plantilla]: documentos,
@@ -92,13 +93,13 @@ const TablaRegistros = () => {
       setLoading(false);
     }
   };
-  
 
   useEffect(() => {
     let registrosFiltrados = registrosPorPlantilla[plantillaSeleccionada] || [];
-
+  
+    // Filtrar por valores seleccionados en los campos
     Object.keys(valoresFiltro).forEach((campo) => {
-      if (valoresFiltro[campo]) {
+      if (valoresFiltro[campo] && campo !== "observaciones") { // Excluir Observaciones de este filtro
         const campoNormalizado = campo.toLowerCase().trim();
         registrosFiltrados = registrosFiltrados.filter(
           (registro) =>
@@ -107,9 +108,36 @@ const TablaRegistros = () => {
         );
       }
     });
-
+  
+    // Filtrar por rango de fechas
+    if (fechaInicio || fechaFin) {
+      const fechaInicioObj = fechaInicio ? new Date(fechaInicio) : null;
+      const fechaFinObj = fechaFin
+        ? new Date(fechaFin).setHours(23, 59, 59, 999) // Asegurar incluir todo el día
+        : null;
+  
+      registrosFiltrados = registrosFiltrados.filter((registro) => {
+        const fechaRegistro = new Date(registro.fechaHora);
+        return (
+          (!fechaInicioObj || fechaRegistro >= fechaInicioObj) &&
+          (!fechaFinObj || fechaRegistro <= fechaFinObj)
+        );
+      });
+    }
+  
+    // Filtro de búsqueda de texto para el campo Observaciones
+    if (valoresFiltro["observaciones"]) {
+      const textoBusqueda = valoresFiltro["observaciones"].toLowerCase().trim();
+      registrosFiltrados = registrosFiltrados.filter((registro) =>
+        registro.observaciones?.toLowerCase().includes(textoBusqueda) // Verifica coincidencias parciales
+      );
+    }
+  
     setRegistrosFiltrados(registrosFiltrados);
-  }, [valoresFiltro, registrosPorPlantilla, plantillaSeleccionada]);
+  }, [valoresFiltro, registrosPorPlantilla, plantillaSeleccionada, fechaInicio, fechaFin]);
+  
+  
+
 
   const toCamelCase = (str) => {
     return str
@@ -163,11 +191,10 @@ const TablaRegistros = () => {
               setPlantillaSeleccionada(plantilla.nombre);
               cargarRegistros(plantilla.nombre);
             }}
-            className={`px-6 py-2 rounded-md font-semibold shadow-md ${
-              plantillaSeleccionada === plantilla.nombre
+            className={`px-6 py-2 rounded-md font-semibold shadow-md ${plantillaSeleccionada === plantilla.nombre
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 text-gray-800"
-            } hover:bg-blue-500 transition`}
+              } hover:bg-blue-500 transition`}
           >
             {plantilla.nombre}
           </button>
@@ -176,7 +203,7 @@ const TablaRegistros = () => {
 
       {/* Filtros dinámicos */}
       {camposFiltrados.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-xs">
           {camposFiltrados.map((campo, index) => (
             <div key={index} className="flex flex-col">
               <label className="text-sm font-semibold text-gray-600 mb-2">
@@ -198,8 +225,44 @@ const TablaRegistros = () => {
               </select>
             </div>
           ))}
+          {/* Filtros de fecha */}
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-600 mb-2">Fecha Inicio</label>
+              <input
+                type="date"
+                value={fechaInicio}
+                onChange={(e) => setFechaInicio(e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-600 mb-2">Fecha Fin</label>
+              <input
+                type="date"
+                value={fechaFin}
+                onChange={(e) => setFechaFin(e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              />
+            </div>
+          </div>
+          {/* Input de búsqueda para Observaciones */}
+<div className="flex flex-col mb-4">
+  <label className="text-sm font-semibold text-gray-600 mb-2">Buscar en Observaciones</label>
+  <input
+    type="text"
+    value={valoresFiltro["observaciones"] || ""}
+    onChange={(e) => handleFiltroCambio("observaciones", e.target.value)}
+    placeholder="Escribe para buscar..."
+    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+  />
+</div>
+
         </div>
+        
       )}
+
+
 
       {/* Tabla de registros */}
       {plantillaSeleccionada && (
@@ -225,9 +288,8 @@ const TablaRegistros = () => {
                   {registrosFiltrados.map((registro, index) => (
                     <tr
                       key={index}
-                      className={`hover:bg-blue-50 transition ${
-                        index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                      }`}
+                      className={`hover:bg-blue-50 transition ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                        }`}
                     >
                       {obtenerColumnas().map((columna, colIndex) => (
                         <td key={colIndex} className="border px-4 py-2 text-gray-800">
