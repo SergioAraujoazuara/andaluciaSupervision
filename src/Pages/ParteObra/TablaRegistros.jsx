@@ -5,7 +5,7 @@ import { storage } from "../../../firebase_config";
 import { db } from "../../../firebase_config";
 import { doc, updateDoc } from "firebase/firestore";
 import imageCompression from "browser-image-compression"; // Importa la librería de compresión
-
+import { deleteDoc } from "firebase/firestore";
 
 const TablaRegistros = () => {
   const [plantillas, setPlantillas] = useState([]);
@@ -18,62 +18,7 @@ const TablaRegistros = () => {
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
 
-  // Función para comprimir la imagen
-  const compressImage = async (file) => {
-    const options = {
-      maxSizeMB: 0.3,
-      maxWidthOrHeight: 1920,
-      useWebWorker: true,
-    };
-    console.log("Compresion de imagen iniciada", file);
-    return await imageCompression(file, options);
-  };
 
-  // Función para subir la imagen a Firebase Storage
-  const uploadImageWithMetadata = async (file, index) => {
-    console.log("Subida de imagen iniciada", file);
-    try {
-      const storageRef = ref(storage, `imagenes/${Date.now()}_${index}`);
-      const metadata = {
-        contentType: file.type,
-      };
-      await uploadBytes(storageRef, file, metadata);
-      const url = await getDownloadURL(storageRef);
-      console.log("Imagen subida con éxito y URL obtenida:", url);
-      return url;
-    } catch (error) {
-      console.error("Error al subir la imagen:", error);
-      throw error;
-    }
-  };
-
-  const handleImageEdit = async (e, index) => {
-    const file = e.target.files[0]; // Obtener la imagen seleccionada
-    if (file) {
-      console.log(`Imagen seleccionada en el índice ${index}:`, file);
-  
-      try {
-        // Comprimir la imagen
-        const compressedFile = await compressImage(file);
-        console.log(`Imagen comprimida en el índice ${index}:`, compressedFile);
-  
-        // Subir la imagen a Firebase Storage
-        const imageUrl = await uploadImageWithMetadata(compressedFile, index);
-        console.log(`URL de la imagen subida en el índice ${index}:`, imageUrl);
-  
-        // Actualizar el estado local con la nueva URL de la imagen
-        const updatedRegistro = { ...registroSeleccionado };
-        updatedRegistro.imagenes[index] = imageUrl; // Reemplazar la imagen en la posición correspondiente
-        setRegistroSeleccionado(updatedRegistro); // Actualizar el estado con el nuevo registro
-  
-        console.log(`Registro actualizado con la nueva imagen en el índice ${index}:`, updatedRegistro);
-  
-      } catch (error) {
-        console.error(`Error al procesar la imagen en el índice ${index}:`, error);
-      }
-    }
-  };
-  
 
   useEffect(() => {
     const cargarPlantillas = async () => {
@@ -245,51 +190,194 @@ const TablaRegistros = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState(""); // Contenido dinámico del modal
 
-const [alertModalVisible, setAlertModalVisible] = useState(false); // Modal de alerta
-const [alertMessage, setAlertMessage] = useState("");  // Mensaje de la alerta
+  const [alertModalVisible, setAlertModalVisible] = useState(false); // Modal de alerta
+  const [alertMessage, setAlertMessage] = useState("");  // Mensaje de la alerta
 
   // Editar modal
   const [registroSeleccionado, setRegistroSeleccionado] = useState(null);
 
-  const handleGuardar = async () => {
+  // Imagenes
+
+  const [compressedImages, setCompressedImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]); // Previsualización de imágenes
+
+  // Función para comprimir la imagen
+  const compressImage = async (file) => {
+    const options = {
+      maxSizeMB: 0.3,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    };
+    console.log("Compresion de imagen iniciada", file);
+    return await imageCompression(file, options);
+  };
+
+  // Función para subir la imagen a Firebase Storage
+  const uploadImageWithMetadata = async (file, index) => {
+    console.log("Subida de imagen iniciada", file);
     try {
-      console.log("Guardando el registro actualizado:", registroSeleccionado);
-  
-      // Asegúrate de que las imágenes han sido subidas y actualizadas en el estado
-      const updatedRegistro = { ...registroSeleccionado };
-  
-      // Si se han subido nuevas imágenes, debes actualizarlas en Firestore
-      const docRef = doc(db, `${toCamelCase(plantillaSeleccionada)}Form`, registroSeleccionado.id);
-  
-      // Actualiza el documento con las nuevas imágenes y los valores modificados
-      await updateDoc(docRef, updatedRegistro);
-  
-      console.log("Documento actualizado correctamente");
-  
-      // Actualizar el estado localmente en registrosFiltrados para reflejar el cambio
-      setRegistrosFiltrados((prevRegistros) =>
-        prevRegistros.map((registro) =>
-          registro.id === updatedRegistro.id ? updatedRegistro : registro
-        )
-      );
-  
-      setAlertMessage("El registro se actualizó correctamente.");
-      setAlertModalVisible(true);
-  
-      setModalVisible(false);
+      const storageRef = ref(storage, `imagenes/${Date.now()}_${index}`);
+      const metadata = {
+        contentType: file.type,
+      };
+      await uploadBytes(storageRef, file, metadata);
+      const url = await getDownloadURL(storageRef);
+      console.log("Imagen subida con éxito y URL obtenida:", url);
+      return url;
     } catch (error) {
-      console.error("Error al actualizar el documento:", error);
-  
-      setAlertMessage("Hubo un error al actualizar el registro.");
-      setAlertModalVisible(true);
+      console.error("Error al subir la imagen:", error);
+      throw error;
     }
   };
-  
-  
-  
-  
-  
-  
+
+  const handleFileChange = async (e, index) => {
+    const file = e.target.files[0]; // Obtener el archivo seleccionado
+    if (file) {
+      // Generar URL temporal para la miniatura
+      const imageUrl = URL.createObjectURL(file);
+
+      // Mostrar la miniatura antes de guardarla
+      setImagePreviews((prev) => {
+        const newPreviews = [...prev];
+        newPreviews[index] = imageUrl;
+        return newPreviews;
+      });
+
+      try {
+        // Comprimir la imagen
+        const compressedFile = await compressImage(file);
+        console.log(`Imagen comprimida en el índice ${index}:`, compressedFile);
+
+        // Actualizar el estado con la imagen comprimida
+        const newCompressedImages = [...compressedImages];
+        newCompressedImages[index] = compressedFile;
+        setCompressedImages(newCompressedImages);
+      } catch (error) {
+        console.error("Error al procesar la imagen:", error);
+      }
+    }
+  };
+
+  // Función para guardar el registro
+  const handleGuardar = async () => {
+    try {
+      const updatedRegistro = { ...registroSeleccionado };
+
+      // Subir solo las imágenes comprimidas que han sido modificadas
+      const updatedImages = await Promise.all(
+        registroSeleccionado.imagenes.map(async (image, index) => {
+          if (compressedImages[index]) {
+            // Solo sube la imagen si se ha modificado
+            const newImageUrl = await uploadImageWithMetadata(compressedImages[index], index);
+            return newImageUrl; // Retornar la nueva URL si se sube una imagen nueva
+          }
+          return image; // Si no se ha cambiado, mantén la imagen original
+        })
+      );
+      updatedRegistro.imagenes = updatedImages; // Actualiza las imágenes del registro
+
+      // Usar 'doc' de Firestore para obtener la referencia del documento
+      const docRef = doc(db, `${toCamelCase(plantillaSeleccionada)}Form`, updatedRegistro.id);
+
+      // Actualiza el documento con las nuevas imágenes y los valores modificados
+      await updateDoc(docRef, updatedRegistro);
+
+      console.log("Documento actualizado correctamente");
+
+      setRegistroSeleccionado(updatedRegistro);
+      setModalContent(false)
+
+      // Mostrar mensaje de éxito en el modal
+      showModal("El registro se actualizó correctamente.", "success");
+
+    } catch (error) {
+      console.error("Error al actualizar el documento:", error);
+
+      // Mostrar mensaje de error en el modal
+      showModal("Hubo un error al actualizar el registro.", "error");
+    }
+  };
+
+  // Función para mostrar el modal
+  const showModal = (message, type) => {
+    setAlertMessage(message); // Set the message to display
+    setModalType(type); // Set the type to either "success" or "error"
+    setAlertModalVisible(true); // Show the modal
+  };
+
+  // Función para cerrar el modal
+  const closeModal = () => {
+    setAlertModalVisible(false); // Hide the modal
+    setAlertMessage(""); // Clear the message
+    setModalType(""); // Reset the modal type
+  };
+
+
+  const [modalType, setModalType] = useState(""); // Modal type ("success" or "error")
+
+  useEffect(() => {
+    // Limpiar las URLs de miniaturas cuando el componente se desmonte
+    return () => {
+      imagePreviews.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [imagePreviews]);
+
+
+
+
+  // Eliminar registros
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false); // Modal de confirmación
+
+  const showConfirmDeleteModal = (registro) => {
+    setRegistroSeleccionado(registro); // Guardamos el registro a eliminar
+    setConfirmDeleteVisible(true); // Mostramos el modal de confirmación
+  };
+
+  const closeConfirmDeleteModal = () => {
+    setConfirmDeleteVisible(false); // Cerramos el modal de confirmación
+  };
+
+  const confirmEliminar = () => {
+    handleEliminar();  // Ejecutamos la eliminación
+    closeConfirmDeleteModal();  // Cerramos el modal de confirmación
+  };
+
+// Función para eliminar el registro
+const handleEliminar = async () => {
+  try {
+    // Asegurarse de que el registro seleccionado tenga un id
+    if (!registroSeleccionado || !registroSeleccionado.id) {
+      console.error("Registro no encontrado o ID no válido");
+      return;
+    }
+
+    // Usar 'doc' para obtener la referencia del documento
+    const docRef = doc(db, `${toCamelCase(plantillaSeleccionada)}Form`, registroSeleccionado.id);
+
+    // Eliminar el documento de Firestore
+    await deleteDoc(docRef);
+
+    console.log("Registro eliminado correctamente");
+
+    // Eliminar el registro de los registros locales (sin necesidad de recargar desde Firestore)
+    setRegistrosFiltrados((prevRegistros) =>
+      prevRegistros.filter((registro) => registro.id !== registroSeleccionado.id)
+    );
+
+    // Mostrar mensaje de éxito en el modal
+    showModal("El registro se eliminó correctamente.", "success");
+
+    // Cerrar el modal de confirmación después de eliminar el registro
+    setConfirmDeleteVisible(false);
+  } catch (error) {
+    console.error("Error al eliminar el documento:", error);
+
+    // Mostrar mensaje de error en el modal
+    showModal("Hubo un error al eliminar el registro.", "error");
+  }
+};
+
+
 
   return (
     <div className="p-8 max-w-7xl mx-auto bg-white shadow-lg rounded-lg">
@@ -429,13 +517,12 @@ const [alertMessage, setAlertMessage] = useState("");  // Mensaje de la alerta
                         </button>
                         <button
                           className="px-4 py-2 bg-red-500 text-white rounded-md"
-                          onClick={() => {
-                            setModalContent("Eliminar");
-                            setModalVisible(true);
-                          }}
+                          onClick={() => showConfirmDeleteModal(registro)} // Llamamos a la función para mostrar el modal de confirmación
                         >
                           Eliminar
                         </button>
+
+
                       </td>
 
                     </tr>
@@ -507,27 +594,23 @@ const [alertMessage, setAlertMessage] = useState("");  // Mensaje de la alerta
                 );
               })}
 
-            {/* Mostrar y cargar imágenes */}
-            <div className="mb-4">
-  <label className="block text-sm font-semibold text-gray-600 mb-2">
-    Imágenes
-  </label>
-  {registroSeleccionado.imagenes && registroSeleccionado.imagenes.map((imagen, index) => (
-    <div key={index} className="flex items-center gap-2 mb-2">
-      <img
-        src={imagen} // Mostrar la imagen
-        alt={`Imagen ${index + 1}`}
-        className="w-16 h-16 object-cover rounded-md border"
-      />
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => handleImageEdit(e, index)} // Llamar a la función de edición
-        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200"
-      />
-    </div>
-  ))}
-</div>
+            {/* Mostrar las imágenes seleccionadas como miniaturas */}
+            <div>
+              {registroSeleccionado?.imagenes?.map((imagen, index) => (
+                <div key={index}>
+                  <img
+                    src={imagePreviews[index] || imagen} // Muestra la miniatura de la imagen o la imagen original
+                    alt={`Imagen ${index + 1}`}
+                    className="w-16 h-16 object-cover"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, index)}
+                  />
+                </div>
+              ))}
+            </div>
 
 
             <div className="flex justify-end">
@@ -549,22 +632,49 @@ const [alertMessage, setAlertMessage] = useState("");  // Mensaje de la alerta
         </div>
       )}
 
-{alertModalVisible && (
-  <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-    <div className="bg-white p-6 rounded-md shadow-md w-96 max-h-[90vh] overflow-y-auto">
-      <h2 className="text-lg font-bold mb-4 text-center">Actualización</h2>
-      <p className="text-sm text-center text-gray-600 mb-4">{alertMessage}</p>
-      <div className="flex justify-end">
-        <button
-          className="px-4 py-2 bg-blue-500 text-white rounded-md"
-          onClick={() => setAlertModalVisible(false)} // Cierra el modal de alerta
-        >
-          Aceptar
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+
+
+      {alertModalVisible && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-md shadow-md w-96 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-bold mb-4 text-center">
+              {modalType === "success" ? "¡Éxito!" : "Error"}
+            </h2>
+            <p className="text-sm text-center text-gray-600 mb-4">{alertMessage}</p>
+            <div className="flex justify-end">
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                onClick={() => setAlertModalVisible(false)} // Close the modal
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDeleteVisible && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-md shadow-md w-96">
+            <h2 className="text-lg font-bold text-center">¿Estás seguro de que deseas eliminar este registro?</h2>
+            <div className="flex justify-center gap-4 mt-4">
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded-md"
+                onClick={confirmEliminar} // Llamamos a la función de confirmar eliminación
+              >
+                Sí, Eliminar
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-500 text-white rounded-md"
+                onClick={closeConfirmDeleteModal} // Cierra el modal de confirmación
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
 
 
