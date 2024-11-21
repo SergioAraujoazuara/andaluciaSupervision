@@ -23,7 +23,9 @@ import Dashboard from './Pages/Dashboard.jsx';
 import Auscultacion from './Pages/Auscultacion.jsx';
 import SendMail from './Components/FeatureSendMail/SendMail.jsx';
 import ParteObra from './Pages/ParteObra/ParteObra.jsx';
-import GestionOpciones from './Pages/ParteObra/GestionOpciones.jsx';
+import SistemaDePestanas from './Pages/ParteObra/SistemaPestanas.jsx';
+import GridParteDeObra from './Pages/ParteObra/GridParteDeObra.jsx';
+import TablaRegistros from './Pages/ParteObra/TablaRegistros.jsx';
 
 
 function App() {
@@ -37,6 +39,7 @@ function App() {
   const adminRoutes = [
     { path: '/admin', element: <AdminHome />, roles: ['admin', 'usuario'] },
     { path: '/trazabilidad/:id', element: <Trazabilidad />, roles: ['admin', 'usuario'] },
+    { path: '/formularios/:id', element: <SistemaDePestanas />, roles: ['admin', 'usuario'] },
     { path: '/visorAdmin', element: <Viewer_admin />, roles: ['admin', 'usuario'] },
     { path: '/verPPis', element: <VerPpis />, roles: ['admin'] },
     { path: '/agregarPpi', element: <AgregarPPi />, roles: ['admin'] },
@@ -55,8 +58,10 @@ function App() {
     { path: '/pdf_final', element: <Pdf_final />, roles: ['admin', 'usuario'] },
 
     // Parte de obra
-    { path: '/parteObra', element: <ParteObra />, roles: ['admin', 'usuario'] },
-    { path: '/opcionesFormulario', element: <GestionOpciones />, roles: ['admin', 'usuario'] },
+    { path: '/parteObra', element: <GridParteDeObra />, roles: ['admin', 'usuario'] },
+    { path: '/formularios', element: <ParteObra />, roles: ['admin', 'usuario'] },
+    { path: '/verRegistros', element: <TablaRegistros />, roles: ['admin', 'usuario'] },
+   
 
 
 

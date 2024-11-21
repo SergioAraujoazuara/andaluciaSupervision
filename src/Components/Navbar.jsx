@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
 import { getDoc, doc } from 'firebase/firestore';
-import Imagen from '../assets/tpf_marca.png';  // Asegúrate de que la ruta de la imagen está correcta
+import Imagen from '../assets/tpf_marca.png'; // Asegúrate de que la ruta de la imagen está correcta
 import { db } from '../../firebase_config';
 
-import { FaUserAlt, FaDoorOpen, FaBars } from "react-icons/fa";
-import { ImExit } from "react-icons/im";
+import { FaUserAlt, FaDoorOpen, FaBars, FaCaretDown } from "react-icons/fa";
 import { IoIosSettings } from "react-icons/io";
-
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -16,7 +14,8 @@ const Navbar = () => {
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [userNombre, setUserNombre] = useState('');
   const [userRol, setUserRol] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false); // Estado para el menú desplegable
+  const [menuOpen, setMenuOpen] = useState(false); // Estado para el menú móvil
+  const [dropdownOpen, setDropdownOpen] = useState(false); // Estado del menú desplegable
   const location = useLocation();
 
   useEffect(() => {
@@ -27,7 +26,6 @@ const Navbar = () => {
           const userData = docSnap.data();
           setUserNombre(userData.nombre);
           setUserRol(userData.role);
-          console.log(userData.role);
         }
       });
     } else {
@@ -36,99 +34,73 @@ const Navbar = () => {
     }
   }, [user]);
 
-  const [activeLink, setActiveLink] = useState(location.pathname);
-
-  const handleLinkClick = (linkName) => {
-    setActiveLink(linkName);
-    setMenuOpen(false); // Cierra el menú cuando se selecciona un enlace
-  };
-
-  const toggleLogoutConfirmation = () => setShowLogoutConfirmation(!showLogoutConfirmation);
-
   const handleLogout = async () => {
     await logout();
     navigate('/authTabs');
     setShowLogoutConfirmation(false);
   };
 
-  const isAuthTabs = location.pathname === '/authTabs';
+  const toggleLogoutConfirmation = () => setShowLogoutConfirmation(!showLogoutConfirmation);
 
   return (
     <nav className="bg-gray-100 shadow">
       <div className="container mx-auto ps-0 pr-4 xl:px-10">
         <div className="flex justify-between items-center h-24">
+          {/* Logo */}
           <div className="flex items-center gap-10">
             <div className="flex-shrink-0 flex items-center">
               <img className="h-auto" src={Imagen} width={150} alt="logo" />
             </div>
+
+            {/* Menú principal */}
             {user && (
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <NavLink
-                  to="/"
-                  linkName="Home"
-                  activeLink={activeLink}
-                  handleLinkClick={handleLinkClick}
-                />
-
+                <NavLink to="/" linkName="Home" />
                 {(userRol === 'usuario' || userRol === 'admin') && (
-                  <NavLink
-                    to="/elemento/proyecto"
-                    linkName="Inspección"
-                    activeLink={activeLink}
-                    handleLinkClick={handleLinkClick}
-                  />
+                  <NavLink to="/elemento/proyecto" linkName="Inspección" />
+                )}
+                {(userRol === 'usuario' || userRol === 'admin') && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                      className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-sky-600"
+                    >
+                      Parte de obra <FaCaretDown />
+                    </button>
+                    {dropdownOpen && (
+                      <div className="absolute bg-white shadow-lg rounded-md mt-2 py-2 w-48 z-50">
+                        <Link
+                          to="/formularios"
+                          className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          Formulario
+                        </Link>
+                        <Link
+                          to="/verRegistros"
+                          className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          Registros
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {(userRol === 'admin' || userRol === 'usuario') && (
-                  <NavLink
-                    to="/parteObra"
-                    linkName="Parte de obra"
-                    activeLink={activeLink}
-                    handleLinkClick={handleLinkClick}
-                  />
+                  <NavLink to="/dashboard" linkName="Dashboard" />
                 )}
                 {(userRol === 'admin' || userRol === 'usuario') && (
-                  <NavLink
-                    to="/dashboard"
-                    linkName="Dashboard"
-                    activeLink={activeLink}
-                    handleLinkClick={handleLinkClick}
-                  />
+                  <NavLink to="/visor_inspeccion" linkName="BIM" />
                 )}
-
                 {(userRol === 'admin' || userRol === 'usuario') && (
-                  <NavLink
-                    to="/visor_inspeccion"
-                    linkName="BIM"
-                    activeLink={activeLink}
-                    handleLinkClick={handleLinkClick}
-                  />
+                  <NavLink to="/admin" linkName="Administración" />
                 )}
-
-                
-
-                {/* {(userRol === 'admin' || userRol === 'usuario') && (
-                  <NavLink
-                    to="/auscultacion"
-                    linkName="Auscultación"
-                    activeLink={activeLink}
-                    handleLinkClick={handleLinkClick}
-                  />
-                )} */}
-
-
-                {(userRol === 'admin' || userRol === 'usuario') && (
-                  <NavLink
-                    to="/admin"
-                    linkName="Administración"
-                    activeLink={activeLink}
-                    handleLinkClick={handleLinkClick}
-                  />
-                )}
-
-
               </div>
             )}
           </div>
+
+          {/* Botón de usuario */}
           <div className="flex items-center">
             {user ? (
               <>
@@ -139,7 +111,7 @@ const Navbar = () => {
                   </div>
                   <div className="relative bg-sky-600 text-white px-4 py-2 rounded-lg">
                     <button className="flex items-center text-md" onClick={toggleLogoutConfirmation}>
-                      {showLogoutConfirmation ? <span className='text-xl flex items-center'><IoIosSettings /></span> : <span className='text-md'>Salir</span>}
+                      Salir
                     </button>
                   </div>
                 </div>
@@ -150,63 +122,61 @@ const Navbar = () => {
                 </div>
               </>
             ) : (
-              !isAuthTabs && (
-                <button
-                  onClick={() => navigate('/authTabs')}
-                  className="bg-sky-600 text-white font-medium py-2 px-4 h-12 rounded-lg "
-                >
-                  Iniciar sesión  |  Registrarse
-                </button>
-              )
+              <button
+                onClick={() => navigate('/authTabs')}
+                className="bg-sky-600 text-white font-medium py-2 px-4 h-12 rounded-lg "
+              >
+                Iniciar sesión | Registrarse
+              </button>
             )}
           </div>
         </div>
+
+        {/* Menú móvil */}
         {menuOpen && (
           <div className="sm:hidden mt-2">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              <NavLink
-                to="/"
-                linkName="Home"
-                activeLink={activeLink}
-                handleLinkClick={handleLinkClick}
-              />
-
+              <NavLink to="/" linkName="Home" />
               {(userRol === 'usuario' || userRol === 'admin') && (
-                <NavLink
-                  to="/elemento/proyecto"
-                  linkName="Inspección"
-                  activeLink={activeLink}
-                  handleLinkClick={handleLinkClick}
-                />
+                <NavLink to="/elemento/proyecto" linkName="Inspección" />
               )}
-
-              {(userRol === 'admin' || userRol === 'usuario') && (
-                <NavLink
-                  to="/admin"
-                  linkName="Administración"
-                  activeLink={activeLink}
-                  handleLinkClick={handleLinkClick}
-                />
-              )}
-
-              {user && (
-                <div className="flex flex-col items-start gap-2">
-                  <div className='flex gap-2 items-center text-gray-500 mt-2'>
-                    <FaUserAlt className='hidden xl:block' />
-                    <p className='ps-3 font-medium text-gray-400'>{userNombre || 'Usuario'}</p>
-                  </div>
+              {(userRol === 'usuario' || userRol === 'admin') && (
+                <div>
                   <button
-                    className="bg-gray-200 text-gray-500 font-medium px-4 py-2 rounded-lg w-1/2 text-left"
-                    onClick={toggleLogoutConfirmation}
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center gap-1 px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                   >
-                    {showLogoutConfirmation ? <span className='flex items-center'><IoIosSettings />&nbsp;Cerrar Menú</span> : <span>Salir</span>}
+                    Parte de obra <FaCaretDown />
                   </button>
+                  {dropdownOpen && (
+                    <div className="ml-4">
+                      <Link
+                        to="/formularios"
+                        className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                        onClick={() => setDropdownOpen(false)}
+                      >
+                        Formulario
+                      </Link>
+                      <Link
+                        to="/ver-registros"
+                        className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                        onClick={() => setDropdownOpen(false)}
+                      >
+                        Registros
+                      </Link>
+                    </div>
+                  )}
                 </div>
+              )}
+              {(userRol === 'admin' || userRol === 'usuario') && (
+                <NavLink to="/admin" linkName="Administración" />
               )}
             </div>
           </div>
         )}
       </div>
+
+      {/* Modal de confirmación de logout */}
       {showLogoutConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-80 z-10 flex justify-center items-center">
           <div className="bg-white p-10 rounded-md flex flex-col gap-2 items-center">
@@ -223,16 +193,11 @@ const Navbar = () => {
   );
 };
 
-const NavLink = ({ to, linkName, activeLink, handleLinkClick }) => {
-  const isActive = to === activeLink;
-  const borderColorClass = isActive ? 'border-sky-600' : 'border-transparent';
-  const textColorClass = isActive ? 'text-sky-600' : 'text-gray-500';
-
+const NavLink = ({ to, linkName }) => {
   return (
     <Link
       to={to}
-      onClick={() => handleLinkClick(to)}
-      className={`block px-3 py-2 rounded-md text-sm font-medium ${borderColorClass} ${textColorClass}`}
+      className="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-sky-600"
     >
       {linkName}
     </Link>

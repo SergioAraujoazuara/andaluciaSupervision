@@ -4,8 +4,6 @@ import { db } from '../../../firebase_config';
 import { GoHomeFill } from "react-icons/go";
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
-import { BsClipboardCheck } from "react-icons/bs";
-import { GrDocumentTest } from "react-icons/gr";
 import { IoArrowBackCircle } from "react-icons/io5";
 
 function PlantillaPpi() {

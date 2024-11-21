@@ -8,8 +8,8 @@ import {
   deleteValor,
   updateCampo,
   updateValor,
-} from "../../Pages/ParteObra/Helpers/firebaseHelpers";
-import GestionPlantillas from "./GestionPlantillas";
+} from "./Helpers/firebaseHelpers";
+import { IoIosAddCircle } from "react-icons/io";
 
 const normalizeForValidation = (str) => {
   return str
@@ -30,7 +30,7 @@ const capitalizeFirstLetter = (str) => {
   return str.charAt(0).toUpperCase() + str.slice(1); // Primera letra mayúscula
 };
 
-const GestionOpciones = () => {
+const GestionCampos = () => {
   const [nuevoCampo, setNuevoCampo] = useState("");
   const [valorCampo, setValorCampo] = useState("");
   const [campos, setCampos] = useState([]);
@@ -175,8 +175,7 @@ const GestionOpciones = () => {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto bg-gray-100 shadow-lg rounded-lg">
-      <h1 className="text-3xl font-extrabold text-gray-700 mb-8 text-center">Gestión de Campos</h1>
+    <div className="p-8 max-w-6xl mx-auto text-gray-500">
 
       {/* Modal para Notificaciones */}
       {modalVisible && (
@@ -187,7 +186,7 @@ const GestionOpciones = () => {
                 tipoModal === "success"
                   ? "text-green-600"
                   : tipoModal === "warning"
-                  ? "text-yellow-600"
+                  ? "text-gray-600"
                   : "text-red-600"
               }`}
             >
@@ -207,7 +206,7 @@ const GestionOpciones = () => {
               )}
               <button
                 onClick={cerrarModal}
-                className="px-6 py-2 bg-gray-300 rounded-md shadow hover:bg-gray-400 transition"
+                className="px-6 py-2 bg-gray-500 text-white rounded-md shadow hover:bg-gray-600 transition"
               >
                 Cerrar
               </button>
@@ -218,29 +217,30 @@ const GestionOpciones = () => {
 
       {/* Gestión de Campos */}
       <div className="grid grid-cols-2 gap-8">
-        <div className="bg-white shadow-md rounded-md p-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Agregar Nuevo Campo</h3>
+        <div className="bg-white shadow-xl rounded-md p-6">
+          <h3 className="text-md font-semibold text-gray-800 mb-4 flex gap-2 items-center"> <span><IoIosAddCircle /></span>Agrega campos</h3>
           <input
             type="text"
             value={nuevoCampo}
             onChange={(e) => setNuevoCampo(e.target.value)}
             placeholder="Nombre del nuevo campo"
-            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500"
           />
           <button
             onClick={handleAddCampo}
-            className="w-full mt-4 px-6 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow hover:bg-indigo-700 transition"
+            className="w-full mt-4 px-6 py-2 bg-amber-600 text-white font-semibold rounded-md shadow hover:bg-amber-700 transition"
           >
+           
             Agregar Campo
           </button>
         </div>
 
-        <div className="bg-white shadow-md rounded-md p-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Agregar Valores a un Campo</h3>
+        <div className="bg-white shadow-xl rounded-md p-6">
+        <h3 className="text-md font-semibold text-gray-800 mb-4 flex gap-2 items-center"> <span><IoIosAddCircle /></span>Agregar valores</h3>
           <select
             value={campoSeleccionado}
             onChange={(e) => setCampoSeleccionado(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mb-4"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 mb-4"
           >
             <option value="">-- Seleccionar Campo --</option>
             {campos?.map((campo) => (
@@ -254,11 +254,11 @@ const GestionOpciones = () => {
             value={valorCampo}
             onChange={(e) => setValorCampo(e.target.value)}
             placeholder="Nuevo valor"
-            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500"
           />
           <button
             onClick={handleAddValor}
-            className="w-full mt-4 px-6 py-2 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 transition"
+            className="w-full mt-4 px-6 py-2 bg-amber-600 text-white font-semibold rounded-md shadow hover:bg-amber-700 transition"
           >
             Agregar Valor
           </button>
@@ -286,7 +286,7 @@ const GestionOpciones = () => {
               </div>
             ) : (
               <div className="flex justify-between items-center mb-2">
-                <h4 className="text-lg font-semibold text-indigo-600">
+                <h4 className="text-lg font-semibold text-sky-600 border-b-2 w-full pb-4">
                   {capitalizeFirstLetter(campo.nombre)}
                 </h4>
                 <div className="flex gap-2">
@@ -345,9 +345,9 @@ const GestionOpciones = () => {
           </div>
         ))}
       </div>
-      <GestionPlantillas />
+      
     </div>
   );
 };
 
-export default GestionOpciones;
+export default GestionCampos;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../../firebase_config";
 import { FaCheckCircle, FaExclamationTriangle, FaTimesCircle } from "react-icons/fa";
+import { IoIosAddCircle } from "react-icons/io";
 
 // Función para normalizar datos para validación
 const normalizeForValidation = (str) => {
@@ -164,8 +165,7 @@ const GestionPlantillas = () => {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto bg-gray-50 shadow-md rounded-md">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">Gestión de Plantillas</h1>
+    <div className="mt-2 max-w-6xl mx-auto">
 
       {/* Modal */}
       {modalVisible && (
@@ -205,10 +205,12 @@ const GestionPlantillas = () => {
       )}
 
       {/* Crear o Editar Plantilla */}
-      <div className="bg-white p-6 rounded-md shadow-md mb-8">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">
+      <div className="bg-white p-6 rounded-md shadow-xl mb-8">
+        <h3 className=" font-semibold text-gray-800 mb-4 flex gap-2 items-center">
+        <IoIosAddCircle />
           {plantillaEditando ? "Editar Plantilla" : "Crear Nueva Plantilla"}
         </h3>
+        
         <input
           type="text"
           value={nuevaPlantilla}
@@ -234,17 +236,17 @@ const GestionPlantillas = () => {
           onClick={plantillaEditando ? handleActualizarPlantilla : handleCrearPlantilla}
           className="mt-4 px-6 py-2 bg-sky-600 text-white font-semibold rounded-md shadow hover:bg-sky-700 transition w-full"
         >
-          {plantillaEditando ? "Actualizar Plantilla" : "Crear Plantilla"}
+          {plantillaEditando ? "Actualizar Plantilla" : "Guardar Plantilla"}
         </button>
       </div>
 
       {/* Listar plantillas existentes */}
-      <div>
-        <h3 className="text-2xl font-semibold text-gray-800 mb-4">Plantillas Existentes</h3>
+      <div className="mt-12">
+        <h3 className="text-2xl font-semibold text-gray-800 mb-4 w-full border-b-2 pb-4">Plantillas Existentes</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plantillas.map((plantilla) => (
             <div key={plantilla.id} className="bg-white p-4 rounded-md shadow-md">
-              <h4 className="text-lg font-semibold text-sky-600">{plantilla.nombre}</h4>
+              <h4 className="text-lg font-semibold text-sky-600 w-full border-b-2 pb-2">{plantilla.nombre}</h4>
               <ul className="mt-2 list-disc pl-5 text-sm text-gray-700">
                 {plantilla.campos.map((campo, index) => (
                   <li key={index}>{typeof campo === "string" ? campo : campo.nombre}</li>

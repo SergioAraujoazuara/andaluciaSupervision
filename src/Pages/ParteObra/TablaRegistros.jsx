@@ -6,6 +6,12 @@ import { db } from "../../../firebase_config";
 import { doc, updateDoc } from "firebase/firestore";
 import imageCompression from "browser-image-compression"; // Importa la librería de compresión
 import { deleteDoc } from "firebase/firestore";
+import { BsClipboardData } from "react-icons/bs";
+import { FaArrowRight } from "react-icons/fa";
+import { IoArrowBackCircle } from "react-icons/io5";
+
+import { GoHomeFill } from "react-icons/go";
+import { Link, useNavigate } from "react-router-dom";
 
 const TablaRegistros = () => {
   const [plantillas, setPlantillas] = useState([]);
@@ -18,6 +24,11 @@ const TablaRegistros = () => {
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
 
+  const navigate = useNavigate();
+
+  const handleGoBack = () => {
+    navigate(-1); // Navega hacia atrás en el historial
+  };
 
 
   useEffect(() => {
@@ -265,16 +276,17 @@ const TablaRegistros = () => {
 
       // Subir solo las imágenes comprimidas que han sido modificadas
       const updatedImages = await Promise.all(
-        registroSeleccionado.imagenes.map(async (image, index) => {
+        Array.from({ length: 4 }).map(async (_, index) => {
           if (compressedImages[index]) {
             // Solo sube la imagen si se ha modificado
             const newImageUrl = await uploadImageWithMetadata(compressedImages[index], index);
             return newImageUrl; // Retornar la nueva URL si se sube una imagen nueva
           }
-          return image; // Si no se ha cambiado, mantén la imagen original
+          return registroSeleccionado.imagenes?.[index] || ""; // Mantén la imagen original o vacío
         })
       );
-      updatedRegistro.imagenes = updatedImages; // Actualiza las imágenes del registro
+
+      updatedRegistro.imagenes = updatedImages;
 
       // Usar 'doc' de Firestore para obtener la referencia del documento
       const docRef = doc(db, `${toCamelCase(plantillaSeleccionada)}Form`, updatedRegistro.id);
@@ -284,19 +296,33 @@ const TablaRegistros = () => {
 
       console.log("Documento actualizado correctamente");
 
-      setRegistroSeleccionado(updatedRegistro);
-      setModalContent(false)
+      // Actualizar el estado global de los registros
+      setRegistrosFiltrados((prev) =>
+        prev.map((registro) =>
+          registro.id === updatedRegistro.id ? updatedRegistro : registro
+        )
+      );
 
-      // Mostrar mensaje de éxito en el modal
+      // Actualizar el registro seleccionado localmente
+      setRegistroSeleccionado((prev) => ({
+        ...prev,
+        imagenes: updatedImages,
+      }));
+
+      // Sincronizar las previsualizaciones con las URLs de Firebase Storage
+      setImagePreviews(updatedImages);
+
+      setModalVisible(false);
+
+      // Mostrar mensaje de éxito
       showModal("El registro se actualizó correctamente.", "success");
-
     } catch (error) {
       console.error("Error al actualizar el documento:", error);
-
-      // Mostrar mensaje de error en el modal
       showModal("Hubo un error al actualizar el registro.", "error");
     }
   };
+
+
 
   // Función para mostrar el modal
   const showModal = (message, type) => {
@@ -342,49 +368,79 @@ const TablaRegistros = () => {
     closeConfirmDeleteModal();  // Cerramos el modal de confirmación
   };
 
-// Función para eliminar el registro
-const handleEliminar = async () => {
-  try {
-    // Asegurarse de que el registro seleccionado tenga un id
-    if (!registroSeleccionado || !registroSeleccionado.id) {
-      console.error("Registro no encontrado o ID no válido");
-      return;
+  // Función para eliminar el registro
+  const handleEliminar = async () => {
+    try {
+      // Asegurarse de que el registro seleccionado tenga un id
+      if (!registroSeleccionado || !registroSeleccionado.id) {
+        console.error("Registro no encontrado o ID no válido");
+        return;
+      }
+
+      // Usar 'doc' para obtener la referencia del documento
+      const docRef = doc(db, `${toCamelCase(plantillaSeleccionada)}Form`, registroSeleccionado.id);
+
+      // Eliminar el documento de Firestore
+      await deleteDoc(docRef);
+
+      console.log("Registro eliminado correctamente");
+
+      // Eliminar el registro de los registros locales (sin necesidad de recargar desde Firestore)
+      setRegistrosFiltrados((prevRegistros) =>
+        prevRegistros.filter((registro) => registro.id !== registroSeleccionado.id)
+      );
+
+      // Mostrar mensaje de éxito en el modal
+      showModal("El registro se eliminó correctamente.", "success");
+
+      // Cerrar el modal de confirmación después de eliminar el registro
+      setConfirmDeleteVisible(false);
+    } catch (error) {
+      console.error("Error al eliminar el documento:", error);
+
+      // Mostrar mensaje de error en el modal
+      showModal("Hubo un error al eliminar el registro.", "error");
     }
+  };
 
-    // Usar 'doc' para obtener la referencia del documento
-    const docRef = doc(db, `${toCamelCase(plantillaSeleccionada)}Form`, registroSeleccionado.id);
+  // Historial
 
-    // Eliminar el documento de Firestore
-    await deleteDoc(docRef);
-
-    console.log("Registro eliminado correctamente");
-
-    // Eliminar el registro de los registros locales (sin necesidad de recargar desde Firestore)
-    setRegistrosFiltrados((prevRegistros) =>
-      prevRegistros.filter((registro) => registro.id !== registroSeleccionado.id)
-    );
-
-    // Mostrar mensaje de éxito en el modal
-    showModal("El registro se eliminó correctamente.", "success");
-
-    // Cerrar el modal de confirmación después de eliminar el registro
-    setConfirmDeleteVisible(false);
-  } catch (error) {
-    console.error("Error al eliminar el documento:", error);
-
-    // Mostrar mensaje de error en el modal
-    showModal("Hubo un error al eliminar el registro.", "error");
-  }
-};
-
+  useEffect(() => {
+    if (registroSeleccionado && !registroSeleccionado.imagenes) {
+      setRegistroSeleccionado((prev) => ({
+        ...prev,
+        imagenes: Array(4).fill(""), // Inicializar con 4 posiciones vacías
+      }));
+    }
+  }, [registroSeleccionado]);
 
 
   return (
-    <div className="p-8 max-w-7xl mx-auto bg-white shadow-lg rounded-lg">
-      <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Registros de Formularios</h1>
+    <div className="min-h-screen container mx-auto xl:px-14 py-2 text-gray-500 mb-10">
+      <div className="flex gap-2 items-center justify-between px-5 py-3 text-md">
+        {/* Navegación */}
+        <div className="flex gap-2 items-center">
+          <GoHomeFill style={{ width: 15, height: 15, fill: "#d97706" }} />
+          <Link to="#">
+            <h1 className="font-medium text-gray-600">Home</h1>
+          </Link>
+          <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
+          <h1 className="font-medium text-amber-600">Ver registros</h1>
+        </div>
+
+        {/* Botón de volver */}
+        <div className="flex items-center">
+          <button className="text-amber-600 text-3xl" onClick={handleGoBack}>
+            <IoArrowBackCircle />
+          </button>
+        </div>
+      </div>
+
+      <div className="w-full border-b-2"></div>
+
 
       {/* Selección de Plantilla */}
-      <div className="flex flex-wrap justify-center gap-4 mb-8">
+      <div className="flex flex-wrap justify-center gap-4 mb-8 mt-6">
         {plantillas.map((plantilla) => (
           <button
             key={plantilla.id}
@@ -539,6 +595,19 @@ const handleEliminar = async () => {
         </>
       )}
 
+      {/* Mensaje de texto si no se ha seleccionado una plantilla */}
+      {!plantillaSeleccionada && (
+        <div className="flex flex-col items-center mt-16">
+          <p className="text-gray-600 text-center text-lg font-medium">
+            Seleccione una plantilla para visualizar los registros disponibles.
+          </p>
+          <p className="text-gray-500 text-center mt-2">
+            Haga clic en una de las opciones de plantilla disponibles en la parte superior.
+          </p>
+        </div>
+      )}
+
+
       {modalVisible && modalContent === "Editar" && registroSeleccionado && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-md shadow-md w-96 max-h-[90vh] overflow-y-auto">
@@ -595,22 +664,35 @@ const handleEliminar = async () => {
               })}
 
             {/* Mostrar las imágenes seleccionadas como miniaturas */}
-            <div>
-              {registroSeleccionado?.imagenes?.map((imagen, index) => (
-                <div key={index}>
-                  <img
-                    src={imagePreviews[index] || imagen} // Muestra la miniatura de la imagen o la imagen original
-                    alt={`Imagen ${index + 1}`}
-                    className="w-16 h-16 object-cover"
-                  />
+            <div className="flex flex-col gap-6">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="flex flex-col items-start">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
+                    Imagen {index + 1}
+                  </label>
+                  {registroSeleccionado?.imagenes?.[index] || imagePreviews[index] ? (
+                    <img
+                      src={imagePreviews[index] || registroSeleccionado?.imagenes?.[index] || ""}
+                      alt={`Imagen ${index + 1}`}
+                      className="w-24 h-24 object-cover mb-2 border border-gray-300 rounded"
+                      onError={(e) => (e.target.style.display = "none")} // Ocultar si no hay imagen
+                    />
+                  ) : (
+                    <div className="w-24 h-24 bg-gray-100 border border-gray-300 rounded flex items-center justify-center text-gray-400 mb-2">
+                      Sin imagen
+                    </div>
+                  )}
                   <input
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleFileChange(e, index)}
+                    className="block text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-600 hover:file:bg-blue-200"
                   />
                 </div>
               ))}
             </div>
+
+
 
 
             <div className="flex justify-end">

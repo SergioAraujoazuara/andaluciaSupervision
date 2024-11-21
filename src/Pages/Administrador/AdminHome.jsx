@@ -1,19 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { db } from '../../../firebase_config';
-import { FaArrowRight } from "react-icons/fa";
 import { GoHomeFill } from "react-icons/go";
 import { collection, getDocs, deleteDoc, query, where, updateDoc, doc, onSnapshot } from 'firebase/firestore';
 import { IoCreateOutline } from "react-icons/io5";
-import { IoMdAddCircleOutline } from "react-icons/io";
 import { MdOutlineEditLocation } from "react-icons/md";
 import { IoArrowBackCircle } from "react-icons/io5";
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowAltCircleRight } from "react-icons/fa";
-import { FaCircleUser } from "react-icons/fa6";
 import { FaRegUserCircle } from "react-icons/fa";
 import { useAuth } from '../../context/authContext';
-import ViewerComponent from '../../ViewerComponent';
+import { BsClipboardDataFill } from "react-icons/bs";
 
 
 function AdminHome() {
@@ -49,6 +46,8 @@ function AdminHome() {
         navigate('/'); // Esto navega hacia atrás en la historia
     };
     const idProyecto = localStorage.getItem('proyecto')
+
+    
     return (
         <div className='min-h-screen container mx-auto xl:px-14 py-2 text-gray-500 mb-10'>
 
@@ -120,6 +119,30 @@ function AdminHome() {
                                 </Link>
                             )}
 
+                            {(userRole === 'admin' || userRole === 'usuario') && (
+                                <Link className='w-full' to={`/formularios/${idProyecto}`}>
+                                    <div className='flex flex-col justify-start items-center xl:flex-row gap-4  transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
+                                        <div className=' flex items-center text-gray-600'>
+                                            <span ><BsClipboardDataFill className='xl:w-[100px] xl:h-[100px] w-[70px] h-[70px]' /></span>
+                                        </div>
+                                        <div className='sm:col-span-9 text-center  xl:text-start flex flex-col justify-center items-center xl:items-start sm:justify-center text-base font-medium'>
+                                            <p className='flex items-center gap-2'>
+                                                <span className='text-amber-500  transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight />
+                                                </span>Formularios
+                                            </p>
+                                            <p className='mt-4 font-normal text-sm xl:'>
+                                                Configuración de formularios,
+                                                <br />
+                                                Crea los campos y plantillas personalizadas
+
+                                            </p>
+
+                                        </div>
+                                    </div>
+
+                                </Link>
+                            )}
+
 
 
 
@@ -141,6 +164,8 @@ function AdminHome() {
                                 </Link>
                             )}
 
+
+
                             {
                                 userRole === 'admin' && (
                                     <Link className=' w-full' to={'/roles'}>
@@ -160,6 +185,8 @@ function AdminHome() {
                                     </Link>
                                 )
                             }
+
+
 
 
 
