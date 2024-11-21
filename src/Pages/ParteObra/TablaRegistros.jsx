@@ -3,7 +3,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../../firebase_config";
 import { db } from "../../../firebase_config";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, addDoc } from "firebase/firestore";
 import imageCompression from "browser-image-compression"; // Importa la librería de compresión
 import { deleteDoc } from "firebase/firestore";
 import { BsClipboardData } from "react-icons/bs";
@@ -12,6 +12,7 @@ import { IoArrowBackCircle } from "react-icons/io5";
 
 import { GoHomeFill } from "react-icons/go";
 import { Link, useNavigate } from "react-router-dom";
+import InformePDF from "./InformePdf";
 
 const TablaRegistros = () => {
   const [plantillas, setPlantillas] = useState([]);
@@ -268,59 +269,98 @@ const TablaRegistros = () => {
       }
     }
   };
+  const [registroAnterior, setRegistroAnterior] = useState(null); // Estado para capturar el registro antes de los cambios
+
 
   // Función para guardar el registro
   const handleGuardar = async () => {
     try {
+      // 1. Validar que el campo motivoCambio no esté vacío
+      if (!motivoCambio.trim()) {
+        showModal("El campo 'Motivo del cambio' es obligatorio.", "error");
+        return; // Detener la ejecución si no está lleno
+      }
+
+      // 2. Verificar que el registro anterior esté disponible
+      if (!registroAnterior) {
+        console.error("El estado del registro anterior no está definido.");
+        return;
+      }
+
+      console.log("Estado anterior del registro:", registroAnterior);
+
+      // 3. Crear una copia para el registro actualizado
       const updatedRegistro = { ...registroSeleccionado };
 
-      // Subir solo las imágenes comprimidas que han sido modificadas
+      // 4. Subir solo las imágenes comprimidas que han sido modificadas
       const updatedImages = await Promise.all(
         Array.from({ length: 4 }).map(async (_, index) => {
           if (compressedImages[index]) {
-            // Solo sube la imagen si se ha modificado
             const newImageUrl = await uploadImageWithMetadata(compressedImages[index], index);
-            return newImageUrl; // Retornar la nueva URL si se sube una imagen nueva
+            return newImageUrl;
           }
-          return registroSeleccionado.imagenes?.[index] || ""; // Mantén la imagen original o vacío
+          return registroSeleccionado.imagenes?.[index] || "";
         })
       );
 
       updatedRegistro.imagenes = updatedImages;
 
-      // Usar 'doc' de Firestore para obtener la referencia del documento
+      // 5. Referencia al documento principal en Firestore
       const docRef = doc(db, `${toCamelCase(plantillaSeleccionada)}Form`, updatedRegistro.id);
 
-      // Actualiza el documento con las nuevas imágenes y los valores modificados
-      await updateDoc(docRef, updatedRegistro);
+      // 6. Crear objeto del historial
+      const historialModificacion = {
+        registroId: registroSeleccionado.id, // ID del registro modificado
+        responsable: "usuario", // Cambiar por el ID del usuario si es necesario en el futuro
+        fechaHora: new Date().toISOString(), // Captura automática de fecha y hora
+        motivoCambio, // Motivo del cambio introducido por el usuario
+        registroAnterior, // Estado anterior del registro (capturado al abrir el modal)
+        registroNuevo: updatedRegistro, // Estado actualizado del registro
+      };
 
+      // 7. Guardar en la colección de historialModificaciones
+      await addDoc(collection(db, "historialModificaciones"), historialModificacion);
+      console.log("Historial guardado correctamente");
+
+      // 8. Actualizar el documento principal en Firestore
+      await updateDoc(docRef, updatedRegistro);
       console.log("Documento actualizado correctamente");
 
-      // Actualizar el estado global de los registros
+      // 9. Actualizar el estado global
       setRegistrosFiltrados((prev) =>
         prev.map((registro) =>
           registro.id === updatedRegistro.id ? updatedRegistro : registro
         )
       );
 
-      // Actualizar el registro seleccionado localmente
+      // 10. Actualizar el registro seleccionado localmente
       setRegistroSeleccionado((prev) => ({
         ...prev,
         imagenes: updatedImages,
       }));
 
-      // Sincronizar las previsualizaciones con las URLs de Firebase Storage
+      // 11. Sincronizar las previsualizaciones con las URLs de Firebase Storage
       setImagePreviews(updatedImages);
 
+      // 12. Cerrar el modal
       setModalVisible(false);
 
-      // Mostrar mensaje de éxito
+      // 13. Limpiar el motivo del cambio
+      setMotivoCambio("");
+
+      // 14. Mostrar mensaje de éxito
       showModal("El registro se actualizó correctamente.", "success");
     } catch (error) {
+      // Manejo de errores
       console.error("Error al actualizar el documento:", error);
       showModal("Hubo un error al actualizar el registro.", "error");
     }
   };
+
+
+
+
+
 
 
 
@@ -415,6 +455,30 @@ const TablaRegistros = () => {
   }, [registroSeleccionado]);
 
 
+  // Historial auditoria
+  const [motivoCambio, setMotivoCambio] = useState(""); // Motivo del cambio
+  const [historialVisible, setHistorialVisible] = useState(false); // Controlar la visibilidad del modal de historial
+  const [historialRegistros, setHistorialRegistros] = useState([]); // Guardar el historial del registro
+
+  const cargarHistorial = async (registroId) => {
+    try {
+      const historialSnapshot = await getDocs(
+        collection(db, "historialModificaciones")
+      );
+      // Filtrar por el ID del registro
+      const historial = historialSnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((item) => item.registroId === registroId);
+
+      setHistorialRegistros(historial); // Guardar el historial en el estado
+      setHistorialVisible(true); // Mostrar el modal
+    } catch (error) {
+      console.error("Error al cargar el historial:", error);
+    }
+  };
+
+
+
   return (
     <div className="min-h-screen container mx-auto xl:px-14 py-2 text-gray-500 mb-10">
       <div className="flex gap-2 items-center justify-between px-5 py-3 text-md">
@@ -433,6 +497,8 @@ const TablaRegistros = () => {
           <button className="text-amber-600 text-3xl" onClick={handleGoBack}>
             <IoArrowBackCircle />
           </button>
+          <InformePDF registros={registrosFiltrados} columnas={obtenerColumnas()} />
+
         </div>
       </div>
 
@@ -561,22 +627,32 @@ const TablaRegistros = () => {
                         <button
                           className="px-4 py-2 bg-green-500 text-white rounded-md mr-2"
                           onClick={() => {
-                            console.log("Registro seleccionado:", registro); // Aquí imprimimos el registro en la consola
-                            setRegistroSeleccionado(registro); // Asegúrate de que 'registro' tiene las imágenes
+                            console.log("Registro seleccionado antes de abrir el modal:", registro);
+                            setRegistroAnterior({ ...registro }); // Capturar una copia inmutable del estado anterior
+                            setRegistroSeleccionado(registro); // Establecer el registro seleccionado para edición
                             setModalContent("Editar");
                             setModalVisible(true);
                           }}
-
-
                         >
                           Editar
                         </button>
+
+
+
                         <button
                           className="px-4 py-2 bg-red-500 text-white rounded-md"
                           onClick={() => showConfirmDeleteModal(registro)} // Llamamos a la función para mostrar el modal de confirmación
                         >
                           Eliminar
                         </button>
+
+                        <button
+                          className="px-4 py-2 bg-gray-400 text-white rounded-md ms-2"
+                          onClick={() => cargarHistorial(registro.id)} // Llamar a la función con el ID del registro
+                        >
+                          Ver historial
+                        </button>
+
 
 
                       </td>
@@ -615,10 +691,11 @@ const TablaRegistros = () => {
 
             {/* Mostrar campos del registro */}
             {Object.keys(registroSeleccionado)
-              .filter((campo) => campo !== "imagenes") // Excluimos las imágenes para tratarlas por separado
+              .filter((campo) => campo !== "imagenes" && campo !== "id") // Excluir las imágenes y el ID
               .map((campo, index) => {
-                // Normalizamos el nombre del campo a minúsculas para comparación
-                const campoDinamico = camposFiltrados.find(c => c.nombre.toLowerCase() === campo.toLowerCase());
+                const campoDinamico = camposFiltrados.find(
+                  (c) => c.nombre.toLowerCase() === campo.toLowerCase()
+                );
 
                 return (
                   <div key={index} className="mb-4">
@@ -626,7 +703,6 @@ const TablaRegistros = () => {
                       {capitalizeFirstLetter(campo)}
                     </label>
 
-                    {/* Si el campo tiene valores posibles, se muestra un select */}
                     {campoDinamico && campoDinamico.valores.length > 0 ? (
                       <select
                         value={registroSeleccionado[campo] || ""}
@@ -646,7 +722,6 @@ const TablaRegistros = () => {
                         ))}
                       </select>
                     ) : (
-                      // Si no tiene valores posibles, se muestra un input de texto
                       <input
                         type="text"
                         value={registroSeleccionado[campo] || ""}
@@ -672,10 +747,12 @@ const TablaRegistros = () => {
                   </label>
                   {registroSeleccionado?.imagenes?.[index] || imagePreviews[index] ? (
                     <img
-                      src={imagePreviews[index] || registroSeleccionado?.imagenes?.[index] || ""}
+                      src={
+                        imagePreviews[index] || registroSeleccionado?.imagenes?.[index] || ""
+                      }
                       alt={`Imagen ${index + 1}`}
                       className="w-24 h-24 object-cover mb-2 border border-gray-300 rounded"
-                      onError={(e) => (e.target.style.display = "none")} // Ocultar si no hay imagen
+                      onError={(e) => (e.target.style.display = "none")}
                     />
                   ) : (
                     <div className="w-24 h-24 bg-gray-100 border border-gray-300 rounded flex items-center justify-center text-gray-400 mb-2">
@@ -692,20 +769,35 @@ const TablaRegistros = () => {
               ))}
             </div>
 
-
-
+            {/* Campo para ingresar el motivo del cambio */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-600 mt-6 mb-4">
+                Motivo del cambio
+              </label>
+              <textarea
+                value={motivoCambio}
+                onChange={(e) => setMotivoCambio(e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                placeholder="Escribe el motivo de la modificación"
+                required
+              />
+            </div>
 
             <div className="flex justify-end">
               <button
-                className="px-4 py-2 bg-blue-500 text-white rounded-md mr-2"
-                onClick={handleGuardar} // Llamamos a la función de guardar aquí
+                className="px-4 py-2 mr-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                onClick={handleGuardar} // Llama a la función de guardado
+                disabled={!motivoCambio.trim()} // Deshabilita el botón si el campo está vacío
               >
                 Guardar
               </button>
 
               <button
-                className="px-4 py-2 bg-gray-500 text-white rounded-md"
-                onClick={() => setModalVisible(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
+                onClick={() => {
+                  setModalVisible(false);
+                  setMotivoCambio(""); // Resetea el campo motivoCambio si se cancela
+                }}
               >
                 Cancelar
               </button>
@@ -713,6 +805,8 @@ const TablaRegistros = () => {
           </div>
         </div>
       )}
+
+
 
 
 
@@ -756,6 +850,138 @@ const TablaRegistros = () => {
           </div>
         </div>
       )}
+
+      {historialVisible && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-md shadow-lg w-[90vw] max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-bold mb-6 text-center text-gray-700">Historial de cambios</h2>
+            {historialRegistros.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="table-auto w-full text-sm border-collapse shadow-lg rounded-lg">
+                  <thead>
+                    <tr className="bg-gray-200 text-gray-700">
+                      <th className="border-b px-6 py-3 text-left font-semibold">Fecha y Hora</th>
+                      <th className="border-b px-6 py-3 text-left font-semibold">Responsable</th>
+                      <th className="border-b px-6 py-3 text-left font-semibold">Motivo del Cambio</th>
+                      <th className="border-b px-6 py-3 text-left font-semibold">Campo</th>
+                      <th className="border-b px-6 py-3 text-left font-semibold">Valor Anterior</th>
+                      <th className="border-b px-6 py-3 text-left font-semibold">Valor Nuevo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {historialRegistros.map((historial, index) => {
+                      const camposModificados = Object.keys(historial.registroAnterior || {}).filter(
+                        (campo) => campo !== "id" // Excluir el campo "id"
+                      );
+                      return camposModificados.map((campo, i) => (
+                        <tr
+                          key={`${index}-${i}`}
+                          className={`hover:bg-gray-100 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                            }`}
+                        >
+                          {i === 0 && (
+                            <>
+                              <td
+                                className="border-b px-6 py-4 text-gray-600 align-top"
+                                rowSpan={camposModificados.length}
+                              >
+                                {new Date(historial.fechaHora).toLocaleString()}
+                              </td>
+                              <td
+                                className="border-b px-6 py-4 text-gray-600 align-top"
+                                rowSpan={camposModificados.length}
+                              >
+                                {historial.responsable}
+                              </td>
+                              <td
+                                className="border-b px-6 py-4 text-gray-600 align-top"
+                                rowSpan={camposModificados.length}
+                              >
+                                {historial.motivoCambio}
+                              </td>
+                            </>
+                          )}
+                          <td className="border-b px-6 py-4 text-gray-600">{campo}</td>
+                          <td className="border-b px-6 py-4 text-gray-600">
+                            {Array.isArray(historial.registroAnterior[campo])
+                              ? historial.registroAnterior[campo].map((url, index) => (
+                                <a
+                                  key={index}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 underline block"
+                                >
+                                  Ver Imagen {index + 1}
+                                </a>
+                              ))
+                              : typeof historial.registroAnterior[campo] === "string" &&
+                                historial.registroAnterior[campo].startsWith("http") ? (
+                                <a
+                                  href={historial.registroAnterior[campo]}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 underline"
+                                >
+                                  Ver Imagen
+                                </a>
+                              ) : (
+                                historial.registroAnterior[campo] || "—"
+                              )}
+                          </td>
+                          <td className="border-b px-6 py-4 text-gray-600">
+                            {Array.isArray(historial.registroNuevo[campo])
+                              ? historial.registroNuevo[campo].map((url, index) => (
+                                <a
+                                  key={index}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 underline block"
+                                >
+                                  Ver Imagen {index + 1}
+                                </a>
+                              ))
+                              : typeof historial.registroNuevo[campo] === "string" &&
+                                historial.registroNuevo[campo].startsWith("http") ? (
+                                <a
+                                  href={historial.registroNuevo[campo]}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 underline"
+                                >
+                                  Ver Imagen
+                                </a>
+                              ) : (
+                                historial.registroNuevo[campo] || "—"
+                              )}
+                          </td>
+                        </tr>
+                      ));
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-center text-gray-600">No hay historial de cambios para este registro.</p>
+            )}
+            <div className="flex justify-end mt-6">
+              <button
+                className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition"
+                onClick={() => setHistorialVisible(false)} // Cerrar el modal
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+
+
+
 
 
 
