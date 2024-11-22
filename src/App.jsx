@@ -26,6 +26,7 @@ import ParteObra from './Pages/ParteObra/ParteObra.jsx';
 import SistemaDePestanas from './Pages/ParteObra/SistemaPestanas.jsx';
 import GridParteDeObra from './Pages/ParteObra/GridParteDeObra.jsx';
 import TablaRegistros from './Pages/ParteObra/TablaRegistros.jsx';
+import ViewProject from './Pages/Administrador/ViewProject.jsx';
 
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
     { path: '/verPPis', element: <VerPpis />, roles: ['admin'] },
     { path: '/agregarPpi', element: <AgregarPPi />, roles: ['admin'] },
     { path: '/roles', element: <Roles />, roles: ['admin'] },
+    { path: '/project', element: <ViewProject />, roles: ['admin'] },
   ];
 
   const inspectionRoutes = [

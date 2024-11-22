@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Document, Page, Text, View, StyleSheet, Link } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { pdf } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
 
@@ -62,62 +62,75 @@ const styles = StyleSheet.create({
   fieldValue: {
     color: "#555555",
   },
-  link: {
-    color: "#007BFF",
-    textDecoration: "none",
-    fontSize: 10,
+  imageRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  image: {
+    width: "45%",
+    height: 150,
+    margin: "2.5%",
+    borderRadius: 8,
+    border: "1px solid #cccccc",
   },
 });
 
 const PdfInforme = ({ registros }) => {
   const [pdfBlob, setPdfBlob] = useState(null);
+  const [imagenesBase64, setImagenesBase64] = useState([]);
+
+  useEffect(() => {
+    const fetchImagenes = async () => {
+      const allImages = await Promise.all(
+        registros.flatMap((registro) =>
+          registro.imagenes.map(async (url) => {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            return URL.createObjectURL(blob);
+          })
+        )
+      );
+      setImagenesBase64(allImages);
+    };
+
+    fetchImagenes();
+  }, [registros]);
 
   useEffect(() => {
     const generatePdfBlob = async () => {
       const doc = (
         <Document>
-          <Page size="A4" style={styles.page}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>INFORME DE ESTADO DEL PROYECTO</Text>
-              <Text style={{ fontSize: 12 }}>
-                Fecha de Generación: {new Date().toLocaleDateString()}
-              </Text>
-            </View>
-
-            {/* Sección: Resumen */}
-            <Text style={styles.sectionTitle}>Resumen del Proyecto</Text>
-            <View style={styles.card}>
-              <Text style={styles.cardHeader}>Detalles del Proyecto</Text>
-              <View style={styles.cardContent}>
-                <Text style={styles.fieldRow}>
-                  <Text style={styles.fieldLabel}>Nombre del Proyecto:</Text>
-                  <Text style={styles.fieldValue}>Nombre Placeholder</Text>
-                </Text>
-                <Text style={styles.fieldRow}>
-                  <Text style={styles.fieldLabel}>Ubicación:</Text>
-                  <Text style={styles.fieldValue}>Ubicación Placeholder</Text>
+          {registros.map((registro, index) => (
+            <Page key={index} size="A4" style={styles.page}>
+              {/* Header */}
+              <View style={styles.header}>
+                <Text style={styles.title}>INFORME DE ESTADO DEL PROYECTO</Text>
+                <Text style={{ fontSize: 12 }}>
+                  Fecha de Generación: {new Date().toLocaleDateString()}
                 </Text>
               </View>
-            </View>
 
-            {/* Sección: Registros */}
-            <Text style={styles.sectionTitle}>Registros</Text>
-            {registros.map((registro, index) => (
-              <View key={index} style={styles.card}>
+              {/* Registro */}
+              <View style={styles.card}>
                 <Text style={styles.cardHeader}>Registro #{index + 1}</Text>
                 <View style={styles.cardContent}>
                   {Object.entries(registro).map(([key, value], i) => (
                     <View key={i} style={styles.fieldRow}>
                       <Text style={styles.fieldLabel}>{key.toUpperCase()}:</Text>
                       {key === "imagenes" && Array.isArray(value) ? (
-                        value.map((link, linkIndex) => (
-                          <Text key={linkIndex}>
-                            <Link style={styles.link} src={link}>
-                              {`Imagen ${linkIndex + 1}`}
-                            </Link>
-                          </Text>
-                        ))
+                        <View>
+                          {value.map((_, imgIndex) => (
+                            imgIndex % 2 === 0 && (
+                              <View key={imgIndex} style={styles.imageRow}>
+                                <Image style={styles.image} src={imagenesBase64[imgIndex]} />
+                                {imagenesBase64[imgIndex + 1] && (
+                                  <Image style={styles.image} src={imagenesBase64[imgIndex + 1]} />
+                                )}
+                              </View>
+                            )
+                          ))}
+                        </View>
                       ) : (
                         <Text style={styles.fieldValue}>
                           {Array.isArray(value) ? value.join(", ") : value || "N/A"}
@@ -127,8 +140,8 @@ const PdfInforme = ({ registros }) => {
                   ))}
                 </View>
               </View>
-            ))}
-          </Page>
+            </Page>
+          ))}
         </Document>
       );
 
@@ -136,12 +149,14 @@ const PdfInforme = ({ registros }) => {
       setPdfBlob(blob);
     };
 
-    generatePdfBlob();
-  }, [registros]);
+    if (imagenesBase64.length > 0) {
+      generatePdfBlob();
+    }
+  }, [registros, imagenesBase64]);
 
   const downloadPdf = () => {
     if (pdfBlob) {
-      saveAs(pdfBlob, "informe_proyecto_profesional.pdf");
+      saveAs(pdfBlob, "informe_proyecto.pdf");
     }
   };
 

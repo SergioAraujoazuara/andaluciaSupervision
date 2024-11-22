@@ -47,7 +47,7 @@ function AdminHome() {
     };
     const idProyecto = localStorage.getItem('proyecto')
 
-    
+
     return (
         <div className='min-h-screen container mx-auto xl:px-14 py-2 text-gray-500 mb-10'>
 
@@ -92,6 +92,32 @@ function AdminHome() {
 
 
                             ))}
+
+                            {(userRole === 'admin' || userRole === 'usuario') && (
+                                <Link className='w-full' to={`/project`}>
+                                    <div className='flex flex-col justify-center items-center xl:flex-row gap-4  transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
+                                        <div className=' flex items-center text-gray-600'>
+                                            <span ><IoCreateOutline className='xl:w-[100px] xl:h-[100px] w-[70px] h-[70px]' /></span>
+                                        </div>
+                                        <div className='sm:col-span-9 text-center  xl:text-start flex flex-col justify-center items-center xl:items-start sm:justify-center text-base font-medium'>
+                                            <p className='flex items-center gap-2'>
+                                                <span className='text-amber-500  transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight />
+                                                </span>Administrar proyecto
+                                            </p>
+                                            <p className='mt-4 font-normal text-sm xl:'>Creación y configuración del proyecto,
+                                                agregar la trazabilidad completa del proyecto, establecer parámetros como el sector, sub sector, parte, elemento, lote y asignar PPI
+                                                Puedes agregar los datos en 2 visualizaciones distintas:
+                                                <br />
+                                                - Versión web
+                                                <br />
+                                                - Versión BIM
+                                            </p>
+
+                                        </div>
+                                    </div>
+
+                                </Link>
+                            )}
 
                             {(userRole === 'admin' || userRole === 'usuario') && (
                                 <Link className='w-full' to={`/trazabilidad/${idProyecto}`}>

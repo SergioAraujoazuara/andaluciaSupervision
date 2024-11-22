@@ -1,170 +1,486 @@
-import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom';
-import { db } from '../../../firebase_config';
-import { collection, getDocs, deleteDoc } from 'firebase/firestore';
-import { doc } from 'firebase/firestore';
-import { GoHomeFill } from "react-icons/go";
-import { FaRegEdit } from "react-icons/fa";
-import { MdDelete } from "react-icons/md";
-import { IoAddCircle } from "react-icons/io5";
-import { FaArrowRight } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { db, storage } from "../../../firebase_config";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { deleteObject } from "firebase/storage";
 
+function Projects() {
+  const [nombre, setNombre] = useState("");
+  const [obra, setObra] = useState("");
+  const [tramo, setTramo] = useState("");
+  const [contrato, setContrato] = useState("");
+  const [logo, setLogo] = useState(null);
+  const [logoCliente, setLogoCliente] = useState(null);  // Solo un logo de cliente
+  const [proyectosSupervision, setProyectosSupervision] = useState([]);
+  const [proyectoInspeccion, setProyectoInspeccion] = useState(null);
 
+  // Estados para los modales
+  const [isEditing, setIsEditing] = useState(false);
+  const [editProject, setEditProject] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteProjectId, setDeleteProjectId] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
+  // Obtener todos los proyectos
+  const fetchProyectos = async () => {
+    const proyectosCollection = collection(db, "proyectos");
+    const proyectosSnapshot = await getDocs(proyectosCollection);
 
+    const supervision = [];
+    let inspeccion = null;
 
-function ViewProject() {
-
-
-  // Variables de estado
-
-  const nombre_proyecto = localStorage.getItem('nombre_proyecto')
-
-  const [proyectos, setProyectos] = useState([])
-  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-  const [proyectoToDelete, setProyectoToDelete] = useState(null);
-
-  // Obtener proyectos
-  useEffect(() => {
-    const obtenerProyectos = async () => {
-      try {
-        const proyectosCollection = collection(db, 'proyectos');
-        const proyectosSnapshot = await getDocs(proyectosCollection);
-
-        const proyectosData = proyectosSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setProyectos(proyectosData)
-      } catch (error) {
-        console.error('Error al obtener la lista de proyectos:', error);
+    proyectosSnapshot.docs.forEach((doc) => {
+      const proyecto = { id: doc.id, ...doc.data() };
+      if (proyecto.nombre_corto) {
+        inspeccion = proyecto; // Proyecto de inspección
+      } else {
+        supervision.push(proyecto); // Proyectos de supervisión
       }
-    };
+    });
 
-    obtenerProyectos();
+    setProyectosSupervision(supervision);
+    setProyectoInspeccion(inspeccion);
+  };
+
+  useEffect(() => {
+    fetchProyectos();
   }, []);
 
+  // Función para guardar un nuevo proyecto de supervisión
+  const guardarProyectoSupervision = async () => {
+    if (!nombre || !obra || !contrato || !logo) {
+      alert("Por favor, completa todos los campos y sube los archivos necesarios.");
+      return;
+    }
 
-  // Función para mostrar el modal de confirmación y configurar el proyecto a eliminar
-  const confirmDeleteProyecto = (proyectoId) => {
-    setProyectoToDelete(proyectoId);
-    setShowConfirmationModal(true);
-  };
-
-  // Función para cerrar el modal de confirmación sin eliminar el proyecto
-  const cancelDeleteProyecto = () => {
-    setProyectoToDelete(null);
-    setShowConfirmationModal(false);
-  };
-
-  // Función para eliminar un proyecto
-  const eliminarProyecto = async (id) => {
     try {
-      await deleteDoc(doc(db, 'proyectos', id));
-      // Actualizar la lista de proyectos después de eliminar uno
-      setProyectos(proyectos.filter(proyecto => proyecto.id !== id));
-      console.log('Proyecto eliminado correctamente');
-      setShowConfirmationModal(false); // Ocultar el modal después de eliminar
+      const logoRef = ref(storage, `logos/${logo.name}`);
+      await uploadBytes(logoRef, logo);
+      const logoURL = await getDownloadURL(logoRef);
+
+      let logoClienteURL = null;
+      if (logoCliente) {
+        const logoClienteRef = ref(storage, `logos_clientes/${logoCliente.name}`);
+        await uploadBytes(logoClienteRef, logoCliente);
+        logoClienteURL = await getDownloadURL(logoClienteRef);
+      }
+
+
+      await addDoc(collection(db, "proyectos"), {
+        nombre,
+        obra,
+        contrato,
+        tramo,
+        logo: logoURL,
+        logoCliente: logoClienteURL,  // Ahora es solo una URL de un solo logo de cliente
+      });
+      
+
+      setSuccessMessage("Proyecto de supervisión guardado correctamente.");
+      setShowSuccessModal(true);
+      fetchProyectos();
+
+      setNombre("");
+      setObra("");
+      setTramo("");
+      setContrato("");
+      setLogo(null);
+      setLogoCliente(null);
     } catch (error) {
-      console.error('Error al eliminar el proyecto:', error);
+      console.error("Error al guardar el proyecto:", error);
+    }
+  };
+
+  // Función para abrir modal de edición
+  const startEditing = (proyecto) => {
+    setIsEditing(true);
+    setEditProject({
+      ...proyecto,
+      newLogo: null,
+      newLogoCliente: null, // Solo un logo de cliente
+    });
+
+  };
+
+  // Función para actualizar proyecto
+
+
+  const actualizarProyecto = async () => {
+    if (!editProject.nombre || !editProject.obra || !editProject.contrato) {
+      alert("Por favor, completa todos los campos.");
+      return;
+    }
+
+    try {
+      const projectRef = doc(db, "proyectos", editProject.id);
+
+      // 1. Eliminar logo anterior si se ha cambiado
+      let updatedLogoURL = editProject.logo;
+      if (editProject.newLogo) {
+        // Eliminar el logo anterior
+        if (editProject.logo) {
+          const oldLogoRef = ref(storage, editProject.logo.split("?")[0]);
+          await deleteObject(oldLogoRef);
+        }
+        // Subir el nuevo logo
+        const logoRef = ref(storage, `logos/${editProject.newLogo.name}`);
+        await uploadBytes(logoRef, editProject.newLogo);
+        updatedLogoURL = await getDownloadURL(logoRef);
+      }
+
+      // 2. Eliminar logos de clientes anteriores si se han cambiado
+      let updatedLogoClienteURL = editProject.logoCliente || null;
+      if (editProject.newLogoCliente) {
+        // Eliminar el logo de cliente anterior si existe
+        if (editProject.logoCliente) {
+          const oldClienteLogoRef = ref(storage, editProject.logoCliente.split("?")[0]);
+          await deleteObject(oldClienteLogoRef);
+        }
+
+        // Subir el nuevo logo de cliente
+        const logoClienteRef = ref(storage, `logos_clientes/${editProject.newLogoCliente.name}`);
+        await uploadBytes(logoClienteRef, editProject.newLogoCliente);
+        updatedLogoClienteURL = await getDownloadURL(logoClienteRef);
+      }
+
+
+      // 3. Actualizar Firestore con los nuevos datos
+      await updateDoc(projectRef, {
+        nombre: editProject.nombre,
+        obra: editProject.obra,
+        contrato: editProject.contrato,
+        tramo: editProject.tramo,
+        logo: updatedLogoURL,
+        logoCliente: updatedLogoClienteURL,
+      });
+
+      setIsEditing(false);
+      setSuccessMessage("Proyecto actualizado correctamente.");
+      setShowSuccessModal(true);
+      fetchProyectos();
+    } catch (error) {
+      console.error("Error al actualizar el proyecto:", error);
     }
   };
 
 
+
+  // Función para eliminar proyecto
+  const deleteProject = async () => {
+    try {
+      await deleteDoc(doc(db, "proyectos", deleteProjectId));
+      setShowDeleteModal(false);
+      setSuccessMessage("Proyecto eliminado correctamente.");
+      setShowSuccessModal(true);
+      fetchProyectos();
+    } catch (error) {
+      console.error("Error al eliminar el proyecto:", error);
+    }
+  };
+
   return (
-    <div className='min-h-screen px-14 py-5 text-gray-500'>
+    <div className="min-h-screen px-14 py-5 text-gray-500">
+      <h1 className="text-2xl font-bold mb-5">Gestión de Proyectos</h1>
 
-      <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
-        <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-        
-        <Link to={'/admin'}>
-          <h1 className='text-gray-600'>Administración</h1>
-        </Link>
-        <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
-        <Link to={'#'}>
-          <h1 className='font-medium text-amber-600'>Ver proyectos</h1>
-        </Link>
+      {/* Formulario para agregar proyectos de supervisión */}
+      <div className="bg-white p-8 rounded-xl shadow-md space-y-4">
+        <h2 className="text-lg font-bold">Nuevo Proyecto de Supervisión</h2>
+        <input
+          type="text"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder="Nombre del Proyecto"
+          className="w-full px-4 py-2 border rounded-md"
+        />
+        <input
+          type="text"
+          value={obra}
+          onChange={(e) => setObra(e.target.value)}
+          placeholder="Obra"
+          className="w-full px-4 py-2 border rounded-md"
+        />
+        <input
+          type="text"
+          value={tramo}
+          onChange={(e) => setTramo(e.target.value)}
+          placeholder="Tramo"
+          className="w-full px-4 py-2 border rounded-md"
+        />
+        <input
+          type="text"
+          value={contrato}
+          onChange={(e) => setContrato(e.target.value)}
+          placeholder="Contrato"
+          className="w-full px-4 py-2 border rounded-md"
+        />
+        <input
+          type="file"
+          onChange={(e) => setLogo(e.target.files[0])}
+          className="w-full px-4 py-2 border rounded-md"
+        />
+        <input
+          type="file"
+          onChange={(e) => setLogoCliente(e.target.files[0])}  // Solo un archivo
+          className="w-full px-4 py-2 border rounded-md"
+        />
 
+
+        <button
+          onClick={guardarProyectoSupervision}
+          className="w-full px-4 py-2 bg-green-500 text-white rounded-md"
+        >
+          Guardar Proyecto de Supervisión
+        </button>
       </div>
 
+      {/* Tabla de proyectos de supervisión */}
+      <div className="mt-10 bg-white p-8 rounded-xl shadow-md">
+        <h2 className="text-xl font-bold mb-5">Proyectos de Supervisión</h2>
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b">
+              <th className="p-2">Nombre</th>
+              <th className="p-2">Obra</th>
+              <th className="p-2">Tramo</th>
+              <th className="p-2">Contrato</th>
+              <th className="p-2">Logo</th>
+              <th className="p-2">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {proyectosSupervision.map((proyecto, index) => (
+              <tr key={index} className="border-b">
+                <td className="p-2">{proyecto.nombre}</td>
+                <td className="p-2">{proyecto.obra}</td>
+                <td className="p-2">{proyecto.tramo}</td>
+                <td className="p-2">{proyecto.contrato}</td>
+                <td className="p-2">
+                  <img src={proyecto.logo} alt="Logo" className="w-12 h-12" />
+                </td>
+                <td className="p-2">
+                  <button
+                    onClick={() => startEditing(proyecto)}
+                    className="text-blue-500"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDeleteProjectId(proyecto.id);
+                      setShowDeleteModal(true);
+                    }}
+                    className="text-red-500 ml-4"
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-
-      <div className='flex gap-3 flex-col  mt-5 bg-white p-8 rounded rounded-xl shadow-md'>
-
-
-
-
-        <div class="w-full rounded rounded-xl">
-          <div className='grid sm:grid-cols-8 grid-cols-1 sm:px-5 sm:py-2 sm:bg-gray-100 rounded rounded-md '>
-            <div className='text-left ps-2 font-medium text-gray-600 sm:block hidden'>Logo</div>
-            <div className='sm:col-span-1 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Nombre</div>
-            <div className='sm:col-span-1 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Contrato</div>
-            <div className='sm:col-span-2 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Descripción</div>
-            <div className='sm:col-span-2 text-left ps-10 font-medium text-gray-600 sm:block hidden'>Acciones</div>
-          </div>
-
-          {proyectos.map((p, i) => (
-            <div className='cursor-pointer grid sm:grid-cols-8 grid-cols-1 items-center justify-start sm:p-5 border-b-2 text-sm'>
-              <div className='sm:border-r-2 sm:border-b-0 flex items-center'>
-                <img className='sm:w-16 sm:H-12 w-60 ' src={p.logo} alt="logo" />
-              </div>
-
-              <div className='sm:col-span-1 sm:border-r-2 sm:border-b-0 h-10 flex items-center sm:justify-start sm:ps-10 font-medium text-gray-600'>
-                {p.nombre_corto}
-              </div>
-
-              <div className='sm:col-span-1 sm:border-r-2 sm:border-b-0 h-10 flex items-center sm:justify-start sm:ps-10 font-medium text-gray-600'>
-                {p.codigoTpf}
-              </div>
-
-              <div className='sm:col-span-2 h-10 flex items-center sm:justify-start sm:ps-10 font-medium text-gray-600'>
-                {p.nombre_completo}
-
-              </div>
-              <div className='sm:col-span-3 h-10 flex items-center sm:justify-start sm:ps-6 font-medium text-gray-600'>
-
-                <Link to={`/trazabilidad/${p.id}`}>
-                  <button className='text-sky-600 px-3 py-1 flex items-center gap-1'> <IoAddCircle style={{ fontSize: 25 }} /> <p> Trazabilidad</p> </button>
-                </Link>
-                <Link to={`/editProject/${p.id}`}>
-                  <button className='text-gray-600 px-3 py-1 text-2xl'> <FaRegEdit /></button>
-                </Link>
-                <button onClick={() => confirmDeleteProyecto(p.id)} className='text-red-600 px-3 py-1 text-2xl'> <MdDelete /></button>
-
-
-
-              </div>
-
-            </div>
-          ))}
-
-          {/* Modal de confirmación */}
-          {showConfirmationModal && (
-            <div className="fixed inset-0 z-10 overflow-y-auto flex justify-center items-center bg-black bg-opacity-70">
-              <div className="bg-white p-5 rounded-lg text-center">
-                <p>¿Estás seguro que quieres eliminar este proyecto?</p>
-                <div className="mt-4 flex justify-center">
-                  <button onClick={() => eliminarProyecto(proyectoToDelete)} className="bg-red-600 hover:bg-red-600 text-white font-bold py-2 px-4 mr-4 rounded">Aceptar</button>
-                  <button onClick={cancelDeleteProyecto} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">Cancelar</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-
-
+      {/* Tabla de proyecto de inspección */}
+      {proyectoInspeccion && (
+        <div className="mt-10 bg-white p-8 rounded-xl shadow-md">
+          <h2 className="text-xl font-bold mb-5">Proyecto de Inspección</h2>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b">
+                <th className="p-2">Nombre Corto</th>
+                <th className="p-2">Obra</th>
+                <th className="p-2">Tramo</th>
+                <th className="p-2">Logo</th>
+                <th className="p-2">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b">
+                <td className="p-2">{proyectoInspeccion.nombre_corto}</td>
+                <td className="p-2">{proyectoInspeccion.obra}</td>
+                <td className="p-2">{proyectoInspeccion.tramo}</td>
+                <td className="p-2">
+                  <img
+                    src={proyectoInspeccion.logoBase64}
+                    alt="Logo"
+                    className="w-12 h-12"
+                  />
+                </td>
+                <td className="p-2">
+                  <button
+                    onClick={() => startEditing(proyectoInspeccion)}
+                    className="text-blue-500"
+                  >
+                    Editar
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      )}
 
+      {/* Modales */}
+      {isEditing && (
+  <div className="fixed inset-0 z-10 flex justify-center items-center bg-black bg-opacity-50">
+    <div className="bg-white p-8 rounded-lg w-full max-w-lg">
+      <h2 className="text-xl font-bold mb-4">Editar Proyecto</h2>
+
+      {/* Campos de texto */}
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-2">Nombre</label>
+        <input
+          type="text"
+          value={editProject.nombre}
+          onChange={(e) =>
+            setEditProject({ ...editProject, nombre: e.target.value })
+          }
+          placeholder="Nombre"
+          className="w-full px-4 py-2 border rounded-md"
+        />
       </div>
 
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-2">Obra</label>
+        <input
+          type="text"
+          value={editProject.obra}
+          onChange={(e) =>
+            setEditProject({ ...editProject, obra: e.target.value })
+          }
+          placeholder="Obra"
+          className="w-full px-4 py-2 border rounded-md"
+        />
+      </div>
 
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-2">Tramo</label>
+        <input
+          type="text"
+          value={editProject.tramo}
+          onChange={(e) =>
+            setEditProject({ ...editProject, tramo: e.target.value })
+          }
+          placeholder="Tramo"
+          className="w-full px-4 py-2 border rounded-md"
+        />
+      </div>
 
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-2">Contrato</label>
+        <input
+          type="text"
+          value={editProject.contrato}
+          onChange={(e) =>
+            setEditProject({ ...editProject, contrato: e.target.value })
+          }
+          placeholder="Contrato"
+          className="w-full px-4 py-2 border rounded-md"
+        />
+      </div>
 
+      {/* Mostrar logo actual */}
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-2">
+          Logo Principal (Actual)
+        </label>
+        <img
+          src={editProject.logo}
+          alt="Logo Actual"
+          className="w-32 h-32 mb-4"
+        />
+        <input
+          type="file"
+          onChange={(e) =>
+            setEditProject({ ...editProject, newLogo: e.target.files[0] })
+          }
+          className="w-full px-4 py-2 border rounded-md"
+        />
+      </div>
 
+      {/* Mostrar logo de cliente actual */}
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-2">
+          Logo de Cliente (Actual)
+        </label>
+        {editProject.logoCliente && (
+          <img
+            src={editProject.logoCliente}
+            alt="Logo Cliente Actual"
+            className="w-20 h-20 object-cover rounded-md mb-4"
+          />
+        )}
+        <input
+          type="file"
+          onChange={(e) =>
+            setEditProject({
+              ...editProject,
+              newLogoCliente: e.target.files[0],
+            })
+          }
+          className="w-full px-4 py-2 border rounded-md mt-4"
+        />
+      </div>
 
-
+      {/* Botones de acción */}
+      <div className="flex justify-end gap-4">
+        <button
+          onClick={actualizarProyecto}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md"
+        >
+          Guardar
+        </button>
+        <button
+          onClick={() => setIsEditing(false)}
+          className="px-4 py-2 bg-gray-300 rounded-md"
+        >
+          Cancelar
+        </button>
+      </div>
     </div>
-  )
+  </div>
+)}
+
+
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-10 flex justify-center items-center bg-black bg-opacity-50">
+          <div className="bg-white p-5 rounded-lg">
+            <p>¿Estás seguro de que deseas eliminar este proyecto?</p>
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={deleteProject}
+                className="bg-red-500 text-white px-4 py-2 rounded-md mr-2"
+              >
+                Eliminar
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="bg-gray-300 px-4 py-2 rounded-md"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-10 flex justify-center items-center bg-black bg-opacity-50">
+          <div className="bg-white p-5 rounded-lg text-center">
+            <p>{successMessage}</p>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="bg-green-500 text-white px-4 py-2 rounded-md mt-4"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default ViewProject
+export default Projects;
