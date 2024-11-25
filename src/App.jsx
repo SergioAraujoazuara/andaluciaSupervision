@@ -27,6 +27,7 @@ import SistemaDePestanas from './Pages/ParteObra/SistemaPestanas.jsx';
 import GridParteDeObra from './Pages/ParteObra/GridParteDeObra.jsx';
 import TablaRegistros from './Pages/ParteObra/TablaRegistros.jsx';
 import ViewProject from './Pages/Administrador/ViewProject.jsx';
+import ApiRickYMorty from './ApiRickYMorty.jsx';
 
 
 function App() {
@@ -34,7 +35,8 @@ function App() {
     { path: '/', element: <Home /> },
     { path: '/authTabs', element: <AuthTabs /> },
     { path: '/groc', element: <GrocIA /> },
-    { path: '/sendEmail', element: <SendMail /> }
+    { path: '/sendEmail', element: <SendMail /> },
+    
   ];
 
   const adminRoutes = [

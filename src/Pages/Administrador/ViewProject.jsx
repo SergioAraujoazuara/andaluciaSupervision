@@ -4,7 +4,21 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { deleteObject } from "firebase/storage";
 
+import { Link } from 'react-router-dom';
+import { FaArrowRight } from "react-icons/fa";
+import { GoHomeFill } from "react-icons/go";
+import { FaEdit } from "react-icons/fa";
+import { MdDeleteOutline } from "react-icons/md";
+import { IoCloseCircle } from "react-icons/io5";
+import { useNavigate } from 'react-router-dom';
+import { IoArrowBackCircle } from "react-icons/io5";
+import { IoAlertCircleSharp } from "react-icons/io5";
+
 function Projects() {
+  const navigate = useNavigate();
+  const handleGoBack = () => {
+      navigate('/admin'); // Esto navega hacia atrás en la historia
+  };
   const [nombre, setNombre] = useState("");
   const [obra, setObra] = useState("");
   const [tramo, setTramo] = useState("");
@@ -75,7 +89,7 @@ function Projects() {
         logo: logoURL,
         logoCliente: logoClienteURL,  // Ahora es solo una URL de un solo logo de cliente
       });
-      
+
 
       setSuccessMessage("Proyecto de supervisión guardado correctamente.");
       setShowSuccessModal(true);
@@ -180,11 +194,34 @@ function Projects() {
   };
 
   return (
-    <div className="min-h-screen px-14 py-5 text-gray-500">
-      <h1 className="text-2xl font-bold mb-5">Gestión de Proyectos</h1>
+    <div className='container mx-auto min-h-screen xl:px-14 py-2 text-gray-500'>
+      <div className='flex gap-2 items-center justify-between px-4 py-3 text-base'>
+
+        <div className='flex gap-2 items-center'>
+          <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
+          <Link to={'/admin'}>
+            <h1 className='text-gray-500 text-gray-500'>Administración</h1>
+          </Link>
+          <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
+          <Link to={'#'}>
+            <h1 className='text-amber-500 font-medium'>Información de proyectos</h1>
+          </Link>
+        </div>
+
+
+
+        <div className='flex items-center'>
+          <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
+
+        </div>
+
+      </div>
+
+      <div className="w-full border-b-2 pb-1"></div>
+     
 
       {/* Formulario para agregar proyectos de supervisión */}
-      <div className="bg-white p-8 rounded-xl shadow-md space-y-4">
+      <div className="bg-white p-8 rounded-xl shadow-xl space-y-4">
         <h2 className="text-lg font-bold">Nuevo Proyecto de Supervisión</h2>
         <input
           type="text"
@@ -228,7 +265,7 @@ function Projects() {
 
         <button
           onClick={guardarProyectoSupervision}
-          className="w-full px-4 py-2 bg-green-500 text-white rounded-md"
+          className="w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md"
         >
           Guardar Proyecto de Supervisión
         </button>
@@ -236,7 +273,7 @@ function Projects() {
 
       {/* Tabla de proyectos de supervisión */}
       <div className="mt-10 bg-white p-8 rounded-xl shadow-md">
-        <h2 className="text-xl font-bold mb-5">Proyectos de Supervisión</h2>
+        <h2 className="text-xl font-bold mb-5">Proyecto de Supervisión</h2>
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b">
@@ -323,124 +360,127 @@ function Projects() {
 
       {/* Modales */}
       {isEditing && (
-  <div className="fixed inset-0 z-10 flex justify-center items-center bg-black bg-opacity-50">
-    <div className="bg-white p-8 rounded-lg w-full max-w-lg">
-      <h2 className="text-xl font-bold mb-4">Editar Proyecto</h2>
+        <div className="fixed inset-0 z-10 flex justify-center items-center bg-black bg-opacity-50">
+          <div
+            className="bg-white p-8 rounded-lg w-full max-w-lg overflow-y-auto max-h-[90vh]"
+          >
+            <h2 className="text-xl font-bold mb-4">Editar Proyecto</h2>
 
-      {/* Campos de texto */}
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-2">Nombre</label>
-        <input
-          type="text"
-          value={editProject.nombre}
-          onChange={(e) =>
-            setEditProject({ ...editProject, nombre: e.target.value })
-          }
-          placeholder="Nombre"
-          className="w-full px-4 py-2 border rounded-md"
-        />
-      </div>
+            {/* Campos de texto */}
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-2">Nombre</label>
+              <input
+                type="text"
+                value={editProject.nombre}
+                onChange={(e) =>
+                  setEditProject({ ...editProject, nombre: e.target.value })
+                }
+                placeholder="Nombre"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+            </div>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-2">Obra</label>
-        <input
-          type="text"
-          value={editProject.obra}
-          onChange={(e) =>
-            setEditProject({ ...editProject, obra: e.target.value })
-          }
-          placeholder="Obra"
-          className="w-full px-4 py-2 border rounded-md"
-        />
-      </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-2">Obra</label>
+              <input
+                type="text"
+                value={editProject.obra}
+                onChange={(e) =>
+                  setEditProject({ ...editProject, obra: e.target.value })
+                }
+                placeholder="Obra"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+            </div>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-2">Tramo</label>
-        <input
-          type="text"
-          value={editProject.tramo}
-          onChange={(e) =>
-            setEditProject({ ...editProject, tramo: e.target.value })
-          }
-          placeholder="Tramo"
-          className="w-full px-4 py-2 border rounded-md"
-        />
-      </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-2">Tramo</label>
+              <input
+                type="text"
+                value={editProject.tramo}
+                onChange={(e) =>
+                  setEditProject({ ...editProject, tramo: e.target.value })
+                }
+                placeholder="Tramo"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+            </div>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-2">Contrato</label>
-        <input
-          type="text"
-          value={editProject.contrato}
-          onChange={(e) =>
-            setEditProject({ ...editProject, contrato: e.target.value })
-          }
-          placeholder="Contrato"
-          className="w-full px-4 py-2 border rounded-md"
-        />
-      </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-2">Contrato</label>
+              <input
+                type="text"
+                value={editProject.contrato}
+                onChange={(e) =>
+                  setEditProject({ ...editProject, contrato: e.target.value })
+                }
+                placeholder="Contrato"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+            </div>
 
-      {/* Mostrar logo actual */}
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-2">
-          Logo Principal (Actual)
-        </label>
-        <img
-          src={editProject.logo}
-          alt="Logo Actual"
-          className="w-32 h-32 mb-4"
-        />
-        <input
-          type="file"
-          onChange={(e) =>
-            setEditProject({ ...editProject, newLogo: e.target.files[0] })
-          }
-          className="w-full px-4 py-2 border rounded-md"
-        />
-      </div>
+            {/* Mostrar logo actual */}
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-2">
+                Logo Principal (Actual)
+              </label>
+              <img
+                src={editProject.logo}
+                alt="Logo Actual"
+                className="w-32 h-32 mb-4"
+              />
+              <input
+                type="file"
+                onChange={(e) =>
+                  setEditProject({ ...editProject, newLogo: e.target.files[0] })
+                }
+                className="w-full px-4 py-2 border rounded-md"
+              />
+            </div>
 
-      {/* Mostrar logo de cliente actual */}
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-2">
-          Logo de Cliente (Actual)
-        </label>
-        {editProject.logoCliente && (
-          <img
-            src={editProject.logoCliente}
-            alt="Logo Cliente Actual"
-            className="w-20 h-20 object-cover rounded-md mb-4"
-          />
-        )}
-        <input
-          type="file"
-          onChange={(e) =>
-            setEditProject({
-              ...editProject,
-              newLogoCliente: e.target.files[0],
-            })
-          }
-          className="w-full px-4 py-2 border rounded-md mt-4"
-        />
-      </div>
+            {/* Mostrar logo de cliente actual */}
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-2">
+                Logo de Cliente (Actual)
+              </label>
+              {editProject.logoCliente && (
+                <img
+                  src={editProject.logoCliente}
+                  alt="Logo Cliente Actual"
+                  className="w-20 h-20 object-cover rounded-md mb-4"
+                />
+              )}
+              <input
+                type="file"
+                onChange={(e) =>
+                  setEditProject({
+                    ...editProject,
+                    newLogoCliente: e.target.files[0],
+                  })
+                }
+                className="w-full px-4 py-2 border rounded-md mt-4"
+              />
+            </div>
 
-      {/* Botones de acción */}
-      <div className="flex justify-end gap-4">
-        <button
-          onClick={actualizarProyecto}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md"
-        >
-          Guardar
-        </button>
-        <button
-          onClick={() => setIsEditing(false)}
-          className="px-4 py-2 bg-gray-300 rounded-md"
-        >
-          Cancelar
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+            {/* Botones de acción */}
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={actualizarProyecto}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md"
+              >
+                Guardar
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="px-4 py-2 bg-gray-300 rounded-md"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
 
 
