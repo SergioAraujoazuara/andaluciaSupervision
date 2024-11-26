@@ -497,7 +497,7 @@ const TablaRegistros = () => {
           <button className="text-amber-600 text-3xl" onClick={handleGoBack}>
             <IoArrowBackCircle />
           </button>
-          <InformePDF registros={registrosFiltrados} columnas={obtenerColumnas()} />
+
 
         </div>
       </div>
@@ -506,27 +506,34 @@ const TablaRegistros = () => {
 
 
       {/* Selección de Plantilla */}
-      <div className="flex flex-wrap justify-center gap-4 mb-8 mt-6">
-        {plantillas.map((plantilla) => (
-          <button
-            key={plantilla.id}
-            onClick={() => {
-              setPlantillaSeleccionada(plantilla.nombre);
-              cargarRegistros(plantilla.nombre);
-            }}
-            className={`px-6 py-2 rounded-md font-semibold shadow-md ${plantillaSeleccionada === plantilla.nombre
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-800"
-              } hover:bg-blue-500 transition`}
-          >
-            {plantilla.nombre}
-          </button>
-        ))}
+      <div className="flex justify-between gap-4 mb-8 mt-6">
+        <div className="flex gap-4">
+          {plantillas.map((plantilla) => (
+            <button
+              key={plantilla.id}
+              onClick={() => {
+                setPlantillaSeleccionada(plantilla.nombre);
+                cargarRegistros(plantilla.nombre);
+              }}
+              className={`px-6 py-2 rounded-md font-semibold shadow-md ${plantillaSeleccionada === plantilla.nombre
+                ? "bg-sky-600 text-white"
+                : "bg-gray-200 text-gray-800"
+                } hover:bg-sky-700 hover:text-white transition`}
+            >
+              {plantilla.nombre}
+            </button>
+
+
+          ))}
+
+        </div>
+
+        <InformePDF registros={registrosFiltrados} columnas={obtenerColumnas()} />
       </div>
 
       {/* Filtros dinámicos */}
       {camposFiltrados.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-xs">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4  text-xs">
           {camposFiltrados.map((campo, index) => (
             <div key={index} className="flex flex-col">
               <label className="text-sm font-semibold text-gray-600 mb-2">
@@ -591,9 +598,9 @@ const TablaRegistros = () => {
       {plantillaSeleccionada && (
         <>
           {loading ? (
-            <p className="text-center text-gray-500 mt-8">Cargando registros...</p>
+            <p className="text-center text-gray-500">Cargando registros...</p>
           ) : registrosFiltrados.length > 0 ? (
-            <div className="overflow-x-auto bg-gray-50 p-6 rounded-md shadow-lg">
+            <div className="overflow-x-auto bg-gray-50 rounded-md shadow-lg">
               <table className="table-auto w-full text-sm">
                 <thead>
                   <tr className="bg-gray-100">
@@ -616,7 +623,7 @@ const TablaRegistros = () => {
                   {registrosFiltrados.map((registro, index) => (
                     <tr
                       key={index}
-                      className={`hover:bg-blue-50 transition ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                      className={`hover:bg-sky-50 transition ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                         }`}
                     >
                       {obtenerColumnas().map((columna, colIndex) => (
@@ -636,7 +643,7 @@ const TablaRegistros = () => {
                       {/* Columna de acciones */}
                       <td className="border px-4 py-2 text-gray-800">
                         <button
-                          className="px-4 py-2 bg-green-500 text-white rounded-md mr-2"
+                          className="px-4 py-2 bg-teal-500 text-white rounded-md mr-2"
                           onClick={() => {
                             setRegistroAnterior({ ...registro });
                             setRegistroSeleccionado(registro);
@@ -648,7 +655,7 @@ const TablaRegistros = () => {
                         </button>
 
                         <button
-                          className="px-4 py-2 bg-red-500 text-white rounded-md"
+                          className="px-4 py-2 bg-red-400 text-white rounded-md"
                           onClick={() => showConfirmDeleteModal(registro)}
                         >
                           Eliminar
@@ -767,7 +774,7 @@ const TablaRegistros = () => {
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleFileChange(e, index)}
-                    className="block text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-600 hover:file:bg-blue-200"
+                    className="block text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-sky-100 file:text-blue-600 hover:file:bg-sky-200"
                   />
                 </div>
               ))}
@@ -789,7 +796,7 @@ const TablaRegistros = () => {
 
             <div className="flex justify-end">
               <button
-                className="px-4 py-2 mr-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                className="px-4 py-2 mr-4 bg-sky-500 text-white rounded-md hover:bg-sky-700 hover_text-white disabled:bg-gray-300 disabled:cursor-not-allowed transition"
                 onClick={handleGuardar} // Llama a la función de guardado
                 disabled={!motivoCambio.trim()} // Deshabilita el botón si el campo está vacío
               >
@@ -823,7 +830,7 @@ const TablaRegistros = () => {
             <p className="text-sm text-center text-gray-600 mb-4">{alertMessage}</p>
             <div className="flex justify-end">
               <button
-                className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                className="px-4 py-2 bg-sky-500 text-white rounded-md"
                 onClick={() => setAlertModalVisible(false)} // Close the modal
               >
                 Aceptar

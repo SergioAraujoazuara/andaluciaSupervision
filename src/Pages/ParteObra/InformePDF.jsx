@@ -4,6 +4,7 @@ import { pdf } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
 import { db } from "../../../firebase_config";
 import { doc, getDoc } from "firebase/firestore";
+import { FaRegFilePdf } from "react-icons/fa6";
 
 const styles = StyleSheet.create({
   page: {
@@ -12,8 +13,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   header: {
-    marginBottom: 10,
-    marginTop: 20,
+    marginBottom: 20,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
@@ -22,21 +22,22 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     width: "65%",
-    fontSize: 10,
+    fontSize: 12,
+    color: "#4b5563",
   },
   headerField: {
-    marginBottom: 2,
     flexDirection: "row",
-    fontSize: 10,
-    lineHeight: 1.5,
+    fontSize: 12,
+    lineHeight: 2,
   },
   headerLabel: {
     fontWeight: "bold",
-    color: "#000000",
+    color: "#4b5563",
   },
   headerValue: {
-    color: "#555555",
-    fontSize: 10,
+    color: "#4b5563",
+    fontSize: 12,
+    marginTop:"5px"
   },
   headerLogos: {
     flexDirection: "row",
@@ -50,65 +51,81 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   card: {
-    border: "1px solid #cbd5e1",
-    borderRadius: 8,
-    padding: 15,
+    padding: 20,
     marginBottom: 15,
-    backgroundColor: "white",
-    marginTop: 5,
+    backgroundColor: "#FFFFFF",
   },
-  cardHeader: {
+  sectionTitle: {
     fontSize: 12,
     fontWeight: "bold",
-    marginBottom: 5,
-    color: "#475569",
-    borderBottom: "1px solid #cccccc",
-    paddingBottom: 5,
-    marginBottom:"15px"
+    marginBottom: 15,
+    textAlign: "left",
+    color: "#4b5563",
+    backgroundColor: "#E5E7EB",
+    padding: 10,
+    borderRadius: 5,
   },
-  dynamicFieldsContainer: {
+  fieldGroup: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 1,
+    marginBottom: 15,
   },
-  dynamicField: {
-    width: "48%", // Ajusta esto para definir el tamaño de cada columna
-    marginBottom: 10
+  fieldColumn: {
+    width: "48%", // Ajusta esto para mantener dos columnas
+    marginBottom: 10,
   },
   fieldLabel: {
     fontWeight: "bold",
-    color: "#333333",
+    color: "#4b5563",
     fontSize: 10,
+    marginBottom: 2,
   },
   fieldValue: {
-    color: "#555555",
-    fontSize: 9,
+    color: "#4b5563",
+    fontSize: 10,
     lineHeight: 1.5,
     wordBreak: "break-word",
-    marginTop:"2px"
   },
   imageRow: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 20,
+    marginBottom: 15,
   },
   image: {
     width: "45%",
     height: 170,
-    margin: "1.5%",
+    margin: "2.5%",
     borderRadius: 8,
     border: "1px solid #cccccc",
   },
-  fieldRow: {
-    marginBottom: 2,
-  },
 });
 
-const PdfInforme = ({ registros }) => {
+const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
   const [pdfBlob, setPdfBlob] = useState(null);
   const [imagenesBase64, setImagenesBase64] = useState([]);
   const [proyecto, setProyecto] = useState(null);
+
+  const getDefaultDates = () => {
+    const today = new Date();
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(today.getDate() - 7);
+
+    const formatDate = (date) =>
+      `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date
+        .getDate()
+        .toString()
+        .padStart(2, "0")}`;
+
+    return {
+      startDate: formatDate(oneWeekAgo),
+      endDate: formatDate(today),
+    };
+  };
+
+  const { startDate, endDate } = getDefaultDates();
+  const fechaInicioFinal = fechaInicial || startDate;
+  const fechaFinFinal = fechaFinal || endDate;
 
   useEffect(() => {
     const fetchProyecto = async () => {
@@ -154,27 +171,18 @@ const PdfInforme = ({ registros }) => {
         <Document>
           {registros.map((registro, index) => (
             <Page key={index} size="A4" style={styles.page}>
-              {/* Header */}
+              {/* Encabezado */}
               <View style={styles.header}>
                 <View style={styles.headerInfo}>
-                  <View style={styles.headerField}>
-                    <Text style={styles.headerLabel}>Obra: </Text>
-                    <Text style={styles.headerValue}>
-                      {proyecto?.obra || "N/A"}
-                    </Text>
-                  </View>
-                  <View style={styles.headerField}>
-                    <Text style={styles.headerLabel}>Tramo: </Text>
-                    <Text style={styles.headerValue}>
-                      {proyecto?.tramo || "N/A"}
-                    </Text>
-                  </View>
-                  <View style={styles.headerField}>
-                    <Text style={styles.headerLabel}>Fecha: </Text>
-                    <Text style={styles.headerValue}>
-                      {new Date().toLocaleDateString()}
-                    </Text>
-                  </View>
+                  <Text style={styles.headerLabel}>
+                    Línea de alta velocidad Vitoria-Bilbao-San Sebastián
+                  </Text>
+                  <Text style={styles.headerValue}>
+                    Tramo: {proyecto?.tramo || "N/A"}
+                  </Text>
+                  <Text style={styles.headerValue}>
+                    Rango de fechas: {fechaInicioFinal} - {fechaFinFinal}
+                  </Text>
                 </View>
                 <View style={styles.headerLogos}>
                   {proyecto?.logo && (
@@ -186,32 +194,32 @@ const PdfInforme = ({ registros }) => {
                 </View>
               </View>
 
-              {/* Registro */}
-              <View style={styles.card}>
-                <Text style={styles.cardHeader}>
-                  Registro número: {registro.id}
-                </Text>
+              {/* Título de la sección */}
+              <Text style={styles.sectionTitle}>
+                Registro número: {registro.id}
+              </Text>
 
-                {/* Campos dinámicos */}
-                <View style={styles.dynamicFieldsContainer}>
-                  {Object.entries(registro)
-                    .filter(
-                      ([key]) =>
-                        key !== "imagenes" &&
-                        key !== "observaciones" &&
-                        key !== "id"
-                    )
-                    .map(([key, value], i) => (
-                      <View key={i} style={styles.dynamicField}>
-                        <Text style={styles.fieldLabel}>{key.toUpperCase()}:</Text>
-                        <Text style={styles.fieldValue}>
-                          {Array.isArray(value) ? value.join(", ") : value || "N/A"}
-                        </Text>
-                      </View>
-                    ))}
-                </View>
+              {/* Datos en columnas */}
+              <View style={styles.fieldGroup}>
+                {Object.entries(registro)
+                  .filter(
+                    ([key]) =>
+                      key !== "imagenes" &&
+                      key !== "observaciones" &&
+                      key !== "id"
+                  )
+                  .map(([key, value], i) => (
+                    <View key={i} style={styles.fieldColumn}>
+                      <Text style={styles.fieldLabel}>{key.toUpperCase()}:</Text>
+                      <Text style={styles.fieldValue}>
+                        {Array.isArray(value) ? value.join(", ") : value || "N/A"}
+                      </Text>
+                    </View>
+                  ))}
+              </View>
 
-                {/* Imágenes */}
+              {/* Imágenes */}
+              <View>
                 {registro.imagenes && Array.isArray(registro.imagenes) && (
                   <View>
                     {registro.imagenes.map((_, imgIndex) => (
@@ -232,15 +240,17 @@ const PdfInforme = ({ registros }) => {
                     ))}
                   </View>
                 )}
-
-                {/* Campo OBSERVACIONES */}
-                {registro.observaciones && (
-                  <View style={styles.fieldRow}>
-                    <Text style={styles.fieldLabel}>OBSERVACIONES:</Text>
-                    <Text style={styles.fieldValue}>{registro.observaciones}</Text>
-                  </View>
-                )}
               </View>
+
+              {/* Observaciones */}
+              {registro.observaciones && (
+                <View style={styles.fieldRow}>
+                  <Text style={styles.fieldLabel}>OBSERVACIONES:</Text>
+                  <Text style={styles.fieldValue}>
+                    {registro.observaciones}
+                  </Text>
+                </View>
+              )}
             </Page>
           ))}
         </Document>
@@ -253,7 +263,7 @@ const PdfInforme = ({ registros }) => {
     if (imagenesBase64.length > 0) {
       generatePdfBlob();
     }
-  }, [registros, imagenesBase64, proyecto]);
+  }, [registros, imagenesBase64, proyecto, fechaInicioFinal, fechaFinFinal]);
 
   const downloadPdf = () => {
     if (pdfBlob) {
@@ -265,9 +275,9 @@ const PdfInforme = ({ registros }) => {
     <div>
       <button
         onClick={downloadPdf}
-        className="bg-blue-500 text-white px-4 py-2 rounded-md"
+        className="bg-amber-600 text-white px-4 py-2 rounded-md flex items-center gap-4"
       >
-        Descargar Informe PDF
+        Generar informe <FaRegFilePdf />
       </button>
     </div>
   );
