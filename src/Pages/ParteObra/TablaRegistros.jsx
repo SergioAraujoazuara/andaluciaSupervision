@@ -600,7 +600,9 @@ const TablaRegistros = () => {
                     {obtenerColumnas().map((columna, index) => (
                       <th
                         key={index}
-                        className="border border-gray-300 px-4 py-2 text-left text-sm text-gray-700"
+                        className={`border border-gray-300 px-4 py-2 text-left text-sm text-gray-700 ${columna === "observaciones" ? "w-1/4" : ""
+                          }`}
+                        style={columna === "observaciones" ? { width: "300px" } : {}}
                       >
                         {capitalizeFirstLetter(columna)}
                       </th>
@@ -618,7 +620,16 @@ const TablaRegistros = () => {
                         }`}
                     >
                       {obtenerColumnas().map((columna, colIndex) => (
-                        <td key={colIndex} className="border px-4 py-2 text-gray-800">
+                        <td
+                          key={colIndex}
+                          className={`border px-4 py-2 text-gray-800 ${columna === "observaciones" ? "truncate" : ""
+                            }`}
+                          style={
+                            columna === "observaciones"
+                              ? { width: "300px", whiteSpace: "normal", wordBreak: "break-word" }
+                              : {}
+                          }
+                        >
                           {registro[columna] || ""}
                         </td>
                       ))}
@@ -627,9 +638,8 @@ const TablaRegistros = () => {
                         <button
                           className="px-4 py-2 bg-green-500 text-white rounded-md mr-2"
                           onClick={() => {
-                            console.log("Registro seleccionado antes de abrir el modal:", registro);
-                            setRegistroAnterior({ ...registro }); // Capturar una copia inmutable del estado anterior
-                            setRegistroSeleccionado(registro); // Establecer el registro seleccionado para edición
+                            setRegistroAnterior({ ...registro });
+                            setRegistroSeleccionado(registro);
                             setModalContent("Editar");
                             setModalVisible(true);
                           }}
@@ -637,31 +647,25 @@ const TablaRegistros = () => {
                           Editar
                         </button>
 
-
-
                         <button
                           className="px-4 py-2 bg-red-500 text-white rounded-md"
-                          onClick={() => showConfirmDeleteModal(registro)} // Llamamos a la función para mostrar el modal de confirmación
+                          onClick={() => showConfirmDeleteModal(registro)}
                         >
                           Eliminar
                         </button>
 
                         <button
                           className="px-4 py-2 bg-gray-400 text-white rounded-md ms-2"
-                          onClick={() => cargarHistorial(registro.id)} // Llamar a la función con el ID del registro
+                          onClick={() => cargarHistorial(registro.id)}
                         >
                           Ver historial
                         </button>
-
-
-
                       </td>
-
                     </tr>
                   ))}
                 </tbody>
-
               </table>
+
             </div>
           ) : (
             <p className="text-center text-gray-500 mt-8">
