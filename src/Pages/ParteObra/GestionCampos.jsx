@@ -13,16 +13,21 @@ import { IoIosAddCircle } from "react-icons/io";
 
 const normalizeForValidation = (str) => {
   return str
-    .toLowerCase() // Convertir a minúsculas
-    .replace(/[^\w]/g, "") // Eliminar caracteres especiales (todo lo que no sea letra, número o guion bajo)
-    .replace(/\s+/g, ""); // Eliminar espacios
+    .toLowerCase() // Convertir todo a minúsculas
+    .replace(/[^\p{L}\p{N}\sñ]/gu, "") // Mantener letras (con acentos), números, espacios y "ñ"
+    .replace(/\s+/g, " "); // Reemplazar múltiples espacios por uno
 };
 
+
 const capitalizeWords = (str) => {
-  return str
-    .toLowerCase() // Asegurarse de que todo esté en minúsculas
-    .replace(/\b\w/g, (match) => match.toUpperCase()); // Primera letra de cada palabra en mayúscula
+  return str.replace(/(^|\s)([^\s]+)/g, (match, space, word) => {
+    // Convierte la primera letra de cada palabra a mayúscula y respeta el resto
+    return space + word.charAt(0).toUpperCase() + word.slice(1);
+  });
 };
+
+
+
 
 
 // Capitalizar primera letra

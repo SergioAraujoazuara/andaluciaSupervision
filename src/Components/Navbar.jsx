@@ -6,7 +6,6 @@ import Imagen from '../assets/tpf_marca.png'; // Asegúrate de que la ruta de la
 import { db } from '../../firebase_config';
 
 import { FaUserAlt, FaDoorOpen, FaBars, FaCaretDown } from "react-icons/fa";
-import { IoIosSettings } from "react-icons/io";
 
 const Navbar = () => {
   const navigate = useNavigate();

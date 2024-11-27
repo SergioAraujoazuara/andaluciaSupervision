@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getDoc } from 'firebase/firestore';
 import { storage } from "../../../firebase_config";
 import { db } from "../../../firebase_config";
 import { doc, updateDoc, addDoc } from "firebase/firestore";
 import imageCompression from "browser-image-compression"; // Importa la librería de compresión
 import { deleteDoc } from "firebase/firestore";
-import { BsClipboardData } from "react-icons/bs";
 import { FaArrowRight } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
+import { CiEdit } from "react-icons/ci";
+import { MdDelete } from "react-icons/md";
+import { MdOutlineHistoryToggleOff } from "react-icons/md";
 
 import { GoHomeFill } from "react-icons/go";
 import { Link, useNavigate } from "react-router-dom";
 import InformePDF from "./InformePdf";
+import { useAuth } from '../../context/authContext';
 
 const TablaRegistros = () => {
+  const { user } = useAuth();
   const [plantillas, setPlantillas] = useState([]);
   const [registrosPorPlantilla, setRegistrosPorPlantilla] = useState({});
   const [registrosFiltrados, setRegistrosFiltrados] = useState([]);
@@ -24,6 +29,25 @@ const TablaRegistros = () => {
   const [valoresFiltro, setValoresFiltro] = useState({});
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
+  const [userNombre, setUserNombre] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      const userDocRef = doc(db, 'usuarios', user.uid);
+      getDoc(userDocRef).then(docSnap => {
+        if (docSnap.exists()) {
+          const userData = docSnap.data(); // Obtenemos los datos del documento
+          setUserNombre(userData.nombre); // Establecemos el nombre del usuario
+
+          console.log(userData.nombre)
+        }
+      });
+    } else {
+      setUserNombre(''); // Limpia el estado si no hay usuario
+      setUserRol('');
+    }
+  }, [user]);
+
 
   const navigate = useNavigate();
 
@@ -84,13 +108,12 @@ const TablaRegistros = () => {
   }, [plantillaSeleccionada, plantillas]);
 
   const cargarRegistros = async (plantilla) => {
-    if (registrosPorPlantilla[plantilla]) {
-      console.log(`Usando registros guardados localmente para la plantilla: ${plantilla}`);
-      setRegistrosFiltrados(registrosPorPlantilla[plantilla]);
+    if (!plantilla || !fechaInicio || !fechaFin) {
+      setRegistrosFiltrados([]); // Si falta alguno de los parámetros, limpiar los registros
       return;
     }
 
-    console.log(`Realizando consulta a Firestore para la plantilla: ${plantilla}`);
+    console.log(`Cargando registros para la plantilla: ${plantilla} entre ${fechaInicio} y ${fechaFin}`);
 
     setLoading(true);
 
@@ -99,19 +122,38 @@ const TablaRegistros = () => {
       const refColeccion = collection(db, nombreColeccion);
 
       const snapshot = await getDocs(refColeccion);
-      const documentos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const documentos = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      // Filtrar por rango de fechas
+      const fechaInicioObj = new Date(fechaInicio);
+      const fechaFinObj = new Date(fechaFin).setHours(23, 59, 59, 999);
+
+      const registrosFiltrados = documentos.filter((registro) => {
+        const fechaRegistro = new Date(registro.fechaHora);
+        return fechaRegistro >= fechaInicioObj && fechaRegistro <= fechaFinObj;
+      });
 
       setRegistrosPorPlantilla((prev) => ({
         ...prev,
-        [plantilla]: documentos,
+        [plantilla]: registrosFiltrados, // Guardar los registros filtrados en memoria local
       }));
-      setRegistrosFiltrados(documentos);
+
+      setRegistrosFiltrados(registrosFiltrados); // Establecer los registros filtrados
     } catch (error) {
       console.error("Error al cargar registros:", error);
     } finally {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    if (plantillaSeleccionada && fechaInicio && fechaFin) {
+      cargarRegistros(plantillaSeleccionada);
+    }
+  }, [plantillaSeleccionada, fechaInicio, fechaFin]);
+
 
   useEffect(() => {
     let registrosFiltrados = registrosPorPlantilla[plantillaSeleccionada] || [];
@@ -311,7 +353,7 @@ const TablaRegistros = () => {
       // 6. Crear objeto del historial
       const historialModificacion = {
         registroId: registroSeleccionado.id, // ID del registro modificado
-        responsable: "usuario", // Cambiar por el ID del usuario si es necesario en el futuro
+        responsable: userNombre, // Cambiar por el ID del usuario si es necesario en el futuro
         fechaHora: new Date().toISOString(), // Captura automática de fecha y hora
         motivoCambio, // Motivo del cambio introducido por el usuario
         registroAnterior, // Estado anterior del registro (capturado al abrir el modal)
@@ -477,6 +519,13 @@ const TablaRegistros = () => {
     }
   };
 
+  const limpiarFiltros = () => {
+    setPlantillaSeleccionada(""); // Restablece la plantilla seleccionada
+    setFechaInicio(""); // Limpia la fecha de inicio
+    setFechaFin(""); // Limpia la fecha de fin
+    setValoresFiltro({}); // Limpia los filtros aplicados
+    setRegistrosFiltrados([]); // Limpia los registros filtrados
+  };
 
 
   return (
@@ -506,8 +555,29 @@ const TablaRegistros = () => {
 
 
       {/* Selección de Plantilla */}
-      <div className="flex justify-between gap-4 mb-8 mt-6">
-        <div className="flex gap-4">
+      <div className="flex justify-between items-end mb-8 mt-6">
+        <div className="flex items-end gap-4">
+          {/* Filtros de Fecha */}
+          <div className="flex gap-4 items-center">
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-600">Fecha Inicio</label>
+              <input
+                type="date"
+                value={fechaInicio}
+                onChange={(e) => setFechaInicio(e.target.value)}
+                className="block px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-600">Fecha Fin</label>
+              <input
+                type="date"
+                value={fechaFin}
+                onChange={(e) => setFechaFin(e.target.value)}
+                className="block px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              />
+            </div>
+          </div>
           {plantillas.map((plantilla) => (
             <button
               key={plantilla.id}
@@ -515,7 +585,7 @@ const TablaRegistros = () => {
                 setPlantillaSeleccionada(plantilla.nombre);
                 cargarRegistros(plantilla.nombre);
               }}
-              className={`px-6 py-2 rounded-md font-semibold shadow-md ${plantillaSeleccionada === plantilla.nombre
+              className={`px-6 py-2 rounded-md font-semibold shadow-md h-12 ${plantillaSeleccionada === plantilla.nombre
                 ? "bg-sky-600 text-white"
                 : "bg-gray-200 text-gray-800"
                 } hover:bg-sky-700 hover:text-white transition`}
@@ -526,9 +596,27 @@ const TablaRegistros = () => {
 
           ))}
 
+
+
         </div>
 
-        <InformePDF registros={registrosFiltrados} columnas={obtenerColumnas()} />
+        <div className="flex gap-4">
+          
+          {/* Botón de Limpiar Filtros */}
+          <button
+            onClick={limpiarFiltros}
+            className="px-6 py-2 bg-gray-400 text-white font-semibold rounded-md shadow-md hover:bg-gray-400 transition"
+          >
+            Limpiar Filtros
+          </button>
+
+          <InformePDF registros={registrosFiltrados} columnas={obtenerColumnas()} />
+
+
+
+        </div>
+
+
       </div>
 
       {/* Filtros dinámicos */}
@@ -555,27 +643,7 @@ const TablaRegistros = () => {
               </select>
             </div>
           ))}
-          {/* Filtros de fecha */}
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold text-gray-600 mb-2">Fecha Inicio</label>
-              <input
-                type="date"
-                value={fechaInicio}
-                onChange={(e) => setFechaInicio(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-              />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold text-gray-600 mb-2">Fecha Fin</label>
-              <input
-                type="date"
-                value={fechaFin}
-                onChange={(e) => setFechaFin(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-              />
-            </div>
-          </div>
+
           {/* Input de búsqueda para Observaciones */}
           <div className="flex flex-col mb-4">
             <label className="text-sm font-semibold text-gray-600 mb-2">Buscar en Observaciones</label>
@@ -641,9 +709,9 @@ const TablaRegistros = () => {
                         </td>
                       ))}
                       {/* Columna de acciones */}
-                      <td className="border px-4 py-2 text-gray-800">
+                      <td className="p-4 text-gray-800 flex gap-2 items-center">
                         <button
-                          className="px-4 py-2 bg-teal-500 text-white rounded-md mr-2"
+                          className="p-2 bg-teal-500 text-white font-bold text-xl rounded-md mr-2"
                           onClick={() => {
                             setRegistroAnterior({ ...registro });
                             setRegistroSeleccionado(registro);
@@ -651,21 +719,21 @@ const TablaRegistros = () => {
                             setModalVisible(true);
                           }}
                         >
-                          Editar
+                          <CiEdit />
                         </button>
 
                         <button
-                          className="px-4 py-2 bg-red-400 text-white rounded-md"
+                          className="p-2 bg-red-400 text-xl text-white rounded-md"
                           onClick={() => showConfirmDeleteModal(registro)}
                         >
-                          Eliminar
+                          <MdDelete />
                         </button>
 
                         <button
-                          className="px-4 py-2 bg-gray-400 text-white rounded-md ms-2"
+                          className="p-2 bg-gray-400 text-xl text-white rounded-md ms-2"
                           onClick={() => cargarHistorial(registro.id)}
                         >
-                          Ver historial
+                          <MdOutlineHistoryToggleOff />
                         </button>
                       </td>
                     </tr>
@@ -683,16 +751,11 @@ const TablaRegistros = () => {
       )}
 
       {/* Mensaje de texto si no se ha seleccionado una plantilla */}
-      {!plantillaSeleccionada && (
-        <div className="flex flex-col items-center mt-16">
-          <p className="text-gray-600 text-center text-lg font-medium">
-            Seleccione una plantilla para visualizar los registros disponibles.
-          </p>
-          <p className="text-gray-500 text-center mt-2">
-            Haga clic en una de las opciones de plantilla disponibles en la parte superior.
-          </p>
-        </div>
-      )}
+      {!plantillaSeleccionada || !fechaInicio || !fechaFin ? (
+        <p className="text-center text-gray-500 mt-8">
+          Por favor, selecciona una plantilla y un rango de fechas para cargar los registros.
+        </p>
+      ) : null}
 
 
       {modalVisible && modalContent === "Editar" && registroSeleccionado && (

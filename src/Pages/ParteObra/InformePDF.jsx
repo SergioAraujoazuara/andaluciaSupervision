@@ -5,6 +5,7 @@ import { saveAs } from "file-saver";
 import { db } from "../../../firebase_config";
 import { doc, getDoc } from "firebase/firestore";
 import { FaRegFilePdf } from "react-icons/fa6";
+import { useAuth } from '../../context/authContext';
 
 const styles = StyleSheet.create({
   page: {
@@ -37,7 +38,7 @@ const styles = StyleSheet.create({
   headerValue: {
     color: "#4b5563",
     fontSize: 12,
-    marginTop:"5px"
+    marginTop: "5px",
   },
   headerLogos: {
     flexDirection: "row",
@@ -70,9 +71,10 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "space-between",
     marginBottom: 15,
+    marginLeft: "10px"
   },
   fieldColumn: {
-    width: "48%", // Ajusta esto para mantener dos columnas
+    width: "48%",
     marginBottom: 10,
   },
   fieldLabel: {
@@ -99,12 +101,47 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     border: "1px solid #cccccc",
   },
+  footer: {
+    marginTop: 40,
+    paddingTop: 10,
+    borderTop: "1px solid #cccccc",
+    textAlign: "center",
+    fontSize: 10,
+    color: "#4b5563",
+  },
+  signature: {
+    marginTop: 20,
+    width: 150,
+    height: 50,
+    alignSelf: "center",
+  },
 });
 
 const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
+  const { user } = useAuth();
   const [pdfBlob, setPdfBlob] = useState(null);
   const [imagenesBase64, setImagenesBase64] = useState([]);
   const [proyecto, setProyecto] = useState(null);
+  const [userNombre, setUserNombre] = useState('');
+  const [userSignature, setUserSignature] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      const userDocRef = doc(db, 'usuarios', user.uid);
+      getDoc(userDocRef).then(docSnap => {
+        if (docSnap.exists()) {
+          const userData = docSnap.data(); // Obtenemos los datos del documento
+          setUserNombre(userData.nombre); // Establecemos el nombre del usuario
+          setUserSignature(userData.signature); // Establecemos el nombre del usuario
+
+          console.log(userData.nombre)
+        }
+      });
+    } else {
+      setUserNombre(''); // Limpia el estado si no hay usuario
+      setUserSignature('');
+    }
+  }, [user]);
 
   const getDefaultDates = () => {
     const today = new Date();
@@ -147,6 +184,15 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
 
     fetchProyecto();
   }, []);
+
+  const generateFileName = () => {
+    const nombreProyecto = proyecto?.nombre_proyecto || "Proyecto";
+    const nombreObra = proyecto?.obra || "Obra";
+    const plantilla = "Plantilla"; // Puedes ajustarlo si tienes un valor dinámico para la plantilla
+    const fechaHora = new Date().toISOString().replace(/:/g, "-").split(".")[0]; // Formato ISO con ":" reemplazado por "-" y sin milisegundos
+
+    return `${nombreProyecto}_${nombreObra}_${plantilla}_${fechaHora}.pdf`;
+  };
 
   useEffect(() => {
     const fetchImagenes = async () => {
@@ -253,6 +299,36 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
               )}
             </Page>
           ))}
+
+          {/* Página final con la firma */}
+          <Page size="A4" style={styles.page}>
+          <View style={styles.header}>
+                <View style={styles.headerInfo}>
+                  <Text style={styles.headerLabel}>
+                    Línea de alta velocidad Vitoria-Bilbao-San Sebastián
+                  </Text>
+                  <Text style={styles.headerValue}>
+                    Tramo: {proyecto?.tramo || "N/A"}
+                  </Text>
+                  <Text style={styles.headerValue}>
+                    Rango de fechas: {fechaInicioFinal} - {fechaFinFinal}
+                  </Text>
+                </View>
+                <View style={styles.headerLogos}>
+                  {proyecto?.logo && (
+                    <Image src={proyecto.logo} style={styles.logo} />
+                  )}
+                  {proyecto?.logoCliente && (
+                    <Image src={proyecto.logoCliente} style={styles.logo} />
+                  )}
+                </View>
+              </View>
+            <View style={styles.footer}>
+              <Text>Informe generado por:</Text>
+              <Text>{userNombre}</Text>
+              {userSignature && <Image src={userSignature} style={styles.signature} />}
+            </View>
+          </Page>
         </Document>
       );
 
@@ -267,7 +343,8 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
 
   const downloadPdf = () => {
     if (pdfBlob) {
-      saveAs(pdfBlob, "informe_proyecto.pdf");
+      const fileName = generateFileName();
+      saveAs(pdfBlob, fileName);
     }
   };
 
