@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { db } from '../../firebase_config';
 import { getDocs, collection } from 'firebase/firestore';
 import { FaArrowRight, FaSearch, FaTimes, FaThLarge, FaTable, FaChartPie } from "react-icons/fa";
@@ -296,9 +296,8 @@ function Elemento() {
 
 
 
-
     // Modal de cards sector
-    const [isModalOpen, setIsModalOpen] = useState(false); 
+    const [isModalOpen, setIsModalOpen] = useState(false);
     // Función para abrir el modal
     const handleOpenModal = (sector) => {
         setSectorSeleccionado(sector); // Establece el sector seleccionado
@@ -310,6 +309,26 @@ function Elemento() {
         setIsModalOpen(false); // Cierra el modal
         setSectorSeleccionado(''); // Reinicia el sector seleccionado
     };
+    // Referencias a las gráficas
+    const timelineRef = useRef(null);
+    const aptoNoAptoRef = useRef(null);
+    const graficaLotesRef = useRef(null);
+
+    const sectorsData = uniqueValues.sector.map((sector) => {
+        const lotesPorSector = filteredLotes.filter(l => l.sectorNombre === sector);
+    
+        const aptos = lotesPorSector.reduce((sum, lote) => sum + (lote.actividadesAptas || 0), 0);
+        const noAptos = lotesPorSector.reduce((sum, lote) => sum + (lote.actividadesNoAptas || 0), 0);
+        const total = lotesPorSector.reduce((sum, lote) => sum + (lote.totalSubactividades || 0), 0);
+    
+        return {
+            name: sector,
+            aptos,
+            noAptos,
+            total,
+        };
+    });
+    
 
     return (
         <div className='container mx-auto min-h-screen xl:px-14 py-2'>
@@ -346,6 +365,7 @@ function Elemento() {
 
             <div className='w-full border-b-2 border-gray-200'></div>
 
+
             <div className='flex flex-col items-start justify-center mt-2 bg-white p-4 rounded-xl'>
                 {/* Filtros para la vista de gráficos */}
                 <FiltrosDashboard
@@ -361,16 +381,16 @@ function Elemento() {
                     <div className='my-5 grid xl:grid-cols-4 grid-cols-1 gap-5'>
                         {/* TargetCards para mostrar métricas generales */}
                         <TargetCard
-                            title="Inspecciones realizadas:"
+                            title="Total aptos (Progreso):"
                             value={`${progresoGeneralObra}%`}
                         />
-                         <TarjetaNoAptosPorSector filteredLotes={filteredLotes} />
+                        <TarjetaNoAptosPorSector filteredLotes={filteredLotes} />
 
 
                         {!isSectorSelected && (
                             <>
 
-                                <TargetCard title="Lotes finalizados:"
+                                <TargetCard title="Lotes completados:"
                                     value={
                                         <div>{inspeccionesTerminadas}</div>
                                     }
@@ -390,47 +410,49 @@ function Elemento() {
 
                             </>
                         )}
-                       
+
                     </div>
 
                     {/* Gráficos y mapa */}
+
                     <div className='grid grid-cols-1 xl:grid-cols-4 gap-4 mb-4'>
 
-                        <div className='xl:col-span-2'><TimelineAptos filteredLotes={filteredLotes} getInspections={getInspections}/></div>
-                        <div className='xl:col-span-1'><AptoNoApto datosAptosPorSector={datosAptosPorSector} filteredLotes={filteredLotes} /></div>
-                        <div className='xl:col-span-1'><GraficaLotesPorSector lotes={lotes} filteredLotes={filteredLotes} /></div>
 
-                        
-                        
-                        {/* <GraficaAptosPorSector datosAptosPorSector={datosAptosPorSector} />
-                        <GraficaNoAptosPorSector filteredLotes={filteredLotes} datosNoAptosPorSector={datosNoAptosPorSector} /> */}
+                        <div className='xl:col-span-2' ref={timelineRef}>
+                            <TimelineAptos filteredLotes={filteredLotes} getInspections={getInspections} />
+                        </div>
+                        <div className='xl:col-span-1' ref={aptoNoAptoRef}>
+                            <AptoNoApto datosAptosPorSector={datosAptosPorSector} filteredLotes={filteredLotes} />
+                        </div>
+                        <div className='xl:col-span-1' ref={graficaLotesRef}>
+                            <GraficaLotesPorSector lotes={lotes} filteredLotes={filteredLotes} />
+                        </div>
 
-                        
 
 
                     </div>
                 </div>
 
-                 {/* Resumen por nivel */}
-            <ResumenPorNivel
-                nivel="sector"
-                titulo="Resumen de Todos los Sectores"
-                uniqueValues={uniqueValues} // Asegúrate de pasar los valores únicos correctamente
-                calcularProgresoPorNivel={calcularProgresoPorNivel}
-                contarAptos={contarAptos}
-                contarNoAptos={contarNoAptos}
-                onClick={handleOpenModal} // Pasa la función como prop
-            />
+                {/* Resumen por nivel */}
+                <ResumenPorNivel
+                    nivel="sector"
+                    titulo="Resumen de Todos los Sectores"
+                    uniqueValues={uniqueValues} // Asegúrate de pasar los valores únicos correctamente
+                    calcularProgresoPorNivel={calcularProgresoPorNivel}
+                    contarAptos={contarAptos}
+                    contarNoAptos={contarNoAptos}
+                    onClick={handleOpenModal} // Pasa la función como prop
+                />
 
-            {/* Modal de Resumen de Sector */}
-            <ModalResumenSector
-                isOpen={isModalOpen}
-                onClose={handleCloseModal}
-                sectorSeleccionado={sectorSeleccionado}
-                datosAptosPorSector={datosAptosPorSector} filteredLotes={filteredLotes} lotes={lotes}
-                getInspections={getInspections}
-                calcularProgresoPorNivel={calcularProgresoPorNivel}
-            />
+                {/* Modal de Resumen de Sector */}
+                <ModalResumenSector
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
+                    sectorSeleccionado={sectorSeleccionado}
+                    datosAptosPorSector={datosAptosPorSector} filteredLotes={filteredLotes} lotes={lotes}
+                    getInspections={getInspections}
+                    calcularProgresoPorNivel={calcularProgresoPorNivel}
+                />
             </div>
 
             <PdfCreator
@@ -442,8 +464,9 @@ function Elemento() {
     timelineRef={timelineRef}
     aptoNoAptoRef={aptoNoAptoRef}
     graficaLotesRef={graficaLotesRef}
-    sectorsData={sectorsData} 
+    sectorsData={sectorsData} // Pasa la información de los sectores aquí
 />
+
         </div>
     );
 }

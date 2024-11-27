@@ -10,13 +10,13 @@ const TargetCard = ({ title, value, message }) => {
     rounded-lg shadow-lg">
       <div className="text-md font-medium text-gray-600 flex flex-col items-center gap-1">
         <span>
-          {title == "Inspecciones realizadas:" ? (
+          {title == "Total aptos (Progreso):" ? (
             <FaSitemap className='text-2xl' />
           ) : (
             ""
           )}
 
-          {title == "Lotes finalizados:" ? (
+          {title == "Lotes completados:" ? (
             <FaCalendarCheck className='text-2xl' />
           ) : (
             ""

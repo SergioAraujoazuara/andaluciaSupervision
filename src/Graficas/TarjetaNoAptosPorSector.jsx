@@ -112,8 +112,8 @@ const TotalNoAptosPorSector = ({ filteredLotes }) => {
                 <div className="font-medium text-gray-600 flex flex-col items-center justify-center gap-1 p-2">
                     <RiCalendarCloseLine className='text-gray-600 text-3xl'/>
                     <div className="text-gray-600 flex flex-col justify-center items-center">
-                        <p>Total de inspecciones</p> 
-                        <p>No apto: {'\u00A0'} {sectorSeleccionado === 'Todos' ? totalNoAptos : noAptosPorSector[sectorSeleccionado] || 0}</p> 
+                        <p>Total No apto</p> 
+                        <p>{'\u00A0'} {sectorSeleccionado === 'Todos' ? totalNoAptos : noAptosPorSector[sectorSeleccionado] || 0}</p> 
                         
                     </div>
                 </div>
