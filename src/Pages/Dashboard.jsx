@@ -25,6 +25,7 @@ import { getInspections } from '../Functions/GetInspections'; // Importar la fun
 import { getNoAptos } from '../Functions/getNoAptos'; // Importar la función de obtención de inspecciones
 import AptoNoApto from '../Graficas/AptoNoapto';
 import ModalResumenSector from '../Graficas/ModalResumenSector';
+import PdfCreator from '../Components/PdfCreator';
 
 
 function Elemento() {
@@ -432,7 +433,17 @@ function Elemento() {
             />
             </div>
 
-
+            <PdfCreator
+    progresoGeneralObra={progresoGeneralObra}
+    inspeccionesTerminadas={inspeccionesTerminadas}
+    totalLotes={totalLotes}
+    lotesIniciados={lotesIniciados}
+    porcentajeInspeccionesCompletadas={porcentajeInspeccionesCompletadas}
+    timelineRef={timelineRef}
+    aptoNoAptoRef={aptoNoAptoRef}
+    graficaLotesRef={graficaLotesRef}
+    sectorsData={sectorsData} 
+/>
         </div>
     );
 }
