@@ -35,7 +35,7 @@ function Elemento() {
         navigate('/');
     };
 
-   
+
 
     // Estados del componente
     const [lotes, setLotes] = useState([]); // Almacena los lotes obtenidos de la base de datos
@@ -369,16 +369,16 @@ function Elemento() {
 
 
             <div className='flex flex-col items-start justify-center mt-2 bg-white p-4 rounded-xl'>
-                <div className='flex gap-4'>
+                <div className='flex justify-between w-full gap-4'>
 
-                <FiltrosDashboard
-                    filters={filters}
-                    uniqueValues={uniqueValues}
-                    filterText={filterText}
-                    onFilterChange={handleFilterChange}
-                    onSelectChange={handleSelectChange}
-                    onClearFilters={handleClearFilters}
-                />
+                    <FiltrosDashboard
+                        filters={filters}
+                        uniqueValues={uniqueValues}
+                        filterText={filterText}
+                        onFilterChange={handleFilterChange}
+                        onSelectChange={handleSelectChange}
+                        onClearFilters={handleClearFilters}
+                    />
 
                     <PdfCreator
                         progresoGeneralObra={progresoGeneralObra}
@@ -392,7 +392,7 @@ function Elemento() {
                         sectorsData={sectorsData} // Pasa la información de los sectores aquí
                     /></div>
                 {/* Filtros para la vista de gráficos */}
-                
+
 
                 <div className='w-full'>
                     <div className='my-5 grid xl:grid-cols-4 grid-cols-1 gap-5'>
