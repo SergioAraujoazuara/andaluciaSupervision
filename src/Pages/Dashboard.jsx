@@ -35,6 +35,8 @@ function Elemento() {
         navigate('/');
     };
 
+   
+
     // Estados del componente
     const [lotes, setLotes] = useState([]); // Almacena los lotes obtenidos de la base de datos
     const [filterText, setFilterText] = useState(''); // Almacena el texto de filtro de búsqueda
@@ -316,11 +318,11 @@ function Elemento() {
 
     const sectorsData = uniqueValues.sector.map((sector) => {
         const lotesPorSector = filteredLotes.filter(l => l.sectorNombre === sector);
-    
+
         const aptos = lotesPorSector.reduce((sum, lote) => sum + (lote.actividadesAptas || 0), 0);
         const noAptos = lotesPorSector.reduce((sum, lote) => sum + (lote.actividadesNoAptas || 0), 0);
         const total = lotesPorSector.reduce((sum, lote) => sum + (lote.totalSubactividades || 0), 0);
-    
+
         return {
             name: sector,
             aptos,
@@ -328,7 +330,7 @@ function Elemento() {
             total,
         };
     });
-    
+
 
     return (
         <div className='container mx-auto min-h-screen xl:px-14 py-2'>
@@ -367,7 +369,8 @@ function Elemento() {
 
 
             <div className='flex flex-col items-start justify-center mt-2 bg-white p-4 rounded-xl'>
-                {/* Filtros para la vista de gráficos */}
+                <div className='flex gap-4'>
+
                 <FiltrosDashboard
                     filters={filters}
                     uniqueValues={uniqueValues}
@@ -376,6 +379,20 @@ function Elemento() {
                     onSelectChange={handleSelectChange}
                     onClearFilters={handleClearFilters}
                 />
+
+                    <PdfCreator
+                        progresoGeneralObra={progresoGeneralObra}
+                        inspeccionesTerminadas={inspeccionesTerminadas}
+                        totalLotes={totalLotes}
+                        lotesIniciados={lotesIniciados}
+                        porcentajeInspeccionesCompletadas={porcentajeInspeccionesCompletadas}
+                        timelineRef={timelineRef}
+                        aptoNoAptoRef={aptoNoAptoRef}
+                        graficaLotesRef={graficaLotesRef}
+                        sectorsData={sectorsData} // Pasa la información de los sectores aquí
+                    /></div>
+                {/* Filtros para la vista de gráficos */}
+                
 
                 <div className='w-full'>
                     <div className='my-5 grid xl:grid-cols-4 grid-cols-1 gap-5'>
@@ -455,17 +472,7 @@ function Elemento() {
                 />
             </div>
 
-            <PdfCreator
-    progresoGeneralObra={progresoGeneralObra}
-    inspeccionesTerminadas={inspeccionesTerminadas}
-    totalLotes={totalLotes}
-    lotesIniciados={lotesIniciados}
-    porcentajeInspeccionesCompletadas={porcentajeInspeccionesCompletadas}
-    timelineRef={timelineRef}
-    aptoNoAptoRef={aptoNoAptoRef}
-    graficaLotesRef={graficaLotesRef}
-    sectorsData={sectorsData} // Pasa la información de los sectores aquí
-/>
+
 
         </div>
     );

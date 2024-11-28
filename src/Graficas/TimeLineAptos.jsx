@@ -177,7 +177,7 @@ const CompanyPerformanceChart = ({ filteredLotes }) => {
     return (
         <div className='bg-gray-100 rounded-lg shadow-lg text-gray-500'>
             <div className='flex flex-col gap-2 justify-between items-center w-full mb-1'>
-                <div className='w-full bg-gray-200 p-2 rounded-t-xl flex justify-between items-center'>
+                <div className='w-full bg-gray-200 text-xl p-4 rounded-t-xl flex justify-between items-center'>
                     {/* Contenedor Flex que usa justify-between para separar los elementos */}
                     <p className='font-medium flex-grow text-center'>
                         Timeline (Apto-No apto)
@@ -189,7 +189,7 @@ const CompanyPerformanceChart = ({ filteredLotes }) => {
 
             <div className='py-2 px-4 flex flex-col items-center'>
                 <div>
-                    <select id='sector-select' className='rounded-lg p-1 bg-gray-200 text-sm'
+                    <select id='sector-select' className='rounded-lg p-2 bg-gray-200 text-lg'
                         value={sectorSeleccionado} onChange={handleSectorChange}>
                         <option value='Todos'>Todos</option>
                         {Object.keys(datosProcesados).map(sector => (

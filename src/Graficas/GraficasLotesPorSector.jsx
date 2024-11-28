@@ -71,7 +71,7 @@ const GraficaLotesPorSector = ({ filteredLotes }) => {
       {/* Filtro de sector */}
       <div className='flex flex-col gap-2 justify-between items-center w-full mb-1'>
         <div className='w-full bg-gray-200 p-2 rounded-t-xl flex justify-between items-center'>
-          <p className='font-medium flex-grow text-center'>Lotes por sector</p>
+          <p className='font-medium flex-grow text-center text-xl'>Lotes por sector</p>
           {/* Botón de pantalla completa */}
           <MdFullscreen onClick={toggleModal} className='cursor-pointer text-gray-600 text-2xl hover:text-gray-800 transition' />
         </div>
@@ -79,7 +79,7 @@ const GraficaLotesPorSector = ({ filteredLotes }) => {
 
       <div className='py-2 px-4 flex flex-col h-full justify-center'>
         <div className='flex flex-col gap-2 justify-between items-center w-full mb-1'>
-          <select id='sector-select' className='rounded-lg p-1 bg-gray-200 text-sm' value={sectorSeleccionado} onChange={handleSectorChange}>
+          <select id='sector-select' className='rounded-lg p-2 bg-gray-200 text-lg' value={sectorSeleccionado} onChange={handleSectorChange}>
             {obtenerSectoresUnicos().map(sector => (
               <option key={sector} value={sector}>{sector}</option>
             ))}

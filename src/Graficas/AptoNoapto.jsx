@@ -120,7 +120,7 @@ const AptoNoApto = ({ datosAptosPorSector, filteredLotes }) => {
             {/* Filtro de sector */}
             <div className='flex flex-col gap-2 justify-between items-center w-full mb-1'>
                 <div className='w-full bg-gray-200 p-2 rounded-t-xl flex justify-between items-center'>
-                    <p className='font-medium flex-grow text-center'>Comparativa sectores</p>
+                    <p className='font-medium flex-grow text-center text-xl'>Comparativa sectores</p>
                     {/* Botón de pantalla completa */}
                     <MdFullscreen onClick={toggleModal} className='cursor-pointer text-gray-600 text-2xl hover:text-gray-800 transition' />
                 </div>
@@ -128,7 +128,7 @@ const AptoNoApto = ({ datosAptosPorSector, filteredLotes }) => {
 
             <div className='py-2 px-4 flex flex-col items-center w-full'>
                 <div className='flex flex-col gap-2 justify-between items-center w-full mb-1'>
-                    <select id='sector-select' className='rounded-lg p-1 bg-gray-200 text-sm' value={sectorSeleccionado} onChange={handleSectorChange}>
+                    <select id='sector-select' className='rounded-lg p-2 bg-gray-200 text-lg' value={sectorSeleccionado} onChange={handleSectorChange}>
                         <option value='Todos'>Todos</option>
                         {datosAptosPorSector.slice(1).map((item, index) => (
                             <option key={index} value={item[0]}>{item[0]}</option>

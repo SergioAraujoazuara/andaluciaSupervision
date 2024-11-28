@@ -3,7 +3,7 @@ import { FaSearch, FaTimes } from "react-icons/fa";
 
 const FiltrosDashboard = ({ filters, uniqueValues, filterText, onFilterChange, onSelectChange, onClearFilters }) => {
     return (
-        <div className='w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4 text-sm'>
+        <div className='w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 text-sm'>
             <div className="relative flex items-center">
                 <input
                     type="text"
