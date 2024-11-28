@@ -15,7 +15,7 @@ import { MdOutlineHistoryToggleOff } from "react-icons/md";
 
 import { GoHomeFill } from "react-icons/go";
 import { Link, useNavigate } from "react-router-dom";
-import InformePDF from "./InformePdf";
+import InformePDF from "../ParteObra/InformePDF.jsx";
 import { useAuth } from '../../context/authContext';
 
 const TablaRegistros = () => {

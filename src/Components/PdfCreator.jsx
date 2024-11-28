@@ -182,8 +182,8 @@ const PdfCreator = ({
                 const label = labels[i];
 
                 if (ref.current) {
-                    const canvas = await html2canvas(ref.current, { scale: 3.5 }); // Reducción de escala
-                    const imgData = canvas.toDataURL('image/jpeg', 0.3); // Reducción de calidad
+                    const canvas = await html2canvas(ref.current, { scale: 5 }); // Reducción de escala
+                    const imgData = canvas.toDataURL('image/jpeg', 0.5); // Reducción de calidad
 
                     const imgWidth = pageWidth * 0.6;
                     const imgHeight = 300;
