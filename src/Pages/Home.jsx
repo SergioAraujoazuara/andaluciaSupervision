@@ -1,111 +1,67 @@
-import React, { useEffect, useState } from 'react'
-import { db } from '../../firebase_config';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import ImagenHome from '../assets/imagenHome.jpg'
-import { FaArrowAltCircleRight } from "react-icons/fa";
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/authContext';
+import React from 'react';
+import ImagenHome from '../assets/imagenHome3.jpg';
+import { FaClipboardList, FaHardHat, FaMicroscope, FaArrowAltCircleRight } from "react-icons/fa";
 
 function Home() {
-  const [proyectos, setProyectos] = useState([]);
-  const { user } = useAuth();
-  const [userRole, setUserRole] = useState('');
-
-  const obtenerProyecto = (p) => {
-    localStorage.setItem('nombre_proyecto', p.nombre_corto);
-    localStorage.setItem('logo_proyecto', p.logo);
-    localStorage.setItem('tramo', p.tramo);
-    localStorage.setItem('obra', p.obra);
-    localStorage.setItem('idProyecto', p.id);
-  };
-
-  useEffect(() => {
-    const getUsers = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/users');
-        if (response.ok) {
-          const users = await response.json();
-          console.log(users);
-        } else {
-          console.log(`Failed to fetch users: ${response.statusText}`);
-        }
-      } catch (error) {
-        console.log(`Failed to fetch users: ${error.message}`);
-      }
-    };
-    getUsers();
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      const fetchUserData = async () => {
-        try {
-          const q = query(collection(db, "usuarios"), where("uid", "==", user.uid));
-          const querySnapshot = await getDocs(q);
-          if (!querySnapshot.empty) {
-            const userData = querySnapshot.docs[0].data();
-            setUserRole(userData.role);
-          } else {
-            console.log("No se encontraron documentos con ese UID.");
-          }
-        } catch (error) {
-          console.error("Error al obtener datos del usuario:", error);
-        }
-      };
-
-      fetchUserData();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    const obtenerProyectos = async () => {
-      try {
-        const proyectosCollection = collection(db, 'proyectos');
-        const proyectosSnapshot = await getDocs(proyectosCollection);
-
-        const proyectosData = proyectosSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setProyectos(proyectosData);
-        console.log(proyectosData[0].id);
-        localStorage.setItem('proyecto', proyectosData[0].id);
-      } catch (error) {
-        console.error('Error al obtener la lista de proyectos:', error);
-      }
-    };
-
-    obtenerProyectos();
-  }, []);
-
   return (
-    <div className='min-h-screen text-gray-500'>
-      
-      <div className='flex flex-col gap-3'>
-        {proyectos.map((p) => (
-          <div className="relative" key={p.id}>
-            <img src={ImagenHome} alt="Sustainable Building" className="w-full h-screen object-cover object-center md:object-top lg:object-center" />
-            <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-            <div className="absolute inset-0 flex flex-col items-start justify-start xl:px-60 px-4 py-20">
-              <div className='text-gray-700 bg-white bg-opacity-85 rounded-2xl shadow-xl w-full xl:max-w-2xl p-6'>
-                <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-700 mb-2">{p.nombre_corto}</div>
-                <p className="text-lg md:text-xl lg:text-2xl mt-4">{p.obra}</p>
-                <p className="text-lg md:text-xl lg:text-2xl mt-1">{p.tramo}</p>
-                <Link to={`/elemento/${p.id}`} onClick={() => { obtenerProyecto(p) }}>
-                  {(userRole === 'admin' || userRole === 'usuario') && (
-                    <button className="bg-sky-600 hover:bg-sky-700 text-white mt-8 flex items-center gap-3 text-lg font-semibold py-2 px-6 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1">
-                      <span className='text-white text-xl transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
-                      Comenzar
-                    </button>
-                  )}
-                </Link>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <div
+        className="relative bg-cover bg-center h-[50vh] pt-20 flex items-start justify-center"
+        style={{ backgroundImage: `url(${ImagenHome})` }}
+      >
+        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        <div className="relative text-center text-white px-6 flex flex-col items-center">
+          <h1 className="text-6xl font-bold mb-4 underline">AP4I</h1>
+          <p className="text-lg lg:text-2xl max-w-3xl mx-auto">
+            Gestiona inspecciones, parte de obra y auscultación desde una sola aplicación. Simplifica tus procesos con nuestras herramientas confiables.
+          </p>
+          <button className="text-white flex items-center gap-2 px-6 py-3 text-lg font-medium rounded-lg shadow-md mt-6 transition duration-300">
+            <FaArrowAltCircleRight className='text-amber-600'/>
+            TPF INGENIERIA
+          </button>
+        </div>
+
+      </div>
+
+      {/* Sección de Áreas */}
+      <div className="container mx-auto px-6 lg:px-20 py-6">
+        <h2 className="text-2xl font-bold text-gray-600 text-center mb-6 underline">
+          Áreas de Trabajo
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Inspección */}
+          <div className="bg-white shadow-md rounded-lg p-8 text-center flex flex-col items-center">
+            <FaClipboardList className="text-sky-600 text-4xl mb-4" />
+            <h3 className="text-xl font-bold text-gray-600 mb-2">Inspección</h3>
+            <p className="text-gray-600 mb-4">
+              Lleva el control de todas tus inspecciones de forma intuitiva y organizada.
+            </p>
+
           </div>
-        ))}
+
+          {/* Parte de Obra */}
+          <div className="bg-white shadow-md rounded-lg p-8 text-center flex flex-col items-center">
+            <FaHardHat className="text-sky-600 text-4xl mb-4" />
+            <h3 className="text-xl font-bold text-gray-600 mb-2">Parte de Obra</h3>
+            <p className="text-gray-600 mb-4">
+              Gestiona tus partes de obra y lleva el registro al día.
+            </p>
+
+          </div>
+
+          {/* Auscultación */}
+          <div className="bg-white shadow-md rounded-lg p-8 text-center flex flex-col items-center">
+            <FaMicroscope className="text-sky-600 text-4xl mb-4" />
+            <h3 className="text-xl font-bold text-gray-600 mb-2">Auscultación</h3>
+            <p className="text-gray-600 mb-4">
+              Monitorea y analiza datos de auscultación con precisión.
+            </p>
+
+          </div>
+        </div>
       </div>
     </div>
-
   );
 }
 

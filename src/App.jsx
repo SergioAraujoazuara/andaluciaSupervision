@@ -27,7 +27,9 @@ import SistemaDePestanas from './Pages/ParteObra/SistemaPestanas.jsx';
 import GridParteDeObra from './Pages/ParteObra/GridParteDeObra.jsx';
 import TablaRegistros from './Pages/ParteObra/TablaRegistros.jsx';
 import ViewProject from './Pages/Administrador/ViewProject.jsx';
-import ApiRickYMorty from './ApiRickYMorty.jsx';
+import Horta from './Pages/Auscultacion/Horta.jsx';
+import Glorias from './Pages/Auscultacion/Glorias.jsx';
+import Llacuna from './Pages/Auscultacion/Llacuna.jsx';
 
 
 function App() {
@@ -36,7 +38,7 @@ function App() {
     { path: '/authTabs', element: <AuthTabs /> },
     { path: '/groc', element: <GrocIA /> },
     { path: '/sendEmail', element: <SendMail /> },
-    
+
   ];
 
   const adminRoutes = [
@@ -65,7 +67,14 @@ function App() {
     { path: '/parteObra', element: <GridParteDeObra />, roles: ['admin', 'usuario'] },
     { path: '/formularios', element: <ParteObra />, roles: ['admin', 'usuario'] },
     { path: '/verRegistros', element: <TablaRegistros />, roles: ['admin', 'usuario'] },
-   
+
+    // Auscultación
+    { path: '/auscultacion', element: <GridParteDeObra />, roles: ['admin', 'usuario'] },
+    { path: '/auscultacion/glorias', element: <Glorias />, roles: ['admin', 'usuario'] },
+    { path: '/auscultacion/llacuna', element: <Llacuna />, roles: ['admin', 'usuario'] },
+    { path: '/auscultacion/horta', element: <Horta />, roles: ['admin', 'usuario'] },
+
+
 
 
 
@@ -73,29 +82,29 @@ function App() {
 
   return (
     <AuthProvider>
-    
-        <Navbar />
-        <Routes>
-          {publicRoutes.map((route, index) => (
-            <Route key={index} path={route.path} element={route.element} />
-          ))}
-          {adminRoutes.map((route, index) => (
-            <Route
-              key={index}
-              path={route.path}
-              element={<ProtectedRoutes allowedRoles={route.roles}>{route.element}</ProtectedRoutes>}
-            />
-          ))}
-          {inspectionRoutes.map((route, index) => (
-            <Route
-              key={index}
-              path={route.path}
-              element={<ProtectedRoutes allowedRoles={route.roles}>{route.element}</ProtectedRoutes>}
-            />
-          ))}
-        </Routes>
-        <Footer />
-      
+
+      <Navbar />
+      <Routes>
+        {publicRoutes.map((route, index) => (
+          <Route key={index} path={route.path} element={route.element} />
+        ))}
+        {adminRoutes.map((route, index) => (
+          <Route
+            key={index}
+            path={route.path}
+            element={<ProtectedRoutes allowedRoles={route.roles}>{route.element}</ProtectedRoutes>}
+          />
+        ))}
+        {inspectionRoutes.map((route, index) => (
+          <Route
+            key={index}
+            path={route.path}
+            element={<ProtectedRoutes allowedRoles={route.roles}>{route.element}</ProtectedRoutes>}
+          />
+        ))}
+      </Routes>
+      <Footer />
+
     </AuthProvider>
   );
 }

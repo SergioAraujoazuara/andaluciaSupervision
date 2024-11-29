@@ -1021,7 +1021,7 @@ function TablaPpi() {
 
         // Calcula la posición X para la imagen en función de la longitud del texto
         const textWidth = regularFont.widthOfTextAtSize(documentoFormulario.nombre_usuario, 11);
-        const imageX = 360 + textWidth; // Posición X del texto más su longitud
+        const imageX = 320 + textWidth; // Posición X del texto más su longitud
 
         // Ajusta el ancho máximo de la imagen
         const maxWidth = 70; // Puedes ajustar esto según sea necesario

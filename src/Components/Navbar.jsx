@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
 import { getDoc, doc } from 'firebase/firestore';
 import Imagen from '../assets/tpf_marca.png'; // Asegúrate de que la ruta de la imagen está correcta
@@ -10,12 +10,14 @@ import { FaUserAlt, FaDoorOpen, FaBars, FaCaretDown } from "react-icons/fa";
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const proyecto = 'i8l2VQeDIIB7fs3kUQxA';
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [userNombre, setUserNombre] = useState('');
   const [userRol, setUserRol] = useState('');
   const [menuOpen, setMenuOpen] = useState(false); // Estado para el menú móvil
-  const [dropdownOpen, setDropdownOpen] = useState(false); // Estado del menú desplegable
-  const location = useLocation();
+  const [dropdownOpen, setDropdownOpen] = useState(false); // Estado del menú desplegable Parte de obra
+  const [dropdownInspectionOpen, setDropdownInspectionOpen] = useState(false); // Estado del menú desplegable Inspección
+  const [dropdownAuscultationOpen, setDropdownAuscultationOpen] = useState(false); // Estado del menú de Auscultación
 
   useEffect(() => {
     if (user) {
@@ -41,6 +43,17 @@ const Navbar = () => {
 
   const toggleLogoutConfirmation = () => setShowLogoutConfirmation(!showLogoutConfirmation);
 
+  const closeAllDropdowns = () => {
+    setDropdownOpen(false);
+    setDropdownInspectionOpen(false);
+    setDropdownAuscultationOpen(false);
+  };
+
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+    closeAllDropdowns();
+  };
+
   return (
     <nav className="bg-gray-100 shadow">
       <div className="container mx-auto ps-0 pr-4 xl:px-10">
@@ -55,14 +68,56 @@ const Navbar = () => {
             {user && (
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 <NavLink to="/" linkName="Home" />
-                {(userRol === 'usuario' || userRol === 'admin') && (
-                  <NavLink to="/elemento/proyecto" linkName="Inspección" />
-                )}
+
+                {/* Inspección */}
                 {(userRol === 'usuario' || userRol === 'admin') && (
                   <div className="relative">
                     <button
-                      onClick={() => setDropdownOpen(!dropdownOpen)}
-                      className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-sky-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDropdownInspectionOpen(!dropdownInspectionOpen);
+                      }}
+                      className="flex items-center gap-1 px-3 py-2 rounded-md text-md font-medium text-gray-500 hover:text-sky-600"
+                    >
+                      Inspección <FaCaretDown />
+                    </button>
+                    {dropdownInspectionOpen && (
+                      <div className="absolute bg-white shadow-lg rounded-md mt-2 py-2 w-48 z-50">
+                        <Link
+                          to={`/elemento/${proyecto}`}
+                          className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                          onClick={closeAllDropdowns}
+                        >
+                          Iniciar Inspección
+                        </Link>
+                        <Link
+                          to="/dashboard"
+                          className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                          onClick={closeAllDropdowns}
+                        >
+                          Dashboard
+                        </Link>
+                        <Link
+                          to="/visor_inspeccion"
+                          className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                          onClick={closeAllDropdowns}
+                        >
+                          BIM
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Parte de obra */}
+                {(userRol === 'usuario' || userRol === 'admin') && (
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDropdownOpen(!dropdownOpen);
+                      }}
+                      className="flex items-center gap-1 px-3 py-2 rounded-md text-md font-medium text-gray-500 hover:text-sky-600"
                     >
                       Parte de obra <FaCaretDown />
                     </button>
@@ -71,14 +126,14 @@ const Navbar = () => {
                         <Link
                           to="/formularios"
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                          onClick={() => setDropdownOpen(false)}
+                          onClick={closeAllDropdowns}
                         >
                           Formulario
                         </Link>
                         <Link
                           to="/verRegistros"
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                          onClick={() => setDropdownOpen(false)}
+                          onClick={closeAllDropdowns}
                         >
                           Registros
                         </Link>
@@ -86,12 +141,48 @@ const Navbar = () => {
                     )}
                   </div>
                 )}
-                {(userRol === 'admin' || userRol === 'usuario') && (
-                  <NavLink to="/dashboard" linkName="Dashboard" />
+
+                {/* Auscultación */}
+                {(userRol === 'usuario' || userRol === 'admin') && (
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDropdownAuscultationOpen(!dropdownAuscultationOpen);
+                      }}
+                      className="flex items-center gap-1 px-3 py-2 rounded-md text-md font-medium text-gray-500 hover:text-sky-600"
+                    >
+                      Auscultación <FaCaretDown />
+                    </button>
+                    {dropdownAuscultationOpen && (
+                      <div className="absolute bg-white shadow-lg rounded-md mt-2 py-2 w-48 z-50">
+                        <Link
+                          to="/auscultacion/llacuna"
+                          className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                          onClick={closeAllDropdowns}
+                        >
+                          Llacuna
+                        </Link>
+                        <Link
+                          to="/auscultacion/glorias"
+                          className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                          onClick={closeAllDropdowns}
+                        >
+                          Glorias
+                        </Link>
+                        <Link
+                          to="/auscultacion/horta"
+                          className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                          onClick={closeAllDropdowns}
+                        >
+                          Horta
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 )}
-                {(userRol === 'admin' || userRol === 'usuario') && (
-                  <NavLink to="/visor_inspeccion" linkName="BIM" />
-                )}
+
+                {/* Administración */}
                 {(userRol === 'admin' || userRol === 'usuario') && (
                   <NavLink to="/admin" linkName="Administración" />
                 )}
@@ -103,10 +194,10 @@ const Navbar = () => {
           <div className="flex items-center">
             {user ? (
               <>
-                <div className='hidden sm:flex items-center font-medium text-gray-500 pr-5 gap-5 text-base'>
-                  <div className='flex gap-2 items-center text-gray-500'>
-                    <FaUserAlt className=' hidden xl:block' />
-                    <p className=' hidden xl:block'>{userNombre || 'Usuario'}</p>
+                <div className="hidden sm:flex items-center font-medium text-gray-500 pr-5 gap-5 text-base">
+                  <div className="flex gap-2 items-center text-gray-500">
+                    <FaUserAlt className="hidden xl:block" />
+                    <p className="hidden xl:block">{userNombre || 'Usuario'}</p>
                   </div>
                   <div className="relative bg-sky-600 text-white px-4 py-2 rounded-lg">
                     <button className="flex items-center text-md" onClick={toggleLogoutConfirmation}>
@@ -115,7 +206,7 @@ const Navbar = () => {
                   </div>
                 </div>
                 <div className="sm:hidden">
-                  <button onClick={() => setMenuOpen(!menuOpen)} className="text-gray-500 focus:outline-none">
+                  <button onClick={toggleMenu} className="text-gray-500 focus:outline-none">
                     <FaBars className="text-2xl" />
                   </button>
                 </div>
@@ -136,14 +227,56 @@ const Navbar = () => {
           <div className="sm:hidden mt-2">
             <div className="px-2 pt-2 pb-3 space-y-1">
               <NavLink to="/" linkName="Home" />
-              {(userRol === 'usuario' || userRol === 'admin') && (
-                <NavLink to="/elemento/proyecto" linkName="Inspección" />
-              )}
+
+              {/* Inspección */}
               {(userRol === 'usuario' || userRol === 'admin') && (
                 <div>
                   <button
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-1 px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDropdownInspectionOpen(!dropdownInspectionOpen);
+                    }}
+                    className="flex items-center gap-1 px-6 py-2 text-gray-600 font-medium hover:bg-gray-100 hover:text-gray-800"
+                  >
+                    Inspección <FaCaretDown />
+                  </button>
+                  {dropdownInspectionOpen && (
+                    <div className="ml-4">
+                      <Link
+                        to={`/elemento/${proyecto}`}
+                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                        onClick={closeAllDropdowns}
+                      >
+                        Iniciar Inspección
+                      </Link>
+                      <Link
+                        to="/dashboard"
+                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                        onClick={closeAllDropdowns}
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        to="/visor_inspeccion"
+                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                        onClick={closeAllDropdowns}
+                      >
+                        BIM
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Parte de obra */}
+              {(userRol === 'usuario' || userRol === 'admin') && (
+                <div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDropdownOpen(!dropdownOpen);
+                    }}
+                    className="flex items-center gap-1 px-6 py-2 text-gray-600 font-medium hover:bg-gray-100 hover:text-gray-800"
                   >
                     Parte de obra <FaCaretDown />
                   </button>
@@ -151,15 +284,15 @@ const Navbar = () => {
                     <div className="ml-4">
                       <Link
                         to="/formularios"
-                        className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                        onClick={() => setDropdownOpen(false)}
+                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                        onClick={closeAllDropdowns}
                       >
                         Formulario
                       </Link>
                       <Link
-                        to="/ver-registros"
-                        className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                        onClick={() => setDropdownOpen(false)}
+                        to="/verRegistros"
+                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                        onClick={closeAllDropdowns}
                       >
                         Registros
                       </Link>
@@ -167,6 +300,48 @@ const Navbar = () => {
                   )}
                 </div>
               )}
+
+              {/* Auscultación */}
+              {(userRol === 'usuario' || userRol === 'admin') && (
+                <div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDropdownAuscultationOpen(!dropdownAuscultationOpen);
+                    }}
+                    className="flex items-center gap-1 px-6 py-2 text-gray-600 font-medium hover:bg-gray-100 hover:text-gray-800 mb-2"
+                  >
+                    Auscultación <FaCaretDown />
+                  </button>
+                  {dropdownAuscultationOpen && (
+                    <div className="ml-4">
+                      <Link
+                        to="/auscultacion/llacuna"
+                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                        onClick={closeAllDropdowns}
+                      >
+                        Llacuna
+                      </Link>
+                      <Link
+                        to="/auscultacion/glorias"
+                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                        onClick={closeAllDropdowns}
+                      >
+                        Glorias
+                      </Link>
+                      <Link
+                        to="/auscultacion/horta"
+                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                        onClick={closeAllDropdowns}
+                      >
+                        Horta
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Administración */}
               {(userRol === 'admin' || userRol === 'usuario') && (
                 <NavLink to="/admin" linkName="Administración" />
               )}
@@ -179,7 +354,7 @@ const Navbar = () => {
       {showLogoutConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-80 z-10 flex justify-center items-center">
           <div className="bg-white p-10 rounded-md flex flex-col gap-2 items-center">
-            <p className='text-gray-500 text-7xl'><FaDoorOpen /></p>
+            <p className="text-gray-500 text-7xl"><FaDoorOpen /></p>
             <p className="text-gray-500 font-bold">¿Estás seguro que quieres cerrar sesión?</p>
             <div className="flex justify-around gap-5 mt-4 p-1">
               <button onClick={handleLogout} className="bg-amber-600 text-white font-medium px-4 py-2 rounded-lg">Confirmar</button>
@@ -196,7 +371,7 @@ const NavLink = ({ to, linkName }) => {
   return (
     <Link
       to={to}
-      className="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-sky-600"
+      className="xl:px-4 px-6 py-2 font-medium rounded-md text-gray-500 hover:text-sky-600"
     >
       {linkName}
     </Link>
