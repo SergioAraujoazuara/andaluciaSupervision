@@ -2452,7 +2452,7 @@ function TablaPpi() {
                                     <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium">Seleccionar imagen</label>
                                     <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                     {imagen && (
-                                        <img src={imagen} />
+                                        <img src={imagen} className='w-40'/>
                                     )}
                                     {isManual && (
                                         <Mapa
@@ -2465,7 +2465,7 @@ function TablaPpi() {
                                     <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium">Seleccionar imagen 2</label>
                                     <input onChange={handleImagenChange2} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                     {imagen2 && (
-                                        <img src={imagen2} />
+                                        <img src={imagen2} className='w-40'/>
                                     )}
                                     {isManual && (
                                         <Mapa
