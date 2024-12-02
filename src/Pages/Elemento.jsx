@@ -365,6 +365,7 @@ function Elemento() {
                         showSector={showSector}
                         handleCaptrurarTrazabilidad={handleCaptrurarTrazabilidad}
                         isTableView={isTableView}
+                        
                     />
                 </div>
             )}
