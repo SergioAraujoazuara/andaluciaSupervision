@@ -22,11 +22,11 @@ function Home() {
           {/* <p className="text-lg lg:text-2xl max-w-3xl mx-auto">
             Gestiona inspecciones, parte de obra y auscultación desde una sola aplicación. Simplifica tus procesos con nuestras herramientas confiables.
           </p> */}
-          <p className="text-lg lg:text-2xl max-w-3xl mx-auto">
+          <p className="text-3xl max-w-3xl mx-auto">
             Seguimiento digital de plan de inspección de obra
           </p>
-          <button className="text-white flex items-center gap-2 px-6 py-3 text-lg font-medium rounded-lg shadow-md mt-6 transition duration-300">
-            <FaArrowAltCircleRight className='text-amber-600' />
+          <button className="text-white flex items-center gap-2 px-6 py-3 text-xl font-medium rounded-lg shadow-md mt-6 transition duration-300">
+            <FaArrowAltCircleRight className='text-amber-600 text-xl' />
             TPF INGENIERIA
           </button>
         </div>
