@@ -44,7 +44,7 @@ const VistaTabla = ({ filteredLotes, showSector, handleCaptrurarTrazabilidad }) 
                         Sector
                     </div>
                 )}
-                <div className="text-left font-medium text-gray-600 col-span-2 sm:block hidden px-6">Sub Sector</div>
+                <div className="text-left font-medium text-gray-600 col-span-2 sm:block hidden px-6 text-center">Sub Sector</div>
                 <div className="text-left font-medium text-gray-600 sm:block hidden px-2">Parte</div>
                 <div className="text-left font-medium text-gray-600 col-span-1 sm:block hidden px-2">Elemento</div>
                 <div className="text-left font-medium text-gray-600 col-span-2 sm:block hidden px-2">Pk</div>
@@ -72,7 +72,7 @@ const VistaTabla = ({ filteredLotes, showSector, handleCaptrurarTrazabilidad }) 
                                     {l.sectorNombre}
                                 </div>
                             )}
-                            <div className="w-full xl:col-span-2 flex xl:block gap-2 px-2">
+                            <div className="w-full xl:col-span-2 flex xl:block gap-2 px-2 text-center">
                                 <p className="xl:hidden font-light">Sub sector: </p>
                                 {l.subSectorNombre}
                             </div>

@@ -3,6 +3,12 @@ import ImagenHome from '../assets/imagenHome3.jpg';
 import { FaClipboardList, FaHardHat, FaMicroscope, FaArrowAltCircleRight } from "react-icons/fa";
 
 function Home() {
+  localStorage.setItem('idProyecto', 'i8l2VQeDIIB7fs3kUQxA');
+  localStorage.setItem('nombre_proyecto', 'Sector 3 - ADIF');
+  localStorage.setItem('tramo', 'Mondragón-Elorrio-Bergara');
+  localStorage.setItem('obra', 'Linea de alta velocidad Vitoria-Bilbao-San Sebastián');
+
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -20,7 +26,7 @@ function Home() {
             Seguimiento digital de plan de inspección de obra
           </p>
           <button className="text-white flex items-center gap-2 px-6 py-3 text-lg font-medium rounded-lg shadow-md mt-6 transition duration-300">
-            <FaArrowAltCircleRight className='text-amber-600'/>
+            <FaArrowAltCircleRight className='text-amber-600' />
             TPF INGENIERIA
           </button>
         </div>
