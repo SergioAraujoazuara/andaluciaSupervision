@@ -27,8 +27,10 @@ const TablaRegistros = () => {
   const [plantillaSeleccionada, setPlantillaSeleccionada] = useState("");
   const [camposFiltrados, setCamposFiltrados] = useState([]);
   const [valoresFiltro, setValoresFiltro] = useState({});
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
+  const today = new Date().toISOString().split("T")[0]; // Obtiene la fecha actual en formato YYYY-MM-DD
+  const [fechaInicio, setFechaInicio] = useState(today);
+  const [fechaFin, setFechaFin] = useState(today);
+
   const [userNombre, setUserNombre] = useState('');
 
   useEffect(() => {
@@ -601,7 +603,7 @@ const TablaRegistros = () => {
         </div>
 
         <div className="flex gap-4">
-          
+
           {/* Botón de Limpiar Filtros */}
           <button
             onClick={limpiarFiltros}
@@ -752,7 +754,7 @@ const TablaRegistros = () => {
 
       {/* Mensaje de texto si no se ha seleccionado una plantilla */}
       {!plantillaSeleccionada || !fechaInicio || !fechaFin ? (
-        <p className="text-center text-gray-500 mt-8">
+        <p className="text-center text-gray-500 text-xl mt-20">
           Por favor, selecciona una plantilla y un rango de fechas para cargar los registros.
         </p>
       ) : null}
