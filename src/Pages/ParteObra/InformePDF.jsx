@@ -224,7 +224,7 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
                     Línea de alta velocidad Vitoria-Bilbao-San Sebastián
                   </Text>
                   <Text style={styles.headerValue}>
-                    Tramo: {proyecto?.tramo || "N/A"}
+                    Tramo: Mondragón-Elorrio-Bergara
                   </Text>
                   <Text style={styles.headerValue}>
                     Rango de fechas: {fechaInicioFinal} - {fechaFinFinal}
