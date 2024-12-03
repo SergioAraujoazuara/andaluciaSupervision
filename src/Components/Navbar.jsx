@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
 import { getDoc, doc } from 'firebase/firestore';
@@ -14,10 +14,15 @@ const Navbar = () => {
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [userNombre, setUserNombre] = useState('');
   const [userRol, setUserRol] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false); // Estado para el menú móvil
-  const [dropdownOpen, setDropdownOpen] = useState(false); // Estado del menú desplegable Parte de obra
-  const [dropdownInspectionOpen, setDropdownInspectionOpen] = useState(false); // Estado del menú desplegable Inspección
-  const [dropdownAuscultationOpen, setDropdownAuscultationOpen] = useState(false); // Estado del menú de Auscultación
+  const [menuOpen, setMenuOpen] = useState(false); // Menú móvil
+  const [dropdownOpen, setDropdownOpen] = useState(false); // Parte de obra
+  const [dropdownInspectionOpen, setDropdownInspectionOpen] = useState(false); // Inspección
+  const [dropdownAuscultationOpen, setDropdownAuscultationOpen] = useState(false); // Auscultación
+
+  // Referencias para detectar clics fuera de los menús
+  const dropdownRef = useRef(null);
+  const inspectionRef = useRef(null);
+  const auscultationRef = useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -49,6 +54,39 @@ const Navbar = () => {
     setDropdownAuscultationOpen(false);
   };
 
+  const handleDropdownClick = (dropdownSetter, currentState) => {
+    // Si el menú ya está abierto, lo cerramos directamente.
+    if (currentState) {
+        closeAllDropdowns();
+    } else {
+        // Si no está abierto, cerramos todos los menús y luego abrimos el seleccionado.
+        closeAllDropdowns();
+        dropdownSetter(true);
+    }
+};
+
+
+  const handleLinkClick = () => {
+    closeAllDropdowns(); // Cierra todos los menús al hacer clic en cualquier enlace
+  };
+
+  const handleClickOutside = (event) => {
+    if (
+      dropdownRef.current && !dropdownRef.current.contains(event.target) &&
+      inspectionRef.current && !inspectionRef.current.contains(event.target) &&
+      auscultationRef.current && !auscultationRef.current.contains(event.target)
+    ) {
+      closeAllDropdowns();
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
     closeAllDropdowns();
@@ -67,16 +105,13 @@ const Navbar = () => {
             {/* Menú principal */}
             {user && (
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <NavLink to="/" linkName="Home" />
+                <NavLink to="/" linkName="Home" onClick={handleLinkClick} />
 
                 {/* Inspección */}
                 {(userRol === 'usuario' || userRol === 'admin') && (
-                  <div className="relative">
+                  <div className="relative" ref={inspectionRef}>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDropdownInspectionOpen(!dropdownInspectionOpen);
-                      }}
+                      onClick={() => handleDropdownClick(setDropdownInspectionOpen)}
                       className="flex items-center gap-1 px-3 py-2 rounded-md text-md font-medium text-gray-500 hover:text-sky-600"
                     >
                       Inspección <FaCaretDown />
@@ -86,21 +121,21 @@ const Navbar = () => {
                         <Link
                           to={`/elemento/${proyecto}`}
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                          onClick={closeAllDropdowns}
+                          onClick={handleLinkClick}
                         >
                           Iniciar Inspección
                         </Link>
                         <Link
                           to="/dashboard"
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                          onClick={closeAllDropdowns}
+                          onClick={handleLinkClick}
                         >
                           Dashboard
                         </Link>
                         <Link
                           to="/visor_inspeccion"
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                          onClick={closeAllDropdowns}
+                          onClick={handleLinkClick}
                         >
                           BIM
                         </Link>
@@ -111,12 +146,9 @@ const Navbar = () => {
 
                 {/* Parte de obra */}
                 {(userRol === 'usuario' || userRol === 'admin') && (
-                  <div className="relative">
+                  <div className="relative" ref={dropdownRef}>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDropdownOpen(!dropdownOpen);
-                      }}
+                      onClick={() => handleDropdownClick(setDropdownOpen)}
                       className="flex items-center gap-1 px-3 py-2 rounded-md text-md font-medium text-gray-500 hover:text-sky-600"
                     >
                       Parte de obra <FaCaretDown />
@@ -126,14 +158,14 @@ const Navbar = () => {
                         <Link
                           to="/formularios"
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                          onClick={closeAllDropdowns}
+                          onClick={handleLinkClick}
                         >
                           Formulario
                         </Link>
                         <Link
                           to="/verRegistros"
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                          onClick={closeAllDropdowns}
+                          onClick={handleLinkClick}
                         >
                           Registros
                         </Link>
@@ -144,12 +176,9 @@ const Navbar = () => {
 
                 {/* Auscultación */}
                 {(userRol === 'usuario' || userRol === 'admin') && (
-                  <div className="relative">
+                  <div className="relative" ref={auscultationRef}>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDropdownAuscultationOpen(!dropdownAuscultationOpen);
-                      }}
+                      onClick={() => handleDropdownClick(setDropdownAuscultationOpen)}
                       className="flex items-center gap-1 px-3 py-2 rounded-md text-md font-medium text-gray-500 hover:text-sky-600"
                     >
                       Auscultación <FaCaretDown />
@@ -159,21 +188,21 @@ const Navbar = () => {
                         <Link
                           to="/auscultacion/llacuna"
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                          onClick={closeAllDropdowns}
+                          onClick={handleLinkClick}
                         >
                           Llacuna
                         </Link>
                         <Link
                           to="/auscultacion/glorias"
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                          onClick={closeAllDropdowns}
+                          onClick={handleLinkClick}
                         >
                           Glorias
                         </Link>
                         <Link
                           to="/auscultacion/horta"
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                          onClick={closeAllDropdowns}
+                          onClick={handleLinkClick}
                         >
                           Horta
                         </Link>
@@ -184,7 +213,7 @@ const Navbar = () => {
 
                 {/* Administración */}
                 {(userRol === 'admin' || userRol === 'usuario') && (
-                  <NavLink to="/admin" linkName="Administración" />
+                  <NavLink to="/admin" linkName="Administración" onClick={handleLinkClick} />
                 )}
               </div>
             )}
@@ -214,7 +243,7 @@ const Navbar = () => {
             ) : (
               <button
                 onClick={() => navigate('/authTabs')}
-                className="bg-sky-600 text-white font-medium py-2 px-4 h-12 rounded-lg "
+                className="bg-sky-600 text-white font-medium py-2 px-4 h-12 rounded-lg"
               >
                 Iniciar sesión | Registrarse
               </button>
@@ -222,160 +251,28 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Menú móvil */}
-        {menuOpen && (
-          <div className="sm:hidden mt-2">
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              <NavLink to="/" linkName="Home" />
-
-              {/* Inspección */}
-              {(userRol === 'usuario' || userRol === 'admin') && (
-                <div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDropdownInspectionOpen(!dropdownInspectionOpen);
-                    }}
-                    className="flex items-center gap-1 px-6 py-2 text-gray-600 font-medium hover:bg-gray-100 hover:text-gray-800"
-                  >
-                    Inspección <FaCaretDown />
-                  </button>
-                  {dropdownInspectionOpen && (
-                    <div className="ml-4">
-                      <Link
-                        to={`/elemento/${proyecto}`}
-                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                        onClick={closeAllDropdowns}
-                      >
-                        Iniciar Inspección
-                      </Link>
-                      <Link
-                        to="/dashboard"
-                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                        onClick={closeAllDropdowns}
-                      >
-                        Dashboard
-                      </Link>
-                      <Link
-                        to="/visor_inspeccion"
-                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                        onClick={closeAllDropdowns}
-                      >
-                        BIM
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Parte de obra */}
-              {(userRol === 'usuario' || userRol === 'admin') && (
-                <div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDropdownOpen(!dropdownOpen);
-                    }}
-                    className="flex items-center gap-1 px-6 py-2 text-gray-600 font-medium hover:bg-gray-100 hover:text-gray-800"
-                  >
-                    Parte de obra <FaCaretDown />
-                  </button>
-                  {dropdownOpen && (
-                    <div className="ml-4">
-                      <Link
-                        to="/formularios"
-                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                        onClick={closeAllDropdowns}
-                      >
-                        Formulario
-                      </Link>
-                      <Link
-                        to="/verRegistros"
-                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                        onClick={closeAllDropdowns}
-                      >
-                        Registros
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Auscultación */}
-              {(userRol === 'usuario' || userRol === 'admin') && (
-                <div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDropdownAuscultationOpen(!dropdownAuscultationOpen);
-                    }}
-                    className="flex items-center gap-1 px-6 py-2 text-gray-600 font-medium hover:bg-gray-100 hover:text-gray-800 mb-2"
-                  >
-                    Auscultación <FaCaretDown />
-                  </button>
-                  {dropdownAuscultationOpen && (
-                    <div className="ml-4">
-                      <Link
-                        to="/auscultacion/llacuna"
-                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                        onClick={closeAllDropdowns}
-                      >
-                        Llacuna
-                      </Link>
-                      <Link
-                        to="/auscultacion/glorias"
-                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                        onClick={closeAllDropdowns}
-                      >
-                        Glorias
-                      </Link>
-                      <Link
-                        to="/auscultacion/horta"
-                        className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                        onClick={closeAllDropdowns}
-                      >
-                        Horta
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Administración */}
-              {(userRol === 'admin' || userRol === 'usuario') && (
-                <NavLink to="/admin" linkName="Administración" />
-              )}
+        {/* Modal de confirmación de logout */}
+        {showLogoutConfirmation && (
+          <div className="fixed inset-0 bg-black bg-opacity-80 z-10 flex justify-center items-center">
+            <div className="bg-white p-10 rounded-md flex flex-col gap-2 items-center">
+              <p className="text-gray-500 text-7xl"><FaDoorOpen /></p>
+              <p className="text-gray-500 font-bold">¿Estás seguro que quieres cerrar sesión?</p>
+              <div className="flex justify-around gap-5 mt-4 p-1">
+                <button onClick={handleLogout} className="bg-amber-600 text-white font-medium px-4 py-2 rounded-lg">Confirmar</button>
+                <button onClick={() => setShowLogoutConfirmation(false)} className="bg-gray-300 text-black px-10 py-2 rounded-lg">Cancelar</button>
+              </div>
             </div>
           </div>
         )}
       </div>
-
-      {/* Modal de confirmación de logout */}
-      {showLogoutConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 z-10 flex justify-center items-center">
-          <div className="bg-white p-10 rounded-md flex flex-col gap-2 items-center">
-            <p className="text-gray-500 text-7xl"><FaDoorOpen /></p>
-            <p className="text-gray-500 font-bold">¿Estás seguro que quieres cerrar sesión?</p>
-            <div className="flex justify-around gap-5 mt-4 p-1">
-              <button onClick={handleLogout} className="bg-amber-600 text-white font-medium px-4 py-2 rounded-lg">Confirmar</button>
-              <button onClick={() => setShowLogoutConfirmation(false)} className="bg-gray-300 text-black px-10 py-2 rounded-lg">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 };
 
-const NavLink = ({ to, linkName }) => {
-  return (
-    <Link
-      to={to}
-      className="xl:px-4 px-6 py-2 font-medium rounded-md text-gray-500 hover:text-sky-600"
-    >
-      {linkName}
-    </Link>
-  );
-};
+const NavLink = ({ to, linkName, onClick }) => (
+  <Link to={to} onClick={onClick} className="xl:px-4 px-6 py-2 font-medium rounded-md text-gray-500 hover:text-sky-600">
+    {linkName}
+  </Link>
+);
 
 export default Navbar;
