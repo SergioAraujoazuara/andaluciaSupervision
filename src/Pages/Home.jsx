@@ -58,7 +58,7 @@ function Home() {
             <FaMicroscope className="text-sky-600 text-4xl mb-4" />
             <h3 className="text-xl font-bold text-gray-600 mb-2">Auscultación</h3>
             <p className="text-gray-600 mb-4">
-              Monitorea y analiza datos de auscultación con precisión.
+              Monitorización y analisis de datos con precisión.
             </p>
 
           </div>

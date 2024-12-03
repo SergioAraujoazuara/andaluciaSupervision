@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getDocs, collection } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 import { db } from '../../../firebase_config';
-
+import { FiLoader } from "react-icons/fi";
 const VistaTabla = ({ filteredLotes, showSector, handleCaptrurarTrazabilidad }) => {
     const [subactividadesPorLote, setSubactividadesPorLote] = useState({}); // Guardar el total de subactividades versión 0
 
@@ -131,7 +131,7 @@ const VistaTabla = ({ filteredLotes, showSector, handleCaptrurarTrazabilidad }) 
                                         </div>
                                     </div>
                                 ) : (
-                                    'Inspección no iniciada'
+                                    <div className='flex justify-center'><FiLoader /></div>
                                 )}
                             </div>
                         </div>
