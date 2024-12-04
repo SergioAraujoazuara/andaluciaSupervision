@@ -23,8 +23,14 @@ export const fetchCampos = async () => {
 };
 
 // Agregar un nuevo campo
-export const addCampo = async (docId, campos, nuevoCampo) => {
-  const nuevoObjetoCampo = { id: uuidv4(), nombre: nuevoCampo, valores: [] };
+export const addCampo = async (docId, campos, nuevoCampo, tipo) => {
+  const nuevoObjetoCampo = {
+    id: uuidv4(),
+    nombre: nuevoCampo,
+    tipo: tipo || "select", // Si no se especifica, asumimos que es un select
+    valores: tipo === "select" ? [] : [], // Inicializamos `valores` como array vacío
+  };
+
   const nuevosCampos = [...campos, nuevoObjetoCampo];
 
   try {
@@ -35,6 +41,7 @@ export const addCampo = async (docId, campos, nuevoCampo) => {
     throw new Error(`Error al agregar el campo: ${error.message}`);
   }
 };
+
 
 // Agregar un valor a un campo existente
 export const addValor = async (docId, campos, campoSeleccionado, valorCampo) => {
@@ -91,9 +98,11 @@ export const deleteValor = async (docId, campos, campoId, valorId) => {
 };
 
 // Actualizar un campo
-export const updateCampo = async (docId, campos, campoId, nombreEditado) => {
+export const updateCampo = async (docId, campos, campoId, nombreEditado, tipoEditado) => {
   const nuevosCampos = campos.map((campo) =>
-    campo.id === campoId ? { ...campo, nombre: nombreEditado } : campo
+    campo.id === campoId
+      ? { ...campo, nombre: nombreEditado, tipo: tipoEditado || campo.tipo }
+      : campo
   );
 
   try {
@@ -104,6 +113,7 @@ export const updateCampo = async (docId, campos, campoId, nombreEditado) => {
     throw new Error(`Error al actualizar el campo: ${error.message}`);
   }
 };
+
 
 // Actualizar un valor
 export const updateValor = async (docId, campos, campoId, valorId, valorEditado) => {

@@ -81,13 +81,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#4b5563",
     fontSize: 10,
-    marginBottom: 2,
+    marginBottom: 5,
   },
   fieldValue: {
     color: "#4b5563",
     fontSize: 10,
     lineHeight: 1.5,
     wordBreak: "break-word",
+    marginBottom: 10,
   },
   imageRow: {
     flexDirection: "row",
@@ -248,21 +249,28 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
               {/* Datos en columnas */}
               <View style={styles.fieldGroup}>
                 {Object.entries(registro)
-                  .filter(
-                    ([key]) =>
-                      key !== "imagenes" &&
-                      key !== "observaciones" &&
-                      key !== "id"
-                  )
-                  .map(([key, value], i) => (
-                    <View key={i} style={styles.fieldColumn}>
-                      <Text style={styles.fieldLabel}>{key.toUpperCase()}:</Text>
-                      <Text style={styles.fieldValue}>
-                        {Array.isArray(value) ? value.join(", ") : value || "N/A"}
-                      </Text>
-                    </View>
-                  ))}
+                  .filter(([key]) => key !== "imagenes" && key !== "observaciones" && key !== "id")
+                  .map(([key, value], i) => {
+                    // Verificar si el texto tiene más de 5 palabras
+                    const isLongText =
+                      typeof value === "string" && value.split(" ").length > 5;
+
+                    return (
+                      <View
+                        key={i}
+                        style={[
+                          isLongText ? styles.fullRow : styles.fieldColumn, // Usar estilos diferentes según la longitud del texto
+                        ]}
+                      >
+                        <Text style={styles.fieldLabel}>{key.toUpperCase()}:</Text>
+                        <Text style={styles.fieldValue}>
+                          {Array.isArray(value) ? value.join(", ") : value || "N/A"}
+                        </Text>
+                      </View>
+                    );
+                  })}
               </View>
+
 
               {/* Imágenes */}
               <View>
@@ -302,27 +310,27 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
 
           {/* Página final con la firma */}
           <Page size="A4" style={styles.page}>
-          <View style={styles.header}>
-                <View style={styles.headerInfo}>
-                  <Text style={styles.headerLabel}>
-                    Línea de alta velocidad Vitoria-Bilbao-San Sebastián
-                  </Text>
-                  <Text style={styles.headerValue}>
-                    Tramo: {proyecto?.tramo || "N/A"}
-                  </Text>
-                  <Text style={styles.headerValue}>
-                    Rango de fechas: {fechaInicioFinal} - {fechaFinFinal}
-                  </Text>
-                </View>
-                <View style={styles.headerLogos}>
-                  {proyecto?.logo && (
-                    <Image src={proyecto.logo} style={styles.logo} />
-                  )}
-                  {proyecto?.logoCliente && (
-                    <Image src={proyecto.logoCliente} style={styles.logo} />
-                  )}
-                </View>
+            <View style={styles.header}>
+              <View style={styles.headerInfo}>
+                <Text style={styles.headerLabel}>
+                  Línea de alta velocidad Vitoria-Bilbao-San Sebastián
+                </Text>
+                <Text style={styles.headerValue}>
+                  Tramo: {proyecto?.tramo || "N/A"}
+                </Text>
+                <Text style={styles.headerValue}>
+                  Rango de fechas: {fechaInicioFinal} - {fechaFinFinal}
+                </Text>
               </View>
+              <View style={styles.headerLogos}>
+                {proyecto?.logo && (
+                  <Image src={proyecto.logo} style={styles.logo} />
+                )}
+                {proyecto?.logoCliente && (
+                  <Image src={proyecto.logoCliente} style={styles.logo} />
+                )}
+              </View>
+            </View>
             <View style={styles.footer}>
               <Text>Informe generado por:</Text>
               <Text>{userNombre}</Text>

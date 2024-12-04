@@ -21,14 +21,13 @@ const capitalizeWords = (str) => {
 
 const GestionPlantillas = () => {
   const [plantillas, setPlantillas] = useState([]);
-  const [campos, setCampos] = useState([]);
   const [camposFormulario, setCamposFormulario] = useState([]);
   const [nuevaPlantilla, setNuevaPlantilla] = useState("");
   const [camposSeleccionados, setCamposSeleccionados] = useState([]);
   const [fijos, setFijos] = useState([
-    { id: "observaciones", nombre: "Observaciones" },
-    { id: "fechaHora", nombre: "Fecha y Hora" },
-    { id: "imagenes", nombre: "Imágenes" },
+    { id: "observaciones", nombre: "Observaciones", tipo: "texto" },
+    { id: "fechaHora", nombre: "Fecha y Hora", tipo: "texto" },
+    { id: "imagenes", nombre: "Imágenes", tipo: "archivo" },
   ]);
   const [plantillaEditando, setPlantillaEditando] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -207,10 +206,9 @@ const GestionPlantillas = () => {
       {/* Crear o Editar Plantilla */}
       <div className="bg-white p-6 rounded-md shadow-xl mb-8">
         <h3 className=" font-semibold text-gray-800 mb-4 flex gap-2 items-center">
-        <IoIosAddCircle />
+          <IoIosAddCircle />
           {plantillaEditando ? "Editar Plantilla" : "Crear Nueva Plantilla"}
         </h3>
-        
         <input
           type="text"
           value={nuevaPlantilla}
@@ -220,7 +218,7 @@ const GestionPlantillas = () => {
         />
         <h4 className="text-lg font-medium text-gray-700 mb-2">Seleccionar Campos</h4>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {[...fijos, ...campos, ...camposFormulario].map((campo) => (
+          {[...fijos, ...camposFormulario].map((campo) => (
             <label key={campo.id} className="flex items-center space-x-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -228,7 +226,9 @@ const GestionPlantillas = () => {
                 onChange={() => toggleCampoSeleccionado(campo)}
                 className="h-4 w-4 text-sky-500 border-gray-300 rounded focus:ring-sky-400"
               />
-              <span className="text-sm font-medium text-gray-800">{campo.nombre}</span>
+              <span className="text-sm font-medium text-gray-800">
+                {campo.nombre} ({campo.tipo})
+              </span>
             </label>
           ))}
         </div>
@@ -242,14 +242,20 @@ const GestionPlantillas = () => {
 
       {/* Listar plantillas existentes */}
       <div className="mt-12">
-        <h3 className="text-2xl font-semibold text-gray-800 mb-4 w-full border-b-2 pb-4">Plantillas Existentes</h3>
+        <h3 className="text-2xl font-semibold text-gray-800 mb-4 w-full border-b-2 pb-4">
+          Plantillas Existentes
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plantillas.map((plantilla) => (
             <div key={plantilla.id} className="bg-white p-4 rounded-md shadow-md">
-              <h4 className="text-lg font-semibold text-sky-600 w-full border-b-2 pb-2">{plantilla.nombre}</h4>
+              <h4 className="text-lg font-semibold text-sky-600 w-full border-b-2 pb-2">
+                {plantilla.nombre}
+              </h4>
               <ul className="mt-2 list-disc pl-5 text-sm text-gray-700">
                 {plantilla.campos.map((campo, index) => (
-                  <li key={index}>{typeof campo === "string" ? campo : campo.nombre}</li>
+                  <li key={index}>
+                    {campo.nombre} ({campo.tipo || "N/A"})
+                  </li>
                 ))}
               </ul>
               <div className="mt-4 flex gap-2">

@@ -274,86 +274,93 @@ const ParteObra = () => {
         </div>
 
         <div className="px-8 pb-6">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {camposDinamicos
-              .sort((a, b) => a.nombre.localeCompare(b.nombre))
-              .map(
-                (campo) =>
-                  visibilidadCampos[campo.nombre] && (
-                    <div key={campo.nombre}>
-                      <label className="block text-sm font-medium text-gray-800">
-                        {campo.nombre}
-                      </label>
-                      <select
-                        name={campo.nombre}
-                        value={formData[campo.nombre] || ""}
-                        onChange={(e) =>
-                          setFormData({ ...formData, [campo.nombre]: e.target.value })
-                        }
-                        className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                      >
-                        <option value="">-- Seleccione una opción --</option>
-                        {campo.valores.map((valor) => (
-                          <option key={valor.id} value={valor.valor}>
-                            {valor.valor}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )
-              )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-800">
-                Fecha y Hora
-              </label>
-              <input
-                type="datetime-local"
-                name="fechaHora"
-                value={formData.fechaHora}
+        <form onSubmit={handleSubmit} className="space-y-8">
+  {camposDinamicos
+    .sort((a, b) => a.nombre.localeCompare(b.nombre))
+    .map(
+      (campo) =>
+        visibilidadCampos[campo.nombre] && (
+          <div key={campo.nombre}>
+            <label className="block text-sm font-medium text-gray-800">
+              {campo.nombre}
+            </label>
+            {campo.tipo === "desplegable" ? (
+              <select
+                name={campo.nombre}
+                value={formData[campo.nombre] || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, fechaHora: e.target.value })
+                  setFormData({ ...formData, [campo.nombre]: e.target.value })
                 }
                 className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-800">
-                Observaciones
-              </label>
+              >
+                <option value="">-- Seleccione una opción --</option>
+                {campo.valores.map((valor) => (
+                  <option key={valor.id} value={valor.valor}>
+                    {valor.valor}
+                  </option>
+                ))}
+              </select>
+            ) : campo.tipo === "texto" ? (
               <textarea
-                name="observaciones"
-                value={formData.observaciones}
+                name={campo.nombre}
+                value={formData[campo.nombre] || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, observaciones: e.target.value })
+                  setFormData({ ...formData, [campo.nombre]: e.target.value })
                 }
                 className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
               ></textarea>
-            </div>
+            ) : null}
+          </div>
+        )
+    )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-800">Imágenes</label>
-              {[0, 1, 2, 3].map((index) => (
-                <input
-                  key={index}
-                  type="file"
-                  accept="image/*"
-                  ref={(el) => (fileInputsRefs.current[index] = el)}
-                  onChange={(e) => handleFileChange(e, index)}
-                  className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200"
-                />
-              ))}
+  <div>
+    <label className="block text-sm font-medium text-gray-800">Fecha y Hora</label>
+    <input
+      type="datetime-local"
+      name="fechaHora"
+      value={formData.fechaHora}
+      onChange={(e) =>
+        setFormData({ ...formData, fechaHora: e.target.value })
+      }
+      className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+    />
+  </div>
 
-            </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-800">Observaciones</label>
+    <textarea
+      name="observaciones"
+      value={formData.observaciones}
+      onChange={(e) =>
+        setFormData({ ...formData, observaciones: e.target.value })
+      }
+      className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+    ></textarea>
+  </div>
 
-            <button
-              type="submit"
-              className="w-full py-3 bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:bg-sky-700 transition"
-            >
-              Enviar
-            </button>
-          </form>
+  <div>
+    <label className="block text-sm font-medium text-gray-800">Imágenes</label>
+    {[0, 1, 2, 3].map((index) => (
+      <input
+        key={index}
+        type="file"
+        accept="image/*"
+        ref={(el) => (fileInputsRefs.current[index] = el)}
+        onChange={(e) => handleFileChange(e, index)}
+        className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200"
+      />
+    ))}
+  </div>
+
+  <button
+    type="submit"
+    className="w-full py-3 bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:bg-sky-700 transition"
+  >
+    Enviar
+  </button>
+</form>
+
         </div>
       </div>
 
