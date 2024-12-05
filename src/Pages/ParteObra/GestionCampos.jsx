@@ -195,7 +195,7 @@ const GestionCampos = () => {
                     accionModal();
                     cerrarModal();
                   }}
-                  className="px-6 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600 transition"
+                  className="px-6 py-2 bg-red-400 text-white rounded-md shadow hover:bg-red-600 transition"
                 >
                   Confirmar
                 </button>
@@ -235,7 +235,7 @@ const GestionCampos = () => {
       </select>
       <button
         onClick={handleAddCampo}
-        className="w-full px-6 py-2 bg-amber-600 text-white font-semibold rounded-md shadow hover:bg-amber-700 transition"
+        className="w-1/2 px-6 py-2 bg-amber-600 text-white font-semibold rounded-md shadow hover:bg-amber-700 transition"
       >
         Agregar Campo
       </button>
@@ -271,7 +271,7 @@ const GestionCampos = () => {
       />
       <button
         onClick={handleAddValor}
-        className="w-full px-6 py-2 bg-amber-600 text-white font-semibold rounded-md shadow hover:bg-amber-700 transition"
+        className="w-1/2 px-6 py-2 bg-amber-600 text-white font-semibold rounded-md shadow hover:bg-amber-700 transition"
       >
         Agregar Valor
       </button>
@@ -314,7 +314,7 @@ const GestionCampos = () => {
                     }}
                   />
                   <FaTrash
-                    className="text-red-500 cursor-pointer hover:text-red-700"
+                    className="text-red-400 cursor-pointer hover:text-red-700"
                     onClick={() => handleDeleteCampo(campo.id)}
                   />
                 </div>
@@ -351,7 +351,7 @@ const GestionCampos = () => {
                           }}
                         />
                         <FaTrash
-                          className="text-red-500 cursor-pointer hover:text-red-700"
+                          className="text-red-400 cursor-pointer hover:text-red-700"
                           onClick={() => handleDeleteValor(campo.id, valor.id)}
                         />
                       </div>

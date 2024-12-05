@@ -1,23 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../../firebase_config";
-import { FaCheckCircle, FaExclamationTriangle, FaTimesCircle } from "react-icons/fa";
+import {
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaTimesCircle,
+  FaLock,
+} from "react-icons/fa";
 import { IoIosAddCircle } from "react-icons/io";
+import {
+  MdTextFields,
+  MdOutlineFormatListBulleted,
+} from "react-icons/md";
 
 // Función para normalizar datos para validación
-const normalizeForValidation = (str) => {
-  return str
+const normalizeForValidation = (str) =>
+  str
     .toLowerCase()
     .replace(/[^\w]/g, "") // Eliminar caracteres especiales
     .replace(/\s+/g, ""); // Eliminar espacios
-};
 
 // Función para capitalizar las palabras
-const capitalizeWords = (str) => {
-  return str
+const capitalizeWords = (str) =>
+  str
     .toLowerCase()
     .replace(/\b\w/g, (match) => match.toUpperCase());
-};
 
 const GestionPlantillas = () => {
   const [plantillas, setPlantillas] = useState([]);
@@ -26,8 +33,8 @@ const GestionPlantillas = () => {
   const [camposSeleccionados, setCamposSeleccionados] = useState([]);
   const [fijos, setFijos] = useState([
     { id: "observaciones", nombre: "Observaciones", tipo: "texto" },
-    { id: "fechaHora", nombre: "Fecha y Hora", tipo: "texto" },
-    { id: "imagenes", nombre: "Imágenes", tipo: "archivo" },
+    { id: "fechaHora", nombre: "Fecha y Hora", tipo: "obligatorio" },
+    { id: "imagenes", nombre: "Imágenes", tipo: "obligatorio" },
   ]);
   const [plantillaEditando, setPlantillaEditando] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -37,12 +44,18 @@ const GestionPlantillas = () => {
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const opcionesFormularioSnapshot = await getDocs(collection(db, "opcionesFormulario"));
-        const opcionesFormularioData = opcionesFormularioSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        const camposCargados = opcionesFormularioData.flatMap((doc) => doc.campos || []);
+        const opcionesFormularioSnapshot = await getDocs(
+          collection(db, "opcionesFormulario")
+        );
+        const opcionesFormularioData = opcionesFormularioSnapshot.docs.map(
+          (doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })
+        );
+        const camposCargados = opcionesFormularioData.flatMap(
+          (doc) => doc.campos || []
+        );
         setCamposFormulario(camposCargados);
 
         const plantillasSnapshot = await getDocs(collection(db, "plantillas"));
@@ -76,7 +89,10 @@ const GestionPlantillas = () => {
 
     if (
       !nuevaPlantilla.trim() ||
-      plantillas.some((plantilla) => normalizeForValidation(plantilla.nombre) === nombreNormalizado)
+      plantillas.some(
+        (plantilla) =>
+          normalizeForValidation(plantilla.nombre) === nombreNormalizado
+      )
     ) {
       mostrarModal("El nombre de la plantilla ya existe o es inválido.");
       return;
@@ -84,7 +100,7 @@ const GestionPlantillas = () => {
 
     const plantilla = {
       nombre: capitalizeWords(nuevaPlantilla),
-      campos: camposSeleccionados,
+      campos: [...fijos, ...camposSeleccionados],
     };
 
     try {
@@ -102,7 +118,9 @@ const GestionPlantillas = () => {
     mostrarModal("¿Estás seguro de que deseas eliminar esta plantilla?", async () => {
       try {
         await deleteDoc(doc(db, "plantillas", id));
-        setPlantillas((prev) => prev.filter((plantilla) => plantilla.id !== id));
+        setPlantillas((prev) =>
+          prev.filter((plantilla) => plantilla.id !== id)
+        );
         mostrarModal("Plantilla eliminada correctamente.");
       } catch (error) {
         console.error("Error al eliminar plantilla:", error);
@@ -111,8 +129,11 @@ const GestionPlantillas = () => {
   };
 
   const toggleCampoSeleccionado = (campo) => {
+    if (fijos.some((fijo) => fijo.id === campo.id)) return; // No permitir deseleccionar obligatorios
     if (camposSeleccionados.some((c) => c.id === campo.id)) {
-      setCamposSeleccionados((prev) => prev.filter((c) => c.id !== campo.id));
+      setCamposSeleccionados((prev) =>
+        prev.filter((c) => c.id !== campo.id)
+      );
     } else {
       setCamposSeleccionados((prev) => [...prev, campo]);
     }
@@ -142,7 +163,7 @@ const GestionPlantillas = () => {
 
     const plantillaActualizada = {
       nombre: capitalizeWords(nuevaPlantilla),
-      campos: camposSeleccionados,
+      campos: [...fijos, ...camposSeleccionados],
     };
 
     try {
@@ -164,8 +185,7 @@ const GestionPlantillas = () => {
   };
 
   return (
-    <div className="mt-2 max-w-6xl mx-auto">
-
+    <div className="mt-2 max-w-6xl mx-auto min-h-screen">
       {/* Modal */}
       {modalVisible && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -179,7 +199,9 @@ const GestionPlantillas = () => {
                 <FaTimesCircle className="text-red-500 text-4xl" />
               )}
             </div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">{modalMensaje}</h3>
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">
+              {modalMensaje}
+            </h3>
             <div className="flex justify-center gap-4">
               {modalAccion && (
                 <button
@@ -205,7 +227,7 @@ const GestionPlantillas = () => {
 
       {/* Crear o Editar Plantilla */}
       <div className="bg-white p-6 rounded-md shadow-xl mb-8">
-        <h3 className=" font-semibold text-gray-800 mb-4 flex gap-2 items-center">
+        <h3 className="font-semibold text-gray-800 mb-4 flex gap-2 items-center">
           <IoIosAddCircle />
           {plantillaEditando ? "Editar Plantilla" : "Crear Nueva Plantilla"}
         </h3>
@@ -216,17 +238,38 @@ const GestionPlantillas = () => {
           placeholder="Nombre de la plantilla"
           className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-4"
         />
-        <h4 className="text-lg font-medium text-gray-700 mb-2">Seleccionar Campos</h4>
+        <h4 className="text-lg font-medium text-gray-700 mb-2">
+          Seleccionar Campos
+        </h4>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[...fijos, ...camposFormulario].map((campo) => (
-            <label key={campo.id} className="flex items-center space-x-2 cursor-pointer">
+            <label
+              key={campo.id}
+              className={`flex items-center space-x-2 cursor-pointer ${fijos.some((fijo) => fijo.id === campo.id)
+                  ? "bg-gray-200 text-gray-500"
+                  : ""
+                }`}
+            >
               <input
                 type="checkbox"
                 checked={camposSeleccionados.some((c) => c.id === campo.id)}
                 onChange={() => toggleCampoSeleccionado(campo)}
+                disabled={fijos.some((fijo) => fijo.id === campo.id)}
                 className="h-4 w-4 text-sky-500 border-gray-300 rounded focus:ring-sky-400"
               />
-              <span className="text-sm font-medium text-gray-800">
+              <span className="text-sm font-medium text-gray-800 flex items-center gap-2 p-2">
+                {campo.tipo === "obligatorio" && (
+                  <FaLock className="text-gray-500" title="Obligatorio" />
+                )}
+                {campo.tipo === "texto" && (
+                  <MdTextFields className="text-gray-500" title="Texto" />
+                )}
+                {campo.tipo === "desplegable" && (
+                  <MdOutlineFormatListBulleted
+                    className="text-gray-500"
+                    title="Desplegable"
+                  />
+                )}
                 {campo.nombre} ({campo.tipo})
               </span>
             </label>
@@ -234,7 +277,7 @@ const GestionPlantillas = () => {
         </div>
         <button
           onClick={plantillaEditando ? handleActualizarPlantilla : handleCrearPlantilla}
-          className="mt-4 px-6 py-2 bg-sky-600 text-white font-semibold rounded-md shadow hover:bg-sky-700 transition w-full"
+          className="mt-4 px-6 py-2 bg-amber-600 text-white font-semibold rounded-md shadow hover:bg-amber-700 transition"
         >
           {plantillaEditando ? "Actualizar Plantilla" : "Guardar Plantilla"}
         </button>
@@ -247,27 +290,46 @@ const GestionPlantillas = () => {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plantillas.map((plantilla) => (
-            <div key={plantilla.id} className="bg-white p-4 rounded-md shadow-md">
+            <div
+              key={plantilla.id}
+              className="bg-white p-4 rounded-md shadow-md"
+            >
               <h4 className="text-lg font-semibold text-sky-600 w-full border-b-2 pb-2">
                 {plantilla.nombre}
               </h4>
-              <ul className="mt-2 list-disc pl-5 text-sm text-gray-700">
+              <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 flex flex-col gap-3">
                 {plantilla.campos.map((campo, index) => (
-                  <li key={index}>
+                  <li key={index} className="flex items-center gap-2">
+                    {campo.tipo === "obligatorio" && (
+                      <FaLock className="text-gray-500 text-xl" title="Obligatorio" />
+                    )}
+                    {campo.tipo === "texto" && (
+                      <MdTextFields
+                        className="text-gray-500 text-xl"
+                        title="Texto"
+                      />
+                    )}
+                    {campo.tipo === "desplegable" && (
+                      <MdOutlineFormatListBulleted
+                        className="text-gray-500 text-xl"
+                        title="Desplegable"
+                      />
+                    )}
                     {campo.nombre} ({campo.tipo || "N/A"})
                   </li>
                 ))}
               </ul>
+
               <div className="mt-4 flex gap-2">
                 <button
                   onClick={() => handleEditarPlantilla(plantilla)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition w-full"
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md shadow hover:bg-blue-700 transition w-full"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => handleEliminarPlantilla(plantilla.id)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition w-full"
+                  className="px-4 py-2 bg-red-400 text-white rounded-md shadow hover:bg-red-700 transition w-full"
                 >
                   Eliminar
                 </button>

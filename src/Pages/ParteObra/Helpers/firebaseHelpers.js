@@ -27,8 +27,8 @@ export const addCampo = async (docId, campos, nuevoCampo, tipo) => {
   const nuevoObjetoCampo = {
     id: uuidv4(),
     nombre: nuevoCampo,
-    tipo: tipo || "select", // Si no se especifica, asumimos que es un select
-    valores: tipo === "select" ? [] : [], // Inicializamos `valores` como array vacío
+    tipo: tipo || "desplegable", // Si no se especifica, asumimos que es un desplegable
+    valores: tipo === "desplegable" ? [] : [], // Inicializamos `valores` como array vacío
   };
 
   const nuevosCampos = [...campos, nuevoObjetoCampo];

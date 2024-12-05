@@ -70,12 +70,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 15,
+    marginBottom: 5,
     marginLeft: "10px"
   },
   fieldColumn: {
     width: "48%",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   fieldLabel: {
     fontWeight: "bold",
@@ -88,17 +88,17 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 1.5,
     wordBreak: "break-word",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   imageRow: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 15,
+    marginBottom: 8,
   },
   image: {
     width: "45%",
     height: 170,
-    margin: "2.5%",
+    margin: "0.8%",
     borderRadius: 8,
     border: "1px solid #cccccc",
   },
