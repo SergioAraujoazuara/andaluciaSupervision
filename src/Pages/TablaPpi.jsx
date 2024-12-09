@@ -2036,10 +2036,10 @@ function TablaPpi() {
                                     <div className="col-span-2 xl:col-span-2 hidden xl:block ">Nombre</div>
                                     <div className="col-span-4 xl:col-span-2 hidden xl:block ">Fecha</div>
                                     <div className="col-span-2  hidden xl:flex">Comentarios</div>
-                                    <div className="col-span-4 xl:col-span-1">Result.</div>
-                                    <div className="col-span-3 xl:col-span-1 ">Pdf</div>
+                                    <div className="col-span-3 xl:col-span-1">Result.</div>
+                                    <div className="col-span-2 xl:col-span-1 ">Pdf</div>
                                     <div className="col-span-3 xl:col-span-1 ">Editar</div>
-                                    <div className="col-span-3 xl:col-span-1 ">Estado</div>
+                                    <div className="col-span-1 xl:col-span-1 ">Estado</div>
                                 </div>
 
                                 <div>
@@ -2094,7 +2094,7 @@ function TablaPpi() {
                                                     <div className="col-span-3 xl:col-span-2 hidden xl:block">
                                                         {subactividad.comentario || ''}
                                                     </div>
-                                                    <div className="col-span-4 xl:col-span-1 text-center">
+                                                    <div className="col-span-3 xl:col-span-1 text-start">
                                                         {subactividad.resultadoInspeccion ? (
                                                             subactividad.resultadoInspeccion === "Apto" ? (
                                                                 <span className="w-full font-bold text-xs rounded text-green-500 cursor-pointer">
@@ -2115,13 +2115,13 @@ function TablaPpi() {
                                                         ) : (
                                                             <span
                                                                 onClick={() => handleOpenModalFormulario(`apto-${indexActividad}-${indexSubactividad}`)}
-                                                                className="w-full font-bold text-medium text-xl rounded w-full flex justify-center cursor-pointer"
+                                                                className="w-full font-bold text-medium text-xl rounded w-full flex justify-start cursor-pointer"
                                                             >
                                                                 <IoMdAddCircle />
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="col-span-3 xl:col-span-1 block bg-white cursor-pointer flex justify-center">
+                                                    <div className="col-span-2 xl:col-span-1 block bg-white cursor-pointer flex justify-start">
                                                         {subactividad.formularioEnviado ? (
                                                             <p
                                                                 onClick={() => handleMostrarIdRegistro(`apto-${indexActividad}-${indexSubactividad}`)}
@@ -2154,7 +2154,7 @@ function TablaPpi() {
 
                                                     <div>
                                                         {/* Botón para abrir el modal de confirmación para terminar la inspección */}
-                                                        <div className="col-span-3 xl:col-span-1 block bg-white cursor-pointer flex justify-center">
+                                                        <div className="col-span-1 xl:col-span-1 block bg-white cursor-pointer flex justify-center">
                                                             {subactividad.formularioEnviado ? (
                                                                 subactividad.terminada ? (
                                                                     <button
