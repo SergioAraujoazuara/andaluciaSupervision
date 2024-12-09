@@ -17,6 +17,7 @@ import { GoHomeFill } from "react-icons/go";
 import { Link, useNavigate } from "react-router-dom";
 import InformePDF from "../ParteObra/InformePDF.jsx";
 import { useAuth } from '../../context/authContext';
+import MapWithButton from "./MapWithButton.jsx";
 
 const TablaRegistros = () => {
   const { user } = useAuth();
@@ -268,31 +269,31 @@ const TablaRegistros = () => {
     return await imageCompression(file, options);
   };
 
-  // Función para subir la imagen a Firebase Storage
   const uploadImageWithMetadata = async (file, index) => {
-    console.log("Subida de imagen iniciada", file);
-    try {
-      const storageRef = ref(storage, `imagenes/${Date.now()}_${index}`);
-      const metadata = {
-        contentType: file.type,
-      };
-      await uploadBytes(storageRef, file, metadata);
-      const url = await getDownloadURL(storageRef);
-      console.log("Imagen subida con éxito y URL obtenida:", url);
-      return url;
-    } catch (error) {
-      console.error("Error al subir la imagen:", error);
-      throw error;
+    const coordinates = manualCoordinates[index] || geolocalizacion; // Usar manuales si están disponibles
+    if (!coordinates) {
+      throw new Error("Coordenadas no disponibles.");
     }
+
+    const storageRef = ref(storage, `imagenes/${Date.now()}_${index}`);
+    const metadata = {
+      contentType: file.type,
+      customMetadata: {
+        latitude: coordinates.lat.toString(),
+        longitude: coordinates.lng.toString(),
+      },
+    };
+
+    await uploadBytes(storageRef, file, metadata);
+    return await getDownloadURL(storageRef);
   };
+
+
 
   const handleFileChange = async (e, index) => {
     const file = e.target.files[0]; // Obtener el archivo seleccionado
     if (file) {
-      // Generar URL temporal para la miniatura
-      const imageUrl = URL.createObjectURL(file);
-
-      // Mostrar la miniatura antes de guardarla
+      const imageUrl = URL.createObjectURL(file); // Generar una URL temporal para la previsualización
       setImagePreviews((prev) => {
         const newPreviews = [...prev];
         newPreviews[index] = imageUrl;
@@ -300,19 +301,19 @@ const TablaRegistros = () => {
       });
 
       try {
-        // Comprimir la imagen
-        const compressedFile = await compressImage(file);
-        console.log(`Imagen comprimida en el índice ${index}:`, compressedFile);
-
-        // Actualizar el estado con la imagen comprimida
-        const newCompressedImages = [...compressedImages];
-        newCompressedImages[index] = compressedFile;
-        setCompressedImages(newCompressedImages);
+        const compressedFile = await compressImage(file); // Comprimir la imagen
+        setCompressedImages((prev) => {
+          const updatedImages = [...prev];
+          updatedImages[index] = compressedFile; // Guardar el archivo comprimido para subirlo más tarde
+          return updatedImages;
+        });
       } catch (error) {
         console.error("Error al procesar la imagen:", error);
       }
     }
   };
+
+
   const [registroAnterior, setRegistroAnterior] = useState(null); // Estado para capturar el registro antes de los cambios
 
 
@@ -529,6 +530,37 @@ const TablaRegistros = () => {
     setRegistrosFiltrados([]); // Limpia los registros filtrados
   };
 
+  const [geolocalizacion, setGeolocalizacion] = useState(null);
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGeolocalizacion({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      (error) => console.error("Error al obtener la geolocalización:", error)
+    );
+  }, []);
+
+
+  const [manualCoordinates, setManualCoordinates] = useState(Array(4).fill(null)); // Para 4 imágenes
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null); // Índice de imagen para capturar coordenadas
+  const [mapModalVisible, setMapModalVisible] = useState(false); // Controlar la visibilidad del modal del mapa
+
+  const handleOpenMapForImage = (index) => {
+    setSelectedImageIndex(index); // Establece qué imagen se está editando
+    setMapModalVisible(true); // Abre el modal del mapa
+  };
+
+  const handleCoordinatesCaptured = (coordinates) => {
+    setManualCoordinates((prev) => {
+      const updated = [...prev];
+      updated[selectedImageIndex] = coordinates; // Guarda las coordenadas para la imagen específica
+      return updated;
+    });
+    setMapModalVisible(false); // Cierra el modal del mapa
+  };
 
   return (
     <div className="min-h-screen container mx-auto xl:px-14 py-2 text-gray-500 mb-10">
@@ -841,6 +873,24 @@ const TablaRegistros = () => {
                     onChange={(e) => handleFileChange(e, index)}
                     className="block text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-sky-100 file:text-blue-600 hover:file:bg-sky-200"
                   />
+                  {/* Botón para abrir el mapa */}
+                  <button
+                    className="px-2 py-2 text-gray-500 rounded-md mt-2 text-xs underline font-light"
+                    onClick={() => handleOpenMapForImage(index)}
+                  >
+                    Geolocalización manual
+                  </button>
+
+                  {/* Mostrar coordenadas seleccionadas
+                  {manualCoordinates[index] && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      Coordenadas: Lat {manualCoordinates[index]?.lat}, Lng {manualCoordinates[index]?.lng}
+                    </p>
+                  )} */}
+                  {mapModalVisible && (
+                    <MapWithButton onCoordinatesCaptured={handleCoordinatesCaptured} />
+                  )}
+
                 </div>
               ))}
             </div>
