@@ -58,21 +58,16 @@ const Navbar = () => {
   };
 
   const handleDropdownClick = (dropdownSetter, currentState) => {
-    // Si el menú ya está abierto, lo cerramos directamente.
-    if (currentState) {
-      closeAllDropdowns();
-    } else {
-      // Si no está abierto, cerramos todos los menús y luego abrimos el seleccionado.
-      closeAllDropdowns();
-      dropdownSetter(true);
-    }
+    dropdownSetter(!currentState);
   };
+
 
 
   const handleLinkClick = () => {
     closeAllDropdowns();
     setMenuOpen(false) // Cierra todos los menús al hacer clic en cualquier enlace
   };
+
 
 
 
@@ -200,9 +195,14 @@ const Navbar = () => {
                     </div>
                   )}
 
+                  {/* Administración */}
+                  {(userRol === 'admin' || userRol === 'usuario') && (
+                    <NavLink to="/admin" linkName="Administración" onClick={handleLinkClick} />
+                  )}
+
 
                   {user && (
-                    <div className='px-4'>
+                    <div className='px-6 font-medium text-gray-500'>
                       <p className=''>Usuario: {userNombre}</p>
                       <button
                         onClick={toggleLogoutConfirmation}
@@ -227,7 +227,10 @@ const Navbar = () => {
                 {(userRol === 'usuario' || userRol === 'admin') && (
                   <div className="relative" ref={inspectionRef}>
                     <button
-                      onClick={() => handleDropdownClick(setDropdownInspectionOpen)}
+                      onClick={() => {
+                        closeAllDropdowns(); // Cierra los otros dropdowns
+                        setDropdownInspectionOpen(!dropdownInspectionOpen); // Alterna el estado del actual
+                      }}
                       className="flex items-center gap-1 px-3 py-2 rounded-md text-md font-medium text-gray-500 hover:text-sky-600"
                     >
                       Inspección <FaCaretDown />
@@ -264,7 +267,10 @@ const Navbar = () => {
                 {(userRol === 'usuario' || userRol === 'admin') && (
                   <div className="relative" ref={dropdownRef}>
                     <button
-                      onClick={() => handleDropdownClick(setDropdownOpen)}
+                      onClick={() => {
+                        closeAllDropdowns(); // Cierra los otros dropdowns
+                        setDropdownOpen(!dropdownOpen); // Alterna el estado del actual
+                      }}
                       className="flex items-center gap-1 px-3 py-2 rounded-md text-md font-medium text-gray-500 hover:text-sky-600"
                     >
                       Parte de obra <FaCaretDown />
@@ -294,7 +300,10 @@ const Navbar = () => {
                 {(userRol === 'usuario' || userRol === 'admin') && (
                   <div className="relative" ref={auscultationRef}>
                     <button
-                      onClick={() => handleDropdownClick(setDropdownAuscultationOpen)}
+                      onClick={() => {
+                        closeAllDropdowns(); // Cierra los otros dropdowns
+                        setDropdownAuscultationOpen(!dropdownAuscultationOpen); // Alterna el estado del actual
+                      }}
                       className="flex items-center gap-1 px-3 py-2 rounded-md text-md font-medium text-gray-500 hover:text-sky-600"
                     >
                       Auscultación <FaCaretDown />
@@ -333,6 +342,7 @@ const Navbar = () => {
                 )}
               </div>
             )}
+
           </div>
 
           {/* Botón de usuario */}

@@ -1924,52 +1924,52 @@ function TablaPpi() {
                 <div className=' px-2 xl:px-0'>
                     {ppi ? (
                         <>
-                            <div className='flex flex-col xl:flex-row gap-3 justify-center xl:justify-between items-center'>
-                                <div className='flex gap-14 flex-row xl:flex-row xl:justify-between  bg-gray-200 w-full rounded-lg px-5 py-3'>
-                                    <div className='flex gap-8'>
-                                        <div className='flex gap-2 items-center '>
-                                            <span className='text-green-500 text-xl'><AiOutlineCheckCircle /></span>
-                                            <p className='font-medium text-md'>
-                                                Inspecciones aptas: <span>{actividadesAptas || 0}</span>
-                                            </p>
-                                        </div>
 
-                                        <div className='flex gap-2 items-center '>
-                                            <span className='text-amber-600 text-xl'><FaWpforms /></span>
-                                            <p className='font-medium font-medium text-md'>
-                                                Inspecciones totales: <span>{totalSubactividades || 0}</span>
-                                            </p>
-                                        </div>
-                                        <div className='flex gap-2 items-center '>
-                                            <span className='text-blue-500 text-xl'><AiOutlineCheckCircle /></span>
-                                            <p className='font-medium text-md'>
-                                                Inspecciones terminadas: <span>{terminadasCount || 0}</span>
-                                            </p>
-                                        </div>
+                            <div className='flex gap-5 flex-col xl:flex-row xl:justify-between items-center bg-gray-200 w-full rounded-lg px-5 py-3'>
+                                <div className='flex flex-col xl:flex-row gap-8'>
+                                    <div className='flex gap-2 items-center '>
+                                        <span className='text-green-500 text-xl'><AiOutlineCheckCircle /></span>
+                                        <p className='font-medium text-md'>
+                                            Inspecciones aptas: <span>{actividadesAptas || 0}</span>
+                                        </p>
                                     </div>
 
-
-
-                                    <div className=''>
-                                        {actividadesAptas === totalSubactividades && terminadasCount === totalSubactividades && (
-                                            <button
-                                                onClick={() => setShowConfirmModal(true)}
-                                                className="bg-amber-600 text-white font-medium py-2 px-4 rounded-lg"
-                                            >
-                                                <p className='flex gap-2 items-center'><FaFilePdf />Terminar inspección</p>
-                                            </button>
-                                        )}
+                                    <div className='flex gap-2 items-center '>
+                                        <span className='text-amber-600 text-xl'><FaWpforms /></span>
+                                        <p className='font-medium font-medium text-md'>
+                                            Inspecciones totales: <span>{totalSubactividades || 0}</span>
+                                        </p>
                                     </div>
-
-
-
+                                    <div className='flex gap-2 items-center '>
+                                        <span className='text-blue-500 text-xl'><AiOutlineCheckCircle /></span>
+                                        <p className='font-medium text-md'>
+                                            Inspecciones terminadas: <span>{terminadasCount || 0}</span>
+                                        </p>
+                                    </div>
                                 </div>
 
 
 
+                                <div className=''>
+                                    {actividadesAptas === totalSubactividades && terminadasCount === totalSubactividades && (
+                                        <button
+                                            onClick={() => setShowConfirmModal(true)}
+                                            className="bg-amber-600 text-white font-medium py-2 px-4 rounded-lg"
+                                        >
+                                            <p className='flex gap-2 items-center'><FaFilePdf />Terminar inspección</p>
+                                        </button>
+                                    )}
+                                </div>
+
+
 
                             </div>
-                            <div className='flex gap-2 flex-col xl:flex-row xl:justify-between items-center xl:items-start my-5'>
+
+
+
+
+
+                            <div className='flex gap-2 flex-col xl:flex-row xl:justify-between items-center xl:items-start my-4'>
 
 
                                 <div className='flex-col xl:flex-row gap-5 flex items-center xl:items-center'>
@@ -1996,20 +1996,20 @@ function TablaPpi() {
                                     </div>
 
                                 </div>
-                                <div className='flex gap-5 pr-6'>
 
-                                    <div className='flex gap-5'>
-                                        <button onClick={showTableView} className={`flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2 ${view === 'table' ? 'bg-yellow-600 text-gray-100' : 'bg-gray-200'}`}>
-                                            <span><FaTable /></span>Tabla
-                                        </button>
-                                        <button onClick={showGridView} className={`flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2 ${view === 'grid' ? 'bg-yellow-600 text-gray-100' : 'bg-gray-200'}`}>
-                                            <span><FaTabletAlt /></span>Grid
-                                        </button>
-                                    </div>
 
-                                    <div><PdfListViewer /></div>
-
+                                <div className='flex gap-5 justify-center mt-4'>
+                                    <button onClick={showTableView} className={`flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2 ${view === 'table' ? 'bg-yellow-600 text-gray-100' : 'bg-gray-200'}`}>
+                                        <span><FaTable /></span>Tabla
+                                    </button>
+                                    <button onClick={showGridView} className={`flex gap-2 items-center bg-gray-200 rounded-lg px-4 py-2 ${view === 'grid' ? 'bg-yellow-600 text-gray-100' : 'bg-gray-200'}`}>
+                                        <span><FaTabletAlt /></span>Grid
+                                    </button>
                                 </div>
+
+                                <div><PdfListViewer /></div>
+
+
 
 
 
@@ -2021,7 +2021,7 @@ function TablaPpi() {
                 </div>
 
                 {view === 'table' ? (
-                    <div className='flex gap-3 flex-col px-3 xl:p-0 mt-3'>
+                    <div className='flex gap-3 flex-col px-3 xl:p-0'>
                         <div className="w-full rounded-xl overflow-x-auto">
                             <div>
                                 <div className="w-full bg-sky-600 text-gray-100 text-xs xl:text-sm font-medium py-3 px-3 grid grid-cols-24 items-center">
@@ -2319,7 +2319,63 @@ function TablaPpi() {
                                                                 </button>
                                                             ) : null}
                                                         </div>
+                                                        <div>
+                                                        {/* Botón para abrir el modal de confirmación para terminar la inspección */}
+                                                        <div className="col-span-1 xl:col-span-1 block bg-white cursor-pointer flex justify-center">
+                                                            {subactividad.formularioEnviado ? (
+                                                                subactividad.terminada ? (
+                                                                    <button
+                                                                        onClick={() => openFinishInspectionModal(indexActividad, indexSubactividad)}
+                                                                        className="bg-green-500 text-white px-2 py-1 font-bold text-xs rounded-lg"
+                                                                    >
+                                                                        Terminada
+                                                                    </button>
+                                                                ) : (
+                                                                    isLatestVersion(indexActividad, subactividad) && (
+                                                                        <button
+                                                                            onClick={() => openFinishInspectionModal(indexActividad, indexSubactividad)}
+                                                                            className="bg-yellow-500 text-white px-2 py-1  font-bold text-xs rounded-lg"
+                                                                        >
+                                                                            Pendiente
+                                                                        </button>
+                                                                    )
+                                                                )
+                                                            ) : null}
+                                                        </div>
+
+                                                        {/* Modal de confirmación para terminar la inspección */}
+                                                        {isFinishInspectionModalOpen && (
+                                                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-800 bg-opacity-75">
+                                                                <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+                                                                    <h2 className="text-xl font-semibold mb-4">
+                                                                        {inspectionToFinish?.terminada ? "¿Regresar a pendiente?" : "¿Terminar la inspección?"}
+                                                                    </h2>
+                                                                    <p className="text-gray-600 mb-6">
+                                                                        {inspectionToFinish?.terminada
+                                                                            ? "¿Estás seguro de que deseas marcar esta inspección como pendiente?"
+                                                                            : "¿Estás seguro de que deseas marcar esta inspección como terminada?"}
+                                                                    </p>
+                                                                    <div className="flex justify-end gap-4">
+                                                                        <button
+                                                                            onClick={confirmFinishInspection}
+                                                                            className={`font-bold py-2 px-4 rounded ${inspectionToFinish?.terminada ? "bg-yellow-500" : "bg-green-600"} text-white`}
+                                                                        >
+                                                                            {inspectionToFinish?.terminada ? "Regresar a pendiente" : "Terminar inspección"}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={closeFinishInspectionModal}
+                                                                            className="bg-gray-500 text-white font-bold py-2 px-4 rounded"
+                                                                        >
+                                                                            Cancelar
+                                                                        </button>
+
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
+                                                    </div>
+                                                  
                                                 </div>
                                             </div>
                                         ))}
@@ -2456,7 +2512,7 @@ function TablaPpi() {
                                     <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium">Seleccionar imagen</label>
                                     <input onChange={handleImagenChange} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                     {imagen && (
-                                        <img src={imagen} className='w-40'/>
+                                        <img src={imagen} className='w-40' />
                                     )}
                                     {isManual && (
                                         <Mapa
@@ -2469,7 +2525,7 @@ function TablaPpi() {
                                     <label htmlFor="imagen" className="block text-gray-500 text-sm font-medium">Seleccionar imagen 2</label>
                                     <input onChange={handleImagenChange2} type="file" id="imagen" accept="image/*" className="rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                     {imagen2 && (
-                                        <img src={imagen2} className='w-40'/>
+                                        <img src={imagen2} className='w-40' />
                                     )}
                                     {isManual && (
                                         <Mapa

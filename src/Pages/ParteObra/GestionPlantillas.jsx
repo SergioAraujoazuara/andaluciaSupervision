@@ -185,7 +185,7 @@ const GestionPlantillas = () => {
   };
 
   return (
-    <div className="mt-2 max-w-6xl mx-auto min-h-screen">
+    <div className="mt-2 max-w-6xl mx-auto min-h-screen text-gray-500">
       {/* Modal */}
       {modalVisible && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -199,7 +199,7 @@ const GestionPlantillas = () => {
                 <FaTimesCircle className="text-red-500 text-4xl" />
               )}
             </div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">
+            <h3 className="text-lg font-semibold text-gray-500 mb-4">
               {modalMensaje}
             </h3>
             <div className="flex justify-center gap-4">
@@ -216,7 +216,7 @@ const GestionPlantillas = () => {
               )}
               <button
                 onClick={cerrarModal}
-                className="px-6 py-2 bg-gray-300 text-gray-700 rounded-md shadow hover:bg-gray-400"
+                className="px-6 py-2 bg-gray-300 text-gray-500 rounded-md shadow hover:bg-gray-400"
               >
                 Cerrar
               </button>
@@ -226,8 +226,8 @@ const GestionPlantillas = () => {
       )}
 
       {/* Crear o Editar Plantilla */}
-      <div className="bg-white p-6 rounded-md shadow-xl mb-8">
-        <h3 className="font-semibold text-gray-800 mb-4 flex gap-2 items-center">
+      <div className="bg-white p-6 rounded-md shadow-xl mb-8 px-6">
+        <h3 className="font-semibold text-gray-500 mb-4 flex gap-2 items-center">
           <IoIosAddCircle />
           {plantillaEditando ? "Editar Plantilla" : "Crear Nueva Plantilla"}
         </h3>
@@ -238,7 +238,7 @@ const GestionPlantillas = () => {
           placeholder="Nombre de la plantilla"
           className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-4"
         />
-        <h4 className="text-lg font-medium text-gray-700 mb-2">
+        <h4 className="text-lg font-medium text-gray-500 mb-2">
           Seleccionar Campos
         </h4>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -257,7 +257,7 @@ const GestionPlantillas = () => {
                 disabled={fijos.some((fijo) => fijo.id === campo.id)}
                 className="h-4 w-4 text-sky-500 border-gray-300 rounded focus:ring-sky-400"
               />
-              <span className="text-sm font-medium text-gray-800 flex items-center gap-2 p-2">
+              <span className="text-sm font-medium text-gray-500 flex items-center gap-2 p-2">
                 {campo.tipo === "obligatorio" && (
                   <FaLock className="text-gray-500" title="Obligatorio" />
                 )}
@@ -284,8 +284,8 @@ const GestionPlantillas = () => {
       </div>
 
       {/* Listar plantillas existentes */}
-      <div className="mt-12">
-        <h3 className="text-2xl font-semibold text-gray-800 mb-4 w-full border-b-2 pb-4">
+      <div className="mt-12 px-6">
+        <h3 className="text-2xl font-semibold text-gray-500 mb-4 w-full border-b-2 pb-4">
           Plantillas Existentes
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -297,7 +297,7 @@ const GestionPlantillas = () => {
               <h4 className="text-lg font-semibold text-sky-600 w-full border-b-2 pb-2">
                 {plantilla.nombre}
               </h4>
-              <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 flex flex-col gap-3">
+              <ul className="mt-2 list-disc pl-5 text-sm text-gray-500 flex flex-col gap-3">
                 {plantilla.campos.map((campo, index) => (
                   <li key={index} className="flex items-center gap-2">
                     {campo.tipo === "obligatorio" && (

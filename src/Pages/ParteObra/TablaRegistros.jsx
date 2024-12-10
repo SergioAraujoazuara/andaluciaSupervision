@@ -589,8 +589,8 @@ const TablaRegistros = () => {
 
 
       {/* Selección de Plantilla */}
-      <div className="flex justify-between items-end mb-8 mt-6">
-        <div className="flex items-end gap-4">
+      <div className="flex flex-col md:flex-row items-center justify-center xl:justify-between xl:items-center items-end gap-5 mt-5 mb-2">
+        <div className="flex flex-col md:flex-row items-center justify-center items-end gap-4">
           {/* Filtros de Fecha */}
           <div className="flex gap-4 items-center">
             <div className="flex flex-col">
@@ -619,7 +619,7 @@ const TablaRegistros = () => {
                 setPlantillaSeleccionada(plantilla.nombre);
                 cargarRegistros(plantilla.nombre);
               }}
-              className={`px-6 py-2 rounded-md font-semibold shadow-md h-12 ${plantillaSeleccionada === plantilla.nombre
+              className={`px-6 py-2 rounded-md font-semibold shadow-md  ${plantillaSeleccionada === plantilla.nombre
                 ? "bg-sky-600 text-white"
                 : "bg-gray-200 text-gray-800"
                 } hover:bg-sky-700 hover:text-white transition`}
@@ -634,7 +634,7 @@ const TablaRegistros = () => {
 
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-col md:flex-row items-center justify-center ">
 
           {/* Botón de Limpiar Filtros */}
           <button
@@ -655,7 +655,7 @@ const TablaRegistros = () => {
 
       {/* Filtros dinámicos */}
       {camposFiltrados.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4  text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4  text-xs px-6">
           {camposFiltrados.map((campo, index) => (
             <div key={index} className="flex flex-col">
               <label className="text-sm font-semibold text-gray-600 mb-2">
@@ -698,7 +698,7 @@ const TablaRegistros = () => {
 
       {/* Tabla de registros */}
       {plantillaSeleccionada && (
-        <>
+        <div className=' px-6'>
           {loading ? (
             <p className="text-center text-gray-500">Cargando registros...</p>
           ) : registrosFiltrados.length > 0 ? (
@@ -781,7 +781,7 @@ const TablaRegistros = () => {
               No se encontraron registros para la plantilla seleccionada.
             </p>
           )}
-        </>
+        </div>
       )}
 
       {/* Mensaje de texto si no se ha seleccionado una plantilla */}

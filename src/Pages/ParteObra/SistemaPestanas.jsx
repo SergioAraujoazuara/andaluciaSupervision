@@ -13,7 +13,7 @@ const SistemaDePestanas = () => {
   const [pestanaActiva, setPestanaActiva] = useState("campos");
   const navigate = useNavigate();
   const handleGoBack = () => {
-    navigate('/'); // Esto navega hacia atrás en la historia
+    navigate(-1); // Esto navega hacia atrás en la historia
   };
   const idProyecto = localStorage.getItem('proyecto')
 

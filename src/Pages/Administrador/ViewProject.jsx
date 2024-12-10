@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { db, storage } from "../../../firebase_config";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
 import { FaArrowRight } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
@@ -85,6 +85,11 @@ function Projects() {
     }
   };
 
+  const navigate = useNavigate();
+    const handleGoBack = () => {
+        navigate(-1); // Esto navega hacia atrás en la historia
+    };
+
   return (
     <div className="container mx-auto p-8 min-h-screen">
       <div className="flex gap-2 items-center justify-between px-4 py-3 text-base">
@@ -101,14 +106,14 @@ function Projects() {
 
         <div className="flex items-center">
           <button className="text-amber-600 text-3xl">
-            <IoArrowBackCircle />
+            <IoArrowBackCircle onClick={handleGoBack}/>
           </button>
         </div>
       </div>
 
       {proyecto ? (
-        <div>
-          <h2 className="text-lg font-bold mb-4">Proyecto</h2>
+        <div className="overflow-x-auto text-gray-500">
+          <h2 className="text-lg font-bold text-gray-500 mb-4 mt-4">Proyecto</h2>
           <table className="table-auto w-full text-left border-collapse">
             <thead>
               <tr className="border-b">

@@ -175,16 +175,15 @@ const GestionCampos = () => {
     <div className="p-8 max-w-6xl mx-auto text-gray-500">
       {/* Modal para Notificaciones */}
       {modalVisible && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 px-4">
           <div className="bg-white p-6 rounded-md shadow-md text-center">
             <h3
-              className={`text-xl font-bold mb-4 ${
-                tipoModal === "success"
+              className={`text-xl font-bold mb-4 ${tipoModal === "success"
                   ? "text-green-600"
                   : tipoModal === "warning"
-                  ? "text-gray-600"
-                  : "text-red-600"
-              }`}
+                    ? "text-gray-600"
+                    : "text-red-600"
+                }`}
             >
               {mensajeModal}
             </h3>
@@ -211,77 +210,77 @@ const GestionCampos = () => {
         </div>
       )}
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-  {/* Formulario para agregar campos */}
-  <div className="bg-white shadow-xl rounded-md p-6">
-    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex gap-2 items-center">
-      <IoIosAddCircle className="text-amber-600" /> Agregar Campo
-    </h3>
-    <div className="flex flex-col gap-4">
-      <input
-        type="text"
-        value={nuevoCampo}
-        onChange={(e) => setNuevoCampo(e.target.value)}
-        placeholder="Nombre del nuevo campo"
-        className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500"
-      />
-      <select
-        value={tipoCampo}
-        onChange={(e) => setTipoCampo(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500"
-      >
-        <option value="desplegable">Select</option>
-        <option value="texto">Texto</option>
-      </select>
-      <button
-        onClick={handleAddCampo}
-        className="w-1/2 px-6 py-2 bg-amber-600 text-white font-semibold rounded-md shadow hover:bg-amber-700 transition"
-      >
-        Agregar Campo
-      </button>
-    </div>
-  </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Formulario para agregar campos */}
+        <div className="bg-white shadow-xl rounded-md p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex gap-2 items-center">
+            <IoIosAddCircle className="text-amber-600" /> Agregar Campo
+          </h3>
+          <div className="flex flex-col gap-4">
+            <input
+              type="text"
+              value={nuevoCampo}
+              onChange={(e) => setNuevoCampo(e.target.value)}
+              placeholder="Nombre del nuevo campo"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500"
+            />
+            <select
+              value={tipoCampo}
+              onChange={(e) => setTipoCampo(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500"
+            >
+              <option value="desplegable">Select</option>
+              <option value="texto">Texto</option>
+            </select>
+            <button
+              onClick={handleAddCampo}
+              className="w-1/2 px-6 py-2 bg-amber-600 text-white font-semibold rounded-md shadow hover:bg-amber-700 transition"
+            >
+              Agregar Campo
+            </button>
+          </div>
+        </div>
 
-  {/* Gestión de valores */}
-  <div className="bg-white shadow-xl rounded-md p-6">
-    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex gap-2 items-center">
-      <IoIosAddCircle className="text-amber-600" /> Agregar Valores
-    </h3>
-    <div className="flex flex-col gap-4">
-      <select
-        value={campoSeleccionado}
-        onChange={(e) => setCampoSeleccionado(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500"
-      >
-        <option value="">-- Seleccionar Campo --</option>
-        {campos
-          .filter((campo) => campo.tipo === "desplegable") // Solo mostrar campos tipo select
-          .map((campo) => (
-            <option key={campo.id} value={campo.id}>
-              {capitalizeFirstLetter(campo.nombre)}
-            </option>
-          ))}
-      </select>
-      <input
-        type="text"
-        value={valorCampo}
-        onChange={(e) => setValorCampo(e.target.value)}
-        placeholder="Nuevo valor"
-        className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500"
-      />
-      <button
-        onClick={handleAddValor}
-        className="w-1/2 px-6 py-2 bg-amber-600 text-white font-semibold rounded-md shadow hover:bg-amber-700 transition"
-      >
-        Agregar Valor
-      </button>
-    </div>
-  </div>
-</div>
+        {/* Gestión de valores */}
+        <div className="bg-white shadow-xl rounded-md p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex gap-2 items-center">
+            <IoIosAddCircle className="text-amber-600" /> Agregar Valores
+          </h3>
+          <div className="flex flex-col gap-4">
+            <select
+              value={campoSeleccionado}
+              onChange={(e) => setCampoSeleccionado(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500"
+            >
+              <option value="">-- Seleccionar Campo --</option>
+              {campos
+                .filter((campo) => campo.tipo === "desplegable") // Solo mostrar campos tipo select
+                .map((campo) => (
+                  <option key={campo.id} value={campo.id}>
+                    {capitalizeFirstLetter(campo.nombre)}
+                  </option>
+                ))}
+            </select>
+            <input
+              type="text"
+              value={valorCampo}
+              onChange={(e) => setValorCampo(e.target.value)}
+              placeholder="Nuevo valor"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500"
+            />
+            <button
+              onClick={handleAddValor}
+              className="w-1/2 px-6 py-2 bg-amber-600 text-white font-semibold rounded-md shadow hover:bg-amber-700 transition"
+            >
+              Agregar Valor
+            </button>
+          </div>
+        </div>
+      </div>
 
 
       {/* Tabla de Campos y Valores */}
-      <div className="mt-8 grid grid-cols-3 gap-8">
+      <div className="mt-8 grid grid-cols-1 xl:grid-cols-3 gap-8">
         {campos.map((campo) => (
           <div key={campo.id} className="bg-gray-50 p-4 rounded-md shadow">
             {editandoCampo === campo.id ? (

@@ -6,6 +6,8 @@ import { db } from "../../../firebase_config";
 import { doc, getDoc } from "firebase/firestore";
 import { FaRegFilePdf } from "react-icons/fa6";
 import { useAuth } from '../../context/authContext';
+import { storage } from "../../../firebase_config";
+import { ref, getMetadata } from "firebase/storage";
 
 const styles = StyleSheet.create({
   page: {
@@ -116,6 +118,32 @@ const styles = StyleSheet.create({
     height: 50,
     alignSelf: "center",
   },
+  imageGrid: {
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginBottom: 16, // Separación entre las filas
+  },
+  imageContainer: {
+    width: "45%", // Cada imagen ocupa el 45% del ancho
+    margin: "2.5%", // Margen para crear separación entre las imágenes
+    alignItems: "center", // Centrar la imagen y el enlace
+  },
+  image: {
+    width: "100%", // La imagen ocupa todo el ancho del contenedor
+    height: 150, // Altura fija de la imagen
+    borderRadius: 8,
+    border: "1px solid #cccccc",
+  },
+  imageLink: {
+    fontSize: 8, // Reducir el tamaño del texto del enlace
+    color: "#1d4ed8", // Color azul para el enlace
+    textDecoration: "underline",
+    textAlign: "center",
+    marginTop: 5, // Espacio entre la imagen y el enlace
+  },
+  
 });
 
 const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
@@ -216,98 +244,122 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
     const generatePdfBlob = async () => {
       const doc = (
         <Document>
-          {registros.map((registro, index) => (
-            <Page key={index} size="A4" style={styles.page}>
-              {/* Encabezado */}
-              <View style={styles.header}>
-                <View style={styles.headerInfo}>
-                  <Text style={styles.headerLabel}>
-                    Línea de alta velocidad Vitoria-Bilbao-San Sebastián
-                  </Text>
-                  <Text style={styles.headerValue}>
-                    Tramo: Mondragón-Elorrio-Bergara
-                  </Text>
-                  <Text style={styles.headerValue}>
-                    Rango de fechas: {fechaInicioFinal} - {fechaFinFinal}
-                  </Text>
-                </View>
-                <View style={styles.headerLogos}>
-                  {proyecto?.logo && (
-                    <Image src={proyecto.logo} style={styles.logo} />
-                  )}
-                  {proyecto?.logoCliente && (
-                    <Image src={proyecto.logoCliente} style={styles.logo} />
-                  )}
-                </View>
-              </View>
-
-              {/* Título de la sección */}
-              <Text style={styles.sectionTitle}>
-                Registro número: {registro.id}
-              </Text>
-
-              {/* Datos en columnas */}
-              <View style={styles.fieldGroup}>
-                {Object.entries(registro)
-                  .filter(([key]) => key !== "imagenes" && key !== "observaciones" && key !== "id")
-                  .map(([key, value], i) => {
-                    // Verificar si el texto tiene más de 5 palabras
-                    const isLongText =
-                      typeof value === "string" && value.split(" ").length > 5;
-
-                    return (
-                      <View
-                        key={i}
-                        style={[
-                          isLongText ? styles.fullRow : styles.fieldColumn, // Usar estilos diferentes según la longitud del texto
-                        ]}
-                      >
-                        <Text style={styles.fieldLabel}>{key.toUpperCase()}:</Text>
-                        <Text style={styles.fieldValue}>
-                          {Array.isArray(value) ? value.join(", ") : value || "N/A"}
-                        </Text>
-                      </View>
-                    );
-                  })}
-              </View>
-
-
-              {/* Imágenes */}
-              <View>
-                {registro.imagenes && Array.isArray(registro.imagenes) && (
-                  <View>
-                    {registro.imagenes.map((_, imgIndex) => (
-                      imgIndex % 2 === 0 && (
-                        <View key={imgIndex} style={styles.imageRow}>
-                          <Image
-                            style={styles.image}
-                            src={imagenesBase64[imgIndex]}
-                          />
-                          {imagenesBase64[imgIndex + 1] && (
-                            <Image
-                              style={styles.image}
-                              src={imagenesBase64[imgIndex + 1]}
-                            />
-                          )}
-                        </View>
-                      )
-                    ))}
+          {await Promise.all(
+            registros.map(async (registro, index) => {
+              const imagesWithMetadata = await Promise.all(
+                registro.imagenes.map(async (url, imgIndex) => {
+                  try {
+                    // Extraer el path decodificado desde la URL de la imagen
+                    const path = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
+                    const imageRef = ref(storage, path);
+  
+                    // Obtener metadatos de la imagen
+                    const metadata = await getMetadata(imageRef);
+                    const latitude = metadata.customMetadata?.latitude;
+                    const longitude = metadata.customMetadata?.longitude;
+  
+                    // Generar un enlace de Google Maps si hay coordenadas disponibles
+                    const googleMapsLink =
+                      latitude && longitude
+                        ? `https://www.google.com/maps?q=${latitude},${longitude}`
+                        : null;
+  
+                    return { url, googleMapsLink };
+                  } catch (error) {
+                    console.error("Error al obtener metadatos de la imagen:", error);
+                    return { url, googleMapsLink: null };
+                  }
+                })
+              );
+  
+              return (
+                <Page key={index} size="A4" style={styles.page}>
+                  {/* Encabezado */}
+                  <View style={styles.header}>
+                    <View style={styles.headerInfo}>
+                      <Text style={styles.headerLabel}>
+                        Línea de alta velocidad Vitoria-Bilbao-San Sebastián
+                      </Text>
+                      <Text style={styles.headerValue}>
+                        Tramo: Mondragón-Elorrio-Bergara
+                      </Text>
+                      <Text style={styles.headerValue}>
+                        Rango de fechas: {fechaInicioFinal} - {fechaFinFinal}
+                      </Text>
+                    </View>
+                    <View style={styles.headerLogos}>
+                      {proyecto?.logo && (
+                        <Image src={proyecto.logo} style={styles.logo} />
+                      )}
+                      {proyecto?.logoCliente && (
+                        <Image src={proyecto.logoCliente} style={styles.logo} />
+                      )}
+                    </View>
                   </View>
-                )}
-              </View>
-
-              {/* Observaciones */}
-              {registro.observaciones && (
-                <View style={styles.fieldRow}>
-                  <Text style={styles.fieldLabel}>OBSERVACIONES:</Text>
-                  <Text style={styles.fieldValue}>
-                    {registro.observaciones}
+  
+                  {/* Título de la sección */}
+                  <Text style={styles.sectionTitle}>
+                    Registro número: {registro.id}
                   </Text>
-                </View>
-              )}
-            </Page>
-          ))}
+  
+                  {/* Datos en columnas */}
+                  <View style={styles.fieldGroup}>
+                    {Object.entries(registro)
+                      .filter(
+                        ([key]) =>
+                          key !== "imagenes" &&
+                          key !== "observaciones" &&
+                          key !== "id"
+                      )
+                      .map(([key, value], i) => {
+                        // Verificar si el texto tiene más de 5 palabras
+                        const isLongText =
+                          typeof value === "string" && value.split(" ").length > 5;
+  
+                        return (
+                          <View
+                            key={i}
+                            style={[
+                              isLongText ? styles.fullRow : styles.fieldColumn, // Usar estilos diferentes según la longitud del texto
+                            ]}
+                          >
+                            <Text style={styles.fieldLabel}>{key.toUpperCase()}:</Text>
+                            <Text style={styles.fieldValue}>
+                              {Array.isArray(value)
+                                ? value.join(", ")
+                                : value || "N/A"}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                  </View>
 
+                  <View style={styles.imageGrid}>
+  {imagesWithMetadata.map((imageData, imgIndex) => (
+    <View key={imgIndex} style={styles.imageContainer}>
+      <Image style={styles.image} src={imageData.url} />
+      {imageData.googleMapsLink && (
+        <Text style={styles.imageLink}>{imageData.googleMapsLink}</Text>
+      )}
+    </View>
+  ))}
+</View>
+
+  
+                  {/* Observaciones */}
+                  {registro.observaciones && (
+                    <View style={styles.fieldRow}>
+                      <Text style={styles.fieldLabel}>OBSERVACIONES:</Text>
+                      <Text style={styles.fieldValue}>
+                        {registro.observaciones}
+                      </Text>
+                    </View>
+                  )}
+                </Page>
+              );
+            })
+          )}
+  
           {/* Página final con la firma */}
           <Page size="A4" style={styles.page}>
             <View style={styles.header}>
@@ -334,20 +386,21 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
             <View style={styles.footer}>
               <Text>Informe generado por:</Text>
               <Text>{userNombre}</Text>
-              {userSignature && <Image src={userSignature} style={styles.signature} />}
+              {userSignature && (
+                <Image src={userSignature} style={styles.signature} />
+              )}
             </View>
           </Page>
         </Document>
       );
-
+  
       const blob = await pdf(doc).toBlob();
       setPdfBlob(blob);
     };
-
-    if (imagenesBase64.length > 0) {
-      generatePdfBlob();
-    }
-  }, [registros, imagenesBase64, proyecto, fechaInicioFinal, fechaFinFinal]);
+  
+    generatePdfBlob();
+  }, [registros, proyecto, fechaInicioFinal, fechaFinFinal]);
+  
 
   const downloadPdf = () => {
     if (pdfBlob) {

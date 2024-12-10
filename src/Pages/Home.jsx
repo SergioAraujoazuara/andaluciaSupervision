@@ -4,6 +4,7 @@ import { FaClipboardList, FaHardHat, FaMicroscope, FaArrowAltCircleRight } from 
 
 function Home() {
   localStorage.setItem('idProyecto', 'i8l2VQeDIIB7fs3kUQxA');
+  localStorage.setItem('proyecto', 'i8l2VQeDIIB7fs3kUQxA');
   localStorage.setItem('nombre_proyecto', 'Sector 3 - ADIF');
   localStorage.setItem('tramo', 'Mondragón-Elorrio-Bergara');
   localStorage.setItem('obra', 'Linea de alta velocidad Vitoria-Bilbao-San Sebastián');

@@ -106,8 +106,8 @@ function AdminHome() {
                                                 </span>Información del proyecto
                                             </p>
                                             <p className='mt-4 font-normal text-sm xl:'>
-                                                Información de proyecto,
-                                                <br />
+                                                
+                                             
                                                 Edita el nombre, obra, tramo y todos los datos relevantes.
 
                                             </p>
