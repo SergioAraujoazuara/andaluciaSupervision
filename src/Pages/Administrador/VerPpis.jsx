@@ -1,3 +1,41 @@
+/**
+ * Component: VerPpis
+ * 
+ * Description:
+ * This component manages the display, creation, and deletion of PPIs (Plantillas PPI).
+ * It interacts with the Firestore database to fetch, delete, and update PPI-related information.
+ * 
+ * Key Features:
+ * - Fetch and display a list of PPIs from the Firestore database.
+ * - Confirm and delete selected PPI records.
+ * - Show success and confirmation modals for user interaction feedback.
+ * - Navigate back to the admin panel.
+ * 
+ * Component Flow:
+ * 1. **Initial Data Load**: 
+ *    - The `useEffect` hook triggers `cargarPpis` to fetch all PPIs from the Firestore database when the component mounts.
+ * 
+ * 2. **List and Display**:
+ *    - PPIs are displayed in a table-like format with sorting functionality.
+ *    - PPIs are sorted first by name (alphabetically) and then by version.
+ * 
+ * 3. **Delete PPI**:
+ *    - When the delete icon/button is clicked, the `mostrarModalEliminar` function opens a confirmation modal.
+ *    - Upon confirmation, `eliminarPpiConfirmado` deletes the PPI from Firestore and updates the local state.
+ *    - A success message is displayed in a modal after deletion.
+ * 
+ * 4. **User Navigation**:
+ *    - The "Go Back" button navigates the user to the admin panel.
+ * 
+ * State Management:
+ * - `ppis`: List of all PPI records fetched from Firestore.
+ * - `selectedPpi`: Holds the currently selected PPI (for deletion).
+ * - `showModal`: Toggles the visibility of the delete confirmation modal.
+ * - `showModalEliminar`: Toggles the visibility of the success message modal.
+ * - `errorMessage`: Stores error or success messages for user feedback.
+ */
+
+
 import React, { useEffect, useState } from 'react'
 import { db } from '../../../firebase_config';
 import { getDoc, getDocs, doc, deleteDoc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where } from 'firebase/firestore';
@@ -18,6 +56,7 @@ function VerPpis() {
     const handleGoBack = () => {
         navigate('/admin'); // Esto navega hacia atrás en la historia
     };
+    // State to store PPIs and manage deletion
     const [ppis, setPpis] = useState([]);
     const [selectedPpi, setSelectedPpi] = useState("");
     const [showModal, setShowModal] = useState(false);
@@ -27,10 +66,11 @@ function VerPpis() {
 
 
 
-    // Función para cargar los PPIs
+    // Function: Fetch PPIs from Firestore on component mount
     const cargarPpis = async () => {
         try {
             const querySnapshot = await getDocs(collection(db, "ppis"));
+            // Get firebase
             const ppisList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setPpis(ppisList);
         } catch (error) {
@@ -38,19 +78,20 @@ function VerPpis() {
         }
     };
 
-    // Llamar a cargarPpis en useEffect para cargar los PPIs al montar el componente
+    // Trigger data load when component is mounted
     useEffect(() => {
         cargarPpis();
     }, []);
 
-    // Eliminar ppi
+    // Function: Delete a PPI from Firestore
     const eliminarPpiConfirmado = async () => {
         if (ppiIdAEliminar) {
             try {
+                // DELETE FIREBASE
                 await deleteDoc(doc(db, "ppis", ppiIdAEliminar));
                 const updatedPpis = ppis.filter(ppi => ppi.id !== ppiIdAEliminar);
-                setPpis(updatedPpis); // Actualiza el estado localmente.
-                setShowModal(false); // Cierra el modal.
+                setPpis(updatedPpis);  // Update local state
+                setShowModal(false); // Close modal
                 setShowModalEliminar(true);
                 setTimeout(() => {
                     setShowModalEliminar(false);
@@ -63,13 +104,13 @@ function VerPpis() {
             }
         }
     };
-
+    // Function: Show confirmation modal for deletion
     const mostrarModalEliminar = (idPpi) => {
         setPpiIdAEliminar(idPpi);
         setShowModal(true);
         setErrorMessage(""); // Reinicia el mensaje de error cuando se muestra el modal
     };
-
+    // Close modal handler
     const handleCloseAlert = () => {
         setShowModal(false);
         setErrorMessage(""); // Reinicia el mensaje de error al cerrar el modal
@@ -80,7 +121,7 @@ function VerPpis() {
     return (
         <div className='container mx-auto min-h-screen xl:px-14 py-2 text-gray-500'>
             <div className='flex gap-2 items-center justify-between px-4 py-3 text-base'>
-
+                {/* Header Navigation */}
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'/admin'}>
@@ -91,25 +132,16 @@ function VerPpis() {
                         <h1 className='text-amber-500 font-medium'>Plantillas PPI</h1>
                     </Link>
                 </div>
-
-
-
                 <div className='flex items-center'>
                     <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
 
                 </div>
-
             </div>
 
             <div className='w-full border-b-2 border-gray-200'></div>
-
-
-
             <div>
                 <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white px-5 '>
-
                     <div>
-
                         <p className='flex xl:flex-row flex-col text-sm gap-2 underline'>
                             <span className='flex items-center gap-2'><IoAlertCircleSharp className='text-yellow-500 text-xl' />Atencion! </span>
                             Al editar el PPI, los cambios no se actualizarán en las inspecciones ya realizadas. Si se modifica un PPI con una inspección en curso,
@@ -119,10 +151,6 @@ function VerPpis() {
 
 
                     <div class="w-full rounded rounded-t-xl">
-
-
-
-
                         <div className="overflow-x-auto relative">
                             <div className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                 {/* Header */}
@@ -178,10 +206,6 @@ function VerPpis() {
 
                             </div>
                         </div>
-
-
-
-
                     </div>
                     <div className='flex gap-2 mt-2 xl:block hidden'>
                         <p className=' px-4 py-2 rounded-lg'> Crear nuevo ppi: </p>
@@ -191,12 +215,8 @@ function VerPpis() {
                         </Link>
                     </div>
                 </div>
-
-
-
-
-
             </div>
+            {/* Warning Message */}
             {showModal && (
                 <div className="fixed z-10 inset-0 overflow-y-auto">
                     <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">

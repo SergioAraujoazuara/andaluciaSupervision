@@ -1,3 +1,28 @@
+/**
+ * Component: EditProject
+ * 
+ * Description:
+ * This component allows users to edit project details and propagate updates 
+ * to related records in the database.
+ * 
+ * Flow:
+ * 1. Route Parameter: Retrieve project ID from URL using `useParams`.
+ * 2. Fetching Project Data: Load project data from Firestore into state.
+ * 3. Editing Fields: User modifies form fields; changes are stored in state.
+ * 4. Updating the Project:
+ *    - Updates project fields in Firestore.
+ *    - Updates related records in the `registros` collection.
+ * 5. User Feedback: Show success or error messages.
+ * 6. Navigation: Allows returning to the administration panel.
+ * 
+ * Props:
+ * - None
+ * 
+ * Dependencies:
+ * - Firebase Firestore for data handling.
+ * - React Router for navigation.
+ */
+
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { db } from '../../../firebase_config';
@@ -7,26 +32,42 @@ import { FaArrowRight } from "react-icons/fa";
 import AlertaEditarProyecto from './AlertaEditarProyecto';
 
 
+/**
+ * Functional Component: EditProject
+ * 
+ * Handles:
+ * - Fetching project details based on the project ID from Firestore.
+ * - Editing and saving project details.
+ * - Updating dependent records in the "registros" collection.
+ */
+
 function EditProject() {
-    const { id } = useParams();
+    const { id } = useParams(); // Retrieve project ID from the route parameters.
     const navigate = useNavigate()
-
+    // State to hold project data fetched from Firestore
     const [proyecto, setProyecto] = useState(null);
-
+    // State for alert messages
     const [alertMessage, setAlertMessage] = useState('');
     const [isAlertOpen, setIsAlertOpen] = useState(false);
-
+    /**
+        * closeAlert
+        * Closes the alert modal.
+        */
     const closeAlert = () => {
         setIsAlertOpen(false);
     };
-
+    /**
+         * useEffect
+         * Fetches project details on component mount or when the project ID changes.
+         */
 
     useEffect(() => {
         const obtenerProyectos = async () => {
             try {
+                // Fetch all projects from Firestore
                 const proyectosCollection = collection(db, 'proyectos');
                 const proyectosSnapshot = await getDocs(proyectosCollection);
-
+                // Map projects and find the one matching the given ID
                 const proyectosData = proyectosSnapshot.docs.map((doc) => ({
                     id: doc.id,
                     ...doc.data(),
@@ -41,7 +82,12 @@ function EditProject() {
 
         obtenerProyectos();
     }, [id]);
-
+    /**
+         * handleInputChange
+         * Updates the local state when an input field is modified.
+         * 
+         * @param {Event} e - Input change event.
+         */
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setProyecto({
@@ -49,23 +95,26 @@ function EditProject() {
             [name]: value,
         });
     };
-
+    /**
+         * actualizarProyecto
+         * Updates the project document and propagates changes to related records in Firestore.
+         */
     const actualizarProyecto = async () => {
         try {
             const proyectoRef = doc(db, 'proyectos', id);
             const batch = writeBatch(db);
 
-            // Actualizar el proyecto con el nuevo nombre corto
+            // Update the project document: update 'nombre_corto' field first
             batch.update(proyectoRef, { nombre_corto: proyecto.nombre_corto });
 
-            // Ejecutar actualización por cada campo individual excepto nombre_corto
+            // Update other project fields excluding 'nombre_corto'
             const camposAActualizar = { ...proyecto };
             delete camposAActualizar.nombre_corto; // Eliminar el campo nombre_corto
             for (const campo in camposAActualizar) {
                 batch.update(proyectoRef, { [campo]: camposAActualizar[campo] });
             }
 
-            // Obtener todos los registros que tengan el nombre del proyecto anterior
+            // Update dependent records in 'registros' collection where idProyecto matches
             const registrosQuery = query(collection(db, 'registros'), where('idProyecto', '==', proyecto.id));
             const registrosSnapshot = await getDocs(registrosQuery);
 
@@ -75,7 +124,7 @@ function EditProject() {
                 batch.update(registroRef, { proyecto: proyecto.nombre_corto });
             });
 
-            // Ejecutar el lote de escritura para aplicar todas las actualizaciones
+            // Commit all updates in a single batch
             await batch.commit();
 
             setAlertMessage('Actualizado correctamente');
@@ -91,10 +140,10 @@ function EditProject() {
 
     return (
         <div className='min-h-screen px-14 py-5 text-gray-500'>
-
+            {/* Navigation Header */}
             <div className='flex gap-2 items-center justify start bg-white px-5 py-3 rounded rounded-xl shadow-md text-base'>
                 <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-                
+
                 <Link to={'/admin'}>
                     <h1 className='text-gray-600'>Administración</h1>
                 </Link>
@@ -112,7 +161,7 @@ function EditProject() {
             </div>
 
 
-
+            {/* Project Edit Form */}
             <div className="bg-white mx-auto mt-5 grid sm:grid-cols-3 grid-cols-1 gap-8 bg-gray-100 p-8 shadow-xl rounded-lg text-base">
                 {proyecto && (
                     <>

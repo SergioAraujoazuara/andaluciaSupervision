@@ -30,8 +30,14 @@ import Horta from './Pages/Auscultacion/Horta.jsx';
 import Glorias from './Pages/Auscultacion/Glorias.jsx';
 import Llacuna from './Pages/Auscultacion/Llacuna.jsx';
 
+// App.js
+// This is the main entry point for the application. It defines the routing structure
+// for the application using React Router and organizes routes into Public, Admin, and Inspection sections.
+// The file also integrates global components like the Navbar, Footer, and Authentication Context.
 
 function App() {
+  // publicRoutes
+  // These routes are accessible without authentication.
   const publicRoutes = [
     { path: '/', element: <Home /> },
     { path: '/authTabs', element: <AuthTabs /> },
@@ -39,7 +45,8 @@ function App() {
     { path: '/sendEmail', element: <SendMail /> },
 
   ];
-
+  // adminRoutes
+  // Routes restricted to admin users (and optionally general users).
   const adminRoutes = [
     { path: '/admin', element: <AdminHome />, roles: ['admin', 'usuario'] },
     { path: '/trazabilidad/:id', element: <Trazabilidad />, roles: ['admin', 'usuario'] },
@@ -51,6 +58,8 @@ function App() {
     { path: '/project', element: <ViewProject />, roles: ['admin'] },
   ];
 
+  // inspectionRoutes
+  // Routes dedicated to inspections, monitoring, and work logs.
   const inspectionRoutes = [
     { path: '/visor_inspeccion', element: <Viewer_inspeccion />, roles: ['admin', 'usuario'] },
     { path: '/elemento/:id', element: <Elemento />, roles: ['admin', 'usuario'] },
@@ -71,15 +80,16 @@ function App() {
     { path: '/auscultacion/glorias', element: <Glorias />, roles: ['admin', 'usuario'] },
     { path: '/auscultacion/llacuna', element: <Llacuna />, roles: ['admin', 'usuario'] },
     { path: '/auscultacion/horta', element: <Horta />, roles: ['admin', 'usuario'] },
-
-
-
-
-
   ];
 
+  // Main Application Component (App)
+  // - Integrates global context (AuthProvider) for managing user authentication and roles.
+  // - Renders a Navbar and Footer globally across all pages.
+  // - Defines Routes for Public, Admin, and Inspection sections.
+  // - Implements ProtectedRoutes to ensure role-based access control.
+  
   return (
-    <AuthProvider>
+    <AuthProvider> {/* Provides authentication context globally */}
 
       <Navbar />
       <Routes>

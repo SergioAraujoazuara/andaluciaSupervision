@@ -1,3 +1,30 @@
+/**
+ * AdminPanel Component
+ *
+ * Component Flow:
+ * 1. **User Data Fetching**:
+ *    - On component mount, fetch the list of users from Firestore.
+ *    - Use `onSnapshot` to subscribe to real-time updates for the user collection.
+ *
+ * 2. **Image Upload and Compression**:
+ *    - Users can upload a signature image.
+ *    - The image is compressed using `browser-image-compression` and converted to PNG format.
+ *    - The final image is stored as a base64 data URL in the component state.
+ *
+ * 3. **Role and Signature Update**:
+ *    - Users select a target user and assign a new role (e.g., admin, user, or guest).
+ *    - Optionally, a compressed signature image is uploaded and included in the update.
+ *    - The `handleRoleUpdate` function updates Firestore with the new role and image.
+ *
+ * 4. **Feedback to User**:
+ *    - After a successful update, a confirmation modal is displayed to notify the user.
+ *
+ * 5. **Navigation**:
+ *    - Users can navigate back to the main admin page using a "back" button.
+ *
+ * This component uses Firebase Firestore for database operations and `imageCompression` for image processing.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { db } from '../../../firebase_config';
 import { collection, getDocs, query, updateDoc, doc, onSnapshot } from 'firebase/firestore';
@@ -10,12 +37,20 @@ import imageCompression from 'browser-image-compression';
 
 
 function AdminPanel() {
+    // State for storing user list
     const [users, setUsers] = useState([]);
+    // State to hold selected user and their new role
     const [selectedUserId, setSelectedUserId] = useState('');
     const [newRole, setNewRole] = useState('');
+    // State to control success modal display
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    // State for managing compressed signature image
     const [signatureImage, setSignatureImage] = useState(null);
-
+/**
+     * Handles image upload:
+     * - Compresses the image using browser-image-compression.
+     * - Converts it to PNG format and stores it as a base64 data URL in state.
+     */
     const handleImagenChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -50,7 +85,11 @@ function AdminPanel() {
     };
 
 
-    // Cargar todos los usuarios al montar el componente
+    /**
+     * useEffect Hook:
+     * - Fetches the list of users from Firestore on component mount.
+     * - Subscribes to real-time changes in the 'usuarios' collection using `onSnapshot`.
+     */
     useEffect(() => {
         const fetchUsers = async () => {
             const querySnapshot = await getDocs(collection(db, 'usuarios'));
@@ -63,7 +102,7 @@ function AdminPanel() {
 
         fetchUsers();
 
-        // Suscribirse a cambios en la colección de usuarios
+        // Real-time subscription to Firestore user updates
         const unsubscribe = onSnapshot(collection(db, 'usuarios'), (snapshot) => {
             const updatedUsers = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -74,7 +113,10 @@ function AdminPanel() {
 
         return () => unsubscribe();
     }, []);
-
+/**
+     * Updates the selected user's role and optionally uploads a new signature image.
+     * Updates the Firestore document with the new data.
+     */
     const handleRoleUpdate = async () => {
         if (!selectedUserId) {
             alert('Seleccione un usuario para actualizar.');
@@ -86,7 +128,7 @@ function AdminPanel() {
             role: newRole,
         };
 
-        // Si hay una imagen nueva, añádela al documento
+       // Include signature image if uploaded
         if (signatureImage) updates.signature = signatureImage;
 
         await updateDoc(userDocRef, updates);
@@ -96,11 +138,11 @@ function AdminPanel() {
     };
 
 
-    // Cerrar el modal de éxito
+       // Function to close the success modal
     const handleCloseSuccessModal = () => {
         setShowSuccessModal(false);
     };
-
+// Navigation function to return to Admin Dashboard
     const navigate = useNavigate();
     const handleGoBack = () => {
         navigate('/admin'); // Esto navega hacia atrás en la historia
@@ -108,7 +150,7 @@ function AdminPanel() {
 
     return (
         <div className="container mx-auto min-h-screen text-gray-500 xl:px-14 py-2">
-
+{/* Navigation Header */}
             <div className='flex gap-2 items-center justify-between bg-white px-5 py-3  text-base'>
 
                 <div className='flex gap-2 items-center'>
@@ -132,7 +174,7 @@ function AdminPanel() {
                 </div>
 
             </div>
-
+{/* Role Update Section */}
             <div className='w-full border-b-2 border-gray-200'></div>
             <div className="bg-white p-4 mt-2 text-sm">
                 <div className="grid grid-cols-1 xl:grid-cols-6 xl:gap-20 gap-5">

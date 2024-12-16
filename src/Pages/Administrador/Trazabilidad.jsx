@@ -1,3 +1,62 @@
+/*
+1. Initialization:
+   - Retrieve the project ID from the URL using `useParams`.
+   - Initialize multiple state variables to manage project data, hierarchical structure (sectors, subsectors, parts, elements, lots), form inputs, alerts, and modals.
+
+2. Data Fetching on Mount:
+   - `useEffect` triggers two main functions when the component loads:
+     - `obtenerProyecto()`: Fetches project details (name, ID, etc.) from Firestore.
+     - `obtenerSectores()`: Retrieves the sectors for the current project, along with nested subsectors, parts, elements, and lots.
+
+3. Sector Management:
+   - Adding a Sector:
+     - Validate input for duplicates.
+     - Add a new sector to Firestore and update its ID within the document.
+   - Editing a Sector:
+     - Update the name of an existing sector in Firestore.
+   - Deleting a Sector:
+     - Remove the sector and its associated data from Firestore and update local state.
+
+4. Subsector Management:
+   - Adding a Subsector:
+     - Validate duplicates within a sector.
+     - Add a new subsector and associate it with its parent sector.
+   - Editing and Deleting Subsector:
+     - Similar CRUD operations are applied to subsectors.
+
+5. Part Management:
+   - Adding, Editing, and Deleting parts:
+     - Parts are managed within subsectors.
+
+6. Element Management:
+   - Adding, Editing, and Deleting elements:
+     - Elements are managed within parts.
+
+7. Lot Management:
+   - Adding a Lot:
+     - Validate and add new lots to Firestore under their parent element.
+     - Link the lot to additional details such as `ppi`, `pkInicial`, `pkFinal`, and optional `idBim`.
+   - Editing and Deleting Lots:
+     - Similar CRUD operations apply to lots.
+
+8. User Interface (UI) Flow:
+   - The UI consists of:
+     - A **form** for adding sectors, subsectors, parts, elements, and lots.
+     - A **dynamic list** that displays the current hierarchical structure.
+     - **Action buttons** for editing and deleting items at each level.
+   - Each level (Sector > Subsector > Part > Element > Lot) depends on the previous selection.
+
+9. Alerts and Modals:
+   - Alerts:
+     - Display success or error messages for user actions.
+   - Modals:
+     - Confirm deletions or provide editing interfaces for each level of the hierarchy.
+
+10. State Management:
+   - After performing CRUD operations (add, edit, delete), the local state is updated to reflect the changes without needing to reload the page.
+*/
+
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '../../../firebase_config';
@@ -21,15 +80,31 @@ import { FaArrowAltCircleRight } from "react-icons/fa";
 
 
 function Trazabilidad() {
-
+    // Navigation and URL Parameter
     const navigate = useNavigate();
     const { id } = useParams();
 
-    // Variables de estado
-    const [proyecto, setProyecto] = useState({});
-    const [sectores, setSectores] = useState([]);
+    // State Variables
+    /*
+    1. Project State:
+       - `proyecto`: Stores the project information retrieved from Firestore.
+       - `sectores`: Holds the hierarchical data of the project, including sectors, subsectors, parts, elements, and lots.
+    */
+    const [proyecto, setProyecto] = useState({}); // State for storing project details.
+    const [sectores, setSectores] = useState([]); // State for storing the hierarchical structure (sectors and their children).
+    // State to manage the modal visibility and IDs for deleting a subsector
+    const [mostrarModalEliminarSubSector, setMostrarModalEliminarSubSector] = useState(false)
+    const [sectorIdAEliminar, setSectorIdAEliminar] = useState(null);
+    const [subsectorIdAEliminar, setSubsectorIdAEliminar] = useState(null);
 
-    // Inputs
+    // State to store the list of PPIs and the selected PPI
+    const [ppis, setPpis] = useState([]);
+    const [selectedPpi, setSelectedPpi] = useState("");
+
+    /*
+ 2. Input States for Form Management:
+    - Each input state captures user input for adding or interacting with sectors, subsectors, parts, elements, and lots.
+ */
     const [sectorInput, setSectorInput] = useState('');
     const [selectedSector, setSelectedSector] = useState('');
     const [subSectorInput, setSubSectorInput] = useState('');
@@ -43,21 +118,17 @@ function Trazabilidad() {
     const [pkFinalInput, setPkFinalInput] = useState('');
     const [selectedLote, setSelectedLote] = useState('');
     const [idBimInput, setIdBimInput] = useState('');
-
-
     const [objetoLote, setObjetoLote] = useState({})
-
-
-    //alertas 
+    //Alerts 
     const [alerta, setAlerta] = useState('');
     const [tipoAlerta, setTipoAlerta] = useState('');
     const [mostrarModal, setMostrarModal] = useState(false);
 
-
+    // Navigate one step back in browser history.
     const handleGoBack = () => {
         navigate(-1); // Esto navega hacia atrás en la historia
     };
-
+    // Close all active modals
     const handleCloseAlert = () => {
         setMostrarModal(false)
         setMostrarModalEliminarSector(false)
@@ -68,26 +139,27 @@ function Trazabilidad() {
 
     }
 
-    // Modal PPI
+    // State to manage the visibility of the PPI modal
     const [mostrarModalPpi, setMostrarModalPpi] = useState(false);
-
+    // Show the PPI modal
     const handleVerPpi = () => {
         setMostrarModalPpi(true)
     }
-
+    // Close the PPI modal
     const handleCloseModalPpi = () => {
         setMostrarModalPpi(false)
     }
 
-    // Llamar elemetos de la base de datos
+    // Fetch project details from Firestore
     useEffect(() => {
         obtenerProyecto();
         obtenerSectores();
     }, []);
 
-    // Obtener información del proyecto
+    // Fetch info of the project.
     const obtenerProyecto = async () => {
         try {
+            // get data
             const proyectoRef = doc(db, 'proyectos', id);
             const proyectoSnapshot = await getDoc(proyectoRef);
 
@@ -101,7 +173,7 @@ function Trazabilidad() {
         }
     };
 
-    // Obtener sectores
+    // Fetch sectors and their related subsectors from Firestore
     const obtenerSectores = async () => {
         try {
             const sectoresCollectionRef = collection(db, `proyectos/${id}/sector`);
@@ -117,51 +189,52 @@ function Trazabilidad() {
         }
     };
 
-    // Obtener subsectores
+    // Fetch subsectors for a given sector from Firestore
     const obtenerSubsectores = async (sectorId) => {
         try {
             const subsectorCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector`);
             const subsectoresSnapshot = await getDocs(subsectorCollectionRef);
+            // Map through each subsector and fetch its parts
             const subsectoresData = await Promise.all(subsectoresSnapshot.docs.map(async doc => {
                 const subsectorData = { id: doc.id, ...doc.data() };
                 subsectorData.partes = await obtenerPartes(sectorId, doc.id); // Obtener partes asociadas a este subsector
                 return subsectorData;
             }));
-            return subsectoresData;
+            return subsectoresData;// Return array of subsectors with parts
         } catch (error) {
             console.error('Error al obtener los subsectores:', error);
         }
     };
 
-
-
+    // Fetch parts for a given subsector
     const obtenerPartes = async (sectorId, subSectorId) => {
         try {
             const parteCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte`);
             const parteSnapshot = await getDocs(parteCollectionRef);
+            // Map through each part and fetch its elements
             const partesData = await Promise.all(parteSnapshot.docs.map(async doc => {
                 const parteData = { id: doc.id, ...doc.data() };
                 // Aquí se obtienen los elementos de cada parte
                 parteData.elementos = await obtenerElementos(sectorId, subSectorId, doc.id);
                 return parteData;
             }));
-            return partesData;
+            return partesData;// Return array of parts with elements
         } catch (error) {
             console.error('Error al obtener las partes:', error);
         }
     };
 
-
-
-
+    // Add a new sector to Firestore
     const agregarSector = async () => {
         try {
+            // Validate input
             if (!sectorInput.trim()) {
                 setAlerta('El campo no puede estar vacío.');
                 setTipoAlerta('error');
                 setMostrarModal(true);
                 return;
             }
+            // Normalize input and check for duplicates
             const nombreSectorNormalizado = sectorInput.toLowerCase().trim();
             const nombresSectoresNormalizados = sectores.map(sector => sector.nombre.toLowerCase().trim());
 
@@ -170,11 +243,11 @@ function Trazabilidad() {
                 setTipoAlerta('error');
                 setMostrarModal(true);
             } else {
-                // Primero, crea el documento sin el campo 'id'
+                // Create a new sector document in Firestore
                 const nuevoSectorRef = doc(collection(db, `proyectos/${id}/sector`));
                 await setDoc(nuevoSectorRef, { nombre: sectorInput });
 
-                // Luego, actualiza el documento recién creado con su 'id'
+                // Clear input and refresh sectors list
                 await updateDoc(nuevoSectorRef, { id: nuevoSectorRef.id });
 
                 setAlerta('Agregado correctamente.');
@@ -190,20 +263,22 @@ function Trazabilidad() {
 
 
 
-    // Función para manejar el cambio de selección en el desplegable de sector
+    // Handle sector selection change
     const handleSectorChange = async (event) => {
         const selectedSectorId = event.target.value;
         setSelectedSector(selectedSectorId);
     };
-
+    // Add a new subsector under a specific sector
     const agregarSubsector = async (sectorId) => {
         try {
+            // Validate input
             if (!subSectorInput.trim()) {
                 setAlerta('El campo no puede estar vacío.');
                 setTipoAlerta('error');
                 setMostrarModal(true);
                 return;
             }
+            // Normalize input and check for duplicates
             const nombreSubsectorNormalizado = subSectorInput.toLowerCase().trim();
             const subsectoresDelSector = sectores.find(sector => sector.id === sectorId)?.subsectores || [];
             const nombresSubsectoresNormalizados = subsectoresDelSector.map(subsector => subsector.nombre.toLowerCase().trim());
@@ -213,11 +288,9 @@ function Trazabilidad() {
                 setTipoAlerta('error');
                 setMostrarModal(true);
             } else {
-                // Obtener el nombre del sector seleccionado
+                // Create new subsector document in Firestore
                 const sectorSeleccionado = sectores.find(sector => sector.id === sectorId);
                 const sectorNombre = sectorSeleccionado ? sectorSeleccionado.nombre : '';
-
-                // Crear el documento con el nombre del subsector, el id y el nombre del sector
                 const nuevoSubsectorRef = doc(collection(db, `proyectos/${id}/sector/${sectorId}/subsector`));
                 await setDoc(nuevoSubsectorRef, { nombre: subSectorInput, sectorId: sectorId, sectorNombre: sectorNombre });
 
@@ -226,7 +299,7 @@ function Trazabilidad() {
                 setMostrarModal(true);
                 setSubSectorInput('');
 
-                // Actualizar la lista de subsectores del sector
+                // Update subsectors in state
                 const nuevosSubsectores = await obtenerSubsectores(sectorId);
                 const sectoresActualizados = sectores.map(sector => {
                     if (sector.id === sectorId) {
@@ -242,60 +315,62 @@ function Trazabilidad() {
     };
 
 
-    // Función para manejar el cambio de selección en el desplegable de subsector
+    // Handle subsector dropdown change
     const handleSubSectorChange = (event) => {
         setSelectedSubSector(event.target.value);
     };
 
-    // Función para agregar una parte a la subcolección de un subsector específico
+    // Add a new part to a specific subsector
     const agregarParte = async (subSectorId) => {
         try {
+            // Input validation
             if (!parteInput.trim()) {
                 setAlerta('El campo no puede estar vacío.');
                 setTipoAlerta('error');
                 setMostrarModal(true);
                 return;
             }
+            // Normalize the part name and check for duplicates
             const nombreParteNormalizado = parteInput.toLowerCase().trim();
 
-            // Encuentra el subsector y el sector seleccionados
+            // Find selected sector and subsector
             let subSectorNombre = '', sectorNombre = '';
             const subsectorSeleccionado = sectores.flatMap(sector => {
                 if (sector.id === selectedSector) {
-                    sectorNombre = sector.nombre; // Obtener el nombre del sector
+                    sectorNombre = sector.nombre; // Get subsector name
                 }
                 return sector.subsectores;
             }).find(subsector => subsector.id === subSectorId);
 
             if (subsectorSeleccionado) {
-                subSectorNombre = subsectorSeleccionado.nombre; // Obtener el nombre del subsector
+                subSectorNombre = subsectorSeleccionado.nombre; // Get subsector name
             }
-
+            // Check for duplicate part names
             const nombresPartesNormalizados = subsectorSeleccionado?.partes.map(parte => parte.nombre.toLowerCase().trim()) || [];
             if (nombresPartesNormalizados.includes(nombreParteNormalizado)) {
                 setAlerta('El nombre ya existe en la base de datos.');
                 setTipoAlerta('error');
                 setMostrarModal(true);
             } else {
+                // Create a new part document in Firestore with batch write
                 const parteCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${subSectorId}/parte`);
                 const batch = writeBatch(db);
                 const nuevaParteRef = doc(parteCollectionRef);
-                // Agregar nombre del sector y del subsector al documento
                 batch.set(nuevaParteRef, {
                     nombre: parteInput,
                     sectorId: selectedSector,
                     subSectorId: subSectorId,
-                    sectorNombre: sectorNombre, // Agregado
-                    subSectorNombre: subSectorNombre, // Agregado
+                    sectorNombre: sectorNombre, // Include sector name
+                    subSectorNombre: subSectorNombre, // Include subsector name
                 });
                 await batch.commit();
-
+                // Success alert and UI update
                 setAlerta('Agregado correctamente.');
                 setTipoAlerta('success');
                 setMostrarModal(true);
                 setParteInput('');
 
-                // Actualizar la UI con los nuevos subsectores
+                // Refresh the subsector data and update the UI
                 const nuevosSubsectores = await obtenerSubsectores(selectedSector);
                 const sectoresActualizados = sectores.map(sector => {
                     if (sector.id === selectedSector) {
@@ -309,10 +384,7 @@ function Trazabilidad() {
             console.error('Error al agregar la parte:', error);
         }
     };
-
-
-
-    // Función para manejar el evento cuando se hace clic en el botón para agregar una parte
+    // Handles adding a part when the button is clicked
     const handleAgregarParte = () => {
         if (selectedSubSector) {
             agregarParte(selectedSubSector);
@@ -321,25 +393,26 @@ function Trazabilidad() {
         }
     };
 
-    // Función para manejar el cambio de selección en el desplegable de parte
+    // Updates the selected part state when the dropdown value changes
     const handleParteChange = (event) => {
         setSelectedParte(event.target.value);
     };
 
-
+    // Adds a new element to a specific part
     const agregarElemento = async (parteId) => {
         try {
+            // Validate input
             if (!elementoInput.trim()) {
                 setAlerta('El campo no puede estar vacío.');
                 setTipoAlerta('error');
                 setMostrarModal(true);
                 return; // Detener la ejecución de la función
             }
-
+            // Normalize the input name
             const nombreElementoNormalizado = elementoInput.toLowerCase().trim();
             let sectorNombre = '', subSectorNombre = '', parteNombre = '';
 
-            // Encuentra los nombres del sector y subsector seleccionados, y el nombre de la parte
+            // Retrieve sector, subsector, and part names
             const sectorSeleccionado = sectores.find(sector => sector.id === selectedSector);
             if (sectorSeleccionado) {
                 sectorNombre = sectorSeleccionado.nombre; // Obtener el nombre del sector
@@ -352,7 +425,7 @@ function Trazabilidad() {
                     }
                 }
             }
-
+            // Check for duplicate element names in Firestore
             const elementoCollectionRef = collection(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${parteId}/elemento`);
             const elementosSnapshot = await getDocs(elementoCollectionRef);
             const nombresElementosExistentes = elementosSnapshot.docs.map(doc => doc.data().nombre.toLowerCase().trim());
@@ -362,18 +435,19 @@ function Trazabilidad() {
                 setTipoAlerta('error');
                 setMostrarModal(true);
             } else {
+                // Add the new element to Firestore
                 const nuevoElementoRef = doc(elementoCollectionRef);
                 await setDoc(nuevoElementoRef, {
                     nombre: elementoInput,
                     sectorId: selectedSector,
                     subSectorId: selectedSubSector,
                     parteId: parteId,
-                    sectorNombre: sectorNombre, // Nombre del sector
-                    subSectorNombre: subSectorNombre, // Nombre del subsector
-                    parteNombre: parteNombre, // Nombre de la parte
+                    sectorNombre: sectorNombre,
+                    subSectorNombre: subSectorNombre,
+                    parteNombre: parteNombre,
                 });
 
-                // Actualización de la UI con el nuevo elemento
+                // Update the UI to include the new element
                 const nuevosSectores = sectores.map(sector => {
                     if (sector.id === selectedSector) {
                         return {
@@ -387,9 +461,9 @@ function Trazabilidad() {
                                                 const nuevoElemento = {
                                                     id: nuevoElementoRef.id,
                                                     nombre: elementoInput,
-                                                    sectorNombre, // Agregado
-                                                    subSectorNombre, // Agregado
-                                                    parteNombre, // Agregado
+                                                    sectorNombre,
+                                                    subSectorNombre,
+                                                    parteNombre,
                                                 };
                                                 const nuevosElementos = [...parte.elementos, nuevoElemento];
                                                 return { ...parte, elementos: nuevosElementos };
@@ -404,7 +478,7 @@ function Trazabilidad() {
                     }
                     return sector;
                 });
-
+                // Show modal
                 setSectores(nuevosSectores);
                 setElementoInput('');
                 setAlerta('Elemento agregado correctamente.');
@@ -420,16 +494,16 @@ function Trazabilidad() {
     };
 
 
-
+    // Function to add a new lot to the Firestore database and update the UI
     const agregarLote = async (elementoId) => {
-        // Verificación inicial de los campos requeridos
+        // Verify that the lot input is not empty
         if (!loteInput.trim()) {
             setAlerta('El campo no puede estar vacío.');
             setTipoAlerta('error');
             setMostrarModal(true);
             return;
         }
-
+        // Validate that required selections (element, part, subsector, sector) are made
         if (!elementoId || !selectedParte || !selectedSubSector || !selectedSector) {
             console.error('No se ha seleccionado correctamente el elemento, parte, subsector, sector.');
             setAlerta('Selecciona correctamente todos los campos requeridos.');
@@ -437,7 +511,7 @@ function Trazabilidad() {
             setMostrarModal(true);
             return;
         }
-
+        // Ensure a PPI has been selected
         if (!selectedPpi) {
             console.error('No se ha seleccionado un PPI.');
             setAlerta('Debes seleccionar un PPI.');
@@ -447,12 +521,13 @@ function Trazabilidad() {
         }
 
         try {
+            // Normalize the lot name for validation
             const nombreLoteNormalizado = loteInput.toLowerCase().trim();
 
-            // Genera un ID único para el nuevo lote
+            // Generate a unique ID for the new lot
             const loteId = doc(collection(db, 'lotes')).id;
 
-            // Asume que 'ppi' es tu objeto con toda la información del PPI que quieres guardar
+            // Retrieve the selected PPI object
             const ppiSeleccionado = ppis.find(ppi => ppi.id === selectedPpi);
 
             // Verifica que ppiSeleccionado no sea undefined antes de proceder
@@ -464,7 +539,7 @@ function Trazabilidad() {
                 return;
             }
 
-            // Encuentra los nombres del sector, subsector, parte y elemento
+            // Retrieve contextual names (sector, subsector, part, and element) for the new lot
             let sectorNombre = '', subSectorNombre = '', parteNombre = '', elementoNombre = '';
             const sectorSeleccionado = sectores.find(sector => sector.id === selectedSector);
             if (sectorSeleccionado) {
@@ -483,7 +558,7 @@ function Trazabilidad() {
                 }
             }
 
-            // Verifica si el nombre del lote ya existe
+            // Check for duplicate lot names within the current element
             const elementoActual = sectores.flatMap(sector => sector.subsectores)
                 .flatMap(subsector => subsector.partes)
                 .flatMap(parte => parte.elementos)
@@ -496,7 +571,7 @@ function Trazabilidad() {
             }
 
 
-            // Prepara el nuevo lote
+            // Prepare the new lot object with required details
             const nuevoLote = {
                 nombre: loteInput,
                 ppiId: selectedPpi,
@@ -516,24 +591,24 @@ function Trazabilidad() {
                 totalSubactividades: ppiSeleccionado.totalSubactividades || 0,
             };
 
-            // Referencia a la subcolección específica y añade el nuevo lote
+            // Add the new lot to the specific Firestore subcollection path
             const loteSubColeccionRef = doc(db, `proyectos/${id}/sector/${selectedSector}/subsector/${selectedSubSector}/parte/${selectedParte}/elemento/${elementoId}/lote/${loteId}`);
             await setDoc(loteSubColeccionRef, nuevoLote);
 
-            // Referencia a la colección principal y añade el nuevo lote
+            // Add the new lot to the main "lotes" collection for centralized access
             const lotePrincipalRef = doc(db, `lotes/${loteId}`);
             await setDoc(lotePrincipalRef, nuevoLote);
 
-            // Crear la subcolección 'inspecciones' dentro del lote recién creado
-            // y agregar el objeto ppiSeleccionado como documento
+            // Create the "inspecciones" subcollection inside the new lot with PPI details
             const inspeccionRef = doc(collection(db, `lotes/${loteId}/inspecciones`));
             await setDoc(inspeccionRef, ppiSeleccionado);
-            // Limpia los campos y muestra alerta de éxito
+            // Reset form inputs
             setLoteInput('');
             setSelectedPpi('');
             setPkInicialInput('');
             setPkFinalInput('');
             setIdBimInput('');
+            // Show success alert
             setAlerta('Lote agregado correctamente');
             setTipoAlerta('success');
             setMostrarModal(true);
@@ -567,8 +642,7 @@ function Trazabilidad() {
             }
 
 
-            // Actualización del estado para incluir el nuevo lote sin necesidad de recargar
-            // (Asegúrate de que esta parte se adapta correctamente a cómo gestionas el estado de 'sectores')
+            // Update the "sectores" state to reflect the new lot without refreshing data
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === selectedSector) {
                     return {
@@ -603,95 +677,91 @@ function Trazabilidad() {
 
             setSectores(sectoresActualizados);
         } catch (error) {
+            // Handle any errors and display an error alert
             console.error('Error al agregar el lote:', error);
             setAlerta('Error al agregar el lote.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
     };
-
-
-
-
-
-
-
-
-
-
+    // Function to fetch "lotes" (lots) from the Firestore database for a specific element
     const obtenerLotes = async (sectorId, subSectorId, parteId, elementoId) => {
         try {
+            // Reference to the "lote" subcollection path in Firestore
             const loteCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte/${parteId}/elemento/${elementoId}/lote`);
+            // Fetch documents from the "lote" collection
             const loteSnapshot = await getDocs(loteCollectionRef);
+            // Map the Firestore documents into an array of lot objects
             const lotesData = loteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             return lotesData;
         } catch (error) {
             console.error('Error al obtener los lotes:', error);
-            return []; // Retorna un arreglo vacío en caso de error para evitar interrupciones
+            return []; // Return an empty array on error to prevent interruptions
         }
     };
 
 
-
+    // Function to fetch "elementos" (elements) from the Firestore database for a specific part
     const obtenerElementos = async (sectorId, subSectorId, parteId) => {
         try {
+            // Reference to the "elemento" subcollection path in Firestore
             const elementoCollectionRef = collection(db, `proyectos/${id}/sector/${sectorId}/subsector/${subSectorId}/parte/${parteId}/elemento`);
+            // Fetch documents from the "elemento" collection
             const elementoSnapshot = await getDocs(elementoCollectionRef);
+            // Fetch and include "lotes" for each element
             const elementos = await Promise.all(elementoSnapshot.docs.map(async doc => {
                 const elementoData = { id: doc.id, ...doc.data() };
+                // Fetch associated "lotes" for the current element
                 elementoData.lotes = await obtenerLotes(sectorId, subSectorId, parteId, doc.id);
                 return elementoData;
             }));
             return elementos;
         } catch (error) {
             console.error('Error al obtener los elementos:', error);
-            return []; // Retorna un arreglo vacío en caso de error para evitar interrupciones
+            return []; // Return an empty array on error to prevent interruptions
         }
     };
 
 
-    const [ppis, setPpis] = useState([]);
-    const [selectedPpi, setSelectedPpi] = useState("");
-
-    // Función para cargar los PPIs
+    // Function to load PPIs (Project Performance Indicators) from Firestore
     const cargarPpis = async () => {
         try {
+            // Fetch all documents from the "ppis" collection in Firestore
             const querySnapshot = await getDocs(collection(db, "ppis"));
+            // Transform documents into an array of objects with id and data
             const ppisList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Update the state with the fetched PPIs
             setPpis(ppisList);
         } catch (error) {
             console.error("Error al cargar los PPIs:", error);
         }
     };
 
-    // Llamar a cargarPpis en useEffect para cargar los PPIs al montar el componente
+    // useEffect to load PPIs when the component mounts
     useEffect(() => {
         cargarPpis();
     }, []);
 
 
-    const [mostrarModalEliminarSubSector, setMostrarModalEliminarSubSector] = useState(false)
-    const [sectorIdAEliminar, setSectorIdAEliminar] = useState(null);
-    const [subsectorIdAEliminar, setSubsectorIdAEliminar] = useState(null);
-
-
-
-    //Eliminar sub sector
+    // Function to delete a subsector
     const eliminarSubsector = async () => {
         try {
+            // Reference to the specific subsector document in Firestore
             const subsectorRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector`, subsectorIdAEliminar);
             await deleteDoc(subsectorRef);
 
-            // Actualizar el estado para excluir el subsector eliminado
+            // Update the local state to remove the deleted subsector
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === sectorIdAEliminar) {
+                    // Filter out the deleted subsector from the current sector
                     const subsectoresActualizados = sector.subsectores.filter(subsector => subsector.id !== subsectorIdAEliminar);
                     return { ...sector, subsectores: subsectoresActualizados };
                 }
                 return sector;
             });
+            // Update state with the new sectors list
             setSectores(sectoresActualizados);
-
+            // Display success alert
             setAlerta('Subsector eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
@@ -705,10 +775,10 @@ function Trazabilidad() {
     };
 
 
-    // Elminar lote
+    // State to manage the delete lote modal visibility and IDs
     const [mostrarModalEliminarLote, setMostrarModalEliminarLote] = useState(false);
     const [loteIdAEliminar, setLoteIdAEliminar] = useState(null);
-
+    // Function to confirm lote deletion by setting relevant IDs and showing the modal
     const confirmarDeleteLote = (sectorId, subsectorId, parteId, elementoId, loteId) => {
         setSectorIdAEliminar(sectorId);
         setSubsectorIdAEliminar(subsectorId);
@@ -717,18 +787,18 @@ function Trazabilidad() {
         setLoteIdAEliminar(loteId);
         setMostrarModalEliminarLote(true);
     };
-
+    // Function to delete a specific 'lote' (batch) from Firestore and update the local state
     const eliminarLote = async () => {
         try {
-            // Paso 1: Eliminar el lote de la subcolección específica en Firestore
+            // Step 1: Delete the 'lote' document from the specific subcollection in Firestore
             const loteRefSubcoleccion = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento/${elementoIdAEliminar}/lote/${loteIdAEliminar}`);
             await deleteDoc(loteRefSubcoleccion);
 
-            // Paso 1.1: Eliminar el lote de la colección principal 'lotes'
+            // Step 1.1: Delete the 'lote' document from the main 'lotes' collection
             const loteRefPrincipal = doc(db, `lotes/${loteIdAEliminar}`);
             await deleteDoc(loteRefPrincipal);
 
-            // Paso 2: Actualizar el estado para reflejar la eliminación del lote
+            // Step 2: Update the local state to remove the deleted 'lote' from the UI
             setSectores(prevSectores => prevSectores.map(sector => {
                 if (sector.id === sectorIdAEliminar) {
                     return {
@@ -743,7 +813,7 @@ function Trazabilidad() {
                                                 ...parte,
                                                 elementos: parte.elementos.map(elemento => {
                                                     if (elemento.id === elementoIdAEliminar) {
-                                                        // Filtrar el lote eliminado
+                                                        // Filter out the deleted 'lote'
                                                         const lotesActualizados = elemento.lotes.filter(lote => lote.id !== loteIdAEliminar);
                                                         return {
                                                             ...elemento,
@@ -765,19 +835,19 @@ function Trazabilidad() {
                 return sector;
             }));
 
-            // Paso 3: Mostrar mensaje de éxito y cerrar el modal de confirmación
+            // Step 3: Display success message and close the modal
             setAlerta('Lote eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
-            // En caso de error, mostrar mensaje de error y cerrar el modal de confirmación
+            // Step 4: Handle errors and display an error message
             console.error('Error al eliminar el lote:', error);
             setAlerta('Error al eliminar el lote.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
 
-        // Restablece el estado de las variables relacionadas con la eliminación
+        // Step 5: Reset all state variables related to the deletion process
         setMostrarModalEliminarLote(false);
         setSectorIdAEliminar(null);
         setSubsectorIdAEliminar(null);
@@ -790,36 +860,37 @@ function Trazabilidad() {
 
 
 
-
+    // Function to confirm the deletion of a 'subsector' by setting its IDs and showing the confirmation modal
     const confirmarDeleteSubSector = (sectorId, subsectorId) => {
         setSectorIdAEliminar(sectorId);
         setSubsectorIdAEliminar(subsectorId);
         setMostrarModalEliminarSubSector(true);
     };
 
-
-    // Eliminar sector
+    // State to manage the confirmation modal for deleting a sector
     const [mostrarModalEliminarSector, setMostrarModalEliminarSector] = useState(false)
-
+    // Function to prompt the deletion of a sector
     const solicitarEliminarSector = (sectorId) => {
         setSectorIdAEliminar(sectorId);
         setMostrarModalEliminarSector(true);
     };
-
+    // Function to delete a sector from Firestore and update the local state
     const eliminarSector = async () => {
         try {
-            // Referencia al documento del sector a eliminar
+            // Step 1: Reference the document for the sector to delete
             const sectorRef = doc(db, `proyectos/${id}/sector`, sectorIdAEliminar);
+            // Step 2: Delete the sector document from Firestore
             await deleteDoc(sectorRef);
 
-            // Filtrar el estado actual para excluir el sector eliminado
+            // Step 3: Update the state by filtering out the deleted sector
             const sectoresActualizados = sectores.filter(sector => sector.id !== sectorIdAEliminar);
             setSectores(sectoresActualizados);
-
+            // Step 4: Display success message
             setAlerta('Sector eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
+            // Step 5: Handle any errors during the deletion process
             console.error('Error al eliminar el sector:', error);
             setAlerta('Error al eliminar el sector.');
             setTipoAlerta('error');
@@ -829,23 +900,25 @@ function Trazabilidad() {
         // Ocultar el modal de confirmación
         setMostrarModalEliminarSector(false);
     };
-
+    // State to store the ID of the 'parte' to delete and manage the delete confirmation modal visibility
     const [parteIdAEliminar, setParteIdAEliminar] = useState(null);
     const [mostrarModalEliminarParte, setMostrarModalEliminarParte] = useState(false)
-
+    // Function to confirm the deletion of a 'parte' by storing IDs and showing the confirmation modal
     const confirmarDeleteParte = (sectorId, subsectorId, parteId) => {
         setSectorIdAEliminar(sectorId); // Asegúrate de tener este estado si necesitas referenciar al sector para la eliminación
         setSubsectorIdAEliminar(subsectorId); // Similarmente, si necesitas el ID del subsector, asegúrate de tener un estado para ello
         setParteIdAEliminar(parteId);
         setMostrarModalEliminarParte(true);
     };
-
+    // Function to delete a 'parte' from Firestore and update the local state
     const eliminarParte = async () => {
         try {
+            // Step 1: Reference to the 'parte' document to be deleted in Firestore
             const parteRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte`, parteIdAEliminar);
+            // Step 2: Delete the 'parte' document from Firestore
             await deleteDoc(parteRef);
 
-            // Actualizar el estado de 'sectores' para reflejar la eliminación de la parte
+            // Step 3: Update the state to remove the deleted 'parte' from the UI
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === sectorIdAEliminar) {
                     return {
@@ -863,18 +936,20 @@ function Trazabilidad() {
                 }
                 return sector;
             });
-
+            // Step 4: Update state with the new sectors list
             setSectores(sectoresActualizados);
+            // Step 5: Show a success message
             setAlerta('Parte eliminada correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
+            // Step 6: Handle any errors and show an error message
             console.error('Error al eliminar la parte:', error);
             setAlerta('Error al eliminar la parte.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-
+        // Step 7: Close the confirmation modal and reset deletion states
         setMostrarModalEliminarParte(false);
     };
 
@@ -890,13 +965,15 @@ function Trazabilidad() {
         setElementoIdAEliminar(elementoId);
         setMostrarModalEliminarElemento(true);
     };
-
+    // Function to delete an 'elemento' document from Firestore and update the state
     const eliminarElemento = async () => {
         try {
+            // Step 1: Reference to the 'elemento' document in Firestore
             const elementoRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento`, elementoIdAEliminar);
+            // Step 2: Delete the 'elemento' document
             await deleteDoc(elementoRef);
 
-            // Actualizar el estado para reflejar la eliminación del elemento
+            // Step 3: Update the local state to reflect the deletion
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === sectorIdAEliminar) {
                     return {
@@ -922,24 +999,22 @@ function Trazabilidad() {
                 }
                 return sector;
             });
+            // Step 4: Update the state with the new list of sectors
             setSectores(sectoresActualizados);
-
+            // Step 5: Display a success alert
             setAlerta('Elemento eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
+            // Step 6: Handle any errors and display an error alert
             console.error('Error al eliminar el elemento:', error);
             setAlerta('Error al eliminar el elemento.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
+        // Step 7: Close the delete confirmation modal
         setMostrarModalEliminarElemento(false);
     };
-
-
-
-
-
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -947,18 +1022,19 @@ function Trazabilidad() {
     // EDICION TRAZABILIDAD
 
     /// SECTOR ///
-    const [sectorIdAEditar, setSectorIdAEditar] = useState(null);
-    const [nuevoNombreSector, setNuevoNombreSector] = useState('');
-    const [mostrarModalEditarSector, setMostrarModalEditarSector] = useState(false);
+    // State for managing sector editing
+    const [sectorIdAEditar, setSectorIdAEditar] = useState(null);// Stores the ID of the sector being edited
+    const [nuevoNombreSector, setNuevoNombreSector] = useState(''); // Stores the new name for the sector
+    const [mostrarModalEditarSector, setMostrarModalEditarSector] = useState(false); // Controls visibility of the edit modal
 
-    // Función para solicitar la edición de un sector
+    // Function to initiate the editing process for a sector
     const solicitarEditarSector = (sectorId, nombreActual) => {
         setSectorIdAEditar(sectorId);
         setNuevoNombreSector(nombreActual);
         setMostrarModalEditarSector(true);
     };
 
-    // Función para guardar la edición de un sector
+    // Function to save the edited sector name to Firestore
     const guardarEdicionSector = async () => {
         if (!nuevoNombreSector.trim()) {
             setAlerta('El nombre no puede estar vacío.');
@@ -968,24 +1044,27 @@ function Trazabilidad() {
         }
 
         try {
+            // Reference to the sector document in Firestore
             const docRef = doc(db, `proyectos/${id}/sector`, sectorIdAEditar);
+            // Update the 'nombre' field with the new value
             await updateDoc(docRef, { nombre: nuevoNombreSector });
-
+            // Update the state with the new sector name
             const sectoresActualizados = sectores.map(sector =>
                 sector.id === sectorIdAEditar ? { ...sector, nombre: nuevoNombreSector } : sector
             );
-
+            // Show a success message
             setSectores(sectoresActualizados);
             setAlerta('Sector actualizado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
+            // Handle any errors during the update process
             console.error('Error al actualizar el sector:', error);
             setAlerta('Error al actualizar el sector.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-
+        // Reset editing state and close the modal
         setMostrarModalEditarSector(false);
         setSectorIdAEditar('');
         setNuevoNombreSector('');
@@ -994,21 +1073,23 @@ function Trazabilidad() {
 
 
     /// SUB SECTOR ///
-    const [subSectorIdAEditar, setSubSectorIdAEditar] = useState(null);
-    const [nuevoNombreSubSector, setNuevoNombreSubSector] = useState('');
-    const [mostrarModalEditarSubSector, setMostrarModalEditarSubSector] = useState(false);
+    // State for managing subsector editing
+    const [subSectorIdAEditar, setSubSectorIdAEditar] = useState(null); // ID of the subsector being edited
+    const [nuevoNombreSubSector, setNuevoNombreSubSector] = useState(''); // New name for the subsector
+    const [mostrarModalEditarSubSector, setMostrarModalEditarSubSector] = useState(false); // Controls visibility of the edit modal
 
 
-    // Función para solicitar la edición de un subsector
+    // Function to initiate the editing process for a subsector
     const solicitarEditarSubSector = (sectorId, subSectorId, nombreActual) => {
-        setSectorIdAEditar(sectorId);
-        setSubSectorIdAEditar(subSectorId);
-        setNuevoNombreSubSector(nombreActual);
-        setMostrarModalEditarSubSector(true);
+        setSectorIdAEditar(sectorId); // Set the parent sector ID
+        setSubSectorIdAEditar(subSectorId); // Set the subsector ID to be edited
+        setNuevoNombreSubSector(nombreActual); // Pre-fill the input with the current subsector name
+        setMostrarModalEditarSubSector(true); // Show the edit modal
     };
 
-    // Función para guardar la edición de un subsector
+    // Function to save the edited subsector name to Firestore
     const guardarEdicionSubSector = async () => {
+        // Validate that the new name is not empty
         if (!nuevoNombreSubSector.trim()) {
             setAlerta('El nombre no puede estar vacío.');
             setTipoAlerta('error');
@@ -1017,9 +1098,11 @@ function Trazabilidad() {
         }
 
         try {
+            // Reference to the subsector document in Firestore
             const docRef = doc(db, `proyectos/${id}/sector/${sectorIdAEditar}/subsector`, subSectorIdAEditar);
+            // Update the 'nombre' field with the new value
             await updateDoc(docRef, { nombre: nuevoNombreSubSector });
-
+            // Update the state to reflect the change in the subsector name
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === sectorIdAEditar) {
                     return {
@@ -1042,7 +1125,7 @@ function Trazabilidad() {
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-
+        // Reset editing state and close the modal
         setMostrarModalEditarSubSector(false);
         setSectorIdAEditar('');
         setSubSectorIdAEditar('');
@@ -1050,12 +1133,12 @@ function Trazabilidad() {
     };
 
     /// PARTE ///
-
+    // States for managing the editing of a specific part
     const [parteIdAEditar, setParteIdAEditar] = useState(null);
     const [nuevoNombreParte, setNuevoNombreParte] = useState('');
     const [mostrarModalEditarParte, setMostrarModalEditarParte] = useState(false);
 
-    // Función para solicitar la edición de una parte
+    // Function to request the editing of a specific part
     const solicitarEditarParte = (sectorId, subSectorId, parteId, nombreActual) => {
         setSectorIdAEditar(sectorId);
         setSubSectorIdAEditar(subSectorId);
@@ -1064,8 +1147,9 @@ function Trazabilidad() {
         setMostrarModalEditarParte(true);
     };
 
-    // Función para guardar la edición de una parte
+    // Function to save the edits made to the part
     const guardarEdicionParte = async () => {
+        // Step 1: Validate that the new name is not empty
         if (!nuevoNombreParte.trim()) {
             setAlerta('El nombre no puede estar vacío.');
             setTipoAlerta('error');
@@ -1074,9 +1158,11 @@ function Trazabilidad() {
         }
 
         try {
+            // Step 2: Reference the specific part document in Firestore
             const docRef = doc(db, `proyectos/${id}/sector/${sectorIdAEditar}/subsector/${subSectorIdAEditar}/parte`, parteIdAEditar);
+            // Step 3: Update the 'name' field in Firestore
             await updateDoc(docRef, { nombre: nuevoNombreParte });
-
+            // Step 4: Update the local 'sectores' state to reflect changes in the UI
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === sectorIdAEditar) {
                     return {
@@ -1096,18 +1182,19 @@ function Trazabilidad() {
                 }
                 return sector;
             });
-
+            // Step 5: Update the UI state and display a success message
             setSectores(sectoresActualizados);
             setAlerta('Parte actualizada correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
+            // Step 6: Handle any errors during the update
             console.error('Error al actualizar la parte:', error);
             setAlerta('Error al actualizar la parte.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-
+        // Step 7: Clean up states and close the modal
         setMostrarModalEditarParte(false);
         setSectorIdAEditar('');
         setSubSectorIdAEditar('');
@@ -1193,14 +1280,14 @@ function Trazabilidad() {
 
 
     /// LOTE ///
-
+    // States for managing the editing of a specific element
     const [mostrarModalEditarLote, setMostrarModalEditarLote] = useState(false);
     const [loteIdAEditar, setLoteIdAEditar] = useState(null);
     const [nuevoNombreLote, setNuevoNombreLote] = useState('');
     const [nuevoPkInicial, setNuevoPkInicial] = useState('');
     const [nuevoPkFinal, setNuevoPkFinal] = useState('');
     const [nuevoIdBim, setNuevoIdBim] = useState('');
-
+    // Function to request the editing of a specific element
     const solicitarEditarLote = (sectorId, subSectorId, parteId, elementoId, loteId, lote) => {
         setSectorIdAEditar(sectorId);
         setSubSectorIdAEditar(subSectorId);
@@ -1213,8 +1300,9 @@ function Trazabilidad() {
         setNuevoIdBim(lote.idBim || '');
         setMostrarModalEditarLote(true);
     };
-
+    // Function to save the edits made to the element
     const guardarEdicionLote = async () => {
+        // Step 1: Validate that the new name is not empty
         if (!nuevoNombreLote.trim()) {
             setAlerta('El nombre no puede estar vacío.');
             setTipoAlerta('error');
@@ -1223,14 +1311,16 @@ function Trazabilidad() {
         }
 
         try {
+            // Step 2: Reference the Firestore document path of the specific element
             const docRef = doc(db, `proyectos/${id}/sector/${sectorIdAEditar}/subsector/${subSectorIdAEditar}/parte/${parteIdAEditar}/elemento/${elementoIdAEditar}/lote`, loteIdAEditar);
+            // Step 3: Update the 'nombre' field in Firestore
             await updateDoc(docRef, {
                 nombre: nuevoNombreLote,
                 pkInicial: nuevoPkInicial,
                 pkFinal: nuevoPkFinal,
                 idBim: nuevoIdBim
             });
-
+            // Step 4: Update the local 'sectores' state to reflect changes in the UI
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === sectorIdAEditar) {
                     return {
@@ -1268,18 +1358,19 @@ function Trazabilidad() {
                 }
                 return sector;
             });
-
+            // Step 5: Update the state and show success alert
             setSectores(sectoresActualizados);
             setAlerta('Lote actualizado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
+            // Step 6: Handle any errors during the update
             console.error('Error al actualizar el lote:', error);
             setAlerta('Error al actualizar el lote.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-
+        // Step 7: Clean up the states and close the modal
         setMostrarModalEditarLote(false);
         setLoteIdAEditar('');
         setNuevoNombreLote('');
@@ -1289,18 +1380,10 @@ function Trazabilidad() {
     };
 
 
-
-
-
     return (
         <div className='container mx-auto min-h-screen py-2 xl:px-14 text-gray-500'>
             {/* Encabezado */}
-
-
-
-
             <div className='flex gap-2 items-center justify-between px-5 py-3 text-base'>
-
                 <div className='flex items-center gap-2'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
 
@@ -1313,28 +1396,14 @@ function Trazabilidad() {
                         <h1 className='font-medium text-amber-600'>Trazabilidad </h1>
                     </Link>
                 </div>
-                
-
-
-
                 <div className='flex items-center'>
                     <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
-
                 </div>
-
             </div>
             <div className='w-full border-b-2 border-gray-200'></div>
-
-
-            {/* Contenido */}
+            {/* Content */}
             <div className='flex gap-3 flex-col mt-5 bg-white xl:p-4 px-4 rounded rounded-xl shadow-md'>
-
-
-
-                {/* <div className='w-full border border-b-2'></div> */}
-
-
-                {/* Formulario de trazabilidad */}
+                {/* Form of trazabilidad */}
                 <div>
                     <div className='grid grid-cols-24 gap-2 xl:gap-6 text-sm'>
 
@@ -1498,23 +1567,15 @@ function Trazabilidad() {
                             </div>
                         </div>
 
-
-
-
-
-
                         {/* Lote */}
 
 
                         <div className='flex flex-col col-span-24 xl:col-span-12 gap-3 mt-5 xl:mt-0 '>
                             <div className='text-start'>
                                 <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>5. Lote y ppi</p>
-
                             </div>
 
                             <div className='grid xl:grid-cols-12 gap-3'>
-
-
                                 <div className='flex flex-col gap-3 col-span-6'>
 
                                     <input
@@ -1564,9 +1625,6 @@ function Trazabilidad() {
                                     </div>
                                 </div>
 
-
-
-
                                 <div className=' col-span-6 xl:px-5'>
                                     <p className='font-medium flex items-center gap-3'><span className='text-amber-600'>*</span>Para guardar trazabilidad selecciona un item en el desplegable y posteriormente agrega la información en cada campo.</p>
 
@@ -1579,38 +1637,17 @@ function Trazabilidad() {
                                             Guardar trazabilidad
                                         </button>
 
-
-
                                         <Link to={'/visorAdmin'}>
                                             <button className="w-20 xl:w-20 xl:h-14 h-10 text-white text-3xl mt-4 flex justify-center items-center gap-3 font-semibold bg-sky-600 hover:bg-sky-600 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"><SiBim /></button></Link>
-                                        
+
                                     </div>
                                     <p className=' flex items-center gap-2 mt-4'><span className='text-amber-600 text-xl'> *</span>Asigna el globalId dentro del modelo BIM</p>
-
-
                                 </div>
-
-
-
-
                             </div>
-
-
-
-
-
-
-
-
                         </div>
-
-
-
-
-
                     </div>
                 </div>
-                
+                {/* Table */}
                 <div className="mt-5">
                     <div className="hidden xl:flex bg-gray-200 rounded-t-lg font-medium">
                         <p className="px-4 py-2 w-1/5">Sector</p>

@@ -249,7 +249,7 @@ function PlantillaPpi() {
 
                         <div className='w-full bg-gray-200 grid grid-cols-7 text-sm'>
                             <div className="py-3 px-2 text-left">Nº</div>
-                            <div className="py-3 px-2 text-left whitespace-normal ">Actividad</div>
+                            <div className="py-3 px-2 text-left whitespace-normal ">Actividadsssssssssssssssssssssssssssssss</div>
                             <div className="py-3 px-2 text-left whitespace-normal ">Criterio de aceptación</div>
                             <div className="py-3 px-2 text-left whitespace-normal ">Documentación de referencia</div>
                             <div className="py-3 px-2 text-left">Tipo de inspección</div>

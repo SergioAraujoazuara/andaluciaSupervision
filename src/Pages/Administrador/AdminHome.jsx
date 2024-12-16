@@ -13,15 +13,41 @@ import { useAuth } from '../../context/authContext';
 import { BsClipboardDataFill } from "react-icons/bs";
 import { FaInfoCircle } from "react-icons/fa";
 
+/**
+ * AdminHome Component
+ * 
+ * This component serves as the main administration panel for the application.
+ * It dynamically renders sections and navigation options based on the user's role
+ * (admin, user, or guest). The content includes project management, traceability,
+ * forms, templates, and role assignments.
+ * 
+ * Key Features:
+ * - Fetch user role dynamically from Firestore based on the authenticated user.
+ * - Conditional rendering of content and navigation links based on user roles.
+ * - Navigation to various administration pages via React Router.
+ */
 
 function AdminHome() {
+    // Access the current authenticated user from context
     const { user } = useAuth();
+    // State to store the user role (admin, user, or guest)
     const [userRole, setUserRole] = useState('');
-
+    // Hook for programmatic navigation
+    const navigate = useNavigate();
+    const handleGoBack = () => {
+        navigate('/'); // Esto navega hacia atrás en la historia
+    };
+    const idProyecto = localStorage.getItem('proyecto')
+    /**
+         * useEffect Hook
+         * Fetch the user role from Firestore based on the authenticated user's UID.
+         * It runs once when the user object is available or updated.
+         */
     useEffect(() => {
         if (user) {
             const fetchUserData = async () => {
                 try {
+                    // Query Firestore for user document where uid matches the current user
                     const q = query(collection(db, "usuarios"), where("uid", "==", user.uid));
                     const querySnapshot = await getDocs(q);
                     if (!querySnapshot.empty) {
@@ -42,11 +68,6 @@ function AdminHome() {
     }, [user]);
 
 
-    const navigate = useNavigate();
-    const handleGoBack = () => {
-        navigate('/'); // Esto navega hacia atrás en la historia
-    };
-    const idProyecto = localStorage.getItem('proyecto')
 
 
     return (
@@ -85,6 +106,7 @@ function AdminHome() {
 
                         <div className='flex flex-col gap-16 items-start justify-start p-5 xl:px-10
      '>
+                            {/* Guest Role - Restricted Access */}
                             {(userRole === 'invitado' && (
 
                                 <div className=''>
@@ -93,7 +115,7 @@ function AdminHome() {
 
 
                             ))}
-
+                            {/* Admin or User - Project Information */}
                             {(userRole === 'admin' || userRole === 'usuario') && (
                                 <Link className='w-full' to={`/project`}>
                                     <div className='flex flex-col justify-start items-center xl:flex-row gap-4  transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
@@ -106,8 +128,8 @@ function AdminHome() {
                                                 </span>Información del proyecto
                                             </p>
                                             <p className='mt-4 font-normal text-sm xl:'>
-                                                
-                                             
+
+
                                                 Edita el nombre, obra, tramo y todos los datos relevantes.
 
                                             </p>
@@ -117,7 +139,7 @@ function AdminHome() {
 
                                 </Link>
                             )}
-
+                            {/* Traceability Management */}
                             {(userRole === 'admin' || userRole === 'usuario') && (
                                 <Link className='w-full' to={`/trazabilidad/${idProyecto}`}>
                                     <div className='flex flex-col justify-center items-center xl:flex-row gap-4  transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
@@ -144,11 +166,7 @@ function AdminHome() {
                                 </Link>
                             )}
 
-
-
-
-
-
+                            {/* Admin Role Only - Templates and Roles */}
                             {userRole === 'admin' && (
                                 <Link className=' w-full' to={'/verPpis'}>
                                     <div className='flex flex-col xl:flex-row xl:text-start text-center gap-4 items-center transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
@@ -166,7 +184,7 @@ function AdminHome() {
 
                                 </Link>
                             )}
-
+                            {/* Forms Management */}
                             {(userRole === 'admin' || userRole === 'usuario') && (
                                 <Link className='w-full' to={`/formularios/${idProyecto}`}>
                                     <div className='flex flex-col justify-start items-center xl:flex-row gap-4  transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
@@ -190,7 +208,7 @@ function AdminHome() {
 
                                 </Link>
                             )}
-
+                            {/* Roles Management */}
                             {
                                 userRole === 'admin' && (
                                     <Link className=' w-full' to={'/roles'}>

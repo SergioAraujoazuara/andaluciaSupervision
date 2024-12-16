@@ -1,3 +1,32 @@
+/**
+ * Component: Projects
+ * 
+ * Description:
+ * This component retrieves and displays a project from the Firestore database. 
+ * Users can edit project details, including uploading a new logo and client logo.
+ * 
+ * Key Features:
+ * 1. **Fetch Project**: Loads project details from Firestore when the component is mounted.
+ * 2. **Edit Project**: Allows editing project fields (name, work site, section, contract) and uploading new logos.
+ * 3. **Update Project**: Updates project details in Firestore and Storage.
+ * 4. **Responsive UI**: Displays project details in a table and opens a modal for editing.
+ * 5. **Navigate Back**: Users can navigate back to the previous page.
+ * 
+ * Component Flow:
+ * 1. **Data Fetching**: 
+ *    - `fetchProyecto` fetches the project from Firestore's "proyectos" collection.
+ * 2. **Edit Modal**:
+ *    - Clicking "Edit" opens a modal with pre-filled fields from the selected project.
+ * 3. **Update Workflow**:
+ *    - If a new logo or client logo is uploaded, it is stored in Firebase Storage.
+ *    - Updates are saved to Firestore via `updateDoc`.
+ * 4. **UI Interaction**:
+ *    - Editing opens the modal, and saving updates the project.
+ *    - Users can cancel editing to close the modal without changes.
+ */
+
+
+
 import React, { useState, useEffect } from "react";
 import { db, storage } from "../../../firebase_config";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
@@ -11,7 +40,7 @@ function Projects() {
   const [proyecto, setProyecto] = useState(null); // Proyecto existente
   const [isEditing, setIsEditing] = useState(false); // Para mostrar el modal de edición
 
-  // Campos del proyecto
+  // Editable project fields
   const [nombre, setNombre] = useState("");
   const [obra, setObra] = useState("");
   const [tramo, setTramo] = useState("");
@@ -19,7 +48,7 @@ function Projects() {
   const [logo, setLogo] = useState(null);
   const [logoCliente, setLogoCliente] = useState(null);
 
-  // Obtener el proyecto existente
+  // Function: Fetch project data from Firestore
   const fetchProyecto = async () => {
     const proyectosCollection = collection(db, "proyectos");
     const proyectosSnapshot = await getDocs(proyectosCollection);
@@ -30,11 +59,12 @@ function Projects() {
     }
   };
 
+  // Load project data when the component mounts
   useEffect(() => {
     fetchProyecto();
   }, []);
 
-  // Abrir el modal de edición
+  // Function: Open the edit modal and pre-fill fields with current project data
   const openEditModal = () => {
     setIsEditing(true);
     setNombre(proyecto.nombre);
@@ -45,7 +75,7 @@ function Projects() {
     setLogoCliente(null); // No se selecciona nuevo logoCliente por defecto
   };
 
-  // Actualizar el proyecto
+  // Function: Update project data in Firestore
   const actualizarProyecto = async () => {
     if (!nombre || !obra || !contrato) {
       alert("Por favor, completa todos los campos.");
@@ -53,6 +83,7 @@ function Projects() {
     }
 
     try {
+      // Update project details in Firestore
       const projectRef = doc(db, "proyectos", proyecto.id);
 
       let updatedLogoURL = proyecto.logo;
@@ -68,7 +99,7 @@ function Projects() {
         await uploadBytes(logoClienteRef, logoCliente);
         updatedLogoClienteURL = await getDownloadURL(logoClienteRef);
       }
-
+      // Update project details in Firestore
       await updateDoc(projectRef, {
         nombre,
         obra,
@@ -78,21 +109,23 @@ function Projects() {
         logoCliente: updatedLogoClienteURL,
       });
 
+      // Update local state with the updated project data
       setProyecto({ ...proyecto, nombre, obra, tramo, contrato, logo: updatedLogoURL, logoCliente: updatedLogoClienteURL });
       setIsEditing(false);
     } catch (error) {
       console.error("Error al actualizar el proyecto:", error);
     }
   };
-
+  // Function: Navigate back to the previous page
   const navigate = useNavigate();
-    const handleGoBack = () => {
-        navigate(-1); // Esto navega hacia atrás en la historia
-    };
+  const handleGoBack = () => {
+    navigate(-1); // Esto navega hacia atrás en la historia
+  };
 
   return (
     <div className="container mx-auto p-8 min-h-screen">
       <div className="flex gap-2 items-center justify-between px-4 py-3 text-base">
+        {/* Header Navigation */}
         <div className="flex gap-2 items-center">
           <GoHomeFill style={{ width: 15, height: 15, fill: "#d97706" }} />
           <Link to={"/admin"}>
@@ -106,11 +139,11 @@ function Projects() {
 
         <div className="flex items-center">
           <button className="text-amber-600 text-3xl">
-            <IoArrowBackCircle onClick={handleGoBack}/>
+            <IoArrowBackCircle onClick={handleGoBack} />
           </button>
         </div>
       </div>
-
+      {/* Project Details Table */}
       {proyecto ? (
         <div className="overflow-x-auto text-gray-500">
           <h2 className="text-lg font-bold text-gray-500 mb-4 mt-4">Proyecto</h2>
@@ -152,7 +185,7 @@ function Projects() {
             </tbody>
           </table>
 
-          {/* Modal de edición */}
+          {/* Edit Modal */}
           {isEditing && (
             <div className="fixed inset-0 z-10 flex justify-center items-center bg-black bg-opacity-50">
               <div className="bg-white p-8 rounded-lg w-full max-w-lg">

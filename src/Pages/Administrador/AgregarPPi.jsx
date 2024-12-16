@@ -5,8 +5,26 @@ import { GoHomeFill } from "react-icons/go";
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
+/**
+ * PlantillaPpi Component
+ * 
+ * This component allows administrators to create and configure PPI templates (inspection point templates).
+ * Users can dynamically add activities and subactivities, input relevant details, and save the templates
+ * to Firestore.
+ * 
+ * Key Features:
+ * - Fetch PPI data from Firestore based on the PPI name provided in the URL parameters.
+ * - Dynamically manage activities and subactivities with controlled form inputs.
+ * - Save PPI data to Firestore with validation and show success feedback.
+ */
 
 function PlantillaPpi() {
+    /**
+ * Functional Component: PlantillaPpi
+ * Manages the creation and configuration of a PPI template.
+ */
+
+    // Navigation hook to programmatically navigate between pages
     const navigate = useNavigate();
     const handleGoBack = () => {
         navigate('/admin'); // Esto navega hacia atrás en la historia
@@ -14,10 +32,14 @@ function PlantillaPpi() {
     const { ppiNombre } = useParams();
     const [ppi, setPpi] = useState(null); // Estado para almacenar los datos del PPI
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-
+    /**
+         * useEffect Hook
+         * Fetches PPI data from Firestore when the component loads or when ppiNombre changes.
+         */
     useEffect(() => {
         const obtenerPpi = async () => {
             try {
+                // Query Firestore for the PPI with the specified name
                 const q = query(collection(db, "ppis"), where("nombre", "==", ppiNombre));
                 const querySnapshot = await getDocs(q);
                 const ppiData = querySnapshot.docs.map(doc => ({
@@ -41,8 +63,9 @@ function PlantillaPpi() {
             obtenerPpi();
         }
     }, [ppiNombre]); // Este efecto se ejecutará cada vez que ppiNombre cambie
-
+    // State to hold the template name
     const [nombre, setNombre] = useState('');
+    // State to manage activities and their nested subactivities
     const [actividades, setActividades] = useState([
         {
             numero: '',
@@ -70,21 +93,36 @@ function PlantillaPpi() {
             ]
         }
     ]);
+
+    // State for loading indicator and error messages
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-
+    /**
+        * Updates an activity's field based on the index.
+        * @param {number} index - The activity index.
+        * @param {Event} e - The input change event.
+        */
     const handleActividadChange = (index, e) => {
         const newActividades = [...actividades];
         newActividades[index][e.target.name] = e.target.value;
         setActividades(newActividades);
     };
 
+    /**
+     * Updates a subactivity's field based on the activity and subactivity indices.
+     * @param {number} actividadIndex - Index of the parent activity.
+     * @param {number} subactividadIndex - Index of the subactivity.
+     * @param {Event} e - The input change event.
+     */
     const handleSubactividadChange = (actividadIndex, subactividadIndex, e) => {
         const newActividades = [...actividades];
         newActividades[actividadIndex].subactividades[subactividadIndex][e.target.name] = e.target.value;
         setActividades(newActividades);
     };
-
+    /**
+         * Adds a new empty subactivity to the specified activity.
+         * @param {number} actividadIndex - Index of the parent activity.
+         */
     const addSubactividad = (actividadIndex) => {
         const newActividades = [...actividades];
         newActividades[actividadIndex].subactividades.push({
@@ -108,7 +146,10 @@ function PlantillaPpi() {
         });
         setActividades(newActividades);
     };
-
+    /**
+         * Handles the submission of the PPI template to Firestore.
+         * @param {Event} e - The form submission event.
+         */
     const handleAgregarPPi = async (e) => {
         e.preventDefault();
         setLoading(true);

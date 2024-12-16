@@ -7,14 +7,39 @@ import { Link } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
 
+/**
+ * EditarPpi Component
+ * 
+ * This component allows administrators to edit and version inspection point templates (PPI).
+ * Key Functionalities:
+ * - Fetches existing PPI data from Firestore using an ID from URL parameters.
+ * - Allows editing of activities and subactivities dynamically.
+ * - Supports versioning by saving the updated PPI as a new document in Firestore.
+ * - Displays a success modal on successful updates.
+ */
+
+/**
+ * Functional Component: EditarPpi
+ * 
+ * Allows the user to:
+ * - Retrieve an existing PPI template.
+ * - Modify activities and subactivities.
+ * - Create a new version of the updated PPI template.
+ */
 function EditarPpi() {
     const navigate = useNavigate();
     const { id } = useParams();
+    // State to store the fetched PPI data
     const [ppi, setPpi] = useState(null);
+    // State to store editable PPI data
     const [editPpi, setEditPpi] = useState({ actividades: [] });
+    // State for success modal visibility
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    // State for total number of subactivities
     const [totalSubactividades, setTotalSubactividades] = useState(0);
-
+    /**
+         * useEffect: Fetch PPI data on component mount or when the PPI ID changes.
+         */
     useEffect(() => {
         const obtenerPpi = async () => {
             try {
@@ -36,7 +61,15 @@ function EditarPpi() {
 
         obtenerPpi();
     }, [id]);
-
+    /**
+         * handleChange
+         * Handles changes in activity or subactivity input fields.
+         * 
+         * @param {Event} e - Input change event.
+         * @param {Number} actividadIndex - Index of the activity being edited.
+         * @param {Number} subactividadIndex - Index of the subactivity being edited (optional).
+         * @param {String} campo - The specific field name being modified.
+         */
     const handleChange = (e, actividadIndex = null, subactividadIndex = null, campo) => {
         const { value } = e.target;
 
@@ -59,7 +92,12 @@ function EditarPpi() {
             return newState;
         });
     };
-
+    /**
+        * handleSubmit
+        * Submits the updated PPI data:
+        * - Increments the version.
+        * - Adds a new document to the 'ppis' collection in Firestore.
+        */
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -71,16 +109,19 @@ function EditarPpi() {
             };
             console.log('Datos PPI actualizados antes de guardar:', updatedData);
 
-            // Crear una copia del PPI en la colección 'ppis'
+            // Add the updated PPI as a new document (new version)
             await addDoc(collection(db, 'ppis'), updatedData);
 
             console.log('Nueva versión del PPI creada exitosamente.');
-            setShowSuccessModal(true); // Mostrar modal de éxito
+            setShowSuccessModal(true); // Show success modal
         } catch (error) {
             console.error('Error al crear la nueva versión del PPI:', error);
         }
     };
-
+    /**
+         * addActividad
+         * Adds a new activity to the editable PPI state.
+         */
     const updateTotalSubactividades = (increment) => {
         setTotalSubactividades(prevTotal => prevTotal + increment);
         setEditPpi(prevState => ({
@@ -88,7 +129,12 @@ function EditarPpi() {
             totalSubactividades: prevState.totalSubactividades + increment
         }));
     };
-
+    /**
+        * addSubactividad
+        * Adds a new subactivity to a specific activity.
+        * 
+        * @param {Number} actividadIndex - Index of the activity to which the subactivity is added.
+        */
     const addActividad = () => {
         const newActividad = {
             numero: '',
@@ -112,7 +158,12 @@ function EditarPpi() {
         }));
         updateTotalSubactividades(1);
     };
-
+/**
+     * addSubactividad
+     * Adds a new subactivity to a specific activity.
+     * 
+     * @param {Number} actividadIndex - Index of the activity to which the subactivity is added.
+     */
     const addSubactividad = (actividadIndex) => {
         setEditPpi(prevState => {
             const newState = JSON.parse(JSON.stringify(prevState)); // Deep copy
@@ -136,7 +187,10 @@ function EditarPpi() {
     if (!ppi) {
         return <div>Cargando...</div>;
     }
-
+/**
+     * handleGoBack
+     * Navigates the user back to the admin panel.
+     */
     const handleGoBack = () => {
         navigate('/admin'); // Esto navega hacia atrás en la historia
     };
@@ -150,7 +204,7 @@ function EditarPpi() {
                     <Link to={'/admin'}>
                         <h1 className='text-gray-500'>Administración</h1>
                     </Link>
-                    
+
                     <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
                     <Link to={'#'}>
                         <h1 className='font-medium text-amber-600'>Editar PPI</h1>
@@ -160,6 +214,7 @@ function EditarPpi() {
                     <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
                 </div>
             </div>
+            {/* Form for Editing PPI */}
             <div className='w-full border-b-2 border-gray-200 rounded-lg'></div>
             <div className='flex gap-3 flex-col mt-5 bg-white px-4'>
                 <h2 className='flex items-center gap-1 text-base'><strong className='text-amber-500 text-2xl font-medium'>*</strong>Selecciona la celda en la tabla y edita los valores</h2>
@@ -283,7 +338,7 @@ function EditarPpi() {
                     </div>
                 </form>
             </div>
-
+{/* Success Modal */}
             {showSuccessModal && (
                 <div className="fixed z-10 inset-0 overflow-y-auto">
                     <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
