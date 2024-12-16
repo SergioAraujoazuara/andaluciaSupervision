@@ -158,12 +158,12 @@ function EditarPpi() {
         }));
         updateTotalSubactividades(1);
     };
-/**
-     * addSubactividad
-     * Adds a new subactivity to a specific activity.
-     * 
-     * @param {Number} actividadIndex - Index of the activity to which the subactivity is added.
-     */
+    /**
+         * addSubactividad
+         * Adds a new subactivity to a specific activity.
+         * 
+         * @param {Number} actividadIndex - Index of the activity to which the subactivity is added.
+         */
     const addSubactividad = (actividadIndex) => {
         setEditPpi(prevState => {
             const newState = JSON.parse(JSON.stringify(prevState)); // Deep copy
@@ -187,10 +187,10 @@ function EditarPpi() {
     if (!ppi) {
         return <div>Cargando...</div>;
     }
-/**
-     * handleGoBack
-     * Navigates the user back to the admin panel.
-     */
+    /**
+         * handleGoBack
+         * Navigates the user back to the admin panel.
+         */
     const handleGoBack = () => {
         navigate('/admin'); // Esto navega hacia atrás en la historia
     };
@@ -338,7 +338,7 @@ function EditarPpi() {
                     </div>
                 </form>
             </div>
-{/* Success Modal */}
+            {/* Success Modal */}
             {showSuccessModal && (
                 <div className="fixed z-10 inset-0 overflow-y-auto">
                     <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">

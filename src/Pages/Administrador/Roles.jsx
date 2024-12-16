@@ -46,11 +46,11 @@ function AdminPanel() {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     // State for managing compressed signature image
     const [signatureImage, setSignatureImage] = useState(null);
-/**
-     * Handles image upload:
-     * - Compresses the image using browser-image-compression.
-     * - Converts it to PNG format and stores it as a base64 data URL in state.
-     */
+    /**
+         * Handles image upload:
+         * - Compresses the image using browser-image-compression.
+         * - Converts it to PNG format and stores it as a base64 data URL in state.
+         */
     const handleImagenChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -113,10 +113,10 @@ function AdminPanel() {
 
         return () => unsubscribe();
     }, []);
-/**
-     * Updates the selected user's role and optionally uploads a new signature image.
-     * Updates the Firestore document with the new data.
-     */
+    /**
+         * Updates the selected user's role and optionally uploads a new signature image.
+         * Updates the Firestore document with the new data.
+         */
     const handleRoleUpdate = async () => {
         if (!selectedUserId) {
             alert('Seleccione un usuario para actualizar.');
@@ -128,7 +128,7 @@ function AdminPanel() {
             role: newRole,
         };
 
-       // Include signature image if uploaded
+        // Include signature image if uploaded
         if (signatureImage) updates.signature = signatureImage;
 
         await updateDoc(userDocRef, updates);
@@ -138,11 +138,11 @@ function AdminPanel() {
     };
 
 
-       // Function to close the success modal
+    // Function to close the success modal
     const handleCloseSuccessModal = () => {
         setShowSuccessModal(false);
     };
-// Navigation function to return to Admin Dashboard
+    // Navigation function to return to Admin Dashboard
     const navigate = useNavigate();
     const handleGoBack = () => {
         navigate('/admin'); // Esto navega hacia atrás en la historia
@@ -150,7 +150,7 @@ function AdminPanel() {
 
     return (
         <div className="container mx-auto min-h-screen text-gray-500 xl:px-14 py-2">
-{/* Navigation Header */}
+            {/* Navigation Header */}
             <div className='flex gap-2 items-center justify-between bg-white px-5 py-3  text-base'>
 
                 <div className='flex gap-2 items-center'>
@@ -174,7 +174,7 @@ function AdminPanel() {
                 </div>
 
             </div>
-{/* Role Update Section */}
+            {/* Role Update Section */}
             <div className='w-full border-b-2 border-gray-200'></div>
             <div className="bg-white p-4 mt-2 text-sm">
                 <div className="grid grid-cols-1 xl:grid-cols-6 xl:gap-20 gap-5">
@@ -206,7 +206,7 @@ function AdminPanel() {
 
                     <div className='xl:col-span-2 col-span-4 w full'>
                         <div className="rounded-md p-4">
-                        <h2 className="bg-sky-500 text-white text-lg font-semibold px-4 py-1 rounded-t-lg">Actualizar Roles</h2>
+                            <h2 className="bg-sky-500 text-white text-lg font-semibold px-4 py-1 rounded-t-lg">Actualizar Roles</h2>
                             <h2 className="text-lg font-semibold mb-4"></h2>
                             <select
                                 value={selectedUserId}

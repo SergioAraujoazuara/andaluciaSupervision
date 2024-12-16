@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { db } from '../../firebase_config';
+import { db } from '../../../firebase_config';
 import { getDoc, getDocs, query, collection, where, doc, updateDoc, increment, addDoc, or, setDoc } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 import { FaArrowRight } from "react-icons/fa";
@@ -18,16 +18,16 @@ import { FaWpforms } from "react-icons/fa6";
 import { AiOutlineCheckCircle } from "react-icons/ai";
 import { FaTable } from "react-icons/fa";
 import { FaTabletAlt } from "react-icons/fa";
-import FormularioInspeccion from '../Components/FormularioInspeccion'
+import FormularioInspeccion from '../../Components/FormularioInspeccion'
 import logo from '../assets/tpf_logo_azul.png'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import Pdf_final from './Pdf_final';
+import Pdf_final from '../../Components/Pdf_final';
 import imageCompression from 'browser-image-compression';
 
 import { IoArrowBackCircle } from "react-icons/io5";
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../../context/authContext';
 import { TiLockClosedOutline } from "react-icons/ti";
-import GrocIA from '../Components/GrocIA';
+import GrocIA from '../../Components/GrocIA';
 
 
 function TablaPpi() {
