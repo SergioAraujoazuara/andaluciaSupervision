@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '../../firebase_config';
+import { db } from '../../../firebase_config';
 import { getDocs, collection } from 'firebase/firestore';
 import { FaArrowRight, FaSearch, FaTimes } from "react-icons/fa";
 import { GoHomeFill } from "react-icons/go";

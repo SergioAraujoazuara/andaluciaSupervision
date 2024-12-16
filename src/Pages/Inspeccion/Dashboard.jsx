@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { db } from '../../firebase_config';
+import { db } from '../../../firebase_config';
 import { getDocs, collection } from 'firebase/firestore';
 import { FaArrowRight, FaSearch, FaTimes, FaThLarge, FaTable, FaChartPie } from "react-icons/fa";
 import { GoHomeFill } from "react-icons/go";
@@ -10,22 +10,22 @@ import { IoArrowBackCircle } from "react-icons/io5";
 
 
 // Importación de componentes personalizados
-import GraficaAptosPorSector from '../Graficas/GraficaAptosPorSector ';
-import GraficaNoAptosPorSector from '../Graficas//GraficaNoAptosPorSector ';
-import ResumenPorNivel from '../Graficas/ResumenPorNivel';
-import TargetCard from '../Graficas/TargetCard';
-import FiltrosDashboard from '../Components/Filtros/FiltrosDashboard';
-import TimelineAptos from '../Graficas/TimeLineAptos';
-import GraficaLotesPorSector from '../Graficas/GraficasLotesPorSector';
-import TarjetaNoAptosPorSector from '../Graficas/TarjetaNoAptosPorSector';
+import GraficaAptosPorSector from '../../Graficas/GraficaAptosPorSector ';
+import GraficaNoAptosPorSector from '../../Graficas/GraficaNoAptosPorSector ';
+import ResumenPorNivel from '../../Graficas/ResumenPorNivel';
+import TargetCard from '../../Graficas/TargetCard';
+import FiltrosDashboard from '../../Components/Filtros/FiltrosDashboard';
+import TimelineAptos from '../../Graficas/TimeLineAptos';
+import GraficaLotesPorSector from '../../Graficas/GraficasLotesPorSector';
+import TarjetaNoAptosPorSector from '../../Graficas/TarjetaNoAptosPorSector';
 
 // Importar funciones de utilidades
-import { getLotes } from '../Functions/GetLotes'; // Importar la función de obtención de lotes
-import { getInspections } from '../Functions/GetInspections'; // Importar la función de obtención de inspecciones
-import { getNoAptos } from '../Functions/getNoAptos'; // Importar la función de obtención de inspecciones
-import AptoNoApto from '../Graficas/AptoNoapto';
-import ModalResumenSector from '../Graficas/ModalResumenSector';
-import PdfCreator from '../Components/PdfCreator';
+import { getLotes } from '../../Functions/GetLotes'; // Importar la función de obtención de lotes
+import { getInspections } from '../../Functions/GetInspections'; // Importar la función de obtención de inspecciones
+import { getNoAptos } from '../../Functions/getNoAptos'; // Importar la función de obtención de inspecciones
+import AptoNoApto from '../../Graficas/AptoNoapto';
+import ModalResumenSector from '../../Graficas/ModalResumenSector';
+import PdfCreator from '../../Components/PdfCreator';
 
 
 function Elemento() {

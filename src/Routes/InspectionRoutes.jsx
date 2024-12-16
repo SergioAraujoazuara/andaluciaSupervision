@@ -5,9 +5,9 @@ import ProtectedRoutes from './ProtectedRoutes';
 import Viewer_inspeccion from './Viewer_inspeccion';
 import Elemento from './Pages/Elemento';
 import TablaPpi from './Pages/TablaPpi';
-import EditarPpi from './Pages/Administrador/EditarPpi';
-import FormularioInspeccion from './Components/FormularioInspeccion';
-import Pdf_final from './Components/Pdf_final';
+import EditarPpi from '../Pages/Administrador/EditarPpi';
+import FormularioInspeccion from '../Components/FormularioInspeccion';
+import Pdf_final from '../Components/Pdf_final';
 
 const inspectionRoutes = [
   { path: '/visor_inspeccion', element: <Viewer_inspeccion />, roles: ['admin', 'usuario'] },

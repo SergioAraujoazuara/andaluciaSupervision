@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from './context/authContext';
+import { useAuth } from '../context/authContext';
 import { Navigate } from 'react-router-dom';
 import { LuLoader } from "react-icons/lu";
 

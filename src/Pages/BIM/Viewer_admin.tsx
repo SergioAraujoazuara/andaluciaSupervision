@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as OBC from "openbim-components";
 import * as THREE from "three";
-import { db } from '../firebase_config';
+import { db } from '../../../firebase_config';
 import { getDoc, getDocs, doc, collection, addDoc, runTransaction, writeBatch, setDoc, query, where, updateDoc, deleteDoc } from 'firebase/firestore';
 import { IoMdAddCircle } from 'react-icons/io';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
@@ -12,11 +12,11 @@ import { IoCloseCircle } from "react-icons/io5";
 import { SiReacthookform } from "react-icons/si";
 import { FaQuestionCircle } from "react-icons/fa";
 import jsPDF from 'jspdf';
-import logo from './assets/tpf_logo_azul.png'
+import logo from '../../assets/tpf_logo_azul.png';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import FormularioInspeccion from './Components/FormularioInspeccion';
-import Trazabilidad from './Pages/Administrador/Trazabilidad'
-import TrazabilidadBim from './Pages/Administrador/TrazabiidadBim';
+import FormularioInspeccion from '../../Components/FormularioInspeccion';
+import Trazabilidad from '../Administrador/Trazabilidad'
+import TrazabilidadBim from '../Administrador/TrazabiidadBim';
 import { div } from 'three/examples/jsm/nodes/Nodes.js';
 import ViewerComponent from './ViewerComponent';
 import { IoArrowBackCircle } from "react-icons/io5";

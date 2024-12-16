@@ -5,22 +5,21 @@ import Navbar from './Components/Navbar';
 import Footer from './Components/Footer';
 import AuthTabs from './Login/AuthTabs.jsx';
 import { AuthProvider } from './context/authContext.jsx';
-import ProtectedRoutes from './ProtectedRoutes.jsx';
+import ProtectedRoutes from './Routes/ProtectedRoutes.jsx';
 import AdminHome from './Pages/Administrador/AdminHome';
 import Trazabilidad from './Pages/Administrador/Trazabilidad';
-import Viewer_admin from './Viewer_admin';
+import Viewer_admin from './Pages/BIM/Viewer_admin';
 import VerPpis from './Pages/Administrador/VerPpis';
 import AgregarPPi from './Pages/Administrador/AgregarPPi';
 import Roles from './Pages/Administrador/Roles';
-import Viewer_inspeccion from './Viewer_inspeccion';
-import Elemento from './Pages/Elemento';
-import TablaPpi from './Pages/TablaPpi';
+import Viewer_inspeccion from './Pages/BIM/Viewer_inspeccion';
+import Elemento from './Pages/Inspeccion/Elemento';
+import TablaPpi from './Pages/Inspeccion/TablaPpi';
 import EditarPpi from './Pages/Administrador/EditarPpi';
 import FormularioInspeccion from './Components/FormularioInspeccion';
 import Pdf_final from './Components/Pdf_final';
 import GrocIA from './Components/GrocIA.jsx';
-import Dashboard from './Pages/Dashboard.jsx';
-import Auscultacion from './Pages/Auscultacion.jsx';
+import Dashboard from './Pages/Inspeccion/Dashboard.jsx';
 import SendMail from './Components/FeatureSendMail/SendMail.jsx';
 import ParteObra from './Pages/ParteObra/ParteObra.jsx';
 import SistemaDePestanas from './Pages/ParteObra/SistemaPestanas.jsx';
@@ -56,7 +55,6 @@ function App() {
     { path: '/visor_inspeccion', element: <Viewer_inspeccion />, roles: ['admin', 'usuario'] },
     { path: '/elemento/:id', element: <Elemento />, roles: ['admin', 'usuario'] },
     { path: '/dashboard', element: <Dashboard />, roles: ['admin', 'usuario'] },
-    { path: '/auscultacion', element: <Auscultacion />, roles: ['admin', 'usuario'] },
     { path: '/tablaPpi', element: <TablaPpi />, roles: ['admin', 'usuario'] },
     { path: '/tablaPpi/:idLote/:ppiNombre', element: <TablaPpi />, roles: ['admin', 'usuario'] },
     { path: '/editarPpi/:id', element: <EditarPpi />, roles: ['admin', 'usuario'] },

@@ -2,12 +2,12 @@
 import React from 'react';
 import { Route } from 'react-router-dom';
 import ProtectedRoutes from './ProtectedRoutes';
-import AdminHome from './Pages/Administrador/AdminHome';
-import Trazabilidad from './Pages/Administrador/Trazabilidad';
+import AdminHome from '../Pages/Administrador/AdminHome';
+import Trazabilidad from '../Pages/Administrador/Trazabilidad';
 import Viewer_admin from './Viewer_admin';
-import VerPpis from './Pages/Administrador/VerPpis';
-import AgregarPPi from './Pages/Administrador/AgregarPPi';
-import Roles from './Pages/Administrador/Roles';
+import VerPpis from '../Pages/Administrador/VerPpis';
+import AgregarPPi from '../Pages/Administrador/AgregarPPi';
+import Roles from '../Pages/Administrador/Roles';
 
 const adminRoutes = [
   { path: '/admin', element: <AdminHome />, roles: ['admin', 'usuario'] },

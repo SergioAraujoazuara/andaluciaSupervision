@@ -3,7 +3,7 @@ import { Document, Page, Text, View, StyleSheet, Image, pdf } from '@react-pdf/r
 import { PDFDocument } from 'pdf-lib';
 import { MdAttachFile } from "react-icons/md";
 import { FaFilePdf } from "react-icons/fa6";
-import { sendEmail } from '../Components/FeatureSendMail/emaiService';
+import { sendEmail } from '../../Components/FeatureSendMail/emaiService';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const styles = StyleSheet.create({
