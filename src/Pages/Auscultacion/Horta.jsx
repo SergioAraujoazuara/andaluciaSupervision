@@ -1,3 +1,24 @@
+/**
+ * Component: Horta
+ * 
+ * Description:
+ * This component embeds a Power BI report using an iframe.
+ * It displays the report in a responsive centered container.
+ * 
+ * Key Features:
+ * 1. **Embedded Power BI Report**:
+ *    - The report is displayed using an iframe with specified dimensions.
+ * 2. **Responsive Layout**:
+ *    - The report is centered using Flexbox and occupies the full height of the screen.
+ * 3. **Customizable iframe**:
+ *    - The iframe includes attributes such as title, width, height, and allowFullScreen.
+ * 
+ * Flow:
+ * - The iframe loads the Power BI report from a given URL.
+ * - It is centered vertically and horizontally within the viewport.
+ */
+
+
 import React from 'react'
 
 function Horta() {
