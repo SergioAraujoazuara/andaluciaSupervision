@@ -1,3 +1,21 @@
+/**
+ * @file Elemento.jsx
+ * @description
+ * This component provides a dashboard-like view of inspections data for a construction project.
+ * It fetches "lotes" (lots/segments of the project) and displays their inspection progress, aptos (conforming items),
+ * and no aptos (non-conforming items). The component allows filtering by various fields (sector, subSector, etc.)
+ * and shows different KPIs, charts, and summary data.
+ *
+ * Key functionalities:
+ * - Fetches "lotes" data from Firestore and calculates progress, aptos/no aptos counts per sector.
+ * - Provides filters for sector, subSector, parte, elemento, lote, and ppi.
+ * - Allows switching views between a table-like view and a cards/graph view.
+ * - Displays KPIs such as completed lots, started lots, overall progress percentage.
+ * - Integrates multiple custom components: filters, charts, PDF creation, and modal summaries.
+ *
+ * Complex logic sections are commented inline.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { db } from '../../../firebase_config';
 import { getDocs, collection } from 'firebase/firestore';
@@ -30,15 +48,15 @@ import { getNoAptos } from '../../Functions/getNoAptos'; // Importar la función
 
 
 function Elemento() {
-    // Navegación para regresar a la página principal
+    // Navigation
     const navigate = useNavigate();
     const handleGoBack = () => {
         navigate('/');
     };
 
-    // Estados del componente
-    const [lotes, setLotes] = useState([]); // Almacena los lotes obtenidos de la base de datos
-    const [filterText, setFilterText] = useState(''); // Almacena el texto de filtro de búsqueda
+    // State hooks
+    const [lotes, setLotes] = useState([]);
+    const [filterText, setFilterText] = useState(''); 
     const [filters, setFilters] = useState({
         sector: '',
         subSector: '',
@@ -46,10 +64,10 @@ function Elemento() {
         elemento: '',
         lote: '',
         ppi: ''
-    }); // Almacena los filtros seleccionados por el usuario
-    const [isTableView, setIsTableView] = useState(true); // Estado para alternar entre vista de tabla y tarjetas
-    const [showSector, setShowSector] = useState(true); // Estado para mostrar/ocultar el sector en la tabla
-    const [activeView, setActiveView] = useState('tabla'); // Estado para alternar entre vista de tabla y gráficos
+    }); 
+    const [isTableView, setIsTableView] = useState(true); 
+    const [showSector, setShowSector] = useState(true); 
+    const [activeView, setActiveView] = useState('tabla'); 
 
     const [uniqueValues, setUniqueValues] = useState({
         sector: [],
@@ -58,9 +76,9 @@ function Elemento() {
         elemento: [],
         lote: [],
         ppi: []
-    }); // Almacena los valores únicos para cada filtro
+    });
 
-    // Estados para "No Aptos"
+    // States for "No Aptos" counts
     const [noAptosPorSector, setNoAptosPorSector] = useState({});
     const [totalNoAptos, setTotalNoAptos] = useState(0);
     const [sectorSeleccionado, setSectorSeleccionado] = useState('Todos');
@@ -68,6 +86,12 @@ function Elemento() {
     useEffect(() => {
         fetchLotes();
     }, []);
+
+    /**
+     * @function fetchLotes
+     * Fetches all "lotes" from Firestore and sets up unique values for filtering.
+     * Also calculates no aptos by sector using getNoAptos.
+     */
 
     const fetchLotes = async () => {
         try {
@@ -81,13 +105,8 @@ function Elemento() {
                 lote: getUniqueValues(lotesData, 'nombre'),
                 ppi: getUniqueValues(lotesData, 'ppiNombre')
             });
-
-            // Obtener y calcular "No Aptos" utilizando la función `getNoAptos`
+                // Calculate no aptos data
         const { noAptosPorSector, totalNoAptos } = await getNoAptos(lotesData);
-
-        // Aquí agregamos el console.log para ver el conteo de inspecciones no aptas
-        console.log('No Aptos por Sector:', noAptosPorSector);
-        console.log('Total No Aptos:', totalNoAptos);
             setNoAptosPorSector(noAptosPorSector);
             setTotalNoAptos(totalNoAptos);
         } catch (error) {
@@ -95,11 +114,17 @@ function Elemento() {
         }
     };
 
-    // Función para obtener valores únicos de una propiedad específica de los lotes
+     // Extract unique values for dropdown filters
     const getUniqueValues = (data, key) => {
         return [...new Set(data.map(item => item[key]))];
     };
-    // Función para manejar la trazabilidad de los lotes seleccionados y guardar en localStorage
+    
+     /**
+     * @function handleCaptrurarTrazabilidad
+     * Saves selected lot information (such as sector, parte, elemento, etc.) into localStorage
+     * for future reference or navigation to a different page.
+     */
+
     const handleCaptrurarTrazabilidad = (l) => {
         localStorage.setItem('sector', l.sectorNombre || '');
         localStorage.setItem('subSector', l.subSectorNombre || '');
@@ -112,12 +137,12 @@ function Elemento() {
         localStorage.setItem('pkFinal', l.pkFinal || '');
     };
 
-    // Función para manejar cambios en el filtro de texto
+   // Handle filter text input
     const handleFilterChange = (e) => {
         setFilterText(e.target.value);
     };
 
-    // Función para manejar cambios en los selectores de filtro
+    // Handle dropdown filters
     const handleSelectChange = (e) => {
         const { name, value } = e.target;
         setFilters(prevFilters => ({
@@ -126,7 +151,7 @@ function Elemento() {
         }));
     };
 
-    // Función para limpiar todos los filtros
+    // Clear all filters
     const handleClearFilters = () => {
         setFilters({
             sector: '',
@@ -140,7 +165,14 @@ function Elemento() {
     };
 
 
-    // Filtrado de lotes según los filtros y el texto de búsqueda
+    /**
+     * @constant filteredLotes
+     * Filters the lotes based on text search and selected filters.
+     * Complex logic:
+     * - Matches lot names or PPI names to filterText.
+     * - Checks each filter (sector, subSector, etc.) if applied.
+     */
+
     const filteredLotes = lotes.filter(l =>
         (l.nombre.toLowerCase().includes(filterText.toLowerCase()) ||
             l.ppiNombre.toLowerCase().includes(filterText.toLowerCase())) &&
@@ -152,7 +184,7 @@ function Elemento() {
         (filters.ppi === '' || l.ppiNombre === filters.ppi)
     );
 
-    // Cálculo del progreso general
+    // Calculate overall progress
     const calcularProgresoGeneral = () => {
         const totalLotes = filteredLotes.length;
         const progresoTotal = filteredLotes.reduce((sum, lote) => {
@@ -163,7 +195,11 @@ function Elemento() {
     };
 
 
-    // Obtención de datos de actividades aptas por sector
+    /**
+     * @function obtenerDatosAptosPorSector
+     * Aggregates aptos count by sector to feed into charts.
+     */
+
     const obtenerDatosAptosPorSector = () => {
         const data = [['Sector', 'Aptos']];
         uniqueValues.sector.forEach(sector => {
@@ -177,7 +213,11 @@ function Elemento() {
         return data;
     };
 
-    // Obtención de datos de actividades no aptas por sector
+   /**
+     * @function obtenerDatosNoAptosPorSector
+     * Aggregates no aptos count by sector.
+     */
+
     const obtenerDatosNoAptosPorSector = () => {
         const data = [['Sector', 'No Aptos']];
         uniqueValues.sector.forEach(sector => {
@@ -193,21 +233,20 @@ function Elemento() {
         return data;
     };
 
-    // Contar actividades aptas para un nivel y valor específicos
+        // Count aptos/no aptos per given level (e.g., sector, subSector)
     const contarAptos = (nivel, valor) => {
         return filteredLotes
             .filter(l => l[nivel] === valor)
             .reduce((sum, lote) => sum + (lote.actividadesAptas || 0), 0);
     };
 
-    // Contar actividades no aptas para un nivel y valor específicos
     const contarNoAptos = (nivel, valor) => {
         return filteredLotes
             .filter(l => l[nivel] === valor)
             .reduce((sum, lote) => sum + (lote.actividadesNoAptas || 0), 0);
     };
 
-    // Calcular el progreso por nivel
+    // Calculate progress for a given level (sector, etc.)
     const calcularProgresoPorNivel = (nivel, valor) => {
         const totalSubactividades = filteredLotes
             .filter(l => l[nivel] === valor)
@@ -220,32 +259,25 @@ function Elemento() {
             : 0;
     };
 
-    // Variables de control para los KPI
+    // KPI calculations
 
-    // Variables para contar lotes e inspecciones
     const totalLotes = lotes.filter(l => l.ppiNombre).length;
     const lotesIniciados = lotes.filter(l =>
         (l.actividadesAptas > 0 || l.actividadesNoAptas > 0) && l.totalSubactividades > 0
     ).length;
 
-    // Datos para las gráficas de aptos y no aptos por sector
     const datosAptosPorSector = obtenerDatosAptosPorSector();
     const datosNoAptosPorSector = obtenerDatosNoAptosPorSector();
-
     const totalAptos = datosAptosPorSector.slice(1).reduce((sum, sector) => sum + sector[1], 0);
-    // const totalNoAptos = datosNoAptosPorSector.slice(1).reduce((sum, sector) => sum + sector[1], 0);
 
-    console.log(totalNoAptos)
-
-    // Cálculo del porcentaje de inspecciones completadas
+      // Percentage of completed inspections
     const calcularPorcentajeInspeccionesCompletadas = () => {
         if (totalLotes === 0) return 0;
         return ((lotesIniciados / totalLotes) * 100).toFixed(2);
     };
-
     const porcentajeInspeccionesCompletadas = calcularPorcentajeInspeccionesCompletadas();
 
-    // Cálculo del porcentaje de elementos aptos
+    // Percentage of aptos items
     const totalSubactividadesInspeccionadas = filteredLotes.reduce((sum, lote) => sum + (lote.totalSubactividades || 0), 0);
     const totalSubactividadesAptas = filteredLotes.reduce((sum, lote) => sum + (lote.actividadesAptas || 0), 0);
 
@@ -255,7 +287,7 @@ function Elemento() {
     };
 
 
-    // Cálculo del porcentaje de inspecciones pendientes
+ // Pending inspections
     const totalInspecciones = lotes.length; // Total de lotes o inspecciones disponibles
     const inspeccionesPendientes = totalInspecciones - lotesIniciados;
 
@@ -265,7 +297,12 @@ function Elemento() {
     };
 
 
-    // Cálculo del progreso general de la obra
+  /**
+     * @function calcularProgresoGeneralObra
+     * Aggregates the progress of all filtered lots to find the average completion percentage.
+     * Complex logic: Sums up ratio of aptas/totalSubactividades for each lote and averages it.
+     */
+
     const calcularProgresoGeneralObra = () => {
         const totalProgreso = filteredLotes.reduce((sum, lote) => {
             const progresoLote = (lote.actividadesAptas || 0) / (lote.totalSubactividades || 1);
@@ -279,7 +316,8 @@ function Elemento() {
     const progresoGeneralObra = calcularProgresoGeneralObra();
 
 
-    // Función para contar las inspecciones terminadas (todas las subactividades son aptas)
+  // Count completed inspections (all subactivities aptas)
+
     const contarInspeccionesTerminadas = () => {
         return filteredLotes.filter(lote => {
             // Consideramos que una inspección está terminada si todas las subactividades son aptas
@@ -288,11 +326,7 @@ function Elemento() {
         }).length;
     };
 
-    // Obtener el número de inspecciones terminadas
     const inspeccionesTerminadas = contarInspeccionesTerminadas();
-
-
-    // Verifica si se seleccionó un sector específico
     const isSectorSelected = filters.sector !== '';
 
     return (

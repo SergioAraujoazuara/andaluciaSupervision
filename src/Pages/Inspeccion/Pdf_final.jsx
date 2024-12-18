@@ -1,3 +1,22 @@
+/**
+ * @file Pdf_final.jsx
+ * @description
+ * This component handles the creation and combination of PDF documents related to inspection data.
+ * It:
+ * - Generates an initial PDF report using @react-pdf/renderer.
+ * - Allows attaching additional PDF files to be merged into a single final PDF.
+ * - Uploads the final merged PDF to Firebase Storage.
+ * - Sends an email with a link to the merged PDF.
+ *
+ * Key functionalities:
+ * - Renders a PDF with inspection information.
+ * - Supports attaching additional PDFs and merging them with the main PDF.
+ * - Uses firebase Storage for uploading the combined PDF.
+ * - Uses an email service (sendEmail) to send a notification with the PDF link.
+ *
+ * Additional detailed comments are added near more complex logic sections.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Document, Page, Text, View, StyleSheet, Image, pdf } from '@react-pdf/renderer';
 import { PDFDocument } from 'pdf-lib';
@@ -106,11 +125,21 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         setShowConfirmationModal(false);
     };
 
-    // Inicializa Firebase Storage
     const storage = getStorage();
 
+    /**
+     * @function uploadPdfToFirebase
+     * Uploads the final PDF bytes to Firebase Storage and returns the download URL.
+     *
+     * Complex logic:
+     * - Generates a unique filename based on current date and time.
+     * - Uploads the Blob (PDF) to a Firebase Storage reference.
+     * - Retrieves and returns the download URL.
+     *
+     * Metadata with upload date (in UTC) is stored as customMetadata for reference.
+     */
+
     const uploadPdfToFirebase = async (pdfBytes, filename) => {
-        // Obtén la fecha y hora locales en formato legible (YYYYMMDD_HHMMSS)
         const date = new Date();
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -144,7 +173,15 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
 
 
 
-
+    /**
+        * @function confirmPDFCreation
+        * Triggered when the user confirms the PDF creation process.
+        * Complex logic:
+        * - Calls `combinePDFs` to merge the main PDF with any additional attached PDFs.
+        * - Uploads the merged PDF to Firebase and returns the download URL.
+        * - Sends an email with the download link.
+        * - Closes modals and triggers PDF download.
+        */
 
     const confirmPDFCreation = async () => {
         try {
@@ -152,15 +189,21 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
             const downloadURL = await combinePDFs(); // Asegúrate de que `combinePDFs` retorne la URL
             closeConfirmationModal();
             setShowConfirmModal(false);
-            // Descarga el PDF automáticamente
+            // Download the PDF by opening it in a new tab
             downloadPDF(downloadURL, `${ppiname}_${lote}`);
-            // Envía el correo con la URL del PDF
+            // Send an email with the link to the user
             sendEmail(nombreProyecto, ppi.nombre, obra, tramo, userName, user.email, downloadURL);
             console.log('Correo enviado con éxito:', { nombreProyecto, ppi: ppi.nombre, obra, tramo, userName, userEmail: user.email, downloadURL });
         } catch (error) {
             console.error('Error al crear o subir el PDF:', error);
         }
     };
+
+    /**
+    * @function downloadPDF
+    * Triggers a download by opening the PDF in a new browser tab/window.
+    */
+
     const downloadPDF = (downloadURL) => {
         const link = document.createElement('a');
         link.href = downloadURL;
@@ -169,6 +212,14 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
     };
 
 
+    /**
+         * @function combinePDFs
+         * Complex logic:
+         * 1. Loads the initial generated PDF from `pdfBlob`.
+         * 2. Creates a new PDFDocument and copies all pages from the initial PDF.
+         * 3. Iterates through any additional attached PDF files, reads them, and merges their pages.
+         * 4. Saves the merged PDF, uploads it to Firebase, and returns the download URL.
+         */
 
     const combinePDFs = async () => {
         if (!pdfBlob) {
@@ -199,15 +250,29 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         return await uploadPdfToFirebase(finalPdfBytes, filename);
     };
 
+    /**
+         * @function addMoreFiles
+         * Adds a new file entry for attaching additional PDFs.
+         */
 
     const addMoreFiles = () => {
         setAdditionalFiles([...additionalFiles, { id: Date.now(), file: null }]);
     };
 
+    /**
+     * @function handleFileChange
+     * Allows multiple additional PDFs to be selected and prepared for merging.
+     */
+
     const handleFileChange = (event) => {
         const newFiles = Array.from(event.target.files);
         setAdditionalFiles(newFiles.map(file => ({ id: Date.now(), file })));
     };
+
+    /**
+     * @function handleAdditionalFileChange
+     * Triggered when a user selects a PDF for an additional file input field.
+     */
 
     const handleAdditionalFileChange = (event, id) => {
         const { files } = event.target;
@@ -216,6 +281,11 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
         );
         setAdditionalFiles(updatedFiles);
     };
+
+    /**
+        * Generates the initial PDF using @react-pdf/renderer.
+        * This PDF includes the inspection table and metadata.
+        */
 
     useEffect(() => {
         const doc = (
@@ -301,7 +371,7 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
                                                 ?
                                                 <Text style={styles.tableCell}>Terminada</Text>
                                                 :
-                                                <Text style={styles.tableCell}>{sub.resultadoInspeccion === 'No apto'? '': 'Pendiente'}</Text>
+                                                <Text style={styles.tableCell}>{sub.resultadoInspeccion === 'No apto' ? '' : 'Pendiente'}</Text>
                                             }</Text></View>
                                         </View>
                                         <View style={styles.divider} key={`divider_sub_${index}_${subIndex}`} />
@@ -324,7 +394,10 @@ const Pdf_final = ({ ppi, nombreProyecto, titulo, obra, tramo, imagenPath, image
     }, []);
 
 
-
+    /**
+         * @function readFileAsArrayBuffer
+         * Reads a file as an ArrayBuffer, needed by PDF-lib to load the PDF for merging.
+         */
     const readFileAsArrayBuffer = (file) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();

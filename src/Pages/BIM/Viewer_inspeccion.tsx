@@ -1,4 +1,23 @@
 
+// *********************************************************************
+// Component Flow Explanation (in English)
+// *********************************************************************
+//
+// This React component is used to visualize and manage inspection data for a specific construction project element (lote).
+// It integrates with a BIM viewer (using "openbim-components"), fetches data from Firestore, and allows the user to perform inspections.
+//
+// Main workflow steps:
+// 1. The component loads a BIM model using `openbim-components` and listens for user clicks on elements.
+// 2. When a user selects an element, it fetches related "lote" and "inspecciones" data from Firestore.
+// 3. The user can see inspection progress, select sub-activities, and record an inspection result (Apto/No apto).
+// 4. On selecting "No apto," a new inspection version is generated, while "Apto" increments a counter of completed inspections.
+// 5. The user can upload images, add comments, and save the inspection record to Firestore.
+// 6. The component provides options to generate a PDF report of the inspection.
+// 7. In case the inspection is completed (all sub-activities are aptas), the user can finalize the inspection and optionally generate a PDF.
+//
+// The component handles complex logic for versioning inspections and editing previously non-conforming inspections.
+//
+// *********************************************************************
 
 import React, { useState, useEffect } from 'react';
 import * as OBC from "openbim-components";
@@ -39,7 +58,9 @@ interface Lote {
 }
 
 export default function ViewerInspeccion() {
+    // State to show success modal after updating the PPI
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    // Function to handle repeating an inspection after editing a previously performed one
     const handleRepetirInspeccion = async () => {
         if (!ppi || !subactividadToRepeat) return;
 
@@ -48,10 +69,10 @@ export default function ViewerInspeccion() {
         let nuevoPpi = { ...ppi };
         let subactividadSeleccionada = { ...nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] };
 
-        // Generar un nuevo ID para el registro duplicado
+        // Generate a new Firestore document ID for the duplicated record
         const nuevoIdRegistroFormulario = doc(collection(db, "registros")).id;
 
-        // Obtener los datos actuales
+        // Duplicate the existing inspection record in Firestore
         const duplicadoId = await duplicarRegistro(subactividadSeleccionada.idRegistroFormulario, nuevoIdRegistroFormulario);
 
         if (!duplicadoId) {
@@ -59,19 +80,19 @@ export default function ViewerInspeccion() {
             return;
         }
 
-        // Obtener la versión más alta para la actividad específica
+        // Determine the new version number for editing/replacing inspections
         const subactividadesMismaActividad = nuevoPpi.actividades[actividadIndex].subactividades
             .filter(subact => subact.numero === subactividadSeleccionada.numero);
 
-        // Verificar si la subactividad es "no apta" y tiene una versión rechazada
+        // Check if there's a rejected sub-activity that was previously no apto
         const rejectedSubactividad = subactividadesMismaActividad.find(subact => subact.motivoVersion === 'rechazada');
 
         let newEditVersion;
         let newRejectedVersion;
 
-        // Caso 1: Si existe una subactividad rechazada
+        // If there's a rejected sub-activity, reuse its version number
         if (rejectedSubactividad) {
-            // Usar la versión de la subactividad rechazada para la subactividad editada
+            // Otherwise, increment the highest current version by one
             newEditVersion = rejectedSubactividad.version;
 
             // Determinar el nuevo número de versión para la subactividad rechazada
@@ -88,7 +109,7 @@ export default function ViewerInspeccion() {
 
 
 
-        // Crear la nueva subactividad con los valores editados
+        // Create the new edited sub-activity version
         let nuevaSubactividadEditada = {
             ...subactividadSeleccionada,
             nombre: subactividadSeleccionada.nombre,
@@ -111,7 +132,7 @@ export default function ViewerInspeccion() {
         let subAct = subactividadSeleccionada.motivoVersion;
         let resultadoInspeccion = subactividadSeleccionada.resultadoInspeccion;
 
-        // Logs basados en las condiciones
+        // Handle conditions for sub-activities based on their previous states
         if (subAct === 'original' && resultadoInspeccion === 'Apto') {
 
             nuevaSubactividadEditada = {
@@ -131,16 +152,16 @@ export default function ViewerInspeccion() {
 
 
 
-        // Actualizar la subactividad seleccionada para que no esté activa
+        // Deactivate the previous version of the sub-activity
         nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = {
             ...subactividadSeleccionada,
             active: false // Marcar la versión anterior como no activa
         };
 
-        // Añadir la nueva subactividad con los valores editados después de la original
+        // Insert the edited sub-activity as a new version
         nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividadEditada);
 
-        // Actualizar el nuevo registro con las imágenes y observaciones si hay nuevas imágenes
+        // Update the new record in Firestore with images and observations
         const registroDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
         const updateData = {
             edited: true,  // Marcar como editada
@@ -168,6 +189,7 @@ export default function ViewerInspeccion() {
             console.error("Error actualizando el registro:", error);
         }
     };
+    // Duplicate Firestore record to create a new version for editing
     const duplicarRegistro = async (idRegistroFormulario, nuevoIdRegistroFormulario) => {
         try {
             const docRef = doc(db, "registros", idRegistroFormulario);
@@ -196,6 +218,8 @@ export default function ViewerInspeccion() {
             return null;
         }
     };
+
+    // Various state hooks for handling form data, images, and navigation
     const [actividadNombre, setActividadNombre] = useState('');
     const [criterioAceptacion, setCriterioAceptacion] = useState('');
     const [docReferencia, setDocReferencia] = useState('');
@@ -217,6 +241,7 @@ export default function ViewerInspeccion() {
     const [subactividadToRepeat, setSubactividadToRepeat] = useState(null);
     const [subactividadSeleccionada, setSubactividadSeleccionada] = useState(null);
 
+    // Open modal for editing a previously performed inspection (repetir inspección)
     const openConfirmModal = async (subactividadId) => {
         setSubactividadToRepeat(subactividadId);
 
@@ -225,10 +250,10 @@ export default function ViewerInspeccion() {
 
         setIdRegistroImagen(subactividad);
 
-        // Comprobar sub actividad
+        // Get existing form data from Firestore
         setSubActividadreference(subactividad);
 
-        // Obtener el documento del formulario desde Firestore
+        // Get doc of Firestore
         const formularioData = await obtenerDatosFormulario(subactividad.idRegistroFormulario);
 
 
@@ -250,6 +275,8 @@ export default function ViewerInspeccion() {
 
 
     };
+
+     // Fetch inspection form data from Firestore
     const obtenerDatosFormulario = async (idRegistroFormulario) => {
         try {
             const docRef = doc(db, "registros", idRegistroFormulario);
@@ -266,6 +293,8 @@ export default function ViewerInspeccion() {
             return null;
         }
     };
+
+       // State hooks for BIM model and Firestore data
     const [modelCount, setModelCount] = useState(0);
     const [lotes, setLotes] = useState<Lote[]>([]);
     const [selectedGlobalId, setSelectedGlobalId] = useState<string | null>(null);
@@ -288,7 +317,7 @@ export default function ViewerInspeccion() {
     useEffect(() => {
         obtenerLotes();
     }, []);
-
+ // Fetch all "lotes" from Firestore
     const obtenerLotes = async () => {
         try {
             const lotesRef = collection(db, "lotes");
@@ -305,7 +334,7 @@ export default function ViewerInspeccion() {
     };
 
 
-
+    // Initialize BIM viewer and load IFC model
     useEffect(() => {
         let viewer = new OBC.Components();
 
@@ -418,8 +447,7 @@ export default function ViewerInspeccion() {
 
 
 
-    // Función para obtener las inspecciones de un lote
-    // Asegúrate de llamar a esta función cuando se seleccione un lote
+      // Fetch inspections for a given lote from Firestore
     const obtenerInspecciones = async (loteId) => {
         try {
             const inspeccionesRef = collection(db, 'lotes', loteId, 'inspecciones');
@@ -436,7 +464,7 @@ export default function ViewerInspeccion() {
     };
 
     const [ppiNombre, setPpiNombre] = useState('');
-    // Manejar el cambio de lote seleccionado
+    // Whenever a lote is selected, fetch its inspections
     useEffect(() => {
         if (selectedLote) {
             obtenerInspecciones(selectedLote.docId);
@@ -446,7 +474,7 @@ export default function ViewerInspeccion() {
 
 
 
-
+ // Fetch main PPI (inspecciones) data for the currently selected lote
     useEffect(() => {
 
         const obtenerInspecciones = async () => {
@@ -500,7 +528,7 @@ export default function ViewerInspeccion() {
     const [modalFormulario, setModalFormulario] = useState(false);
     const [currentSubactividadId, setCurrentSubactividadId] = useState(null);
 
-
+   // Open modal to submit inspection result (Apto/No apto)
 
     const handleOpenModalFormulario = (subactividadId) => {
         setCurrentSubactividadId(subactividadId);
@@ -525,18 +553,7 @@ export default function ViewerInspeccion() {
     };
 
 
-
-
-
-
-
-
-
-
-
-
-
-    // agregar cometarios
+    // Handle comments and user information
     const [comentario, setComentario] = useState("");
     const { user } = useAuth();
     const [userName, setUserName] = useState('')
@@ -558,7 +575,7 @@ export default function ViewerInspeccion() {
 
     const [resultadoInspeccion, setResultadoInspeccion] = useState('Apto');
 
-    // Define la fecha, el responsable y genera la firma aquí
+    // Current date/time and responsible info
     const fechaHoraActual = new Date().toLocaleString('es-ES', {
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
@@ -567,6 +584,7 @@ export default function ViewerInspeccion() {
 
     const firma = '9c8245e6e0b74cfccg97e8714u3234228fb4xcd2'
 
+     // Mark the form as submitted and update Firestore accordingly
     const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspeccion) => {
         if (!ppi || !currentSubactividadId) {
             return;
@@ -627,7 +645,7 @@ export default function ViewerInspeccion() {
             nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividadRepetida);
         }
 
-        // Lógica adicional para manejar la edición de versiones relacionadas
+        // If this was not the original version and now it's Apto, handle related versions
         if (motivoVersionActual !== 'original' && resultadoInspeccion === "Apto") {
             nuevoPpi.actividades[actividadIndex].subactividades.forEach((subactividad, index) => {
                 if (index > subactividadIndex && subactividad.motivoVersion === 'rechazada') {
@@ -647,7 +665,7 @@ export default function ViewerInspeccion() {
 
 
 
-
+// Update PPI data in Firestore after editing
 
     const actualizarFormularioEnFirestore = async (nuevoPpi) => {
         if (!nuevoPpi.docId) {
@@ -680,7 +698,7 @@ export default function ViewerInspeccion() {
     };
 
 
-
+// Modal for generating PDF final report
     const [modalInforme, setModalInforme] = useState(false)
     const [modalConfirmacionInforme, setModalConfirmacionInforme] = useState(false)
 
@@ -703,6 +721,8 @@ export default function ViewerInspeccion() {
     const [actividadesAptas, setActividadesAptas] = useState(0); // Estado para almacenar los datos del PPI
     const [totalSubactividades, setTotalSubActividades] = useState(0); // Estado para almacenar los datos del PPI
     const [difActividades, setDifActividades] = useState(0); // Estado para almacenar los datos del PPI
+
+    // Fetch lote details to determine inspection completion status
     useEffect(() => {
         const obtenerLotePorId = async () => {
 
@@ -748,7 +768,7 @@ export default function ViewerInspeccion() {
 
     const [formulario, setFormulario] = useState(true)
 
-
+// Save inspection data to Firestore "registros" collection
     const enviarDatosARegistros = async () => {
         // Descomponer currentSubactividadId para obtener los índices
         const [, actividadIndex, subactividadIndex] = currentSubactividadId.split('-').map(Number);
@@ -818,7 +838,7 @@ export default function ViewerInspeccion() {
         }
     };
 
-
+// Handlers for confirming final submission and generating PDF
     const handleConfirmarEnviotablaPpi = async () => {
         // Aquí llamarías a la función que realmente envía los datos del formulario
         await handelEnviarFormulario();
@@ -908,7 +928,8 @@ export default function ViewerInspeccion() {
     }
 
 
-
+// Generate PDF of the inspection
+    // The function `generatePDF` is long, but it handles building a PDF document with pdf-lib.
     const generatePDF = async () => {
         const pdfDoc = await PDFDocument.create();
         let currentPage = pdfDoc.addPage([595, 842]); // Inicializa la primera página
@@ -1613,42 +1634,42 @@ export default function ViewerInspeccion() {
 
 
             {showSuccessModal && (
-    <div className="fixed z-10 inset-0 overflow-y-auto">
-        <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div className="sm:flex sm:items-start">
-                        <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-                            {/* Icono de éxito */}
-                            <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                            </svg>
+                <div className="fixed z-10 inset-0 overflow-y-auto">
+                    <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                            <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
                         </div>
-                        <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 className="text-lg font-medium text-gray-900" id="modal-headline">
-                                Éxito
-                            </h3>
-                            <div className="mt-2">
-                                <p className="text-sm text-gray-500">
-                                    El PPI ha sido actualizado exitosamente.
-                                </p>
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <div className="sm:flex sm:items-start">
+                                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                        {/* Icono de éxito */}
+                                        <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                        <h3 className="text-lg font-medium text-gray-900" id="modal-headline">
+                                            Éxito
+                                        </h3>
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-500">
+                                                El PPI ha sido actualizado exitosamente.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                    <button type="button" onClick={() => setShowSuccessModal(false)} className="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                        Cerrar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="button" onClick={() => setShowSuccessModal(false)} className="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Cerrar
-                        </button>
-                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-)}
+            )}
 
 
 

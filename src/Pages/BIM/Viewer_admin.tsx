@@ -1,3 +1,26 @@
+/**
+ * Component: Viewer_admin
+ *
+ * Description:
+ * This component is responsible for displaying and managing "lotes" (work units) in a BIM project.
+ * It interacts with a BIM viewer component to assign Global IDs and other metadata to selected lots.
+ * 
+ * Key Features:
+ * - **Data Fetching**: Retrieves "lotes" from Firestore on component mount.
+ * - **State Management**: Handles selected lotes, Global IDs, and other metadata.
+ * - **BIM Viewer Integration**: Connects to the `ViewerComponent` for BIM interactions.
+ * - **Dynamic Filtering**: Provides filtering options for "assigned" and "unassigned" lotes.
+ * - **Modals**: Displays modals for success messages, confirmations, and additional actions.
+ *
+ * Core Flow:
+ * 1. On component mount, fetch all "lotes" from Firestore and populate the `lotes` state.
+ * 2. Users can filter, view, and select lots. Unassigned lots can be updated with a Global ID.
+ * 3. Selected data is updated in Firestore, and the state is refreshed dynamically.
+ * 4. Integration with the BIM viewer allows dynamic assignment of metadata to elements.
+ * 5. Feedback is provided to the user via modals.
+ */
+
+
 import React, { useState, useEffect } from 'react';
 import * as OBC from "openbim-components";
 import * as THREE from "three";
@@ -21,7 +44,7 @@ import { div } from 'three/examples/jsm/nodes/Nodes.js';
 import ViewerComponent from './ViewerComponent';
 import { IoArrowBackCircle } from "react-icons/io5";
 
-
+// Define Lote interface to type the data from Firestore
 interface Lote {
     docId: string;
     nombre: string;
@@ -35,11 +58,12 @@ interface Lote {
 }
 
 export default function Viewer_admin() {
-
+    // Navigation handler
     const navigate = useNavigate();
     const handleGoBack = () => {
         navigate('-1'); // Esto navega hacia atrás en la historia
     };
+    // State variables
     const [modelCount, setModelCount] = useState(0);
     const [lotes, setLotes] = useState<Lote[]>([]);
     const [selectedGlobalId, setSelectedGlobalId] = useState<string | null>(null);
@@ -47,11 +71,7 @@ export default function Viewer_admin() {
     const [selectedLote, setSelectedLote] = useState<Lote | null>(null);
     const [inspecciones, setInspecciones] = useState([]);
     const idProyecto = localStorage.getItem('proyecto')
-
-
-
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
-
     const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
     const imagenPath2 = logo
     const [nombreProyecto, setNombreProyecto] = useState(localStorage.getItem('nombre_proyecto') || '');
@@ -59,9 +79,21 @@ export default function Viewer_admin() {
     const [tramo, setTramo] = useState(localStorage.getItem('tramo'));
     const [observaciones, setObservaciones] = useState('');
     const idLote = localStorage.getItem('loteId');
-
-
     const [ppi, setPpi] = useState(null);
+    const [seleccionApto, setSeleccionApto] = useState({});
+    const [tempSeleccion, setTempSeleccion] = useState(null);
+    const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+    const [modal, setModal] = useState(false);
+    const [modalFormulario, setModalFormulario] = useState(false);
+    const [currentSubactividadId, setCurrentSubactividadId] = useState(null);
+    const [modalInforme, setModalInforme] = useState(false)
+    const [modalConfirmacionInforme, setModalConfirmacionInforme] = useState(false)
+    const [loteInfo, setLoteInfo] = useState(null); // Estado para almacenar los datos del PPI
+    const [sectorInfoLote, setSectorInfoLote] = useState(null); // Estado para almacenar los datos del PPI
+    const [mensajeExitoInspeccion, setMensajeExitoInspeccion] = useState('')
+    const [modalExito, setModalExito] = useState(false)
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
 
 
     // En ViewerComponent
@@ -71,7 +103,7 @@ export default function Viewer_admin() {
         setSelectedLote(nuevoLote)
 
     };
-
+    // Fetch lotes when component mounts
     useEffect(() => {
         obtenerLotes();
     }, []); // Asegúrate de que se carga una vez
@@ -84,7 +116,7 @@ export default function Viewer_admin() {
     }, [selectedGlobalId, lotes]); // Reactiva a cambios en selectedGlobalId y lotes
 
 
-
+    // Fetch "lotes" from Firestore
     const obtenerLotes = async () => {
         try {
             const lotesRef = collection(db, "lotes");
@@ -99,86 +131,11 @@ export default function Viewer_admin() {
         }
     };
 
-
-
-
     const regresar = () => {
         navigate(-1); // Regresa a la página anterior
     };
 
 
-
-
-
-    const [seleccionApto, setSeleccionApto] = useState({});
-    const [tempSeleccion, setTempSeleccion] = useState(null);
-    const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
-    const [modal, setModal] = useState(false);
-    const [modalFormulario, setModalFormulario] = useState(false);
-    const [currentSubactividadId, setCurrentSubactividadId] = useState(null);
-
-
-
-
-
-
-
-
-
-
-
-    const handleCloseModal = () => {
-        setModal(false)
-        setModalFormulario(false)
-
-
-
-
-    };
-
-
-
-
-
-
-
-
-
-
-
-
-    const [modalInforme, setModalInforme] = useState(false)
-    const [modalConfirmacionInforme, setModalConfirmacionInforme] = useState(false)
-
-    const confirmarInforme = () => {
-        setModalInforme(true)
-        handleCloseModal()
-    }
-
-    const closeModalConfirmacion = () => {
-        setModalInforme(false)
-        setFormulario(false)
-    }
-
-    const confirmarModalInforme = () => {
-        setModalConfirmacionInforme(true)
-        handleCloseModal()
-        setModalInforme(false)
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-    const [loteInfo, setLoteInfo] = useState(null); // Estado para almacenar los datos del PPI
-    const [sectorInfoLote, setSectorInfoLote] = useState(null); // Estado para almacenar los datos del PPI
     useEffect(() => {
         const obtenerLotePorId = async () => {
             console.log('********** id lote', idLote)
@@ -206,13 +163,7 @@ export default function Viewer_admin() {
     }, [idLote]);
 
 
-
-    const [mensajeExitoInspeccion, setMensajeExitoInspeccion] = useState('')
-    const [modalExito, setModalExito] = useState(false)
-
-
-
-
+    // Update Firestore document with Global ID and BIM name
     const actualizarLoteConGlobalId = async (loteId, globalId, nameBim) => {
         const loteRef = doc(db, "lotes", loteId);
         try {
@@ -220,7 +171,7 @@ export default function Viewer_admin() {
                 globalId: globalId,
                 nameBim: nameBim  // Agregar nameBim a la base de datos.
             });
-            // Actualizar el estado del lote seleccionado inmediatamente
+            // Update local state for immediate UI reflection
             const updatedLote = { ...selectedLote, globalId: globalId, nameBim: nameBim };
             setSelectedLote(updatedLote);
 
@@ -240,7 +191,7 @@ export default function Viewer_admin() {
 
 
 
-
+    // Handle lot selection from dropdown
     const handleSelectLote = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const loteId = e.target.value;
         const lote = lotes.find(l => l.docId === loteId);
@@ -248,13 +199,8 @@ export default function Viewer_admin() {
     };
 
 
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [successMessage, setSuccessMessage] = useState("");
-
+    // Filtering lots based on assignment statu
     const [filtro, setFiltro] = useState("todos"); // 'todos', 'asignados', 'noAsignados'
-
-
-
     const handleFiltroChange = (event) => {
         setFiltro(event.target.value);
     };
@@ -278,7 +224,7 @@ export default function Viewer_admin() {
                         <h1 className='text-gray-600 cursor-pointer'>Administración</h1>
                     </Link>
 
-                    
+
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'#'}>
                         <h1 className='font-medium text-amber-600'>BIM </h1>

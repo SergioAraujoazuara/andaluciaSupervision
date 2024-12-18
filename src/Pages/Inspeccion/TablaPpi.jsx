@@ -1,3 +1,24 @@
+/**
+ * @file TablaPpi.jsx
+ * @description
+ * This component displays and manages a table (and optionally a grid) view of inspection data for a specific "PPI" (Project Plan Item).
+ * It:
+ * - Retrieves inspection data from Firestore.
+ * - Allows filtering and sorting of inspections and sub-inspections ("subactividades").
+ * - Supports editing inspection entries, attaching images, handling geolocation (auto/manual), and signing off on inspections.
+ * - Includes logic for versioning of inspections and controlling which version is the active one.
+ * - Integrates with a PDF generation component (Pdf_final) to finalize inspections with a PDF report.
+ *
+ * Key functionalities:
+ * - Show inspections in either table or grid layout.
+ * - Filter by status (Apto/No apto), responsible person, activities, etc.
+ * - Edit existing sub-inspections (repeating them with a new version) and attach images with geolocation.
+ * - Finish/pending toggle for each inspection version.
+ * - Generate a final PDF report of the completed inspection.
+ *
+ * Complex logic is documented near relevant code sections.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { db } from '../../../firebase_config';
@@ -32,13 +53,20 @@ import Mapa from '../../Components/Geolocalizacion/Mapa'
 
 
 function TablaPpi() {
+    /**
+         * COMPONENT OVERVIEW:
+         * This component manages inspection data, displaying it in a table or grid.
+         * Major actions:
+         * - Filtering inspections by status, responsible, activity, etc.
+         * - Adding/editing inspections with images and geolocation.
+         * - Handling versioning: If "No apto", a new version is created and appended for re-check.
+         * - Finishing inspections (marking them as done) if they are the latest version.
+         * - Generating a final PDF once all inspections are completed and marked as done.
+         */
 
-    const handleGoBack = () => {
-        navigate(`/elementos/${id}`); // Esto navega hacia atrás en la historia
-    };
+
     const { user } = useAuth();
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
-
     const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
     const imagenPath2 = logo
     const [nombreProyecto, setNombreProyecto] = useState(localStorage.getItem('nombre_proyecto') || '');
@@ -49,15 +77,84 @@ function TablaPpi() {
     const navigate = useNavigate();
     const [ppi, setPpi] = useState(null);
     const lote = localStorage.getItem('lote')
-
-
+    const [userName, setUserName] = useState('')
+    const [userSignature, setUserSignature] = useState('')
+    const [seleccionApto, setSeleccionApto] = useState({});
+    const [tempSeleccion, setTempSeleccion] = useState(null);
+    const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+    const [modal, setModal] = useState(false);
+    const [modalFormulario, setModalFormulario] = useState(false);
+    const [currentSubactividadId, setCurrentSubactividadId] = useState(null);
+    const [ppiNombre, setPpiNombre] = useState('');
+    const [comentario, setComentario] = useState("");
+    const [resultadoInspeccion, setResultadoInspeccion] = useState("Apto");
+    const [modalInforme, setModalInforme] = useState(false)
+    const [modalConfirmacionInforme, setModalConfirmacionInforme] = useState(false)
+    const [loteInfo, setLoteInfo] = useState(null);
+    const [sectorInfoLote, setSectorInfoLote] = useState(null);
+    const [cierreInspeccion, setCierreInspeccion] = useState(false);
+    const [actividadesAptas, setActividadesAptas] = useState(0);
+    const [totalSubactividades, setTotalSubActividades] = useState(0);
+    const [difActividades, setDifActividades] = useState(0);
+    const [formulario, setFormulario] = useState(true)
+    const [mensajeExitoInspeccion, setMensajeExitoInspeccion] = useState('')
+    const [modalExito, setModalExito] = useState(false)
+    const [documentoFormulario, setDocumentoFormulario] = useState(null)
+    const [modalRecuperarFormulario, setModalRecuperarFormulario] = useState(false)
+    const [imagen, setImagen] = useState('');
+    const [imagen2, setImagen2] = useState('');
+    const [imagenEdit, setImagenEdit] = useState('');
+    const [imagen2Edit, setImagen2Edit] = useState('');
+    const [imagen1Nombre, setImagen1Nombre] = useState('imagen1');
+    const [imagen2Nombre, setImagen2Nombre] = useState('imagen2');
+    const [imagenDataCoordinates, setImagenDataCoordinates] = useState([]);
+    const [isAuto, setIsAuto] = useState(true);
+    const [isManual, setIsManual] = useState(false);
+    const [showConfirmModalRepetida, setShowConfirmModalRepetida] = useState(false);
+    const [subactividadToRepeat, setSubactividadToRepeat] = useState(null);
+    const [subactividadSeleccionada, setSubactividadSeleccionada] = useState(null);
+    const imagenDataCoordinatesRef = useRef([]);
+    const [subActividadReference, setSubActividadreference] = useState({})
+    const [idRegistroImagen, setIdRegistroImagen] = useState('')
+    const [imagen1Url, setImagen1Url] = useState('');
+    const [imagen2Url, setImagen2Url] = useState('');
+    const [actividadNombre, setActividadNombre] = useState('');
+    const [criterioAceptacion, setCriterioAceptacion] = useState('');
+    const [docReferencia, setDocReferencia] = useState('');
+    const [tipoInspeccion, setTipoInspeccion] = useState('');
+    const [punto, setPunto] = useState('');
+    const [responsable, setResponsable] = useState('');
+    const [aptoNoapto, setAptoNoapto] = useState('');
+    const [nombre_usuario_edit, setNombre_usuario_edit] = useState('');
+    const [formularioData, setFormularioData] = useState({});
+    const [showActiveOnly, setShowActiveOnly] = useState(true);
+    const [responsableFilter, setResponsableFilter] = useState('Todos');
+    const [isFinishInspectionModalOpen, setIsFinishInspectionModalOpen] = useState(false);
+    const [inspectionToFinish, setInspectionToFinish] = useState(null);
+    const [terminadasCount, setTerminadasCount] = useState(0);
+    const [filter, setFilter] = useState('Todos');
+    const [activityFilter, setActivityFilter] = useState('Actividades');
 
     const handleObservaciones = (nuevasObservaciones) => {
         setObservaciones(nuevasObservaciones);
     };
+    const handleGoBack = () => {
+        navigate(`/elementos/${id}`); // Esto navega hacia atrás en la historia
+    };
+    const regresar = () => {
+        navigate(-1); // Regresa a la página anterior
+    };
+    const closeModalConfirmacion = () => {
+        setModalInforme(false)
 
-    const [userName, setUserName] = useState('')
-    const [userSignature, setUserSignature] = useState('')
+    }
+    const confirmarModalInforme = () => {
+        setModalConfirmacionInforme(true)
+        handleCloseModal()
+        setModalInforme(false)
+
+    }
+    // Retrieve user name and signature from Firestore
     useEffect(() => {
         if (user) {
             const userDocRef = doc(db, 'usuarios', user.uid);
@@ -69,88 +166,47 @@ function TablaPpi() {
                 }
             });
         } else {
-            setUserNombre('');
+            setUserName('');
         }
     }, [user]);
 
-
+    // Load PPI inspections for the given "lote"
     useEffect(() => {
         const obtenerInspecciones = async () => {
             try {
                 const inspeccionesRef = collection(db, "lotes", idLote, "inspecciones");
                 const querySnapshot = await getDocs(inspeccionesRef);
-
                 const inspeccionesData = querySnapshot.docs.map(doc => ({
-                    docId: doc.id, // Almacena el ID del documento generado automáticamente por Firestore
+                    docId: doc.id,
                     ...doc.data()
                 }));
-
-                // Asegúrate de que este paso esté ajustado a cómo manejas los datos en tu aplicación
                 if (inspeccionesData.length > 0) {
                     setPpi(inspeccionesData[0]);
-                    console.log(inspeccionesData[0], ' inspeccionessssssss')
-                    setPpiNombre(inspeccionesData[0].nombre) // O maneja múltiples inspecciones según sea necesario
+                    setPpiNombre(inspeccionesData[0].nombre)
                 } else {
-
                     setPpi(null);
                 }
             } catch (error) {
                 console.error('Error al obtener las inspecciones:', error);
             }
         };
-
-
-
         obtenerInspecciones();
+    }, [idLote]);
 
-    }, [idLote]); // Dependencia del efecto basada en idLote
-
-    useEffect(() => {
-
-
-    }, []);
-
-
-
-
-    const regresar = () => {
-        navigate(-1); // Regresa a la página anterior
-    };
-
-
-
-
-
-    const [seleccionApto, setSeleccionApto] = useState({});
-    const [tempSeleccion, setTempSeleccion] = useState(null);
-    const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
-    const [modal, setModal] = useState(false);
-    const [modalFormulario, setModalFormulario] = useState(false);
-    const [currentSubactividadId, setCurrentSubactividadId] = useState(null);
-
-    const [ppiNombre, setPpiNombre] = useState('');
-
-
-
-
-
-
-
+    /**
+    * @function handleOpenModalFormulario
+    * Opens the form modal for editing/adding inspection results.
+    * Resets comments and observations.
+    */
 
     const handleOpenModalFormulario = (subactividadId) => {
         setCurrentSubactividadId(subactividadId);
-
-        // Inicializar la selección temporal con el valor actual si existe
         const valorActual = seleccionApto[subactividadId]?.resultadoInspeccion;
         setTempSeleccion(valorActual);
-        // Añadir aquí el reseteo de los estados necesarios
-        setComentario(''); // Resetear el comentario a un string vacío
-        setObservaciones(''); // Si también necesitas resetear observaciones o cualquier otro estado, hazlo aquí
+        setComentario('');
+        setObservaciones('');
         setModalFormulario(true);
     };
-
-
-
 
     const handleCloseModal = () => {
         setModal(false)
@@ -161,23 +217,18 @@ function TablaPpi() {
 
     };
 
+    const cerrarModalYLimpiarDatos = () => {
+        setDocumentoFormulario('')
+        setModalRecuperarFormulario(false)
+    }
 
-    // agregar cometarios
-    const [comentario, setComentario] = useState("");
-
-    const [resultadoInspeccion, setResultadoInspeccion] = useState("Apto");
-
-    // Define la fecha, el responsable y genera la firma aquí
+    // Date and our
     const fechaHoraActual = new Date().toLocaleString('es-ES', {
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
     });
-    // Asumiendo que tienes una forma de obtener el nombre del usuario
 
-    const firma = 'zO9c82%&45e6e0b74cfccg97e/&/8714u32342&%&/28fb4xcd2'
-
-
-
+    // Check if the ppi exist and save the data of activities and subactitivities aptas y no apto
     useEffect(() => {
         if (ppi) {
             const total = ppi.actividades.reduce((sum, actividad) =>
@@ -200,19 +251,25 @@ function TablaPpi() {
 
     ////////////////////////7 FUNCIONES APTA Y NO APTA ////////////////////////////////////////////////////////////////////7
 
+    // This function handles the re-inspection (repetition) of a particular sub-activity (subactividad) of a PPI (Plan de Puntos de Inspección).
+    // When triggered, it:
+    // 1. Duplicates the existing record in Firestore to create a new version.
+    // 2. Adjusts versions and states of the sub-activities, managing both "rejected" and "original" scenarios.
+    // 3. Preserves or updates images, comments, and observations for the new version.
+    // 4. Updates the PPI data structure in Firestore and in the local state to reflect the new editable version.
 
     const handleRepetirInspeccion = async () => {
         if (!ppi || !subactividadToRepeat) return;
-
+        // Extract indexes of the activity and sub-activity from the selected ID (format: "apto-actividadIndex-subactividadIndex").
         const [actividadIndex, subactividadIndex] = subactividadToRepeat.split('-').slice(1).map(Number);
-
+        // Clone the PPI object to avoid direct state mutation.
         let nuevoPpi = { ...ppi };
         let subactividadSeleccionada = { ...nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] };
 
-        // Generar un nuevo ID para el registro duplicado
+        // Duplicate the existing record in Firestore to reference it in the new version.
         const nuevoIdRegistroFormulario = doc(collection(db, "registros")).id;
 
-        // Obtener los datos actuales
+        // Retrieve all versions of the same subactivity (based on 'numero') to determine the next version number.
         const duplicadoId = await duplicarRegistro(subactividadSeleccionada.idRegistroFormulario, nuevoIdRegistroFormulario);
 
         if (!duplicadoId) {
@@ -220,36 +277,27 @@ function TablaPpi() {
             return;
         }
 
-        // Obtener la versión más alta para la actividad específica
+        // Check if there's a "rejected" version for the given subactivity to determine versioning logic.
         const subactividadesMismaActividad = nuevoPpi.actividades[actividadIndex].subactividades
             .filter(subact => subact.numero === subactividadSeleccionada.numero);
-
-        // Verificar si la subactividad es "no apta" y tiene una versión rechazada
         const rejectedSubactividad = subactividadesMismaActividad.find(subact => subact.motivoVersion === 'rechazada');
 
         let newEditVersion;
         let newRejectedVersion;
 
-        // Caso 1: Si existe una subactividad rechazada
+        // Case 1: A previously rejected subactivity exists. Reuse its versioning logic.
         if (rejectedSubactividad) {
-            // Usar la versión de la subactividad rechazada para la subactividad editada
             newEditVersion = rejectedSubactividad.version;
-
-            // Determinar el nuevo número de versión para la subactividad rechazada
             newRejectedVersion = (parseInt(rejectedSubactividad.version) + 1).toString();
-
-            // Actualizar la subactividad rechazada con el nuevo número de versión
             rejectedSubactividad.version = newRejectedVersion;
 
-            // Caso 2: Si no existe una subactividad rechazada
+            // Case 2: No rejected subactivity. Use the highest existing version + 1.
         } else {
             // Usar la versión más alta actual + 1 para la subactividad editada
             newEditVersion = (Math.max(...subactividadesMismaActividad.map(subact => parseInt(subact.version))) + 1).toString();
         }
 
-
-
-        // Crear la nueva subactividad con los valores editados
+        // Create a new edited subactivity version, updating fields like comentario and observaciones.
         let nuevaSubactividadEditada = {
             ...subactividadSeleccionada,
             nombre: subactividadSeleccionada.nombre,
@@ -258,21 +306,21 @@ function TablaPpi() {
             tipo_inspeccion: subactividadSeleccionada.tipo_inspeccion,
             punto: subactividadSeleccionada.punto,
             responsable: subactividadSeleccionada.responsable,
-            comentario: comentario, // PASO 2 actualizar el input de comentario
-            observaciones: formularioData.observaciones, // PASO 2 actualizar el input de observaciones
-            edited: true,  // Marcar como editada
+            comentario: comentario,
+            observaciones: formularioData.observaciones,
+            edited: true,
             resultadoInspeccion: subactividadSeleccionada.resultadoInspeccion,
-            idRegistroFormulario: nuevoIdRegistroFormulario,  // Asignar el nuevo ID del registro duplicado
-            version: newEditVersion, // Asignar la nueva versión para la subactividad editada
-            active: true, // Esta es la versión activa
-            originalId: subactividadSeleccionada.originalId || subactividadSeleccionada.idRegistroFormulario, // Mantener el ID original
-            motivoVersion: 'editada',  // Actualizar el campo aquí
+            idRegistroFormulario: nuevoIdRegistroFormulario,
+            version: newEditVersion,
+            active: true,
+            originalId: subactividadSeleccionada.originalId || subactividadSeleccionada.idRegistroFormulario,
+            motivoVersion: 'editada',
         };
 
         let subAct = subactividadSeleccionada.motivoVersion;
         let resultadoInspeccion = subactividadSeleccionada.resultadoInspeccion;
 
-        // Logs basados en las condiciones
+        // Additional versioning logic based on conditions:
         if (subAct === 'original' && resultadoInspeccion === 'Apto') {
 
             nuevaSubactividadEditada = {
@@ -280,7 +328,6 @@ function TablaPpi() {
                 motivoVersion: 'editada',
             };
         }
-
         if (subAct === 'rechazada' && resultadoInspeccion === 'Apto') {
 
             nuevaSubactividadEditada = {
@@ -289,19 +336,16 @@ function TablaPpi() {
                 motivoVersion: 'editada',
             };
         }
-
-
-
-        // Actualizar la subactividad seleccionada para que no esté activa
+        // Mark the old subactivity version as inactive, since we are creating a new active version.
         nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = {
             ...subactividadSeleccionada,
             active: false // Marcar la versión anterior como no activa
         };
 
-        // Añadir la nueva subactividad con los valores editados después de la original
+        // Insert the new edited subactivity right after the original one.
         nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividadEditada);
 
-        // Actualizar el nuevo registro con las imágenes y observaciones si hay nuevas imágenes
+        // Update Firestore record with new images and observations if provided.
         const registroDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
         const updateData = {
             edited: true,  // Marcar como editada
@@ -317,28 +361,40 @@ function TablaPpi() {
         if (subactividadSeleccionada.imagen) updateData.imagen = subactividadSeleccionada.imagen;
         if (subactividadSeleccionada.imagen2) updateData.imagen2 = subactividadSeleccionada.imagen2;
         await updateDoc(registroDocRef, updateData);
-
+        // Update the PPI structure in Firestore.
         await actualizarFormularioEnFirestore(nuevoPpi);
 
 
-
+        // Update local state to reflect the changes.
         setPpi(nuevoPpi);
         setShowConfirmModalRepetida(false);
     };
 
 
+    // This function marks a given sub-activity form as "sent" (submitted) to Firestore, updating its versioning, active status,
+    // and related fields. It handles both "Apto" (approved) and "No apto" (not approved) results, as well as version logic 
+    // for original, rejected, and edited sub-activities.
+    //
+    // Key points:
+    // 1. Updates the form submission status, user info, comments, and observations for the current sub-activity.
+    // 2. If the result is "Apto", increments a counter for "actividadesAptas" in the lot document.
+    // 3. If the result is "No apto", creates a new "rechazada" version of the sub-activity to be addressed later.
+    // 4. Manages complex version logic:
+    //    - For "No apto", it deactivates the current version and creates a new rejected version.
+    //    - For "Apto" in a non-original version scenario, it updates related rejected versions accordingly.
+    // 5. Finally, it updates the PPI structure in Firestore and the local state.
 
     const marcarFormularioComoEnviado = async (idRegistroFormulario, resultadoInspeccion) => {
         if (!ppi || !currentSubactividadId) {
             return;
         }
-
+        // Extract the activity and sub-activity indices from the currentSubactividadId.
         const [actividadIndex, subactividadIndex] = currentSubactividadId.split('-').slice(1).map(Number);
         let nuevoPpi = { ...ppi };
         let subactividadSeleccionada = nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex];
 
         let motivoVersionActual = subactividadSeleccionada.motivoVersion || 'original';
-
+        // Update the selected sub-activity with new form data and set as active.
         subactividadSeleccionada.formularioEnviado = formulario;
         subactividadSeleccionada.idRegistroFormulario = idRegistroFormulario;
         subactividadSeleccionada.resultadoInspeccion = resultadoInspeccion;
@@ -350,15 +406,14 @@ function TablaPpi() {
         subactividadSeleccionada.observaciones = observaciones; // obsevaciones input // PASO 1 para guardar info en la inspeccion
         subactividadSeleccionada.active = true;
 
-
-
+        // If the result is "Apto", increment the count of "actividadesAptas" in the corresponding lot document.
         if (resultadoInspeccion === "Apto") {
             const loteRef = doc(db, "lotes", idLote);
             await updateDoc(loteRef, {
                 actividadesAptas: increment(1)
             });
         }
-
+        // If the result is "No apto", handle the logic of creating a new "rechazada" version.
         if (resultadoInspeccion === "No apto") {
             let nuevaSubactividad = {
                 ...subactividadSeleccionada,
@@ -367,7 +422,7 @@ function TablaPpi() {
             };
             nuevoPpi.actividades[actividadIndex].subactividades[subactividadIndex] = nuevaSubactividad;
 
-            // Asignar la nueva versión como una unidad más que la versión de la subactividad seleccionada
+            // Assign a new version number, one more than the current version.
             let nuevaVersion = (parseInt(subactividadSeleccionada.version) + 1).toString();
 
             let nuevaSubactividadRepetida = {
@@ -384,11 +439,13 @@ function TablaPpi() {
                 formularioEnviado: false,
                 motivoVersion: 'rechazada'
             };
-
+            // Insert the new "rechazada" version right after the current one.
             nuevoPpi.actividades[actividadIndex].subactividades.splice(subactividadIndex + 1, 0, nuevaSubactividadRepetida);
         }
 
-        // Lógica adicional para manejar la edición de versiones relacionadas
+        // Additional logic for version management:
+        // If the current version isn't 'original' and the result is "Apto", we need to handle any subsequent rejected versions.
+        // Specifically, find any sub-activities that came after this one and were "rechazada", and update them to "editada".
         if (motivoVersionActual !== 'original' && resultadoInspeccion === "Apto") {
             nuevoPpi.actividades[actividadIndex].subactividades.forEach((subactividad, index) => {
                 if (index > subactividadIndex && subactividad.motivoVersion === 'rechazada') {
@@ -398,9 +455,7 @@ function TablaPpi() {
                 }
             });
         }
-
-
-
+        // Update the modified PPI structure in Firestore and then reflect the changes in local state.
         await actualizarFormularioEnFirestore(nuevoPpi);
         setPpi(nuevoPpi);
     };
@@ -408,41 +463,24 @@ function TablaPpi() {
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    const [modalInforme, setModalInforme] = useState(false)
-    const [modalConfirmacionInforme, setModalConfirmacionInforme] = useState(false)
-
-
-    const closeModalConfirmacion = () => {
-        setModalInforme(false)
-
-    }
-
-    const confirmarModalInforme = () => {
-        setModalConfirmacionInforme(true)
-        handleCloseModal()
-        setModalInforme(false)
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-    const [loteInfo, setLoteInfo] = useState(null); // Estado para almacenar los datos del PPI
-    const [sectorInfoLote, setSectorInfoLote] = useState(null); // Estado para almacenar los datos del PPI
-    const [cierreInspeccion, setCierreInspeccion] = useState(false); // Estado para almacenar los datos del PPI
-    const [actividadesAptas, setActividadesAptas] = useState(0); // Estado para almacenar los datos del PPI
-    const [totalSubactividades, setTotalSubActividades] = useState(0); // Estado para almacenar los datos del PPI
-    const [difActividades, setDifActividades] = useState(0); // Estado para almacenar los datos del PPI
-
+    // This useEffect hook fetches the lote (lot) information from Firestore based on the provided idLote.
+    // Once the lote data is retrieved, it updates various local states such as:
+    // - actividadesAptas (count of apt sub-activities)
+    // - totalSubactividades (total count of sub-activities in version 0)
+    // - difActividades (difference between total and apt sub-activities)
+    // Additionally, it determines whether the inspection should be considered complete (cierreInspeccion) if all sub-activities are apt.
+    //
+    // Detailed logic:
+    // 1. If idLote is not provided, simply return and do nothing.
+    // 2. Retrieves the lote document from Firestore using the idLote.
+    // 3. If the document exists, it stores the lote data in local state.
+    //    - Extracts actividadesAptas from the lote data.
+    //    - Calculates totalSubactividades by summing only those sub-activities whose version is 0 (original versions).
+    // 4. difActividades is computed as the total sub-activities minus the apt ones. If this equals zero, it means all are apt.
+    // 5. Based on difActividades, it sets cierreInspeccion to true (finished) or false (pending).
+    // 6. If no document is found, logs that it was not found.
+    //
+    // The effect also depends on changes to idLote and ppi. If either changes, it re-runs the logic.
 
     useEffect(() => {
         const obtenerLotePorId = async () => {
@@ -459,7 +497,6 @@ function TablaPpi() {
                     let actividadesAptas = loteObject.actividadesAptas;
                     setActividadesAptas(actividadesAptas);
 
-                    // Calcular totalSubactividades solo para versiones 0
                     let totalSubactividades = ppi.actividades.reduce((sum, actividad) =>
                         sum + actividad.subactividades.filter(subactividad => subactividad.version === 0).length, 0);
                     setTotalSubActividades(totalSubactividades);
@@ -485,23 +522,34 @@ function TablaPpi() {
         obtenerLotePorId();
     }, [idLote, ppi]);
 
-
-    const [formulario, setFormulario] = useState(true)
-
-    // const crearVariableFormularioTrue = () => {
-    //     setFormulario(true)
-    // }
-
+    // This function saves the inspection form data into the Firestore 'registros' collection for a specific sub-activity.
+    // Steps:
+    // 1. Identify the currently selected activity and sub-activity indices from currentSubactividadId.
+    // 2. Construct a data object (datosFormulario) containing all relevant inspection details, including:
+    //    - Project information (nombreProyecto, obra, tramo, ppiNombre, etc.)
+    //    - Lote and sub-activity details (sector, subSector, parte, elemento, lote, pkInicial, pkFinal)
+    //    - Activity and sub-activity info (numero_subactividad, version, criterio_aceptacion, etc.)
+    //    - User and timing details (nombre_usuario, signature, fechaHoraActual)
+    //    - Result of the inspection (resultadoInspeccion), comments, observations, and images
+    //    - Geolocation data of images (coordenadas)
+    //
+    // 3. Convert the data to JSON and optionally measure the size (for reference).
+    // 4. Add the document to Firestore using 'addDoc'.
+    // 5. Update the state to reflect success, close modals, clear form states, and reset image & coordinate data.
+    //
+    // If successful, returns the newly created document ID, otherwise logs the error.
+    //
+    // This function works in tandem with other steps that mark the form as sent and update PPI in Firestore.
 
     const enviarDatosARegistros = async () => {
-        // Descomponer currentSubactividadId para obtener los índices
+        // Extract the indices of the activity and sub-activity from the currentSubactividadId.
         const [, actividadIndex, subactividadIndex] = currentSubactividadId.split('-').map(Number);
 
-        // Acceder a la subactividad seleccionada
+        // Access the selected activity and sub-activity from the PPI structure.
         const actividadSeleccionada = ppi.actividades[actividadIndex];
         const subactividadSeleccionada = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
 
-        // Objeto que representa los datos del formulario
+        // Construct the form data object with all required fields
         const datosFormulario = {
             nombreProyecto,
             obra: obra,
@@ -539,17 +587,16 @@ function TablaPpi() {
             coordenadas: imagenDataCoordinates
         };
 
-        // Convertir datos a JSON y medir el tamaño
+        // Convert to JSON and measure size (optional)
         const jsonString = JSON.stringify(datosFormulario);
         const dataSize = new Blob([jsonString]).size;
         try {
-            // Referencia a la colección 'registros' en Firestore
-
+            // Reference to the 'registros' collection in Firestore
             const coleccionRegistros = collection(db, "registros");
             const docRef = await addDoc(coleccionRegistros, datosFormulario);
             setMensajeExitoInspeccion('Inspección completada con éxito')
 
-            // Opcionalmente, cierra el modal o limpia el formulario aquí
+            // Close modals and clear relevant states
             setModalFormulario(false);
 
             setObservaciones('')
@@ -568,41 +615,45 @@ function TablaPpi() {
         }
     };
 
+    // This function is triggered after confirming the submission of the form data to the PPI table.
+    // It:
+    // 1. Calls the function that actually sends the form data (handelEnviarFormulario).
+    // 2. Closes any confirmation modals.
+    // 3. Clears the comment field.
+    // 4. After a short delay, shows a success modal (modalExito) indicating the inspection was completed successfully.
+
     const handleConfirmarEnviotablaPpi = async () => {
-        // Aquí llamarías a la función que realmente envía los datos del formulario
         await handelEnviarFormulario();
         setMostrarConfirmacion(false);
         setModalInforme(false);
-
         setComentario('')
-        // Esperar un poco antes de mostrar el modal de éxito para asegurar que los modales anteriores se han cerrado
         setTimeout(() => {
             setModalExito(true);
-
-
-        }, 300); // Ajusta el tiempo según sea necesario
+        }, 300);
     };
 
+    // This function is called after confirming the intent to also generate a PDF report.
+    // It:
+    // 1. Closes the confirmation and form modals.
+    // 2. Waits a brief moment.
+    // 3. Displays the success modal (modalExito) to notify the user that the inspection process (with PDF generation) was completed successfully.
+
     const handleConfirmarEnvioPdf = async () => {
-        // Aquí llamarías a la función que realmente envía los datos del formulario
         setMostrarConfirmacion(false);
         setModalFormulario(false);
         setModalConfirmacionInforme(false)
-
-
-
-
-        // Esperar un poco antes de mostrar el modal de éxito para asegurar que los modales anteriores se han cerrado
         setTimeout(() => {
             setModalExito(true);
 
-        }, 300); // Ajusta el tiempo según sea necesario
+        }, 300);
     };
 
 
-
-
-
+    // This function orchestrates the sending of form data to Firestore and then marks the form as "sent."
+    // Steps:
+    // 1. Calls enviarDatosARegistros() to insert the form data into the 'registros' collection, returning a reference ID.
+    // 2. If a valid document ID is returned, calls marcarFormularioComoEnviado() to update the PPI structure and set the form as submitted.
+    // Essentially, it ensures that after storing form data, the PPI is also updated to reflect the new state of the inspection.
 
     const handelEnviarFormulario = async () => {
         const idRegistroFormulario = await enviarDatosARegistros();
@@ -612,27 +663,25 @@ function TablaPpi() {
         }
     };
 
-    const [mensajeExitoInspeccion, setMensajeExitoInspeccion] = useState('')
-    const [modalExito, setModalExito] = useState(false)
-
-    const [documentoFormulario, setDocumentoFormulario] = useState(null)
-    const [modalRecuperarFormulario, setModalRecuperarFormulario] = useState(false)
+    // This function retrieves the specific inspection record (using idRegistroFormulario) associated with a chosen sub-activity.
+    // Steps:
+    // 1. Extract activity and sub-activity indices from subactividadId.
+    // 2. Access the corresponding sub-activity in PPI and get its idRegistroFormulario.
+    // 3. If a valid ID is found, fetch that record from Firestore.
+    // 4. If the record exists, store its data in state and immediately generate a PDF report from it.
+    // 5. If no record or ID is provided, log the issue.
 
     const handleMostrarIdRegistro = async (subactividadId) => {
         const [actividadIndex, subactividadIndex] = subactividadId.split('-').slice(1).map(Number);
         const subactividadSeleccionada = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
         const idRegistroFormulario = subactividadSeleccionada.idRegistroFormulario;
-
-        // Asegúrate de que existe un id antes de intentar recuperar el documento
         if (idRegistroFormulario) {
             try {
-                // Obtener la referencia del documento en la colección de registros
                 const docRef = doc(db, "registros", idRegistroFormulario);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
                     setDocumentoFormulario(docSnap.data());
-                    // Llamar a generatePDF directamente
                     await generatePDF(docSnap.data());
                 } else {
                     console.log("No se encontró el documento con el ID:", idRegistroFormulario);
@@ -645,100 +694,123 @@ function TablaPpi() {
         }
     };
 
-
-    const cerrarModalYLimpiarDatos = () => {
-        setDocumentoFormulario('')
-        setModalRecuperarFormulario(false)
-    }
-
-
-
-
-
-
-
+    /**
+ * This function generates a PDF report for a given inspection form document (`documentoFormulario`). 
+ * It uses pdf-lib to create a structured PDF, embedding images, drawing text with custom fonts, 
+ * and handling text wrapping and image scaling. The final PDF is automatically downloaded.
+ * 
+ * Key steps:
+ * - Create a new PDF document.
+ * - Add and configure the first page.
+ * - Draw project metadata, inspection results, and various text fields with automatic line wrapping.
+ * - Conditionally embed images (logo, status icon, and user signature), scaling and positioning them as needed.
+ * - Handle coordinate links from images if provided.
+ * - If there are images for the inspection, add a second page and display them along with their corresponding map links.
+ * - Save and prompt automatic download of the final PDF.
+ */
 
     const generatePDF = async (documentoFormulario) => {
+        // Create a new PDF Document
         const pdfDoc = await PDFDocument.create();
-        let currentPage = pdfDoc.addPage([595, 842]); // Inicializa la primera página
-        let currentY = currentPage.getSize().height; // Inicializa la coordenada Y actual
+        // Create a new PDF Document
+        let currentPage = pdfDoc.addPage([595, 842]);
+        let currentY = currentPage.getSize().height;
 
 
 
         const { height } = currentPage.getSize();
-
-        // Funciones auxiliares
-        const blackColor = rgb(0, 0, 0); // Color negro
+        // Define colors and fonts
+        const blackColor = rgb(0, 0, 0);
         const greenColor = hexToRgb("#15803d")
         const redColor = hexToRgb("#ef4444")
         const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
         const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+        /**
+     * Helper function: 
+     * Replaces special characters (like '≤') with simpler alternatives (like '<=') 
+     * to avoid rendering issues.
+     */
 
         const replaceSpecialChars = (text) => {
             if (text === null || text === undefined) return "";
             return text.replace(/≤/g, "<=");
         };
 
+        /**
+             * Helper function: addText()
+             * Draws text on the current page, automatically wrapping lines that exceed maxWidth.
+             * If the text runs out of space on the page, a new page is added.
+             * 
+             * @param text The text content to draw
+             * @param x Starting x position
+             * @param y Starting y position
+             * @param fontSize Font size for the text
+             * @param font Chosen PDFLib font
+             * @param currentPage The current PDF page we are drawing onto
+             * @param color The color of the text (default black)
+             * @param maxWidth Maximum width before wrapping the text onto a new line
+             * @param newX The x position to jump to after wrapping lines
+             * @return { lastY, page } The updated Y position and possibly a new page if added
+             */
 
         const addText = (text, x, y, fontSize, font, currentPage, color = blackColor, maxWidth = 400, newX = 50) => {
-            text = replaceSpecialChars(text); // Reemplazar caracteres especiales
+            text = replaceSpecialChars(text);
 
             const words = text.split(' ');
             let currentLine = '';
             let currentY = y;
-            let currentX = x; // Almacenar la coordenada X actual
-
+            let currentX = x;
+            // Loop through each word to build lines dynamically
             words.forEach(word => {
                 let testLine = currentLine + word + " ";
                 let testWidth = font.widthOfTextAtSize(testLine, fontSize);
-
-                // Verifica si la línea de prueba es más larga que el ancho máximo permitido
+                // If adding this word exceeds maxWidth, we render the line and move to next
                 if (testWidth > maxWidth) {
-                    // Dibuja la línea actual si no está vacía
                     if (currentLine !== '') {
                         currentPage.drawText(currentLine, { x: currentX, y: currentY, size: fontSize, font, color });
-                        currentLine = ''; // Reinicia la línea actual
-                        currentY -= fontSize * 1.8; // Ajusta la posición Y para la nueva línea
-                        currentX = newX; // Actualiza la coordenada X para la nueva línea
+                        currentLine = '';
+                        currentY -= fontSize * 1.8;
+                        currentX = newX;
                     }
-                    // Verifica si la posición Y actual es menos que la altura mínima requerida para una nueva línea
+
                     if (currentY < fontSize * 1.4) {
-                        currentPage = pdfDoc.addPage([595, 842]); // Añade una nueva página
-                        currentY = currentPage.getSize().height - fontSize * 1.8; // Restablece la posición Y en la nueva página
-                        currentX = x; // Restablece la coordenada X en el margen original
+                        currentPage = pdfDoc.addPage([595, 842]);
+                        currentY = currentPage.getSize().height - fontSize * 1.8;
+                        currentX = x;
                     }
-                    currentLine = word + ' '; // Inicia una nueva línea con la palabra actual
+                    currentLine = word + ' ';
                 } else {
-                    currentLine = testLine; // Agrega la palabra a la línea actual
+                    currentLine = testLine;
                 }
             });
-
-            // Dibuja cualquier texto restante que no haya sido agregado todavía
+            // Draw any remaining text in the buffer after finishing the words
             if (currentLine !== '') {
                 currentPage.drawText(currentLine, { x: currentX, y: currentY, size: fontSize, font, color });
             }
-
             return { lastY: currentY, page: currentPage };
         };
-
-
+        /**
+             * Helper function: hexToRgb()
+             * Converts a hex color string (#RRGGBB) into an rgb() compatible object for pdf-lib.
+             */
 
         function hexToRgb(hex) {
-            // Asegurarse de que el hex tiene el formato correcto
             hex = hex.replace("#", "");
             if (hex.length === 3) {
                 hex = hex.split('').map((hex) => {
                     return hex + hex;
                 }).join('');
             }
-
-            // Convertir hex a rgb
             const r = parseInt(hex.substring(0, 2), 16) / 255;
             const g = parseInt(hex.substring(2, 4), 16) / 255;
             const b = parseInt(hex.substring(4, 6), 16) / 255;
-
             return rgb(r, g, b);
         }
+        /**
+            * Helper function: addHorizontalLine()
+            * Draws a horizontal line across the page for visual section separation.
+            */
 
         const addHorizontalLine = (x1, y, x2, thickness, hexColor = "#000000") => {
             const color = hexToRgb(hexColor);
@@ -749,9 +821,11 @@ function TablaPpi() {
                 color: color,
             });
         };
+        /**
+     * Helper function: embedImage()
+     * Embeds a PNG image from a given URL into the current PDF page at given coordinates and size.
+     */
 
-
-        // Función para agregar imágenes al PDF
         const embedImage = async (imagePath, x, y, width, height) => {
             const imageBytes = await fetch(imagePath).then(res => res.arrayBuffer());
             const image = await pdfDoc.embedPng(imageBytes);
@@ -762,38 +836,26 @@ function TablaPpi() {
                 height,
             });
         };
-
-
-        // Determinar el color del texto según el resultado
-        let color = blackColor; // Color predeterminado: negro
+        // Determine the color for the result text based on pass/fail
+        let color = blackColor;
         if (documentoFormulario.resultadoInspeccion === "Apto") {
-            color = greenColor; // Verde oscuro
+            color = greenColor;
         } else if (documentoFormulario.resultadoInspeccion === "No apto") {
-            color = redColor; // Rojo
+            color = redColor;
         }
 
-        const l = 'Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas Estlíneasnecesitar múltiples líneas ';
-
-        // Agregar imágenes al lado del nombre del proyecto
-        await embedImage(imagenPath2, 380, height - 58, 80, 45); // Ajusta las coordenadas y dimensiones según sea necesario
-        await embedImage(imagenPath, 490, height - 55, 70, 35); // Ajusta las coordenadas y dimensiones según sea necesario
-
-
-        // Primero, asegurémonos de que todos los elementos anteriores estén correctamente posicionados
+        // Embed header images (logos)
+        await embedImage(imagenPath2, 380, height - 58, 80, 45);
+        await embedImage(imagenPath, 490, height - 55, 70, 35);
+        // Now draw the main content of the PDF (titles, project info, inspection info, etc.)
         let result = addText(titulo, 40, currentY - 35, 12, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
-
-
-
         result = addText(nombreProyecto, 40, currentY - 15, 12, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
-
-
-
         addHorizontalLine(40, currentY - 11, 555, 1, "#000000", currentPage);
-
+        // Project and inspection data
         result = addText(obra, 50, currentY - 35, 12, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
@@ -805,8 +867,8 @@ function TablaPpi() {
         result = addText(ppi.nombre, 50, currentY - 18, 12, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
+        // Depending on the inspection result, draw a status icon
 
-        // Cargar y agregar la flecha verde si el resultado es "Apto"
         if (documentoFormulario.resultadoInspeccion === "Apto") {
             const arrowPath = 'data:image/png;base64,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'; // Cambia esto por la ruta real de tu imagen
             await embedImage(arrowPath, 440, currentY - 5, 20, 20); // Ajusta las coordenadas y el tamaño según sea necesario
@@ -815,7 +877,7 @@ function TablaPpi() {
             const arrowPath = 'https://static-00.iconduck.com/assets.00/error-icon-512x512-mmajyv8q.png';
             await embedImage(arrowPath, 440, currentY - 5, 20, 20); // Ajusta las coordenadas y el tamaño según sea necesario
         }
-
+        // Write the inspection result in bold with the chosen color
         result = addText(documentoFormulario.resultadoInspeccion, 470, currentY, 20, boldFont, currentPage, color);
         currentPage = result.page;
         currentY = result.lastY;
@@ -1001,12 +1063,13 @@ function TablaPpi() {
         currentPage = result.page;
         currentY = result.lastY;
 
+        // Embed a user signature if available
         const embedSignatureImage = async (pdfDoc, imagePath, currentPage, x, y, maxWidth) => {
             const imageBytes = await fetch(imagePath).then(res => res.arrayBuffer());
             const image = await pdfDoc.embedPng(imageBytes);
 
             const { width, height } = image.scale(1); // Obtén el tamaño original de la imagen
-
+            // Scale down the signature if it's too large
             const scaledWidth = width > maxWidth ? maxWidth : width;
             const scaledHeight = (height / width) * scaledWidth;
 
@@ -1018,17 +1081,14 @@ function TablaPpi() {
             });
         };
 
-        // En tu código principal:
         result = addText(`${documentoFormulario.nombre_usuario}`, 145, currentY, 11, regularFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
 
-        // Calcula la posición X para la imagen en función de la longitud del texto
         const textWidth = regularFont.widthOfTextAtSize(documentoFormulario.nombre_usuario, 11);
-        const imageX = 320 + textWidth; // Posición X del texto más su longitud
+        const imageX = 320 + textWidth;
 
-        // Ajusta el ancho máximo de la imagen
-        const maxWidth = 70; // Puedes ajustar esto según sea necesario
+        const maxWidth = 70;
 
         await embedSignatureImage(pdfDoc, userSignature, currentPage, imageX, currentY, maxWidth);
 
@@ -1037,16 +1097,8 @@ function TablaPpi() {
         result = addText("Firma ", 450, currentY - 1, 11, boldFont, currentPage);
         currentPage = result.page;
         currentY = result.lastY;
-        // result = addText("Firma: ", 50, currentY - 60, 11, boldFont, currentPage);
-        // currentPage = result.page;
-        // currentY = result.lastY;
 
-        // result = addText(`${documentoFormulario.firma}`, 95, currentY, 11, regularFont, currentPage);
-        // currentPage = result.page;
-        // currentY = result.lastY;
-
-
-        // Función para agregar imágenes Base64 al PDF
+        // If images are provided for the inspection, add a second page with embedded images and map links
         const embedBase64Image = async (base64Image, x, y, width, height) => {
             const base64String = base64Image.split(';base64,').pop(); // Extraer solo la parte Base64 sin el encabezado MIME
             const imageBytes = base64ToArrayBuffer(base64String);
@@ -1069,41 +1121,38 @@ function TablaPpi() {
             return bytes.buffer;
         }
 
-        // Verificar si hay imágenes para añadir y necesitan una página nueva
         if (documentoFormulario.imagen || documentoFormulario.imagen2) {
-            // Crear una nueva página específicamente para las imágenes
             currentPage = pdfDoc.addPage([595, 842]);
             currentY = currentPage.getSize().height;
 
-            // Agregar imágenes al lado del nombre del proyecto
-            await embedImage(imagenPath2, 380, currentY - 58, 80, 45); // Ajusta las coordenadas y dimensiones según sea necesario
-            await embedImage(imagenPath, 490, currentY - 55, 70, 35); // Ajusta las coordenadas y dimensiones según sea necesario
+            await embedImage(imagenPath2, 380, currentY - 58, 80, 45);
+            await embedImage(imagenPath, 490, currentY - 55, 70, 35);
 
-            // Agregar el título
+            // Title
             let result = addText(titulo, 40, currentY - 35, 12, boldFont, currentPage);
             currentPage = result.page;
             currentY = result.lastY;
 
-            // Agregar el nombre del proyecto
+            // name project
             result = addText(nombreProyecto, 40, currentY - 15, 12, boldFont, currentPage);
             currentPage = result.page;
             currentY = result.lastY;
 
-            // Agregar líneas horizontales
+            // Lines
             addHorizontalLine(40, currentY - 11, 555, 1, "#000000", currentPage);
             addHorizontalLine(40, currentY - 50, 555, 30, "#e2e8f0", currentPage);
 
-            // Agregar título de "Imágenes adjuntas"
+            // Imagen titles
             result = addText("Imágenes adjuntas: ", 50, currentY - 53, 11, boldFont, currentPage);
             currentPage = result.page;
             currentY = result.lastY;
 
-            // Agregar la primera imagen y su enlace si existe
+            // Imagen
             if (documentoFormulario.imagen) {
                 await embedBase64Image(documentoFormulario.imagen, 50, currentY - 35, 400, 300);
-                currentY -= 340;  // Ajustar currentY para dejar espacio justo debajo de la imagen
+                currentY -= 340;
 
-                // Agregar el enlace de Google Maps correspondiente a la primera imagen
+                // Link maps
                 const link1 = documentoFormulario.coordenadas[0]?.link || "";
                 if (link1) {
                     result = addText(`Ver en Google Maps: ${link1}`, 50, currentY - 10, 9, regularFont, currentPage);
@@ -1112,12 +1161,12 @@ function TablaPpi() {
                 }
             }
 
-            // Agregar la segunda imagen y su enlace si existe
+            // Imagen 2
             if (documentoFormulario.imagen2) {
                 await embedBase64Image(documentoFormulario.imagen2, 50, currentY - 15, 400, 300);
                 currentY -= 310;  // Ajustar currentY para dejar espacio justo debajo de la imagen
 
-                // Agregar el enlace de Google Maps correspondiente a la segunda imagen
+                // Link maps
                 const link2 = documentoFormulario.coordenadas[1]?.link || "";
                 if (link2) {
                     result = addText(`Ver en Google Maps: ${link2}`, 50, currentY - 20, 9, regularFont, currentPage);
@@ -1127,16 +1176,7 @@ function TablaPpi() {
             }
         }
 
-
-
-
-
-
-
-        // Continuar con el guardado y descarga del PDF, etc.
-
-
-        // Guardar y descargar PDF
+        // save pdf
         const pdfBytes = await pdfDoc.save();
         const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
         const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -1155,14 +1195,10 @@ function TablaPpi() {
 
 
     //! ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    const [imagen, setImagen] = useState('');
-    const [imagen2, setImagen2] = useState('');
-    const [imagenEdit, setImagenEdit] = useState('');
-    const [imagen2Edit, setImagen2Edit] = useState('');
-    const [imagen1Nombre, setImagen1Nombre] = useState('imagen1');
-    const [imagen2Nombre, setImagen2Nombre] = useState('imagen2');
-    const [imagenDataCoordinates, setImagenDataCoordinates] = useState([]);
-
+    // Configuration options for image compression
+    // maxSizeMB: Maximum size in MB the compressed image should have
+    // maxWidthOrHeight: The maximum width or height of the output image
+    // useWebWorker: Whether to use a web worker for compression (improves performance)
 
     const compressionOptions = {
         maxSizeMB: 0.3,
@@ -1170,12 +1206,14 @@ function TablaPpi() {
         useWebWorker: true,
     };
 
-    // Función para comprimir la imagen
+    // Function to compress the image using the given compressionOptions
+    // This returns a compressed image file.
     const compressImage = async (file) => {
         return await imageCompression(file, compressionOptions);
     };
 
-    // Función para convertir archivo a Data URL
+    // Function to convert a file into a Data URL (Base64) so it can be manipulated as an image source
+    // Using FileReader to read the file and return a promise that resolves with the data URL.
     const convertToDataURL = (file) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -1185,7 +1223,9 @@ function TablaPpi() {
         });
     };
 
-    // Función para redimensionar la imagen en un canvas
+    // Function to resize an image (provided as a Data URL) down to a maximum dimension
+    // The image is drawn into a canvas and then exported as a resized PNG data URL.
+    // The largest dimension is scaled down to 500px if it exceeds that.
     const resizeImage = (dataUrl) => {
         return new Promise((resolve) => {
             const img = document.createElement("img");
@@ -1205,17 +1245,20 @@ function TablaPpi() {
         });
     };
 
-
+    // handleImageChange is a generalized function to handle image file input changes.
+    // It compresses the image, converts it to a Data URL, resizes it, updates the state with the processed image,
+    // and if coordinates are set to 'auto', it retrieves the geolocation and stores it along with the image data.
+    // If coordinates are manual, it simply logs a message stating that manual coordinates should be added.
     const handleImageChange = async (e, setImageState, setEditState, setImageNameState, imageIdentifier) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Guardar el identificador de la imagen (ej. "imagen" o "imagen2") en el estado
+        // Store the image identifier (e.g., 'imagen' or 'imagen2') to track which image corresponds to which data
         setImageNameState(imageIdentifier);
         console.log("Identificador de la imagen:", imageIdentifier); // Console log para verificar el identificador
 
         try {
-            // Procesar la imagen
+            // Process the image: compress, convert to Data URL, and resize it
             const compressedFile = await compressImage(file);
             const dataUrl = await convertToDataURL(compressedFile);
             const resizedDataUrl = await resizeImage(dataUrl);
@@ -1223,37 +1266,42 @@ function TablaPpi() {
             setImageState(resizedDataUrl);
             setEditState(resizedDataUrl);
 
-            // Si las coordenadas son automáticas, obtenemos las coordenadas automáticamente
+            // Update the component states with the processed image data
             if (isAuto) {
                 const coordenadas = await obtenerGeolocalizacion();
                 const objetoImagen = {
                     nombre: imageIdentifier,
                     ...coordenadas
                 };
-                // Actualizar el estado para incluir el nuevo objeto de imagen con las coordenadas automáticas
+                // If coordinates are automatic, get current geolocation automatically and store it
                 setImagenDataCoordinates((prevData) => [...prevData, objetoImagen]);
-                console.log("Objeto de imagen con coordenadas automáticas:", objetoImagen); // Ver en la consola
+
             } else if (isManual) {
-                // Si las coordenadas son manuales, solo mostramos el mensaje
-                console.log("Debes de agregar las coordenadas manualmente, Sergio.");
+                // If coordinates are set manually, just log the message indicating that manual coordinates are needed
+                console.log("Debes de agregar las coordenadas manualmente.");
             }
         } catch (error) {
             console.error('Error durante la compresión o procesamiento de la imagen o al obtener geolocalización:', error);
         }
     };
 
-
-
-    // Función específica para manejar la primera imagen
+    // handleImagenChange is specifically for handling the first image input change.
+    // It calls handleImageChange with the appropriate parameters to process the first image.
     const handleImagenChange = (e) => {
         handleImageChange(e, setImagen, setImagenEdit, setImagen1Nombre, "imagen")
     };
 
-    // Función específica para manejar la segunda imagen
+
+    // handleImagenChange2 is specifically for the second image input change.
+    // It calls handleImageChange with the parameters for the second image.
     const handleImagenChange2 = (e) => handleImageChange(e, setImagen2, setImagen2Edit, setImagen2Nombre, "imagen2");
 
 
     ///!!!! Coordenadas
+    // This function attempts to retrieve the user's current geographical position using the browser's geolocation API.
+    // It returns a Promise that resolves with an object containing the latitude, longitude,
+    // and a Google Maps link corresponding to that location. If geolocation is not available
+    // or an error occurs, the promise rejects with an appropriate error.
 
     const obtenerGeolocalizacion = () => {
         return new Promise((resolve, reject) => {
@@ -1265,8 +1313,8 @@ function TablaPpi() {
                             longitud: position.coords.longitude,
                             link: `https://www.google.com/maps/search/?api=1&query=${position.coords.latitude},${position.coords.longitude}`
                         };
-                        console.log(coordenadas); // Mostrar el objeto con latitud, longitud y link en la consola
-                        resolve(coordenadas); // Retornar el objeto con latitud, longitud y enlace de Google Maps
+                        console.log(coordenadas);
+                        resolve(coordenadas);
                     },
                     (error) => {
                         console.error("Error al obtener la geolocalización:", error);
@@ -1274,21 +1322,12 @@ function TablaPpi() {
                     }
                 );
             } else {
-                console.error("La geolocalización no está disponible en este navegador.");
                 reject(new Error("La geolocalización no está disponible en este navegador."));
             }
         });
     };
 
-
-    // auto y manual
-
-    const [isAuto, setIsAuto] = useState(true); // Coordenadas automáticas
-    const [isManual, setIsManual] = useState(false); // Coordenadas manuales
-
-
-
-    // Función para manejar la selección de coordenadas (automáticas o manuales)
+    // Show coordinates (automáticas o manuales)
     const handleSelectCoordenadas = (option) => {
         if (option === 'auto') {
             setIsAuto(true);
@@ -1301,48 +1340,60 @@ function TablaPpi() {
         }
     };
 
-    // Función para manejar la selección de coordenadas
+    // Selection coordinates (automáticas o manuales)
     const handleSelectCoordinates = (coords, imageIdentifier) => {
-        console.log(`${imageIdentifier} seleccionada con coordenadas:`, coords);
 
-        // Crear el objeto con las coordenadas y la información adicional
+        // Create object
         const objetoImagen = {
-            nombre: imageIdentifier, // Nombre de la imagen (imagen1 o imagen2)
+            nombre: imageIdentifier,
             latitud: coords.latitude,
             longitud: coords.longitude,
             link: `https://www.google.com/maps/search/?api=1&query=${coords.latitude},${coords.longitude}`
         };
 
-        // Actualizar el estado y la referencia para almacenar las coordenadas de la imagen seleccionada
+        // Update de state
         setImagenDataCoordinates(prevState => {
             const updatedCoordinates = [...prevState, objetoImagen];
             imagenDataCoordinatesRef.current = updatedCoordinates; // Actualiza la referencia con el valor actualizado
             return updatedCoordinates; // Retorna el nuevo estado actualizado
         });
-
-        console.log("Objeto de imagen con coordenadas:", objetoImagen); // Mostrar en consola
     };
 
-    const imagenDataCoordinatesRef = useRef([]);
+
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // This function duplicates a record from the "registros" collection in Firestore, creating a new document
+    // with a generated ID and incrementing its version number. It also updates coordinates if available,
+    // resets certain states like image coordinates, and toggles coordinate mode back to automatic.
 
+    // Parameters:
+    // - idRegistroFormulario (string): The ID of the original record to be duplicated.
+    // - nuevoIdRegistroFormulario (string): A new generated ID to create the duplicated record under.
 
-    const [showConfirmModalRepetida, setShowConfirmModalRepetida] = useState(false);
-    const [subactividadToRepeat, setSubactividadToRepeat] = useState(null);
-    const [subactividadSeleccionada, setSubactividadSeleccionada] = useState(null);
+    // Returns:
+    // - The new document ID if duplication is successful, or null if the original record was not found or an error occurs.
 
 
     const duplicarRegistro = async (idRegistroFormulario, nuevoIdRegistroFormulario) => {
         try {
+            // Reference to the original record in "registros"
             const docRef = doc(db, "registros", idRegistroFormulario);
+            // Attempt to retrieve the document
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
+                // If the original document is found
                 const data = docSnap.data();
                 const nuevoDocRef = doc(db, "registros", nuevoIdRegistroFormulario);
-                console.log(imagenDataCoordinatesRef.current)
+
+                // Create the new document, using the original data but making some changes:
+                // - Set 'edited' to false since it's a fresh duplicate
+                // - Provide a reference to the original record ID
+                // - Update the date and time
+                // - Set 'active' to true and increment the version number by 1
+                // - Add 'coordenadas' from the current stored coordinates array
+
                 await setDoc(nuevoDocRef, {
                     ...data,
                     edited: false,
@@ -1353,14 +1404,10 @@ function TablaPpi() {
                     originalId: data.originalId || idRegistroFormulario,
                     coordenadas: imagenDataCoordinatesRef.current,
                 });
-                console.log(data)
-
-
+                // Reset the image coordinates array and coordinate modes after duplication
                 setImagenDataCoordinates([])
                 setIsAuto(true)
                 setIsManual(false)
-
-
                 return nuevoIdRegistroFormulario;
             } else {
                 console.log("No se encontró el documento con el ID:", idRegistroFormulario);
@@ -1373,37 +1420,27 @@ function TablaPpi() {
     };
 
 
-
-
-
-
-
-
-
-
-    const [subActividadReference, setSubActividadreference] = useState({})
-
-    const [idRegistroImagen, setIdRegistroImagen] = useState('')
-    const [imagen1Url, setImagen1Url] = useState('');
-    const [imagen2Url, setImagen2Url] = useState('');
-
-
+    // Brief Description:
+    // Opens a confirmation modal to repeat the selected inspection (subactivity). 
+    // It extracts the activity and subactivity indices, fetches form data from Firestore, 
+    // updates the component state with all details (e.g., images, comments), and then 
+    // displays a modal to confirm the repetition process.
 
     const openConfirmModal = async (subactividadId) => {
         setSubactividadToRepeat(subactividadId);
-
+        // Check if the ppi and value
         const [actividadIndex, subactividadIndex] = subactividadId.split('-').slice(1).map(Number);
         const subactividad = ppi.actividades[actividadIndex].subactividades[subactividadIndex];
 
         setIdRegistroImagen(subactividad);
 
-        // Comprobar sub actividad
+        // save ppi
         setSubActividadreference(subactividad);
 
-        // Obtener el documento del formulario desde Firestore
+        // Get doc of firestore
         const formularioData = await obtenerDatosFormulario(subactividad.idRegistroFormulario);
 
-
+        // Save data
         setSubactividadSeleccionada(subactividad);
         setActividadNombre(subactividad.nombre || '');
         setCriterioAceptacion(subactividad.criterio_aceptacion || '');
@@ -1415,23 +1452,26 @@ function TablaPpi() {
         setNombre_usuario_edit(subactividad.nombre_usuario || '');
         setComentario(subactividad.comentario || '');
         setFormularioData({ ...formularioData, observaciones: subactividad.observaciones || '' });
-        // Establecer las URLs de las imágenes en el estado
         setImagen1Url(formularioData.imagen || '');
         setImagen2Url(formularioData.imagen2 || '');
         setShowConfirmModalRepetida(true);
-
-
     };
 
-
-
+    // Brief Description:
+    // This function updates the PPI (Project Production Index) document in Firestore with the 
+    // latest activities and subactivities data. It ensures that each subactivity has the necessary 
+    // fields (`edited`, `motivoVersion`) and then updates the Firestore document accordingly.
+    // Send data to firestore
     const actualizarFormularioEnFirestore = async (nuevoPpi) => {
+        // Validate if ppi exist
         if (!nuevoPpi.docId) {
             console.error("No se proporcionó docId para la actualización.");
             return;
         }
 
         try {
+            // Save the ppi in teh document
+            // Navigate inside the doc and go to the subactivities
             const ppiRef = doc(db, "lotes", idLote, "inspecciones", nuevoPpi.docId);
             const updatedData = {
                 actividades: nuevoPpi.actividades.map(actividad => ({
@@ -1451,23 +1491,9 @@ function TablaPpi() {
     };
 
 
-
-
-
-
-
-
-    const [actividadNombre, setActividadNombre] = useState('');
-    const [criterioAceptacion, setCriterioAceptacion] = useState('');
-    const [docReferencia, setDocReferencia] = useState('');
-    const [tipoInspeccion, setTipoInspeccion] = useState('');
-    const [punto, setPunto] = useState('');
-    const [responsable, setResponsable] = useState('');
-    const [aptoNoapto, setAptoNoapto] = useState('');
-    const [nombre_usuario_edit, setNombre_usuario_edit] = useState('');
-
-    const [formularioData, setFormularioData] = useState({});
-
+    // Brief Description:
+    // This function fetches a form document from the Firestore "registros" collection using its ID.
+    // If the document exists, it returns its data; otherwise, it logs a message and returns null.
 
     const obtenerDatosFormulario = async (idRegistroFormulario) => {
         try {
@@ -1486,27 +1512,20 @@ function TablaPpi() {
         }
     };
 
-
-
-
-    const [showActiveOnly, setShowActiveOnly] = useState(true);
-    const [responsableFilter, setResponsableFilter] = useState('Todos');
-
-
+    // toggleActiveOnly: Toggles a boolean that determines if only active subactivities should be shown.
     const toggleActiveOnly = () => {
         setShowActiveOnly(!showActiveOnly);
     };
-    const [filter, setFilter] = useState('Todos');
-    const [activityFilter, setActivityFilter] = useState('Actividades');
 
+    // handleFilterChange: Updates the current result filter (e.g., "Apto", "No apto", or "Todos").
     const handleFilterChange = (event) => {
         setFilter(event.target.value);
     };
-
+    // handleActivityFilterChange: Updates which activity is selected from the dropdown (either a specific activity or all).
     const handleActivityFilterChange = (event) => {
         setActivityFilter(event.target.value);
     };
-
+    // filterSubactividades: Applies the currently selected filters ("filter" for resultadoInspeccion and "responsableFilter" for responsable) to a given list of subactividades.
     const filterSubactividades = (subactividades) => {
         let filtered = subactividades;
         if (filter !== 'Todos') {
@@ -1518,7 +1537,7 @@ function TablaPpi() {
         return filtered;
     };
 
-
+    // filterActividades: Applies the subactivity filter to each activity, then removes activities with no subactividades that match the filters, and also filters by the selected activity if chosen.
     const filterActividades = (actividades) => {
         return actividades
             .map(actividad => ({
@@ -1528,15 +1547,15 @@ function TablaPpi() {
             .filter(actividad => actividad.subactividades.length > 0)
             .filter(actividad => activityFilter === 'Actividades' || `${actividad.numero}. ${actividad.actividad}` === activityFilter);
     };
-
+    // activityOptions: Creates a dropdown array containing "Actividades" plus the number and name of each activity from the ppi data, for activity selection.
     const activityOptions = ppi ? ['Actividades', ...ppi.actividades.map(actividad => `${actividad.numero}. ${actividad.actividad}`)] : [];
-
+    // handleResponsableFilterChange: Updates which responsible person is selected from the dropdown.
     const handleResponsableFilterChange = (event) => {
         setResponsableFilter(event.target.value);
     };
 
 
-    // Controlar las vistas grid y tabla
+    // Controller the viewe of table and grid
 
     const [view, setView] = useState('table');
 
@@ -1549,10 +1568,11 @@ function TablaPpi() {
     };
 
 
-    const [isFinishInspectionModalOpen, setIsFinishInspectionModalOpen] = useState(false);
-    const [inspectionToFinish, setInspectionToFinish] = useState(null);
 
-    // Función para verificar si la subactividad es la versión más reciente
+    // The isLatestVersion function checks if a given subactivity is currently the newest (latest) version among all versions of that specific subactivity. 
+    // It looks up all versions for a particular subactivity (identified by its 'numero'), finds the highest version number, 
+    // and returns true if the subactivity's version matches this highest number, indicating it is the most recent version.
+
     const isLatestVersion = (actividadIndex, subactividad) => {
         // Obtener todas las versiones de la misma subactividad
         const allVersions = ppi.actividades[actividadIndex].subactividades
@@ -1566,7 +1586,10 @@ function TablaPpi() {
         return parseInt(subactividad.version, 10) === latestVersion;
     };
 
-    // Abrir el modal solo si la subactividad es la más reciente
+    // These functions manage the process of marking an inspection as finished or reverting it to a pending state. 
+    // The `openFinishInspectionModal` function verifies that the chosen subactivity is the latest version before allowing the user 
+    // to finish the inspection. If it is, the confirmation modal opens.
+
     const openFinishInspectionModal = (actividadIndex, subactividadIndex) => {
         const actividad = ppi.actividades[actividadIndex];
         const subactividad = actividad.subactividades[subactividadIndex];
@@ -1579,7 +1602,9 @@ function TablaPpi() {
         }
     };
 
-    // Confirmar la acción y alternar el estado de "terminada" en Firestore
+    // The `confirmFinishInspection` function toggles the 'terminada' (finished) state of the selected subactivity in Firestore. 
+    // It fetches the current data, updates the 'terminada' field, and updates the component's state to reflect the change. 
+    // This may increment or decrement the counter of finished inspections depending on the action taken.
     const confirmFinishInspection = async () => {
         try {
             const { actividadIndex, subactividadIndex } = inspectionToFinish;
@@ -1592,20 +1617,16 @@ function TablaPpi() {
                 return;
             }
 
-            // Copiar los datos existentes
             const existingData = docSnap.data();
             const currentStatus = existingData.actividades[actividadIndex].subactividades[subactividadIndex].terminada;
 
-            // Alternar el estado de terminada
             existingData.actividades[actividadIndex].subactividades[subactividadIndex] = {
                 ...existingData.actividades[actividadIndex].subactividades[subactividadIndex],
                 terminada: !currentStatus, // Alterna el valor de terminada
             };
 
-            // Guardar los datos actualizados en Firestore
             await updateDoc(ppiRef, { actividades: existingData.actividades });
 
-            // Actualizar el estado local de ppi para reflejar el cambio sin recargar la página
             setPpi((prevPpi) => {
                 const updatedActividades = [...prevPpi.actividades];
                 updatedActividades[actividadIndex].subactividades[subactividadIndex] = {
@@ -1616,12 +1637,8 @@ function TablaPpi() {
                 return { ...prevPpi, actividades: updatedActividades };
             });
 
-            // Actualizar el contador de terminadas
             setTerminadasCount((prevCount) => currentStatus ? prevCount - 1 : prevCount + 1);
 
-            console.log("Subactividad actualizada:", existingData.actividades[actividadIndex].subactividades[subactividadIndex]);
-
-            // Cerrar el modal y limpiar el estado
             setIsFinishInspectionModalOpen(false);
             setInspectionToFinish(null);
         } catch (error) {
@@ -1630,19 +1647,17 @@ function TablaPpi() {
     };
 
 
-
-
-    // Cerrar el modal de confirmación sin actualizar
+    // The `closeFinishInspectionModal` simply closes the confirmation modal without making any changes.
     const closeFinishInspectionModal = () => {
         setIsFinishInspectionModalOpen(false);
         setInspectionToFinish(null);
     };
 
 
-    // Contador terminadas
-
-    const [terminadasCount, setTerminadasCount] = useState(0);
-
+    // This useEffect hook calculates the total number of completed ('terminada') inspections each time the 'ppi' state updates.
+    // It iterates over all activities and their subactivities to count how many are marked as 'terminada',
+    // and then updates the 'terminadasCount' state with that total. This ensures that the displayed count of completed inspections
+    // remains accurate whenever there are changes in the 'ppi' data.
 
     useEffect(() => {
         if (ppi && ppi.actividades) {
@@ -2320,62 +2335,62 @@ function TablaPpi() {
                                                             ) : null}
                                                         </div>
                                                         <div>
-                                                        {/* Botón para abrir el modal de confirmación para terminar la inspección */}
-                                                        <div className="col-span-1 xl:col-span-1 block bg-white cursor-pointer flex justify-center">
-                                                            {subactividad.formularioEnviado ? (
-                                                                subactividad.terminada ? (
-                                                                    <button
-                                                                        onClick={() => openFinishInspectionModal(indexActividad, indexSubactividad)}
-                                                                        className="bg-green-500 text-white px-2 py-1 font-bold text-xs rounded-lg"
-                                                                    >
-                                                                        Terminada
-                                                                    </button>
-                                                                ) : (
-                                                                    isLatestVersion(indexActividad, subactividad) && (
+                                                            {/* Botón para abrir el modal de confirmación para terminar la inspección */}
+                                                            <div className="col-span-1 xl:col-span-1 block bg-white cursor-pointer flex justify-center">
+                                                                {subactividad.formularioEnviado ? (
+                                                                    subactividad.terminada ? (
                                                                         <button
                                                                             onClick={() => openFinishInspectionModal(indexActividad, indexSubactividad)}
-                                                                            className="bg-yellow-500 text-white px-2 py-1  font-bold text-xs rounded-lg"
+                                                                            className="bg-green-500 text-white px-2 py-1 font-bold text-xs rounded-lg"
                                                                         >
-                                                                            Pendiente
+                                                                            Terminada
                                                                         </button>
+                                                                    ) : (
+                                                                        isLatestVersion(indexActividad, subactividad) && (
+                                                                            <button
+                                                                                onClick={() => openFinishInspectionModal(indexActividad, indexSubactividad)}
+                                                                                className="bg-yellow-500 text-white px-2 py-1  font-bold text-xs rounded-lg"
+                                                                            >
+                                                                                Pendiente
+                                                                            </button>
+                                                                        )
                                                                     )
-                                                                )
-                                                            ) : null}
-                                                        </div>
+                                                                ) : null}
+                                                            </div>
 
-                                                        {/* Modal de confirmación para terminar la inspección */}
-                                                        {isFinishInspectionModalOpen && (
-                                                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-800 bg-opacity-75">
-                                                                <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-                                                                    <h2 className="text-xl font-semibold mb-4">
-                                                                        {inspectionToFinish?.terminada ? "¿Regresar a pendiente?" : "¿Terminar la inspección?"}
-                                                                    </h2>
-                                                                    <p className="text-gray-600 mb-6">
-                                                                        {inspectionToFinish?.terminada
-                                                                            ? "¿Estás seguro de que deseas marcar esta inspección como pendiente?"
-                                                                            : "¿Estás seguro de que deseas marcar esta inspección como terminada?"}
-                                                                    </p>
-                                                                    <div className="flex justify-end gap-4">
-                                                                        <button
-                                                                            onClick={confirmFinishInspection}
-                                                                            className={`font-bold py-2 px-4 rounded ${inspectionToFinish?.terminada ? "bg-yellow-500" : "bg-green-600"} text-white`}
-                                                                        >
-                                                                            {inspectionToFinish?.terminada ? "Regresar a pendiente" : "Terminar inspección"}
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={closeFinishInspectionModal}
-                                                                            className="bg-gray-500 text-white font-bold py-2 px-4 rounded"
-                                                                        >
-                                                                            Cancelar
-                                                                        </button>
+                                                            {/* Modal de confirmación para terminar la inspección */}
+                                                            {isFinishInspectionModalOpen && (
+                                                                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-800 bg-opacity-75">
+                                                                    <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+                                                                        <h2 className="text-xl font-semibold mb-4">
+                                                                            {inspectionToFinish?.terminada ? "¿Regresar a pendiente?" : "¿Terminar la inspección?"}
+                                                                        </h2>
+                                                                        <p className="text-gray-600 mb-6">
+                                                                            {inspectionToFinish?.terminada
+                                                                                ? "¿Estás seguro de que deseas marcar esta inspección como pendiente?"
+                                                                                : "¿Estás seguro de que deseas marcar esta inspección como terminada?"}
+                                                                        </p>
+                                                                        <div className="flex justify-end gap-4">
+                                                                            <button
+                                                                                onClick={confirmFinishInspection}
+                                                                                className={`font-bold py-2 px-4 rounded ${inspectionToFinish?.terminada ? "bg-yellow-500" : "bg-green-600"} text-white`}
+                                                                            >
+                                                                                {inspectionToFinish?.terminada ? "Regresar a pendiente" : "Terminar inspección"}
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={closeFinishInspectionModal}
+                                                                                className="bg-gray-500 text-white font-bold py-2 px-4 rounded"
+                                                                            >
+                                                                                Cancelar
+                                                                            </button>
 
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        )}
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    </div>
-                                                  
+
                                                 </div>
                                             </div>
                                         ))}
