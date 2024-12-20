@@ -41,7 +41,7 @@ const ParteObra = () => {
     navigate(-1); // Navega hacia atrás en el historial
   };
 
-    // State for templates and dynamic fields
+  // State for templates and dynamic fields
   const [camposDinamicos, setCamposDinamicos] = useState([]);
   const [plantillas, setPlantillas] = useState([]);
   const [plantillaSeleccionada, setPlantillaSeleccionada] = useState(null);
@@ -52,7 +52,7 @@ const ParteObra = () => {
   const [fileInputKey, setFileInputKey] = useState(0);
   const [geolocalizacion, setGeolocalizacion] = useState(null);
 
-    // Fetch user's geolocation when the component mounts
+  // Fetch user's geolocation when the component mounts
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -77,7 +77,7 @@ const ParteObra = () => {
           id: doc.id,
           ...doc.data(),
         }));
-  // Prioritize a specific template
+        // Prioritize a specific template
         const ordenadas = [
           ...plantillasCargadas.filter((p) => p.nombre === "Parte de obra"),
           ...plantillasCargadas.filter((p) => p.nombre !== "Parte de obra").sort((a, b) =>
@@ -104,7 +104,7 @@ const ParteObra = () => {
   }, []);
 
 
-    // Updates field visibility based on the selected template
+  // Updates field visibility based on the selected template
   useEffect(() => {
     if (plantillaSeleccionada) {
       const camposPlantilla = plantillaSeleccionada.campos.map((campo) => campo.nombre);
@@ -116,13 +116,13 @@ const ParteObra = () => {
     }
   }, [plantillaSeleccionada, camposDinamicos]);
 
-    // Handles template selection
+  // Handles template selection
   const handlePlantillaChange = (plantillaId) => {
     const plantilla = plantillas.find((p) => p.id === plantillaId);
     setPlantillaSeleccionada(plantilla || null);
   };
 
-   // Converts a string to camel case
+  // Converts a string to camel case
   const toCamelCase = (str) => {
     return str
       .toLowerCase()
@@ -132,7 +132,7 @@ const ParteObra = () => {
       .replace(/\s+/g, "");
   };
 
-    // Compresses an image using the compression library
+  // Compresses an image using the compression library
   const compressImage = async (file) => {
     const options = {
       maxSizeMB: 0.3,
@@ -143,7 +143,7 @@ const ParteObra = () => {
     return await imageCompression(file, options);
   };
 
-    // Uploads an image to Firebase Storage with metadata
+  // Uploads an image to Firebase Storage with metadata
   const uploadImageWithMetadata = async (file, index) => {
     if (!geolocalizacion) {
       throw new Error("Geolocalización no disponible.");
@@ -308,103 +308,103 @@ const ParteObra = () => {
 
         {plantillaSeleccionada ?
 
-         (
-          <div className="px-8 pb-6">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {camposDinamicos
-              .sort((a, b) => a.nombre.localeCompare(b.nombre))
-              .map(
-                (campo) =>
-                  visibilidadCampos[campo.nombre] && (
-                    <div key={campo.nombre}>
-                      <label className="block text-sm font-medium text-gray-800">
-                        {campo.nombre}
-                      </label>
-                      {campo.tipo === "desplegable" ? (
-                        <select
-                          name={campo.nombre}
-                          value={formData[campo.nombre] || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, [campo.nombre]: e.target.value })
-                          }
-                          className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                        >
-                          <option value="">-- Seleccione una opción --</option>
-                          {campo.valores.map((valor) => (
-                            <option key={valor.id} value={valor.valor}>
-                              {valor.valor}
-                            </option>
-                          ))}
-                        </select>
-                      ) : campo.tipo === "texto" ? (
-                        <textarea
-                          name={campo.nombre}
-                          value={formData[campo.nombre] || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, [campo.nombre]: e.target.value })
-                          }
-                          className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                        ></textarea>
-                      ) : null}
-                    </div>
-                  )
-              )}
+          (
+            <div className="px-8 pb-6">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {camposDinamicos
+                  .sort((a, b) => a.nombre.localeCompare(b.nombre))
+                  .map(
+                    (campo) =>
+                      visibilidadCampos[campo.nombre] && (
+                        <div key={campo.nombre}>
+                          <label className="block text-sm font-medium text-gray-800">
+                            {campo.nombre}
+                          </label>
+                          {campo.tipo === "desplegable" ? (
+                            <select
+                              name={campo.nombre}
+                              value={formData[campo.nombre] || ""}
+                              onChange={(e) =>
+                                setFormData({ ...formData, [campo.nombre]: e.target.value })
+                              }
+                              className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                            >
+                              <option value="">-- Seleccione una opción --</option>
+                              {campo.valores.map((valor) => (
+                                <option key={valor.id} value={valor.valor}>
+                                  {valor.valor}
+                                </option>
+                              ))}
+                            </select>
+                          ) : campo.tipo === "texto" ? (
+                            <textarea
+                              name={campo.nombre}
+                              value={formData[campo.nombre] || ""}
+                              onChange={(e) =>
+                                setFormData({ ...formData, [campo.nombre]: e.target.value })
+                              }
+                              className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                            ></textarea>
+                          ) : null}
+                        </div>
+                      )
+                  )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-800">Fecha y Hora</label>
-              <input
-                type="datetime-local"
-                name="fechaHora"
-                value={formData.fechaHora}
-                onChange={(e) =>
-                  setFormData({ ...formData, fechaHora: e.target.value })
-                }
-                className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-              />
+                <div>
+                  <label className="block text-sm font-medium text-gray-800">Fecha y Hora</label>
+                  <input
+                    type="datetime-local"
+                    name="fechaHora"
+                    value={formData.fechaHora}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fechaHora: e.target.value })
+                    }
+                    className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-800">Observaciones</label>
+                  <textarea
+                    name="observaciones"
+                    value={formData.observaciones}
+                    onChange={(e) =>
+                      setFormData({ ...formData, observaciones: e.target.value })
+                    }
+                    className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-800">Imágenes</label>
+                  {[0, 1, 2, 3].map((index) => (
+                    <input
+                      key={index}
+                      type="file"
+                      accept="image/*"
+                      ref={(el) => (fileInputsRefs.current[index] = el)}
+                      onChange={(e) => handleFileChange(e, index)}
+                      className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200"
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:bg-sky-700 transition"
+                >
+                  Enviar
+                </button>
+              </form>
+
             </div>
+          )
+          :
+          (
+            <div className="text-xl font-medium text-center mt-10">Selecciona una plantilla para visualizar el formulario</div>
+          )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-800">Observaciones</label>
-              <textarea
-                name="observaciones"
-                value={formData.observaciones}
-                onChange={(e) =>
-                  setFormData({ ...formData, observaciones: e.target.value })
-                }
-                className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-              ></textarea>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-800">Imágenes</label>
-              {[0, 1, 2, 3].map((index) => (
-                <input
-                  key={index}
-                  type="file"
-                  accept="image/*"
-                  ref={(el) => (fileInputsRefs.current[index] = el)}
-                  onChange={(e) => handleFileChange(e, index)}
-                  className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200"
-                />
-              ))}
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:bg-sky-700 transition"
-            >
-              Enviar
-            </button>
-          </form>
-
-        </div>
-        )
-        :
-        (
-          <div className="text-xl font-medium text-center mt-10">Selecciona una plantilla para visualizar el formulario</div>
-        )}
-
-        
       </div>
 
 

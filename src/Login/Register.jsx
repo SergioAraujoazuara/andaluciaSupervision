@@ -115,7 +115,7 @@ const Register = () => {
 
 
 
-        <div className="md:w-1/2 w-full p-10 flex flex-col items-center justify-center">
+        <div className=" w-full p-10 flex flex-col items-center justify-center">
           <div className="text-center mb-5">
 
             <h1 className="text-3xl font-semibold text-gray-700 my-4">Registro</h1>

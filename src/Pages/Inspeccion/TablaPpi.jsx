@@ -134,6 +134,7 @@ function TablaPpi() {
     const [terminadasCount, setTerminadasCount] = useState(0);
     const [filter, setFilter] = useState('Todos');
     const [activityFilter, setActivityFilter] = useState('Actividades');
+    const firma = 'zO9c82%&45e6e0b74cfccg97e/&/8714u32342&%&/28fb4xcd2'
 
     const handleObservaciones = (nuevasObservaciones) => {
         setObservaciones(nuevasObservaciones);
@@ -1984,7 +1985,7 @@ function TablaPpi() {
 
 
 
-                            <div className='flex gap-2 flex-col xl:flex-row xl:justify-between items-center xl:items-start my-4'>
+                            <div className='flex gap-2 flex-col xl:flex-row xl:justify-between items-center xl:items-end mb-4'>
 
 
                                 <div className='flex-col xl:flex-row gap-5 flex items-center xl:items-center'>

@@ -111,39 +111,56 @@ const GestionPlantillas = () => {
     setModalAccion(null);
   };
 
+
   /**
-   * Handles creating a new template in Firestore.
-   * Validates that the template name is unique and not empty.
-   */
-  const handleCrearPlantilla = async () => {
-    const nombreNormalizado = normalizeForValidation(nuevaPlantilla);
+ * Handles creating a new template in Firestore.
+ * Ensures that default fields are not duplicated.
+ */
+const handleCrearPlantilla = async () => {
+  const nombreNormalizado = normalizeForValidation(nuevaPlantilla);
 
-    if (
-      !nuevaPlantilla.trim() ||
-      plantillas.some(
-        (plantilla) =>
-          normalizeForValidation(plantilla.nombre) === nombreNormalizado
-      )
-    ) {
-      mostrarModal("El nombre de la plantilla ya existe o es inválido.");
-      return;
-    }
+  // Validate that the template name is unique and not empty
+  if (
+    !nuevaPlantilla.trim() ||
+    plantillas.some(
+      (plantilla) =>
+        normalizeForValidation(plantilla.nombre) === nombreNormalizado
+    )
+  ) {
+    mostrarModal("El nombre de la plantilla ya existe o es inválido.");
+    return;
+  }
 
-    const plantilla = {
-      nombre: capitalizeWords(nuevaPlantilla),
-      campos: [...fijos, ...camposSeleccionados],
-    };
+  // Combine default fields and selected fields, ensuring no duplicates
+  const camposUnicos = [
+    ...fijos,
+    ...camposSeleccionados.filter(
+      (campo) => !fijos.some((fijo) => fijo.id === campo.id)
+    ),
+  ];
 
-    try {
-      const docRef = await addDoc(collection(db, "plantillas"), plantilla);
-      setPlantillas((prev) => [...prev, { id: docRef.id, ...plantilla }]);
-      setNuevaPlantilla("");
-      setCamposSeleccionados([]);
-      mostrarModal("Plantilla creada correctamente.");
-    } catch (error) {
-      console.error("Error al crear plantilla:", error);
-    }
+  const plantilla = {
+    nombre: capitalizeWords(nuevaPlantilla),
+    campos: camposUnicos,
   };
+
+  try {
+    // Add the new template to Firestore
+    const docRef = await addDoc(collection(db, "plantillas"), plantilla);
+
+    // Update the local state with the new template
+    setPlantillas((prev) => [...prev, { id: docRef.id, ...plantilla }]);
+
+    // Reset fields
+    setNuevaPlantilla("");
+    setCamposSeleccionados([]);
+
+    mostrarModal("Plantilla creada correctamente.");
+  } catch (error) {
+    console.error("Error al crear plantilla:", error);
+  }
+};
+
 
   /**
   * Handles deleting a template by showing a confirmation modal.
@@ -190,49 +207,66 @@ const GestionPlantillas = () => {
     setNuevaPlantilla(plantilla.nombre);
     setCamposSeleccionados(plantilla.campos);
   };
+  
 
   /**
-  * Handles updating an existing template in Firestore.
-  * Validates that the new name is unique among other templates.
-  */
-  const handleActualizarPlantilla = async () => {
-    if (!plantillaEditando) return;
+ * Handles updating an existing template in Firestore.
+ * Ensures that default fields are not duplicated during the update process.
+ */
+const handleActualizarPlantilla = async () => {
+  if (!plantillaEditando) return;
 
-    const nombreNormalizado = normalizeForValidation(nuevaPlantilla);
+  const nombreNormalizado = normalizeForValidation(nuevaPlantilla);
 
-    if (
-      plantillas.some(
-        (plantilla) =>
-          plantilla.id !== plantillaEditando.id &&
-          normalizeForValidation(plantilla.nombre) === nombreNormalizado
-      )
-    ) {
-      mostrarModal("El nombre de la plantilla ya existe.");
-      return;
-    }
+  // Validate that the new name is unique across all templates
+  if (
+    plantillas.some(
+      (plantilla) =>
+        plantilla.id !== plantillaEditando.id &&
+        normalizeForValidation(plantilla.nombre) === nombreNormalizado
+    )
+  ) {
+    mostrarModal("El nombre de la plantilla ya existe.");
+    return;
+  }
 
-    const plantillaActualizada = {
-      nombre: capitalizeWords(nuevaPlantilla),
-      campos: [...fijos, ...camposSeleccionados],
-    };
+  // Combine default fields and selected fields, ensuring no duplicates
+  const camposUnicos = [
+    ...fijos,
+    ...camposSeleccionados.filter(
+      (campo) => !fijos.some((fijo) => fijo.id === campo.id)
+    ),
+  ];
 
-    try {
-      await updateDoc(doc(db, "plantillas", plantillaEditando.id), plantillaActualizada);
-      setPlantillas((prev) =>
-        prev.map((plantilla) =>
-          plantilla.id === plantillaEditando.id
-            ? { ...plantilla, ...plantillaActualizada }
-            : plantilla
-        )
-      );
-      setPlantillaEditando(null);
-      setNuevaPlantilla("");
-      setCamposSeleccionados([]);
-      mostrarModal("Plantilla actualizada correctamente.");
-    } catch (error) {
-      console.error("Error al actualizar plantilla:", error);
-    }
+  const plantillaActualizada = {
+    nombre: capitalizeWords(nuevaPlantilla),
+    campos: camposUnicos,
   };
+
+  try {
+    // Update the template in Firestore
+    await updateDoc(doc(db, "plantillas", plantillaEditando.id), plantillaActualizada);
+
+    // Update the local state with the modified template
+    setPlantillas((prev) =>
+      prev.map((plantilla) =>
+        plantilla.id === plantillaEditando.id
+          ? { ...plantilla, ...plantillaActualizada }
+          : plantilla
+      )
+    );
+
+    // Reset fields
+    setPlantillaEditando(null);
+    setNuevaPlantilla("");
+    setCamposSeleccionados([]);
+
+    mostrarModal("Plantilla actualizada correctamente.");
+  } catch (error) {
+    console.error("Error al actualizar plantilla:", error);
+  }
+};
+
 
   return (
     <div className="mt-2 max-w-6xl mx-auto min-h-screen text-gray-500">
