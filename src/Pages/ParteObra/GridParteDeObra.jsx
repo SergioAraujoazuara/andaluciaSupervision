@@ -3,19 +3,28 @@ import { AiOutlineForm, AiOutlineTable } from "react-icons/ai";
 import { IoArrowBackCircle } from "react-icons/io5";
 import { GoHomeFill } from "react-icons/go";
 import { Link, useNavigate } from "react-router-dom";
+/**
+ * GridParteDeObra Component
+ * 
+ * This component renders a navigation grid for a construction project system.
+ * It includes links to different sections such as "Formularios" and "Ver Registros."
+ */
 
 const GridParteDeObra = () => {
+    /**
+   * Navigates back in the browser history.
+   */
   const navigate = useNavigate();
 
   const handleGoBack = () => {
-    navigate(-1); // Navega hacia atrás en el historial
+    navigate(-1); // Go back to the previous page
   };
 
   return (
     <div className="min-h-screen container mx-auto xl:px-14 py-2 text-gray-500 mb-10">
-      {/* Encabezado */}
+      {/* header */}
       <div className="flex gap-2 items-center justify-between px-5 py-3 text-md">
-        {/* Navegación */}
+        {/* Navigate */}
               <div className="flex gap-2 items-center">
                   <GoHomeFill style={{ width: 15, height: 15, fill: "#d97706" }} />
                   <Link to="#">
@@ -23,7 +32,7 @@ const GridParteDeObra = () => {
                   </Link>
               </div>
 
-        {/* Botón de volver */}
+        {/* Back */}
         <div className="flex items-center">
           <button className="text-amber-600 text-3xl" onClick={handleGoBack}>
             <IoArrowBackCircle />
@@ -31,9 +40,9 @@ const GridParteDeObra = () => {
         </div>
       </div>
 
-      {/* Grid principal */}
+      {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl p-6 mt-12">
-        {/* Card de Formulario */}
+        {/* Card */}
         <Link to="/formularios">
           <div className="group relative bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300">
             <div className="absolute inset-0 bg-gray-100 group-hover:bg-blue-50 transition-colors duration-300"></div>
@@ -47,7 +56,7 @@ const GridParteDeObra = () => {
           </div>
         </Link>
 
-        {/* Card de Ver Registros */}
+        {/* Card register */}
         <Link to="/ver-registros">
           <div className="group relative bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300">
             <div className="absolute inset-0 bg-gray-100 group-hover:bg-green-50 transition-colors duration-300"></div>

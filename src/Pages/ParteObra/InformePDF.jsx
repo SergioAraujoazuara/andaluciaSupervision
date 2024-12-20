@@ -8,7 +8,24 @@ import { FaRegFilePdf } from "react-icons/fa6";
 import { useAuth } from '../../context/authContext';
 import { storage } from "../../../firebase_config";
 import { ref, getMetadata } from "firebase/storage";
+/**
+ * PdfInforme Component
+ *
+ * Generates and downloads a PDF report for a construction project, including:
+ * - Project details
+ * - User information
+ * - Images with metadata
+ * - Observations and additional fields
+ *
+ * @param {Object[]} registros - Array of records for the report.
+ * @param {string} [fechaInicial] - Start date for the report range.
+ * @param {string} [fechaFinal] - End date for the report range.
+ */
 
+
+/**
+ * Stylesheet for the PDF document.
+ */
 const styles = StyleSheet.create({
   page: {
     padding: 30,
@@ -123,27 +140,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    marginBottom: 16, // Separación entre las filas
+    marginBottom: 16,
   },
   imageContainer: {
-    width: "45%", // Cada imagen ocupa el 45% del ancho
-    margin: "2.5%", // Margen para crear separación entre las imágenes
-    alignItems: "center", // Centrar la imagen y el enlace
+    width: "45%",
+    margin: "2.5%",
+    alignItems: "center",
   },
   image: {
-    width: "100%", // La imagen ocupa todo el ancho del contenedor
-    height: 150, // Altura fija de la imagen
+    width: "100%",
+    height: 150,
     borderRadius: 8,
     border: "1px solid #cccccc",
   },
   imageLink: {
-    fontSize: 8, // Reducir el tamaño del texto del enlace
-    color: "#1d4ed8", // Color azul para el enlace
+    fontSize: 8,
+    color: "#1d4ed8",
     textDecoration: "underline",
     textAlign: "center",
-    marginTop: 5, // Espacio entre la imagen y el enlace
+    marginTop: 5,
   },
-  
+
 });
 
 const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
@@ -154,6 +171,9 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
   const [userNombre, setUserNombre] = useState('');
   const [userSignature, setUserSignature] = useState('');
 
+  /**
+ * Fetches the authenticated user's details (name and signature) from Firestore.
+ */
   useEffect(() => {
     if (user) {
       const userDocRef = doc(db, 'usuarios', user.uid);
@@ -172,6 +192,12 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
     }
   }, [user]);
 
+
+  /**
+   * Generates default start and end dates (one week range).
+   *
+   * @returns {Object} - Object containing `startDate` and `endDate`.
+   */
   const getDefaultDates = () => {
     const today = new Date();
     const oneWeekAgo = new Date();
@@ -193,6 +219,10 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
   const fechaInicioFinal = fechaInicial || startDate;
   const fechaFinFinal = fechaFinal || endDate;
 
+
+  /**
+  * Fetches project details from Firestore based on the stored project ID.
+  */
   useEffect(() => {
     const fetchProyecto = async () => {
       const idProyecto = localStorage.getItem("idProyecto");
@@ -214,6 +244,12 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
     fetchProyecto();
   }, []);
 
+
+  /**
+  * Generates a file name for the PDF based on project details and timestamp.
+  *
+  * @returns {string} - File name for the PDF.
+  */
   const generateFileName = () => {
     const nombreProyecto = proyecto?.nombre_proyecto || "Proyecto";
     const nombreObra = proyecto?.obra || "Obra";
@@ -223,6 +259,10 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
     return `${nombreProyecto}_${nombreObra}_${plantilla}_${fechaHora}.pdf`;
   };
 
+
+  /**
+   * Fetches images associated with the records and converts them to Base64.
+   */
   useEffect(() => {
     const fetchImagenes = async () => {
       const allImages = await Promise.all(
@@ -240,6 +280,10 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
     fetchImagenes();
   }, [registros]);
 
+
+  /**
+   * Generates the PDF document and stores it as a Blob.
+   */
   useEffect(() => {
     const generatePdfBlob = async () => {
       const doc = (
@@ -252,18 +296,18 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
                     // Extraer el path decodificado desde la URL de la imagen
                     const path = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
                     const imageRef = ref(storage, path);
-  
+
                     // Obtener metadatos de la imagen
                     const metadata = await getMetadata(imageRef);
                     const latitude = metadata.customMetadata?.latitude;
                     const longitude = metadata.customMetadata?.longitude;
-  
+
                     // Generar un enlace de Google Maps si hay coordenadas disponibles
                     const googleMapsLink =
                       latitude && longitude
                         ? `https://www.google.com/maps?q=${latitude},${longitude}`
                         : null;
-  
+
                     return { url, googleMapsLink };
                   } catch (error) {
                     console.error("Error al obtener metadatos de la imagen:", error);
@@ -271,7 +315,7 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
                   }
                 })
               );
-  
+
               return (
                 <Page key={index} size="A4" style={styles.page}>
                   {/* Encabezado */}
@@ -296,12 +340,12 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
                       )}
                     </View>
                   </View>
-  
+
                   {/* Título de la sección */}
                   <Text style={styles.sectionTitle}>
                     Registro número: {registro.id}
                   </Text>
-  
+
                   {/* Datos en columnas */}
                   <View style={styles.fieldGroup}>
                     {Object.entries(registro)
@@ -315,7 +359,7 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
                         // Verificar si el texto tiene más de 5 palabras
                         const isLongText =
                           typeof value === "string" && value.split(" ").length > 5;
-  
+
                         return (
                           <View
                             key={i}
@@ -335,17 +379,17 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
                   </View>
 
                   <View style={styles.imageGrid}>
-  {imagesWithMetadata.map((imageData, imgIndex) => (
-    <View key={imgIndex} style={styles.imageContainer}>
-      <Image style={styles.image} src={imageData.url} />
-      {imageData.googleMapsLink && (
-        <Text style={styles.imageLink}>{imageData.googleMapsLink}</Text>
-      )}
-    </View>
-  ))}
-</View>
+                    {imagesWithMetadata.map((imageData, imgIndex) => (
+                      <View key={imgIndex} style={styles.imageContainer}>
+                        <Image style={styles.image} src={imageData.url} />
+                        {imageData.googleMapsLink && (
+                          <Text style={styles.imageLink}>{imageData.googleMapsLink}</Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
 
-  
+
                   {/* Observaciones */}
                   {registro.observaciones && (
                     <View style={styles.fieldRow}>
@@ -359,7 +403,7 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
               );
             })
           )}
-  
+
           {/* Página final con la firma */}
           <Page size="A4" style={styles.page}>
             <View style={styles.header}>
@@ -393,15 +437,17 @@ const PdfInforme = ({ registros, fechaInicial, fechaFinal }) => {
           </Page>
         </Document>
       );
-  
+
       const blob = await pdf(doc).toBlob();
       setPdfBlob(blob);
     };
-  
+
     generatePdfBlob();
   }, [registros, proyecto, fechaInicioFinal, fechaFinFinal]);
-  
 
+  /**
+     * Triggers the download of the generated PDF.
+     */
   const downloadPdf = () => {
     if (pdfBlob) {
       const fileName = generateFileName();

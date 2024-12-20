@@ -13,20 +13,34 @@ import {
   MdOutlineFormatListBulleted,
 } from "react-icons/md";
 
-// Función para normalizar datos para validación
+/**
+ * Normalizes a string for validation by converting it to lowercase,
+ * removing special characters, and eliminating spaces.
+ *
+ * @param {string} str - The string to normalize.
+ * @returns {string} - Normalized string.
+ */
 const normalizeForValidation = (str) =>
   str
     .toLowerCase()
-    .replace(/[^\w]/g, "") // Eliminar caracteres especiales
-    .replace(/\s+/g, ""); // Eliminar espacios
+    .replace(/[^\w]/g, "")
+    .replace(/\s+/g, "");
 
-// Función para capitalizar las palabras
+
+/**
+* Capitalizes the first letter of each word in a string.
+*
+* @param {string} str - The string to capitalize.
+* @returns {string} - Capitalized string.
+*/
 const capitalizeWords = (str) =>
   str
     .toLowerCase()
     .replace(/\b\w/g, (match) => match.toUpperCase());
 
+
 const GestionPlantillas = () => {
+  // States for managing templates, fields, and modal visibility
   const [plantillas, setPlantillas] = useState([]);
   const [camposFormulario, setCamposFormulario] = useState([]);
   const [nuevaPlantilla, setNuevaPlantilla] = useState("");
@@ -41,6 +55,9 @@ const GestionPlantillas = () => {
   const [modalMensaje, setModalMensaje] = useState("");
   const [modalAccion, setModalAccion] = useState(null);
 
+  /**
+ * Fetches template and field data from Firestore when the component mounts.
+ */
   useEffect(() => {
     const cargarDatos = async () => {
       try {
@@ -72,18 +89,32 @@ const GestionPlantillas = () => {
     cargarDatos();
   }, []);
 
+
+  /**
+  * Displays a modal with a custom message and optional action on confirmation.
+  *
+  * @param {string} mensaje - Message to display in the modal.
+  * @param {Function|null} accion - Optional action to execute on confirmation.
+  */
   const mostrarModal = (mensaje, accion = null) => {
     setModalMensaje(mensaje);
     setModalAccion(() => accion);
     setModalVisible(true);
   };
 
+  /**
+   * Closes the modal and resets its state.
+   */
   const cerrarModal = () => {
     setModalVisible(false);
     setModalMensaje("");
     setModalAccion(null);
   };
 
+  /**
+   * Handles creating a new template in Firestore.
+   * Validates that the template name is unique and not empty.
+   */
   const handleCrearPlantilla = async () => {
     const nombreNormalizado = normalizeForValidation(nuevaPlantilla);
 
@@ -114,6 +145,10 @@ const GestionPlantillas = () => {
     }
   };
 
+  /**
+  * Handles deleting a template by showing a confirmation modal.
+  * Deletes the template if confirmed.
+  */
   const handleEliminarPlantilla = (id) => {
     mostrarModal("¿Estás seguro de que deseas eliminar esta plantilla?", async () => {
       try {
@@ -128,6 +163,12 @@ const GestionPlantillas = () => {
     });
   };
 
+  /**
+ * Toggles the selection of a field.
+ * Mandatory fields cannot be deselected.
+ *
+ * @param {Object} campo - The field to toggle.
+ */
   const toggleCampoSeleccionado = (campo) => {
     if (fijos.some((fijo) => fijo.id === campo.id)) return; // No permitir deseleccionar obligatorios
     if (camposSeleccionados.some((c) => c.id === campo.id)) {
@@ -139,12 +180,21 @@ const GestionPlantillas = () => {
     }
   };
 
+  /**
+  * Prepares the component for editing a template by populating fields and states.
+  *
+  * @param {Object} plantilla - The template to edit.
+  */
   const handleEditarPlantilla = (plantilla) => {
     setPlantillaEditando(plantilla);
     setNuevaPlantilla(plantilla.nombre);
     setCamposSeleccionados(plantilla.campos);
   };
 
+  /**
+  * Handles updating an existing template in Firestore.
+  * Validates that the new name is unique among other templates.
+  */
   const handleActualizarPlantilla = async () => {
     if (!plantillaEditando) return;
 
@@ -246,8 +296,8 @@ const GestionPlantillas = () => {
             <label
               key={campo.id}
               className={`flex items-center space-x-2 cursor-pointer ${fijos.some((fijo) => fijo.id === campo.id)
-                  ? "bg-gray-200 text-gray-500"
-                  : ""
+                ? "bg-gray-200 text-gray-500"
+                : ""
                 }`}
             >
               <input

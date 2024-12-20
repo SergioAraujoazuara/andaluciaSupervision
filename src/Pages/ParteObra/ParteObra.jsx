@@ -10,12 +10,21 @@ import { GoHomeFill } from "react-icons/go";
 import { Link, useNavigate } from "react-router-dom";
 import imageCompression from "browser-image-compression"; // Importa la librería de compresión
 
+/**
+ * ParteObra Component
+ *
+ * A form for recording construction project data, including dynamic fields, images,
+ * geolocation, and template selection.
+ */
+
 const ParteObra = () => {
+  // State for managing form data and dynamic fields
   const [formData, setFormData] = useState({
     observaciones: "",
     imagenes: [],
     fechaHora: "",
   });
+  // Resets file inputs to clear their values
   const fileInputsRefs = useRef([]);
   const resetFileInputs = () => {
     fileInputsRefs.current.forEach((input) => {
@@ -25,13 +34,14 @@ const ParteObra = () => {
     });
   };
 
-
+  // Handles navigation back to the previous page
   const navigate = useNavigate();
 
   const handleGoBack = () => {
     navigate(-1); // Navega hacia atrás en el historial
   };
 
+    // State for templates and dynamic fields
   const [camposDinamicos, setCamposDinamicos] = useState([]);
   const [plantillas, setPlantillas] = useState([]);
   const [plantillaSeleccionada, setPlantillaSeleccionada] = useState(null);
@@ -42,6 +52,7 @@ const ParteObra = () => {
   const [fileInputKey, setFileInputKey] = useState(0);
   const [geolocalizacion, setGeolocalizacion] = useState(null);
 
+    // Fetch user's geolocation when the component mounts
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -56,7 +67,7 @@ const ParteObra = () => {
 
 
 
-
+  // Load templates and dynamic fields from Firestore
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -66,7 +77,7 @@ const ParteObra = () => {
           id: doc.id,
           ...doc.data(),
         }));
-
+  // Prioritize a specific template
         const ordenadas = [
           ...plantillasCargadas.filter((p) => p.nombre === "Parte de obra"),
           ...plantillasCargadas.filter((p) => p.nombre !== "Parte de obra").sort((a, b) =>
@@ -92,6 +103,8 @@ const ParteObra = () => {
     cargarDatos();
   }, []);
 
+
+    // Updates field visibility based on the selected template
   useEffect(() => {
     if (plantillaSeleccionada) {
       const camposPlantilla = plantillaSeleccionada.campos.map((campo) => campo.nombre);
@@ -103,11 +116,13 @@ const ParteObra = () => {
     }
   }, [plantillaSeleccionada, camposDinamicos]);
 
+    // Handles template selection
   const handlePlantillaChange = (plantillaId) => {
     const plantilla = plantillas.find((p) => p.id === plantillaId);
     setPlantillaSeleccionada(plantilla || null);
   };
 
+   // Converts a string to camel case
   const toCamelCase = (str) => {
     return str
       .toLowerCase()
@@ -117,7 +132,7 @@ const ParteObra = () => {
       .replace(/\s+/g, "");
   };
 
-  // Función para comprimir la imagen
+    // Compresses an image using the compression library
   const compressImage = async (file) => {
     const options = {
       maxSizeMB: 0.3,
@@ -128,7 +143,7 @@ const ParteObra = () => {
     return await imageCompression(file, options);
   };
 
-  // Función para subir la imagen a Firebase Storage
+    // Uploads an image to Firebase Storage with metadata
   const uploadImageWithMetadata = async (file, index) => {
     if (!geolocalizacion) {
       throw new Error("Geolocalización no disponible.");
@@ -147,7 +162,7 @@ const ParteObra = () => {
     return await getDownloadURL(storageRef);
   };
 
-  // Función para manejar la selección de archivos
+  // Handles image selection and compression
   const handleFileChange = async (e, index) => {
     const files = [...formData.imagenes];
     const file = e.target.files[0];
@@ -165,7 +180,7 @@ const ParteObra = () => {
     }
   };
 
-  // Función para manejar el envío del formulario
+  // Handles form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 

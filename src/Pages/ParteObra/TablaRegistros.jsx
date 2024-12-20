@@ -19,8 +19,21 @@ import InformePDF from "../ParteObra/InformePDF.jsx";
 import { useAuth } from '../../context/authContext';
 import MapWithButton from "./MapWithButton.jsx";
 
+
+/**
+ * Component: `TablaRegistros`
+ * 
+ * This component displays and manages records stored in Firebase Firestore. It provides functionality
+ * for filtering, editing, deleting, and auditing records. Users can view records, filter them based on
+ * date ranges and dynamic fields, generate PDFs, and view or edit geolocation data associated with images.
+ */
+
+
 const TablaRegistros = () => {
+  // Context for authentication
   const { user } = useAuth();
+
+  // State variables
   const [plantillas, setPlantillas] = useState([]);
   const [registrosPorPlantilla, setRegistrosPorPlantilla] = useState({});
   const [registrosFiltrados, setRegistrosFiltrados] = useState([]);
@@ -31,9 +44,9 @@ const TablaRegistros = () => {
   const today = new Date().toISOString().split("T")[0]; // Obtiene la fecha actual en formato YYYY-MM-DD
   const [fechaInicio, setFechaInicio] = useState(today);
   const [fechaFin, setFechaFin] = useState(today);
-
   const [userNombre, setUserNombre] = useState('');
 
+  // Fetch user details from Firestore
   useEffect(() => {
     if (user) {
       const userDocRef = doc(db, 'usuarios', user.uid);
@@ -51,14 +64,18 @@ const TablaRegistros = () => {
     }
   }, [user]);
 
-
+  // Navigation hook
   const navigate = useNavigate();
 
+  /**
+   * Function: handleGoBack
+   * Description: Navigates back to the previous page in history.
+   */
   const handleGoBack = () => {
-    navigate(-1); // Navega hacia atrás en el historial
+    navigate(-1);
   };
 
-
+  // Fetch templates from Firestore
   useEffect(() => {
     const cargarPlantillas = async () => {
       try {
@@ -76,6 +93,10 @@ const TablaRegistros = () => {
     cargarPlantillas();
   }, []);
 
+  /**
+   * Function: cargarCamposFiltrados
+   * Description: Loads dynamic fields for filtering based on the selected template.
+   */
   useEffect(() => {
     const cargarCamposFiltrados = async () => {
       if (!plantillaSeleccionada) return;
@@ -110,6 +131,12 @@ const TablaRegistros = () => {
     cargarCamposFiltrados();
   }, [plantillaSeleccionada, plantillas]);
 
+
+  /**
+  * Function: cargarRegistros
+  * Description: Loads records from Firestore for the selected template and filters them by date range.
+  * @param {string} plantilla - Name of the selected template.
+  */
   const cargarRegistros = async (plantilla) => {
     if (!plantilla || !fechaInicio || !fechaFin) {
       setRegistrosFiltrados([]); // Si falta alguno de los parámetros, limpiar los registros
@@ -157,11 +184,14 @@ const TablaRegistros = () => {
     }
   }, [plantillaSeleccionada, fechaInicio, fechaFin]);
 
-
+  /**
+   * Filters records dynamically based on selected field values, date range, and partial text search for the "observaciones" field.
+   * Updates the filtered records state whenever filters, selected template, or date range change.
+   */
   useEffect(() => {
     let registrosFiltrados = registrosPorPlantilla[plantillaSeleccionada] || [];
 
-    // Filtrar por valores seleccionados en los campos
+    // Apply field-based filters
     Object.keys(valoresFiltro).forEach((campo) => {
       if (valoresFiltro[campo] && campo !== "observaciones") { // Excluir Observaciones de este filtro
         const campoNormalizado = campo.toLowerCase().trim();
@@ -173,7 +203,7 @@ const TablaRegistros = () => {
       }
     });
 
-    // Filtrar por rango de fechas
+    // Apply date range filter
     if (fechaInicio || fechaFin) {
       const fechaInicioObj = fechaInicio ? new Date(fechaInicio) : null;
       const fechaFinObj = fechaFin
@@ -189,7 +219,7 @@ const TablaRegistros = () => {
       });
     }
 
-    // Filtro de búsqueda de texto para el campo Observaciones
+    // Apply partial text filter for "observaciones"
     if (valoresFiltro["observaciones"]) {
       const textoBusqueda = valoresFiltro["observaciones"].toLowerCase().trim();
       registrosFiltrados = registrosFiltrados.filter((registro) =>
@@ -202,7 +232,11 @@ const TablaRegistros = () => {
 
 
 
-
+  /**
+   * Function: toCamelCase
+   * Description: Converts a string to camel case format by removing spaces and capitalizing the first letter of each subsequent word.
+   * Example: "hello world" -> "helloWorld"
+   */
   const toCamelCase = (str) => {
     return str
       .toLowerCase()
@@ -212,10 +246,21 @@ const TablaRegistros = () => {
       .replace(/\s+/g, "");
   };
 
+  /**
+ * Function: capitalizeFirstLetter
+ * Description: Capitalizes the first letter of a string while keeping the rest of the string unchanged.
+ * Example: "hello" -> "Hello"
+ */
   const capitalizeFirstLetter = (str) => {
     return str.charAt(0).toUpperCase() + str.slice(1);
   };
 
+  /**
+ * Function: obtenerColumnas
+ * Description: Extracts and returns a sorted list of unique column names from the filtered records,
+ *              excluding specific fields such as "tipoFormulario", "imagenes", and "id".
+ *              Ensures that only non-empty and relevant columns are included.
+ */
   const obtenerColumnas = () => {
     const columnasExcluidas = ["tipoFormulario", "imagenes", "id"];
     const columnas = new Set();
@@ -235,6 +280,14 @@ const TablaRegistros = () => {
     return [...columnas].sort((a, b) => a.localeCompare(b));
   };
 
+  /**
+ * Function: handleFiltroCambio
+ * Description: Updates the filter values in the state for a specific field.
+ *              Merges the new field value with the existing filter values.
+ * 
+ * @param {string} campo - The name of the field being updated.
+ * @param {any} valor - The value to set for the specified field.
+ */
   const handleFiltroCambio = (campo, valor) => {
     setValoresFiltro((prev) => ({
       ...prev,
@@ -250,7 +303,7 @@ const TablaRegistros = () => {
   const [alertModalVisible, setAlertModalVisible] = useState(false); // Modal de alerta
   const [alertMessage, setAlertMessage] = useState("");  // Mensaje de la alerta
 
-  // Editar modal
+  // Edit modal
   const [registroSeleccionado, setRegistroSeleccionado] = useState(null);
 
   // Imagenes
@@ -258,17 +311,27 @@ const TablaRegistros = () => {
   const [compressedImages, setCompressedImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]); // Previsualización de imágenes
 
-  // Función para comprimir la imagen
+  // Copmpress image
   const compressImage = async (file) => {
     const options = {
       maxSizeMB: 0.3,
       maxWidthOrHeight: 1920,
       useWebWorker: true,
     };
-    console.log("Compresion de imagen iniciada", file);
     return await imageCompression(file, options);
   };
 
+
+  /**
+ * Function: uploadImageWithMetadata
+ * Description: Uploads an image file to Firebase Storage along with geolocation metadata.
+ *              Retrieves geolocation coordinates either manually provided or automatically obtained.
+ * 
+ * @param {File} file - The image file to upload.
+ * @param {number} index - The index of the image, used to determine associated metadata.
+ * @returns {Promise<string>} - A promise that resolves to the download URL of the uploaded image.
+ * @throws {Error} - If geolocation coordinates are unavailable.
+ */
   const uploadImageWithMetadata = async (file, index) => {
     const coordinates = manualCoordinates[index] || geolocalizacion; // Usar manuales si están disponibles
     if (!coordinates) {
@@ -289,7 +352,14 @@ const TablaRegistros = () => {
   };
 
 
-
+  /**
+   * Function: handleFileChange
+   * Description: Handles the file input change event, allowing image preview and compression.
+   *              Updates the local state with a preview URL and a compressed version of the image.
+   * 
+   * @param {Event} e - The file input change event.
+   * @param {number} index - The index of the image input being handled.
+   */
   const handleFileChange = async (e, index) => {
     const file = e.target.files[0]; // Obtener el archivo seleccionado
     if (file) {
@@ -317,27 +387,38 @@ const TablaRegistros = () => {
   const [registroAnterior, setRegistroAnterior] = useState(null); // Estado para capturar el registro antes de los cambios
 
 
-  // Función para guardar el registro
+  /**
+   * Function: handleGuardar
+   * Description: Handles the saving of an edited record. Validates input, updates images,
+   *              maintains a history of changes, and updates the record in Firestore.
+   * 
+   * Steps:
+   * 1. Validates that the change reason (`motivoCambio`) is provided.
+   * 2. Ensures the previous state of the record is available for history tracking.
+   * 3. Updates and uploads compressed images if modified.
+   * 4. Saves a modification history entry in the Firestore `historialModificaciones` collection.
+   * 5. Updates the main record in Firestore.
+   * 6. Updates local state to reflect the changes and synchronize with Firebase Storage URLs.
+   * 7. Provides user feedback and closes the modal.
+   */
   const handleGuardar = async () => {
     try {
-      // 1. Validar que el campo motivoCambio no esté vacío
+      // 1. Validate that the change reason is not empty
       if (!motivoCambio.trim()) {
         showModal("El campo 'Motivo del cambio' es obligatorio.", "error");
         return; // Detener la ejecución si no está lleno
       }
 
-      // 2. Verificar que el registro anterior esté disponible
+      // 2. Verify that the previous record state is available
       if (!registroAnterior) {
         console.error("El estado del registro anterior no está definido.");
         return;
       }
 
-      console.log("Estado anterior del registro:", registroAnterior);
-
-      // 3. Crear una copia para el registro actualizado
+      // 3. Create a copy of the updated record
       const updatedRegistro = { ...registroSeleccionado };
 
-      // 4. Subir solo las imágenes comprimidas que han sido modificadas
+      // 4. Upload only modified compressed images
       const updatedImages = await Promise.all(
         Array.from({ length: 4 }).map(async (_, index) => {
           if (compressedImages[index]) {
@@ -350,73 +431,74 @@ const TablaRegistros = () => {
 
       updatedRegistro.imagenes = updatedImages;
 
-      // 5. Referencia al documento principal en Firestore
+      // 5. Reference the main document in Firestore
       const docRef = doc(db, `${toCamelCase(plantillaSeleccionada)}Form`, updatedRegistro.id);
 
-      // 6. Crear objeto del historial
+      // 6. Create a modification history object
       const historialModificacion = {
-        registroId: registroSeleccionado.id, // ID del registro modificado
-        responsable: userNombre, // Cambiar por el ID del usuario si es necesario en el futuro
-        fechaHora: new Date().toISOString(), // Captura automática de fecha y hora
-        motivoCambio, // Motivo del cambio introducido por el usuario
-        registroAnterior, // Estado anterior del registro (capturado al abrir el modal)
-        registroNuevo: updatedRegistro, // Estado actualizado del registro
+        registroId: registroSeleccionado.id,
+        responsable: userNombre,
+        fechaHora: new Date().toISOString(),
+        motivoCambio,
+        registroAnterior,
+        registroNuevo: updatedRegistro,
       };
 
-      // 7. Guardar en la colección de historialModificaciones
+      // 7. Save the modification history to Firestore
       await addDoc(collection(db, "historialModificaciones"), historialModificacion);
       console.log("Historial guardado correctamente");
 
-      // 8. Actualizar el documento principal en Firestore
+      // 8. Update the main document in Firestore
       await updateDoc(docRef, updatedRegistro);
       console.log("Documento actualizado correctamente");
 
-      // 9. Actualizar el estado global
+      // 9. Update the global state
       setRegistrosFiltrados((prev) =>
         prev.map((registro) =>
           registro.id === updatedRegistro.id ? updatedRegistro : registro
         )
       );
 
-      // 10. Actualizar el registro seleccionado localmente
+      // 10. Update the locally selected record
       setRegistroSeleccionado((prev) => ({
         ...prev,
         imagenes: updatedImages,
       }));
 
-      // 11. Sincronizar las previsualizaciones con las URLs de Firebase Storage
+      // 11. Synchronize previews with Firebase Storage URLs
       setImagePreviews(updatedImages);
 
-      // 12. Cerrar el modal
+      // 12. Close the modal
       setModalVisible(false);
 
-      // 13. Limpiar el motivo del cambio
+      // 13. Clear the change reason field
       setMotivoCambio("");
 
-      // 14. Mostrar mensaje de éxito
+      // 14. Display success feedback
       showModal("El registro se actualizó correctamente.", "success");
     } catch (error) {
-      // Manejo de errores
-      console.error("Error al actualizar el documento:", error);
+      // Handle errors
       showModal("Hubo un error al actualizar el registro.", "error");
     }
   };
 
-
-
-
-
-
-
-
-  // Función para mostrar el modal
+/**
+ * Function: showModal
+ * Description: Displays a modal with a given message and type (e.g., success or error).
+ * 
+ * @param {string} message - The message to display in the modal.
+ * @param {string} type - The type of modal, either "success" or "error".
+ */
   const showModal = (message, type) => {
     setAlertMessage(message); // Set the message to display
     setModalType(type); // Set the type to either "success" or "error"
     setAlertModalVisible(true); // Show the modal
   };
 
-  // Función para cerrar el modal
+ /**
+ * Function: closeModal
+ * Description: Closes the modal and resets the modal state.
+ */
   const closeModal = () => {
     setAlertModalVisible(false); // Hide the modal
     setAlertMessage(""); // Clear the message
@@ -426,8 +508,14 @@ const TablaRegistros = () => {
 
   const [modalType, setModalType] = useState(""); // Modal type ("success" or "error")
 
+  /**
+ * Hook: useEffect (Clean up image preview URLs)
+ * Description: Cleans up object URLs created for image previews when the component unmounts.
+ * 
+ * This ensures that any temporary URLs generated for image previews are revoked,
+ * preventing memory leaks.
+ */
   useEffect(() => {
-    // Limpiar las URLs de miniaturas cuando el componente se desmonte
     return () => {
       imagePreviews.forEach(url => URL.revokeObjectURL(url));
     };
@@ -436,59 +524,85 @@ const TablaRegistros = () => {
 
 
 
-  // Eliminar registros
+ // State: Controls the visibility of the delete confirmation modal
   const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false); // Modal de confirmación
 
+  /**
+ * Function: showConfirmDeleteModal
+ * Description: Displays the delete confirmation modal for a selected record.
+ * 
+ * @param {object} registro - The record selected for deletion.
+ */
   const showConfirmDeleteModal = (registro) => {
     setRegistroSeleccionado(registro); // Guardamos el registro a eliminar
     setConfirmDeleteVisible(true); // Mostramos el modal de confirmación
   };
 
+  /**
+ * Function: closeConfirmDeleteModal
+ * Description: Closes the delete confirmation modal without performing any action.
+ */
   const closeConfirmDeleteModal = () => {
     setConfirmDeleteVisible(false); // Cerramos el modal de confirmación
   };
 
+  /**
+ * Function: confirmEliminar
+ * Description: Triggers the deletion of the selected record and closes the confirmation modal.
+ */
   const confirmEliminar = () => {
     handleEliminar();  // Ejecutamos la eliminación
     closeConfirmDeleteModal();  // Cerramos el modal de confirmación
   };
 
-  // Función para eliminar el registro
+/**
+ * Function: handleEliminar
+ * Description: Deletes the selected record from Firestore and updates the local state.
+ * 
+ * This function ensures the selected record is removed from both Firestore and the local state.
+ * It also provides user feedback through a success or error modal.
+ */
   const handleEliminar = async () => {
     try {
-      // Asegurarse de que el registro seleccionado tenga un id
+      // Ensure the selected record has a valid ID
       if (!registroSeleccionado || !registroSeleccionado.id) {
         console.error("Registro no encontrado o ID no válido");
         return;
       }
 
-      // Usar 'doc' para obtener la referencia del documento
+      // Reference the document in Firestore
       const docRef = doc(db, `${toCamelCase(plantillaSeleccionada)}Form`, registroSeleccionado.id);
 
-      // Eliminar el documento de Firestore
+     // Delete the document from Firestore
       await deleteDoc(docRef);
 
       console.log("Registro eliminado correctamente");
 
-      // Eliminar el registro de los registros locales (sin necesidad de recargar desde Firestore)
+      // Remove the record from local state without reloading from Firestore
       setRegistrosFiltrados((prevRegistros) =>
         prevRegistros.filter((registro) => registro.id !== registroSeleccionado.id)
       );
 
-      // Mostrar mensaje de éxito en el modal
+     // Show a success message in the modal
       showModal("El registro se eliminó correctamente.", "success");
 
-      // Cerrar el modal de confirmación después de eliminar el registro
+       // Close the confirmation modal
       setConfirmDeleteVisible(false);
     } catch (error) {
       console.error("Error al eliminar el documento:", error);
 
-      // Mostrar mensaje de error en el modal
+         // Show an error message in the modal
       showModal("Hubo un error al eliminar el registro.", "error");
     }
   };
 
   // Historial
+
+  /**
+ * useEffect Hook
+ * Description: Ensures the selected record (`registroSeleccionado`) has an initialized `imagenes` array 
+ * with 4 empty slots if it does not already exist.
+ */
 
   useEffect(() => {
     if (registroSeleccionado && !registroSeleccionado.imagenes) {
@@ -501,16 +615,23 @@ const TablaRegistros = () => {
 
 
   // Historial auditoria
+  // State variables for managing audit history and modal visibility
   const [motivoCambio, setMotivoCambio] = useState(""); // Motivo del cambio
   const [historialVisible, setHistorialVisible] = useState(false); // Controlar la visibilidad del modal de historial
   const [historialRegistros, setHistorialRegistros] = useState([]); // Guardar el historial del registro
 
+  /**
+ * Function: cargarHistorial
+ * Description: Fetches and filters modification history records from Firestore based on the record ID.
+ * 
+ * @param {string} registroId - The ID of the record for which the history is being fetched.
+ */
   const cargarHistorial = async (registroId) => {
     try {
       const historialSnapshot = await getDocs(
         collection(db, "historialModificaciones")
       );
-      // Filtrar por el ID del registro
+      // Filter records by the provided ID
       const historial = historialSnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
         .filter((item) => item.registroId === registroId);
@@ -522,6 +643,10 @@ const TablaRegistros = () => {
     }
   };
 
+  /**
+ * Function: limpiarFiltros
+ * Description: Resets all applied filters and clears the selected template, date range, and filtered records.
+ */
   const limpiarFiltros = () => {
     setPlantillaSeleccionada(""); // Restablece la plantilla seleccionada
     setFechaInicio(""); // Limpia la fecha de inicio
@@ -530,6 +655,9 @@ const TablaRegistros = () => {
     setRegistrosFiltrados([]); // Limpia los registros filtrados
   };
 
+  // Geolocation
+
+// State for storing the current geolocation
   const [geolocalizacion, setGeolocalizacion] = useState(null);
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -544,15 +672,30 @@ const TablaRegistros = () => {
   }, []);
 
 
+  // Map and manual coordinates
+
+// State for managing manual coordinates and map modal
   const [manualCoordinates, setManualCoordinates] = useState(Array(4).fill(null)); // Para 4 imágenes
   const [selectedImageIndex, setSelectedImageIndex] = useState(null); // Índice de imagen para capturar coordenadas
   const [mapModalVisible, setMapModalVisible] = useState(false); // Controlar la visibilidad del modal del mapa
 
+  /**
+ * Function: handleOpenMapForImage
+ * Description: Opens the map modal for a specific image to allow the user to manually select coordinates.
+ * 
+ * @param {number} index - The index of the image being edited.
+ */
   const handleOpenMapForImage = (index) => {
     setSelectedImageIndex(index); // Establece qué imagen se está editando
     setMapModalVisible(true); // Abre el modal del mapa
   };
 
+  /**
+ * Function: handleCoordinatesCaptured
+ * Description: Updates the manual coordinates for a specific image when selected from the map.
+ * 
+ * @param {object} coordinates - The latitude and longitude captured from the map.
+ */
   const handleCoordinatesCaptured = (coordinates) => {
     setManualCoordinates((prev) => {
       const updated = [...prev];

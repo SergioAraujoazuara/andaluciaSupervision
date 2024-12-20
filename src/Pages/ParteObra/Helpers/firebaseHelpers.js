@@ -2,10 +2,15 @@ import { collection, doc, getDocs, addDoc, updateDoc } from "firebase/firestore"
 import { v4 as uuidv4 } from "uuid";
 import { db } from "../../../../firebase_config";
 
-// Referencia a la colección en Firebase
+
 const collectionRef = collection(db, "opcionesFormulario");
 
-// Obtener los campos desde Firebase
+/**
+ * Fetches fields from Firebase.
+ * If there are no documents in the collection, creates a new document with an empty array of fields.
+ * 
+ * @returns {Object} - An object containing the fields (`campos`) and the document ID (`docId`).
+ */
 export const fetchCampos = async () => {
   try {
     const querySnapshot = await getDocs(collectionRef);
@@ -22,7 +27,17 @@ export const fetchCampos = async () => {
   }
 };
 
-// Agregar un nuevo campo
+/**
+ * Adds a new field to the Firebase collection.
+ * The field can have a type (default is "dropdown") and an empty array of values.
+ * 
+ * @param {string} docId - The ID of the document where the fields are stored.
+ * @param {Array} campos - Current list of fields.
+ * @param {string} nuevoCampo - Name of the new field.
+ * @param {string} [tipo="dropdown"] - Type of the field.
+ * @returns {Array} - Updated list of fields.
+ * @throws {Error} - If an error occurs while updating the document in Firebase.
+ */
 export const addCampo = async (docId, campos, nuevoCampo, tipo) => {
   const nuevoObjetoCampo = {
     id: uuidv4(),
@@ -43,7 +58,17 @@ export const addCampo = async (docId, campos, nuevoCampo, tipo) => {
 };
 
 
-// Agregar un valor a un campo existente
+/**
+ * Adds a new value to an existing field in Firebase.
+ * Ensures the value is not duplicated before adding it.
+ * 
+ * @param {string} docId - The ID of the document where the fields are stored.
+ * @param {Array} campos - Current list of fields.
+ * @param {string} campoSeleccionado - ID of the field to which the value will be added.
+ * @param {string} valorCampo - Value to be added.
+ * @returns {Array} - Updated list of fields.
+ * @throws {Error} - If the selected field does not exist or if an error occurs while updating the document.
+ */
 export const addValor = async (docId, campos, campoSeleccionado, valorCampo) => {
   const campoSeleccionadoObj = campos.find((campo) => campo.id === campoSeleccionado);
 
@@ -67,7 +92,16 @@ export const addValor = async (docId, campos, campoSeleccionado, valorCampo) => 
   }
 };
 
-// Eliminar un campo
+/**
+ * Deletes a field from Firebase.
+ * Removes the field from the current list of fields and updates the document.
+ * 
+ * @param {string} docId - The ID of the document where the fields are stored.
+ * @param {Array} campos - Current list of fields.
+ * @param {string} campoId - ID of the field to be deleted.
+ * @returns {Array} - Updated list of fields.
+ * @throws {Error} - If an error occurs while updating the document in Firebase.
+ */
 export const deleteCampo = async (docId, campos, campoId) => {
   const nuevosCampos = campos.filter((campo) => campo.id !== campoId);
 
@@ -97,7 +131,18 @@ export const deleteValor = async (docId, campos, campoId, valorId) => {
   }
 };
 
-// Actualizar un campo
+/**
+ * Updates the name or type of a field in Firebase.
+ * Modifies the specified field and updates the document.
+ * 
+ * @param {string} docId - The ID of the document where the fields are stored.
+ * @param {Array} campos - Current list of fields.
+ * @param {string} campoId - ID of the field to be updated.
+ * @param {string} nombreEditado - New name for the field.
+ * @param {string} tipoEditado - New type for the field.
+ * @returns {Array} - Updated list of fields.
+ * @throws {Error} - If an error occurs while updating the document in Firebase.
+ */
 export const updateCampo = async (docId, campos, campoId, nombreEditado, tipoEditado) => {
   const nuevosCampos = campos.map((campo) =>
     campo.id === campoId
@@ -115,7 +160,18 @@ export const updateCampo = async (docId, campos, campoId, nombreEditado, tipoEdi
 };
 
 
-// Actualizar un valor
+/**
+ * Updates the value of a field in Firebase.
+ * Modifies the specified value and updates the document.
+ * 
+ * @param {string} docId - The ID of the document where the fields are stored.
+ * @param {Array} campos - Current list of fields.
+ * @param {string} campoId - ID of the field containing the value.
+ * @param {string} valorId - ID of the value to be updated.
+ * @param {string} valorEditado - New value to replace the old one.
+ * @returns {Array} - Updated list of fields.
+ * @throws {Error} - If an error occurs while updating the document in Firebase.
+ */
 export const updateValor = async (docId, campos, campoId, valorId, valorEditado) => {
   const nuevosCampos = campos.map((campo) =>
     campo.id === campoId

@@ -11,6 +11,14 @@ import {
 } from "./Helpers/firebaseHelpers";
 import { IoIosAddCircle } from "react-icons/io";
 
+
+/**
+ * Normalizes a string for validation purposes.
+ * Converts the string to lowercase, removes special characters, and trims extra spaces.
+ *
+ * @param {string} str - The string to normalize.
+ * @returns {string} - Normalized string.
+ */
 const normalizeForValidation = (str) => {
   return str
     .toLowerCase()
@@ -18,17 +26,31 @@ const normalizeForValidation = (str) => {
     .replace(/\s+/g, " ");
 };
 
+/**
+ * Capitalizes the first letter of each word in a string.
+ *
+ * @param {string} str - The string to capitalize.
+ * @returns {string} - Capitalized string.
+ */
 const capitalizeWords = (str) => {
   return str.replace(/(^|\s)([^\s]+)/g, (match, space, word) => {
     return space + word.charAt(0).toUpperCase() + word.slice(1);
   });
 };
 
+
+/**
+ * Capitalizes the first letter of the string.
+ *
+ * @param {string} str - The string to capitalize.
+ * @returns {string} - String with the first letter capitalized.
+ */
 const capitalizeFirstLetter = (str) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
 const GestionCampos = () => {
+  // States for managing fields, field types, values, and modal visibility.
   const [nuevoCampo, setNuevoCampo] = useState("");
   const [tipoCampo, setTipoCampo] = useState("desplegable"); // Estado para seleccionar el tipo de campo
   const [valorCampo, setValorCampo] = useState("");
@@ -45,6 +67,9 @@ const GestionCampos = () => {
   const [docId, setDocId] = useState(null);
 
   useEffect(() => {
+    /**
+   * Fetches fields from Firebase on component mount and sets the state.
+   */
     const cargarCampos = async () => {
       try {
         const { campos: camposCargados, docId: fetchedDocId } = await fetchCampos();
@@ -58,6 +83,14 @@ const GestionCampos = () => {
     cargarCampos();
   }, []);
 
+  /**
+ * Shows a modal with a custom message and type.
+ * Optionally, attaches an action to be executed when the modal is confirmed.
+ *
+ * @param {string} mensaje - The message to display.
+ * @param {string} tipo - The type of modal (info, success, error, warning).
+ * @param {Function|null} accion - Optional action to execute on confirmation.
+ */
   const mostrarModal = (mensaje, tipo = "info", accion = null) => {
     setMensajeModal(mensaje);
     setTipoModal(tipo);
@@ -65,6 +98,9 @@ const GestionCampos = () => {
     setModalVisible(true);
   };
 
+  /**
+   * Closes the modal and resets its state.
+   */
   const cerrarModal = () => {
     setModalVisible(false);
     setMensajeModal("");
@@ -72,6 +108,10 @@ const GestionCampos = () => {
     setTipoModal("info");
   };
 
+  /**
+  * Handles adding a new field to Firebase.
+  * Ensures the field name is unique before adding it.
+  */
   const handleAddCampo = async () => {
     const nuevoCampoNormalizado = normalizeForValidation(nuevoCampo);
 
@@ -91,6 +131,11 @@ const GestionCampos = () => {
       mostrarModal(error.message, "error");
     }
   };
+
+  /**
+   * Handles adding a value to an existing field.
+   * Ensures the value is unique before adding it.
+   */
 
   const handleAddValor = async () => {
     const valorNormalizado = normalizeForValidation(valorCampo);
@@ -112,6 +157,11 @@ const GestionCampos = () => {
     }
   };
 
+
+  /**
+   * Handles deleting a field by showing a confirmation modal.
+   * Deletes the field if confirmed.
+   */
   const handleDeleteCampo = (campoId) =>
     mostrarModal("¿Estás seguro de que deseas eliminar este campo?", "warning", async () => {
       try {
@@ -123,6 +173,11 @@ const GestionCampos = () => {
       }
     });
 
+
+  /**
+* Handles deleting a value from a field by showing a confirmation modal.
+* Deletes the value if confirmed.
+*/
   const handleDeleteValor = (campoId, valorId) =>
     mostrarModal("¿Estás seguro de que deseas eliminar este valor?", "warning", async () => {
       try {
@@ -134,6 +189,12 @@ const GestionCampos = () => {
       }
     });
 
+
+
+  /**
+   * Handles updating the name or type of a field.
+   * Ensures the new name is unique before updating.
+   */
   const handleUpdateCampo = async (campoId) => {
     const nombreNormalizado = normalizeForValidation(nombreEditado);
 
@@ -152,6 +213,11 @@ const GestionCampos = () => {
     }
   };
 
+
+  /**
+   * Handles updating a value within a field.
+   * Ensures the new value is unique before updating.
+   */
   const handleUpdateValor = async (campoId, valorId) => {
     const valorNormalizado = normalizeForValidation(valorEditado);
 
@@ -179,10 +245,10 @@ const GestionCampos = () => {
           <div className="bg-white p-6 rounded-md shadow-md text-center">
             <h3
               className={`text-xl font-bold mb-4 ${tipoModal === "success"
-                  ? "text-green-600"
-                  : tipoModal === "warning"
-                    ? "text-gray-600"
-                    : "text-red-600"
+                ? "text-green-600"
+                : tipoModal === "warning"
+                  ? "text-gray-600"
+                  : "text-red-600"
                 }`}
             >
               {mensajeModal}
