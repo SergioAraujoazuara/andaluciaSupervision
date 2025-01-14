@@ -15,7 +15,7 @@ function Home() {
       {/* Hero Section */}
       <div
         className="relative bg-cover bg-center h-[50vh] pt-20 flex items-start justify-center"
-        style={{ backgroundImage: `url(${ImagenHome})` }}
+        style={{ backgroundImage: `url(${'https://images.unsplash.com/photo-1592829660583-ff09d8d232f5?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'})` }}
       >
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
         <div className="relative text-center text-white px-6 flex flex-col items-center">
