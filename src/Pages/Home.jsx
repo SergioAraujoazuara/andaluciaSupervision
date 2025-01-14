@@ -20,6 +20,7 @@ function Home() {
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
         <div className="relative text-center text-white px-6 flex flex-col items-center">
           <h1 className="text-6xl font-bold mb-4 underline">AP4I</h1>
+          <h1 className="text-6xl font-bold mb-4 underline">Seguridad y salud</h1>
           {/* <p className="text-lg lg:text-2xl max-w-3xl mx-auto">
             Gestiona inspecciones, parte de obra y auscultación desde una sola aplicación. Simplifica tus procesos con nuestras herramientas confiables.
           </p> */}

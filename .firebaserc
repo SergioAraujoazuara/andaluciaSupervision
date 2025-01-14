@@ -1,11 +1,7 @@
 {
   "projects": {
-    "inspeccion": "inspeccionadif-65654",
-<<<<<<< HEAD
-    "default": "inspeccionadif-65654"
-=======
-    "default": "inspeccion-65654"
->>>>>>> e8d237173af706678cbd4d98c7dd68e1a758d864
+    "inspeccion": "seguridadsalud-60b15",
+    "default": "seguridadsalud-60b15"
   },
   "targets": {},
   "etags": {},

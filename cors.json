@@ -1,6 +1,6 @@
 [
     {
-      "origin": ["http://localhost:5173", "https://inspeccionadif-65654.web.app"],
+      "origin": ["http://localhost:5173", "https://seguridadsalud-60b15.web.app"],
       "method": ["GET", "POST", "PUT", "DELETE"],
       "maxAgeSeconds": 3600
     }
