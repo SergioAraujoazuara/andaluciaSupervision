@@ -87,7 +87,7 @@ const Register = () => {
         uid: userId,
         nombre: newUser.name,
         email: newUser.email,
-        proyectos: 'Sector 3',
+        proyectos: [],
         role: 'invitado',
         signature: signature, // Guarda la imagen en base64
       };

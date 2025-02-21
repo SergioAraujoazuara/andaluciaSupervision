@@ -48,6 +48,10 @@ import { getNoAptos } from '../../Functions/getNoAptos'; // Importar la función
 
 
 function Elemento() {
+    const id = localStorage.getItem('selectedProjectId')
+    const selectedProjectId = localStorage.getItem('selectedProjectId')
+    const nameProject = localStorage.getItem('selectedProjectName')
+
     // Navigation
     const navigate = useNavigate();
     const handleGoBack = () => {
@@ -56,7 +60,7 @@ function Elemento() {
 
     // State hooks
     const [lotes, setLotes] = useState([]);
-    const [filterText, setFilterText] = useState(''); 
+    const [filterText, setFilterText] = useState('');
     const [filters, setFilters] = useState({
         sector: '',
         subSector: '',
@@ -64,10 +68,10 @@ function Elemento() {
         elemento: '',
         lote: '',
         ppi: ''
-    }); 
-    const [isTableView, setIsTableView] = useState(true); 
-    const [showSector, setShowSector] = useState(true); 
-    const [activeView, setActiveView] = useState('tabla'); 
+    });
+    const [isTableView, setIsTableView] = useState(true);
+    const [showSector, setShowSector] = useState(true);
+    const [activeView, setActiveView] = useState('tabla');
 
     const [uniqueValues, setUniqueValues] = useState({
         sector: [],
@@ -95,7 +99,7 @@ function Elemento() {
 
     const fetchLotes = async () => {
         try {
-            const lotesData = await getLotes();
+            const lotesData = await getLotes(selectedProjectId);
             setLotes(lotesData);
             setUniqueValues({
                 sector: getUniqueValues(lotesData, 'sectorNombre'),
@@ -105,8 +109,8 @@ function Elemento() {
                 lote: getUniqueValues(lotesData, 'nombre'),
                 ppi: getUniqueValues(lotesData, 'ppiNombre')
             });
-                // Calculate no aptos data
-        const { noAptosPorSector, totalNoAptos } = await getNoAptos(lotesData);
+            // Calculate no aptos data
+            const { noAptosPorSector, totalNoAptos } = await getNoAptos(lotesData);
             setNoAptosPorSector(noAptosPorSector);
             setTotalNoAptos(totalNoAptos);
         } catch (error) {
@@ -114,16 +118,16 @@ function Elemento() {
         }
     };
 
-     // Extract unique values for dropdown filters
+    // Extract unique values for dropdown filters
     const getUniqueValues = (data, key) => {
         return [...new Set(data.map(item => item[key]))];
     };
-    
-     /**
-     * @function handleCaptrurarTrazabilidad
-     * Saves selected lot information (such as sector, parte, elemento, etc.) into localStorage
-     * for future reference or navigation to a different page.
-     */
+
+    /**
+    * @function handleCaptrurarTrazabilidad
+    * Saves selected lot information (such as sector, parte, elemento, etc.) into localStorage
+    * for future reference or navigation to a different page.
+    */
 
     const handleCaptrurarTrazabilidad = (l) => {
         localStorage.setItem('sector', l.sectorNombre || '');
@@ -137,7 +141,7 @@ function Elemento() {
         localStorage.setItem('pkFinal', l.pkFinal || '');
     };
 
-   // Handle filter text input
+    // Handle filter text input
     const handleFilterChange = (e) => {
         setFilterText(e.target.value);
     };
@@ -213,10 +217,10 @@ function Elemento() {
         return data;
     };
 
-   /**
-     * @function obtenerDatosNoAptosPorSector
-     * Aggregates no aptos count by sector.
-     */
+    /**
+      * @function obtenerDatosNoAptosPorSector
+      * Aggregates no aptos count by sector.
+      */
 
     const obtenerDatosNoAptosPorSector = () => {
         const data = [['Sector', 'No Aptos']];
@@ -233,7 +237,7 @@ function Elemento() {
         return data;
     };
 
-        // Count aptos/no aptos per given level (e.g., sector, subSector)
+    // Count aptos/no aptos per given level (e.g., sector, subSector)
     const contarAptos = (nivel, valor) => {
         return filteredLotes
             .filter(l => l[nivel] === valor)
@@ -270,7 +274,7 @@ function Elemento() {
     const datosNoAptosPorSector = obtenerDatosNoAptosPorSector();
     const totalAptos = datosAptosPorSector.slice(1).reduce((sum, sector) => sum + sector[1], 0);
 
-      // Percentage of completed inspections
+    // Percentage of completed inspections
     const calcularPorcentajeInspeccionesCompletadas = () => {
         if (totalLotes === 0) return 0;
         return ((lotesIniciados / totalLotes) * 100).toFixed(2);
@@ -287,7 +291,7 @@ function Elemento() {
     };
 
 
- // Pending inspections
+    // Pending inspections
     const totalInspecciones = lotes.length; // Total de lotes o inspecciones disponibles
     const inspeccionesPendientes = totalInspecciones - lotesIniciados;
 
@@ -297,11 +301,11 @@ function Elemento() {
     };
 
 
-  /**
-     * @function calcularProgresoGeneralObra
-     * Aggregates the progress of all filtered lots to find the average completion percentage.
-     * Complex logic: Sums up ratio of aptas/totalSubactividades for each lote and averages it.
-     */
+    /**
+       * @function calcularProgresoGeneralObra
+       * Aggregates the progress of all filtered lots to find the average completion percentage.
+       * Complex logic: Sums up ratio of aptas/totalSubactividades for each lote and averages it.
+       */
 
     const calcularProgresoGeneralObra = () => {
         const totalProgreso = filteredLotes.reduce((sum, lote) => {
@@ -316,7 +320,7 @@ function Elemento() {
     const progresoGeneralObra = calcularProgresoGeneralObra();
 
 
-  // Count completed inspections (all subactivities aptas)
+    // Count completed inspections (all subactivities aptas)
 
     const contarInspeccionesTerminadas = () => {
         return filteredLotes.filter(lote => {
@@ -340,8 +344,10 @@ function Elemento() {
                     </Link>
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'#'}>
-                        <h1 className='font-medium text-amber-600'>Inspección</h1>
+                        <h1 className='text-gray-600'>Inspección</h1>
                     </Link>
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                    <h1 className='font-medium text-amber-600'>{nameProject} </h1>
                 </div>
                 <div className='flex items-center gap-4'>
 
@@ -399,12 +405,12 @@ function Elemento() {
                         showSector={showSector}
                         handleCaptrurarTrazabilidad={handleCaptrurarTrazabilidad}
                         isTableView={isTableView}
-                        
+
                     />
                 </div>
             )}
 
-            
+
 
             {/* Condicional para mostrar la vista de gráficos */}
             {activeView === 'graficas' && (
@@ -451,7 +457,7 @@ function Elemento() {
 
                                 </>
                             )}
-                           <TarjetaNoAptosPorSector  filteredLotes={filteredLotes}/>
+                            <TarjetaNoAptosPorSector filteredLotes={filteredLotes} />
 
 
 

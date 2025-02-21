@@ -77,7 +77,12 @@ export const addValor = async (docId, campos, campoSeleccionado, valorCampo) => 
     throw new Error("El valor ya existe en este campo.");
   }
 
-  const nuevoValor = { id: uuidv4(), valor: valorCampo };
+  const nuevoValor = {
+    id: uuidv4(), 
+    valor: valorCampo, 
+    subvalores: [] // Agregar siempre un array vacío para subvalores
+  };
+
   const nuevosValores = [...campoSeleccionadoObj.valores, nuevoValor];
   const nuevosCampos = campos.map((campo) =>
     campo.id === campoSeleccionado ? { ...campo, valores: nuevosValores } : campo
@@ -91,6 +96,7 @@ export const addValor = async (docId, campos, campoSeleccionado, valorCampo) => 
     throw new Error(`Error al agregar el valor: ${error.message}`);
   }
 };
+
 
 /**
  * Deletes a field from Firebase.
@@ -190,5 +196,133 @@ export const updateValor = async (docId, campos, campoId, valorId, valorEditado)
     return nuevosCampos;
   } catch (error) {
     throw new Error(`Error al actualizar el valor: ${error.message}`);
+  }
+};
+
+
+// Sub valor
+
+export const addSubvalor = async (docId, campos, campoId, valorId, subvalorCampo) => {
+  const campoSeleccionado = campos.find((campo) => campo.id === campoId);
+  if (!campoSeleccionado) throw new Error("El campo seleccionado no existe.");
+
+  const valorSeleccionado = campoSeleccionado.valores.find((valor) => valor.id === valorId);
+  if (!valorSeleccionado) throw new Error("El valor seleccionado no existe.");
+
+  if (
+    valorSeleccionado.subvalores.some(
+      (subvalor) => subvalor.valor.toLowerCase() === subvalorCampo.toLowerCase()
+    )
+  ) {
+    throw new Error("El subvalor ya existe en este valor.");
+  }
+
+  const nuevoSubvalor = {
+    id: uuidv4(), // Generar un ID único para el subvalor
+    valor: subvalorCampo, // El nombre o valor del subvalor
+  };
+
+  // Agregar el nuevo subvalor al array de subvalores
+  const nuevosSubvalores = [...valorSeleccionado.subvalores, nuevoSubvalor];
+
+  // Actualizar la estructura del campo en el array de campos
+  const nuevosCampos = campos.map((campo) =>
+    campo.id === campoId
+      ? {
+          ...campo,
+          valores: campo.valores.map((valor) =>
+            valor.id === valorId
+              ? {
+                  ...valor,
+                  subvalores: nuevosSubvalores, // Actualizar el array de subvalores
+                }
+              : valor
+          ),
+        }
+      : campo
+  );
+
+  try {
+    // Actualizar en Firestore
+    const docRef = doc(collectionRef, docId);
+    await updateDoc(docRef, { campos: nuevosCampos });
+    return nuevosCampos;
+  } catch (error) {
+    throw new Error(`Error al agregar el subvalor: ${error.message}`);
+  }
+};
+
+
+export const deleteSubvalor = async (docId, campos, campoId, valorId, subvalorId) => {
+  console.log("Valores iniciales:", { docId, campoId, valorId, subvalorId });
+  
+  // Buscar el campo seleccionado
+  const nuevosCampos = campos.map((campo) =>
+    campo.id === campoId
+      ? {
+          ...campo,
+          valores: campo.valores.map((valor) =>
+            valor.id === valorId
+              ? {
+                  ...valor,
+                  subvalores: valor.subvalores.filter((subvalor) => subvalor.id !== subvalorId),
+                }
+              : valor
+          ),
+        }
+      : campo
+  );
+
+  console.log("Campos actualizados:", nuevosCampos);
+
+  try {
+    // Actualizar Firestore
+    const docRef = doc(collectionRef, docId);
+    await updateDoc(docRef, { campos: nuevosCampos });
+    console.log("Firestore actualizado correctamente");
+    return nuevosCampos;
+  } catch (error) {
+    console.error("Error al eliminar el subvalor:", error.message);
+    throw error;
+  }
+};
+
+
+
+export const updateSubvalor = async (docId, campos, campoId, valorId, subvalorId, nuevoSubvalor) => {
+  console.log("Valores iniciales:", { docId, campoId, valorId, subvalorId, nuevoSubvalor });
+
+  // Actualiza el subvalor dentro del array de subvalores
+  const nuevosCampos = campos.map((campo) =>
+    campo.id === campoId
+      ? {
+          ...campo,
+          valores: campo.valores.map((valor) =>
+            valor.id === valorId
+              ? {
+                  ...valor,
+                  subvalores: valor.subvalores.map((subvalor) =>
+                    subvalor.id === subvalorId
+                      ? { ...subvalor, valor: nuevoSubvalor } // Actualiza el subvalor
+                      : subvalor
+                  ),
+                }
+              : valor
+          ),
+        }
+      : campo
+  );
+
+  console.log("Campos actualizados:", nuevosCampos);
+
+  try {
+    // Actualizar Firestore
+    const docRef = doc(collectionRef, docId);
+    await updateDoc(docRef, { campos: nuevosCampos });
+    console.log("Subvalor actualizado en Firestore");
+    return nuevosCampos;
+  } catch (error) {
+    console.error("Error al actualizar el subvalor:", error.message);
+    throw error;
   }
 };

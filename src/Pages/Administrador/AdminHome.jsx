@@ -125,12 +125,12 @@ function AdminHome() {
                                         <div className='sm:col-span-9 text-center  xl:text-start flex flex-col justify-center items-center xl:items-start sm:justify-center text-base font-medium ps-5'>
                                             <p className='flex items-center gap-2'>
                                                 <span className='text-amber-500  transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight />
-                                                </span>Información del proyecto
+                                                </span>Gestión de proyectos
                                             </p>
                                             <p className='mt-4 font-normal text-sm xl:'>
 
 
-                                                Edita el nombre, obra, tramo y todos los datos relevantes.
+                                                Crea, edita, elimina tus proyectos y su Información relevante.
 
                                             </p>
 

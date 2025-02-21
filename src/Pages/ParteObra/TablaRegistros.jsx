@@ -18,6 +18,7 @@ import { Link, useNavigate } from "react-router-dom";
 import InformePDF from "../ParteObra/InformePDF.jsx";
 import { useAuth } from '../../context/authContext';
 import MapWithButton from "./MapWithButton.jsx";
+import PdfInformeImagenes from "./PdfInformeImagenes.jsx";
 
 
 /**
@@ -45,6 +46,7 @@ const TablaRegistros = () => {
   const [fechaInicio, setFechaInicio] = useState(today);
   const [fechaFin, setFechaFin] = useState(today);
   const [userNombre, setUserNombre] = useState('');
+  const selectedProjectName = localStorage.getItem('selectedProjectName')
 
   // Fetch user details from Firestore
   useEffect(() => {
@@ -161,9 +163,17 @@ const TablaRegistros = () => {
       const fechaInicioObj = new Date(fechaInicio);
       const fechaFinObj = new Date(fechaFin).setHours(23, 59, 59, 999);
 
+      // Obtener el proyecto seleccionado desde localStorage
+      const selectedProjectName = localStorage.getItem('selectedProjectName');
+
+      // Filtrar registros por fecha y proyecto
       const registrosFiltrados = documentos.filter((registro) => {
         const fechaRegistro = new Date(registro.fechaHora);
-        return fechaRegistro >= fechaInicioObj && fechaRegistro <= fechaFinObj;
+        return (
+          fechaRegistro >= fechaInicioObj &&
+          fechaRegistro <= fechaFinObj &&
+          registro.proyectoNombre === selectedProjectName // Filtramos por el nombre del proyecto
+        );
       });
 
       setRegistrosPorPlantilla((prev) => ({
@@ -178,6 +188,7 @@ const TablaRegistros = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     if (plantillaSeleccionada && fechaInicio && fechaFin) {
       cargarRegistros(plantillaSeleccionada);
@@ -262,7 +273,7 @@ const TablaRegistros = () => {
  *              Ensures that only non-empty and relevant columns are included.
  */
   const obtenerColumnas = () => {
-    const columnasExcluidas = ["tipoFormulario", "imagenes", "id"];
+    const columnasExcluidas = ["tipoFormulario", "imagenes", "id", "proyectoId", "proyectoNombre"];
     const columnas = new Set();
 
     registrosFiltrados.forEach((registro) => {
@@ -477,28 +488,33 @@ const TablaRegistros = () => {
       // 14. Display success feedback
       showModal("El registro se actualizó correctamente.", "success");
     } catch (error) {
-      // Handle errors
-      showModal("Hubo un error al actualizar el registro.", "error");
+      // Handle errors and display the error message
+      console.error("Error al guardar el registro:", error);
+      showModal(
+        `Hubo un error al actualizar el registro: ${error.message || "Error desconocido"}.`,
+        "error"
+      );
     }
   };
 
-/**
- * Function: showModal
- * Description: Displays a modal with a given message and type (e.g., success or error).
- * 
- * @param {string} message - The message to display in the modal.
- * @param {string} type - The type of modal, either "success" or "error".
- */
+
+  /**
+   * Function: showModal
+   * Description: Displays a modal with a given message and type (e.g., success or error).
+   * 
+   * @param {string} message - The message to display in the modal.
+   * @param {string} type - The type of modal, either "success" or "error".
+   */
   const showModal = (message, type) => {
     setAlertMessage(message); // Set the message to display
     setModalType(type); // Set the type to either "success" or "error"
     setAlertModalVisible(true); // Show the modal
   };
 
- /**
- * Function: closeModal
- * Description: Closes the modal and resets the modal state.
- */
+  /**
+  * Function: closeModal
+  * Description: Closes the modal and resets the modal state.
+  */
   const closeModal = () => {
     setAlertModalVisible(false); // Hide the modal
     setAlertMessage(""); // Clear the message
@@ -524,7 +540,7 @@ const TablaRegistros = () => {
 
 
 
- // State: Controls the visibility of the delete confirmation modal
+  // State: Controls the visibility of the delete confirmation modal
   const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false); // Modal de confirmación
 
   /**
@@ -555,13 +571,13 @@ const TablaRegistros = () => {
     closeConfirmDeleteModal();  // Cerramos el modal de confirmación
   };
 
-/**
- * Function: handleEliminar
- * Description: Deletes the selected record from Firestore and updates the local state.
- * 
- * This function ensures the selected record is removed from both Firestore and the local state.
- * It also provides user feedback through a success or error modal.
- */
+  /**
+   * Function: handleEliminar
+   * Description: Deletes the selected record from Firestore and updates the local state.
+   * 
+   * This function ensures the selected record is removed from both Firestore and the local state.
+   * It also provides user feedback through a success or error modal.
+   */
   const handleEliminar = async () => {
     try {
       // Ensure the selected record has a valid ID
@@ -573,7 +589,7 @@ const TablaRegistros = () => {
       // Reference the document in Firestore
       const docRef = doc(db, `${toCamelCase(plantillaSeleccionada)}Form`, registroSeleccionado.id);
 
-     // Delete the document from Firestore
+      // Delete the document from Firestore
       await deleteDoc(docRef);
 
       console.log("Registro eliminado correctamente");
@@ -583,15 +599,15 @@ const TablaRegistros = () => {
         prevRegistros.filter((registro) => registro.id !== registroSeleccionado.id)
       );
 
-     // Show a success message in the modal
+      // Show a success message in the modal
       showModal("El registro se eliminó correctamente.", "success");
 
-       // Close the confirmation modal
+      // Close the confirmation modal
       setConfirmDeleteVisible(false);
     } catch (error) {
       console.error("Error al eliminar el documento:", error);
 
-         // Show an error message in the modal
+      // Show an error message in the modal
       showModal("Hubo un error al eliminar el registro.", "error");
     }
   };
@@ -657,7 +673,7 @@ const TablaRegistros = () => {
 
   // Geolocation
 
-// State for storing the current geolocation
+  // State for storing the current geolocation
   const [geolocalizacion, setGeolocalizacion] = useState(null);
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -674,7 +690,7 @@ const TablaRegistros = () => {
 
   // Map and manual coordinates
 
-// State for managing manual coordinates and map modal
+  // State for managing manual coordinates and map modal
   const [manualCoordinates, setManualCoordinates] = useState(Array(4).fill(null)); // Para 4 imágenes
   const [selectedImageIndex, setSelectedImageIndex] = useState(null); // Índice de imagen para capturar coordenadas
   const [mapModalVisible, setMapModalVisible] = useState(false); // Controlar la visibilidad del modal del mapa
@@ -705,17 +721,30 @@ const TablaRegistros = () => {
     setMapModalVisible(false); // Cierra el modal del mapa
   };
 
+  const selectedProject = localStorage.getItem('selectedProjectName')
+
+
+  // tipos de informe
+
+
   return (
     <div className="min-h-screen container mx-auto xl:px-14 py-2 text-gray-500 mb-10">
-      <div className="flex gap-2 items-center justify-between px-5 py-3 text-md">
+      <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
         {/* Navegación */}
         <div className="flex gap-2 items-center">
-          <GoHomeFill style={{ width: 15, height: 15, fill: "#d97706" }} />
-          <Link to="#">
-            <h1 className="font-medium text-gray-600">Home</h1>
+          {/* Elementos visibles solo en pantallas medianas (md) en adelante */}
+          <GoHomeFill className="hidden md:block" style={{ width: 15, height: 15, fill: "#d97706" }} />
+          <Link to="#" className="hidden md:block font-medium text-gray-600">
+            Home
           </Link>
-          <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-          <h1 className="font-medium text-amber-600">Ver registros</h1>
+          <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
+          <h1 className="hidden md:block font-medium">Ver registros</h1>
+          <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
+
+          {/* Nombre del proyecto (visible en todas las pantallas) */}
+          <h1 className="font-medium text-white bg-sky-600 px-4 py-1 rounded-lg">
+            {selectedProject}
+          </h1>
         </div>
 
         {/* Botón de volver */}
@@ -723,20 +752,21 @@ const TablaRegistros = () => {
           <button className="text-amber-600 text-3xl" onClick={handleGoBack}>
             <IoArrowBackCircle />
           </button>
-
-
         </div>
       </div>
+
 
       <div className="w-full border-b-2"></div>
 
 
       {/* Selección de Plantilla */}
-      <div className="flex flex-col md:flex-row items-center justify-center xl:justify-between xl:items-center items-end gap-5 mt-5 mb-2">
-        <div className="flex flex-col md:flex-row items-center justify-center items-end gap-4">
+      <div className="flex flex-col md:flex-row xl:justify-between justify-between xl:items-center items-center gap-6 mt-6 mb-4 px-6">
+        <div className="flex lg:flex-row xl:items-center xl:justify-start flex-col gap-6">
+
+
           {/* Filtros de Fecha */}
-          <div className="flex gap-4 items-center">
-            <div className="flex flex-col">
+          <div className="flex xl:flex-row flex-col gap-4 items-center">
+            <div className="flex items-center gap-2">
               <label className="text-sm font-semibold text-gray-600">Fecha Inicio</label>
               <input
                 type="date"
@@ -745,7 +775,7 @@ const TablaRegistros = () => {
                 className="block px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
               />
             </div>
-            <div className="flex flex-col">
+            <div className="flex gap-2 items-center">
               <label className="text-sm font-semibold text-gray-600">Fecha Fin</label>
               <input
                 type="date"
@@ -755,39 +785,44 @@ const TablaRegistros = () => {
               />
             </div>
           </div>
-          {plantillas.map((plantilla) => (
-            <button
-              key={plantilla.id}
-              onClick={() => {
-                setPlantillaSeleccionada(plantilla.nombre);
-                cargarRegistros(plantilla.nombre);
-              }}
-              className={`px-6 py-2 rounded-md font-semibold shadow-md  ${plantillaSeleccionada === plantilla.nombre
-                ? "bg-sky-600 text-white"
-                : "bg-gray-200 text-gray-800"
-                } hover:bg-sky-700 hover:text-white transition`}
-            >
-              {plantilla.nombre}
-            </button>
-
-
-          ))}
-
-
-
         </div>
 
-        <div className="flex gap-4 flex-col md:flex-row items-center justify-center ">
+        <div className="flex lg:flex-row flex-col gap-4">
 
+          <div>
+            <select
+              value={plantillaSeleccionada} // Muestra el valor seleccionado
+              onChange={(e) => {
+                const selectedPlantilla = e.target.value;
+                setPlantillaSeleccionada(selectedPlantilla); // Actualiza la plantilla seleccionada
+                cargarRegistros(selectedPlantilla); // Carga los registros de la plantilla seleccionada
+              }}
+              className="px-4 py-2 rounded-md font-semibold shadow-md bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring focus:ring-sky-500 transition"
+            >
+              <option value="" disabled>
+                Selecciona una plantilla
+              </option>
+              {plantillas.map((plantilla) => (
+                <option
+                  key={plantilla.id}
+                  value={plantilla.nombre}
+                  className="bg-gray-200 hover:bg-sky-600 hover:text-white"
+                >
+                  {plantilla.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
           {/* Botón de Limpiar Filtros */}
           <button
             onClick={limpiarFiltros}
-            className="px-6 py-2 bg-gray-400 text-white font-semibold rounded-md shadow-md hover:bg-gray-400 transition"
+            className=" px-6 py-2 bg-gray-400 text-white font-semibold rounded-md shadow-md hover:bg-gray-400 transition"
           >
             Limpiar Filtros
           </button>
 
-          <InformePDF registros={registrosFiltrados} columnas={obtenerColumnas()} />
+          <InformePDF registros={registrosFiltrados} plantillaSeleccionada={plantillaSeleccionada} columnas={obtenerColumnas()} />
+          <PdfInformeImagenes registros={registrosFiltrados} plantillaSeleccionada={plantillaSeleccionada} columnas={obtenerColumnas()} filtrosAplicados={valoresFiltro} />
 
 
 
@@ -796,9 +831,12 @@ const TablaRegistros = () => {
 
       </div>
 
+
+
       {/* Filtros dinámicos */}
       {camposFiltrados.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4  text-xs px-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs px-6 items-end">
+
           {camposFiltrados.map((campo, index) => (
             <div key={index} className="flex flex-col">
               <label className="text-sm font-semibold text-gray-600 mb-2">
@@ -822,7 +860,7 @@ const TablaRegistros = () => {
           ))}
 
           {/* Input de búsqueda para Observaciones */}
-          <div className="flex flex-col mb-4">
+          <div className="flex flex-col">
             <label className="text-sm font-semibold text-gray-600 mb-2">Buscar en Observaciones</label>
             <input
               type="text"
@@ -837,11 +875,11 @@ const TablaRegistros = () => {
 
       )}
 
-
+      <div className="border-b-2 pb-4"></div>
 
       {/* Tabla de registros */}
       {plantillaSeleccionada && (
-        <div className=' px-6'>
+        <div className='mt-8 px-6'>
           {loading ? (
             <p className="text-center text-gray-500">Cargando registros...</p>
           ) : registrosFiltrados.length > 0 ? (
@@ -856,7 +894,9 @@ const TablaRegistros = () => {
                           }`}
                         style={columna === "observaciones" ? { width: "300px" } : {}}
                       >
-                        {capitalizeFirstLetter(columna)}
+                        {columna.toLowerCase().startsWith("subvalores_")
+                          ? `Componente de ${columna.replace("subvalores_", "").replace("_", " ")}`
+                          : capitalizeFirstLetter(columna)}
                       </th>
                     ))}
                     <th className="border border-gray-300 px-4 py-2 text-left text-sm text-gray-700">
@@ -864,57 +904,64 @@ const TablaRegistros = () => {
                     </th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {registrosFiltrados.map((registro, index) => (
-                    <tr
-                      key={index}
-                      className={`hover:bg-sky-50 transition ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                        }`}
-                    >
-                      {obtenerColumnas().map((columna, colIndex) => (
-                        <td
-                          key={colIndex}
-                          className={`border px-4 py-2 text-gray-800 ${columna === "observaciones" ? "truncate" : ""
-                            }`}
-                          style={
-                            columna === "observaciones"
-                              ? { width: "300px", whiteSpace: "normal", wordBreak: "break-word" }
-                              : {}
-                          }
-                        >
-                          {registro[columna] || ""}
+                  {registrosFiltrados
+                    .sort((a, b) => {
+                      if (a.actividad < b.actividad) return -1;
+                      if (a.actividad > b.actividad) return 1;
+                      return 0;
+                    })
+                    .map((registro, index) => (
+                      <tr
+                        key={index}
+                        className={`hover:bg-sky-50 transition ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                          }`}
+                      >
+                        {obtenerColumnas().map((columna, colIndex) => (
+                          <td
+                            key={colIndex}
+                            className={`border px-4 py-2 text-gray-800 ${columna === "observaciones" ? "truncate" : ""
+                              }`}
+                            style={
+                              columna === "observaciones"
+                                ? { width: "300px", whiteSpace: "normal", wordBreak: "break-word" }
+                                : {}
+                            }
+                          >
+                            {registro[columna] || ""}
+                          </td>
+                        ))}
+                        {/* Columna de acciones */}
+                        <td className="p-4 text-gray-800 flex gap-2 items-center">
+                          <button
+                            className="p-2 bg-teal-500 text-white font-bold text-xl rounded-md mr-2"
+                            onClick={() => {
+                              setRegistroAnterior({ ...registro });
+                              setRegistroSeleccionado(registro);
+                              setModalContent("Editar");
+                              setModalVisible(true);
+                            }}
+                          >
+                            <CiEdit />
+                          </button>
+
+                          <button
+                            className="p-2 bg-red-400 text-xl text-white rounded-md"
+                            onClick={() => showConfirmDeleteModal(registro)}
+                          >
+                            <MdDelete />
+                          </button>
+
+                          <button
+                            className="p-2 bg-gray-400 text-xl text-white rounded-md ms-2"
+                            onClick={() => cargarHistorial(registro.id)}
+                          >
+                            <MdOutlineHistoryToggleOff />
+                          </button>
                         </td>
-                      ))}
-                      {/* Columna de acciones */}
-                      <td className="p-4 text-gray-800 flex gap-2 items-center">
-                        <button
-                          className="p-2 bg-teal-500 text-white font-bold text-xl rounded-md mr-2"
-                          onClick={() => {
-                            setRegistroAnterior({ ...registro });
-                            setRegistroSeleccionado(registro);
-                            setModalContent("Editar");
-                            setModalVisible(true);
-                          }}
-                        >
-                          <CiEdit />
-                        </button>
-
-                        <button
-                          className="p-2 bg-red-400 text-xl text-white rounded-md"
-                          onClick={() => showConfirmDeleteModal(registro)}
-                        >
-                          <MdDelete />
-                        </button>
-
-                        <button
-                          className="p-2 bg-gray-400 text-xl text-white rounded-md ms-2"
-                          onClick={() => cargarHistorial(registro.id)}
-                        >
-                          <MdOutlineHistoryToggleOff />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                      </tr>
+                    ))}
                 </tbody>
               </table>
 
@@ -942,11 +989,29 @@ const TablaRegistros = () => {
 
             {/* Mostrar campos del registro */}
             {Object.keys(registroSeleccionado)
-              .filter((campo) => campo !== "imagenes" && campo !== "id") // Excluir las imágenes y el ID
+              .filter((campo) =>
+                campo !== "imagenes" &&
+                campo !== "id" &&
+                campo !== "proyectoNombre" && // Ocultar proyectoNombre
+                campo !== "proyectoId" && // Ocultar proyectoId
+                !campo.toLowerCase().startsWith("subvalores_") // Ocultar campos que comiencen con "subvalores_"
+              )
               .map((campo, index) => {
                 const campoDinamico = camposFiltrados.find(
                   (c) => c.nombre.toLowerCase() === campo.toLowerCase()
                 );
+
+                const valoresPrincipales = campoDinamico?.valores || [];
+                const valorSeleccionado = registroSeleccionado[campo] || "";
+
+                // Buscar el subvalor asociado al campo principal
+                const subvalorKey = Object.keys(registroSeleccionado).find((key) =>
+                  key.toLowerCase() === `subvalores_${campo.toLowerCase()}`
+                );
+                const subvalorSeleccionado = registroSeleccionado[subvalorKey] || ""; // Subvalor seleccionado
+                const subvalores = valoresPrincipales.find(
+                  (valor) => valor.valor === valorSeleccionado
+                )?.subvalores || [];
 
                 return (
                   <div key={index} className="mb-4">
@@ -954,40 +1019,87 @@ const TablaRegistros = () => {
                       {capitalizeFirstLetter(campo)}
                     </label>
 
-                    {campoDinamico && campoDinamico.valores.length > 0 ? (
+                    {/* Renderizar solo desplegable principal */}
+                    {valoresPrincipales.length > 0 ? (
                       <select
-                        value={registroSeleccionado[campo] || ""}
-                        onChange={(e) =>
-                          setRegistroSeleccionado((prev) => ({
-                            ...prev,
-                            [campo]: e.target.value,
-                          }))
-                        }
+                        value={valorSeleccionado}
+                        onChange={(e) => {
+                          const selectedValue = e.target.value;
+                          setRegistroSeleccionado((prev) => {
+                            // Crear una copia del registro actual
+                            const nuevoRegistro = { ...prev, [campo]: selectedValue }; // Actualizar el valor principal
+
+                            // Verificar si existe una clave para subvalores
+                            if (subvalorKey) {
+                              nuevoRegistro[subvalorKey] = ""; // Solo resetear subvalor si la clave existe
+                            }
+
+                            return nuevoRegistro;
+                          });
+                        }}
                         className="block w-full px-3 py-2 border border-gray-300 rounded-lg"
                       >
                         <option value="">Seleccionar</option>
-                        {campoDinamico.valores.map((valor) => (
+                        {valoresPrincipales.map((valor) => (
                           <option key={valor.id} value={valor.valor}>
                             {valor.valor}
                           </option>
                         ))}
                       </select>
                     ) : (
-                      <input
-                        type="text"
-                        value={registroSeleccionado[campo] || ""}
-                        onChange={(e) =>
-                          setRegistroSeleccionado((prev) => ({
-                            ...prev,
-                            [campo]: e.target.value,
-                          }))
-                        }
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      />
+                      // Renderizar input para "observaciones" editable
+                      (campo === "observaciones" ? (
+                        <input
+                          type="text"
+                          value={registroSeleccionado[campo] || ""}
+                          onChange={(e) =>
+                            setRegistroSeleccionado((prev) => ({
+                              ...prev,
+                              [campo]: e.target.value,
+                            }))
+                          }
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        />
+                      ) : (
+                        // Renderizar input deshabilitado para otros campos de texto
+                        <input
+                          type="text"
+                          value={registroSeleccionado[campo] || ""}
+                          readOnly // Hace el campo de solo lectura
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-200 text-gray-600 cursor-not-allowed"
+                        />
+                      ))
+                    )}
+
+                    {/* Renderizar solo el desplegable de subvalor */}
+                    {subvalores.length > 0 && subvalorKey && (
+                      <div className="mt-2">
+                        <label className="block text-sm font-semibold text-gray-600 mb-2">
+                          Subvalor de {capitalizeFirstLetter(campo)}
+                        </label>
+                        <select
+                          value={subvalorSeleccionado}
+                          onChange={(e) =>
+                            setRegistroSeleccionado((prev) => ({
+                              ...prev,
+                              [subvalorKey]: e.target.value, // Actualizar el subvalor
+                            }))
+                          }
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="">Seleccionar Subvalor</option>
+                          {subvalores.map((subvalor) => (
+                            <option key={subvalor.id} value={subvalor.valor}>
+                              {subvalor.valor}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     )}
                   </div>
                 );
               })}
+
 
             {/* Mostrar las imágenes seleccionadas como miniaturas */}
             <div className="flex flex-col gap-6">

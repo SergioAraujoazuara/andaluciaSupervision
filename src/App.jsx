@@ -24,11 +24,13 @@ import SendMail from './Components/FeatureSendMail/SendMail.jsx';
 import ParteObra from './Pages/ParteObra/ParteObra.jsx';
 import SistemaDePestanas from './Pages/ParteObra/SistemaPestanas.jsx';
 import GridParteDeObra from './Pages/ParteObra/GridParteDeObra.jsx';
-import TablaRegistros from './Pages/ParteObra/TablaRegistros.jsx';
+import TablaRegistrosTrazabilidad from './Pages/ParteObra/TablaRegistrosTrazabilidad.jsx';
 import ViewProject from './Pages/Administrador/ViewProject.jsx';
 import Horta from './Pages/Auscultacion/Horta.jsx';
 import Glorias from './Pages/Auscultacion/Glorias.jsx';
 import Llacuna from './Pages/Auscultacion/Llacuna.jsx';
+import Projects from './Pages/Administrador/CreateProject/Projects.jsx';
+import ParteObraTrazabilidad from './Pages/ParteObra/ParteDeObraTrazabilidad.jsx';
 
 // App.js
 // This is the main entry point for the application. It defines the routing structure
@@ -55,7 +57,7 @@ function App() {
     { path: '/verPPis', element: <VerPpis />, roles: ['admin'] },
     { path: '/agregarPpi', element: <AgregarPPi />, roles: ['admin'] },
     { path: '/roles', element: <Roles />, roles: ['admin'] },
-    { path: '/project', element: <ViewProject />, roles: ['admin'] },
+    { path: '/project', element: <Projects />, roles: ['admin'] },
   ];
 
   // inspectionRoutes
@@ -72,8 +74,8 @@ function App() {
 
     // Parte de obra
     { path: '/parteObra', element: <GridParteDeObra />, roles: ['admin', 'usuario'] },
-    { path: '/formularios', element: <ParteObra />, roles: ['admin', 'usuario'] },
-    { path: '/verRegistros', element: <TablaRegistros />, roles: ['admin', 'usuario'] },
+    { path: '/formularios', element: <ParteObraTrazabilidad />, roles: ['admin', 'usuario'] },
+    { path: '/verRegistros', element: <TablaRegistrosTrazabilidad />, roles: ['admin', 'usuario'] },
 
     // Auscultación
     { path: '/auscultacion', element: <GridParteDeObra />, roles: ['admin', 'usuario'] },

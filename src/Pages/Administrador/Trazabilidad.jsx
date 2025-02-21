@@ -82,7 +82,8 @@ import { FaArrowAltCircleRight } from "react-icons/fa";
 function Trazabilidad() {
     // Navigation and URL Parameter
     const navigate = useNavigate();
-    const { id } = useParams();
+    const id = localStorage.getItem('selectedProjectId')
+    const nameProject = localStorage.getItem('selectedProjectName')
 
     // State Variables
     /*
@@ -481,13 +482,13 @@ function Trazabilidad() {
                 // Show modal
                 setSectores(nuevosSectores);
                 setElementoInput('');
-                setAlerta('Elemento agregado correctamente.');
+                setAlerta('Agregado correctamente.');
                 setTipoAlerta('success');
                 setMostrarModal(true);
             }
         } catch (error) {
             console.error('Error al agregar el elemento:', error);
-            setAlerta('Error al agregar el elemento.');
+            setAlerta('Error al agregar.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
@@ -511,14 +512,6 @@ function Trazabilidad() {
             setMostrarModal(true);
             return;
         }
-        // Ensure a PPI has been selected
-        if (!selectedPpi) {
-            console.error('No se ha seleccionado un PPI.');
-            setAlerta('Debes seleccionar un PPI.');
-            setTipoAlerta('error');
-            setMostrarModal(true);
-            return;
-        }
 
         try {
             // Normalize the lot name for validation
@@ -529,15 +522,6 @@ function Trazabilidad() {
 
             // Retrieve the selected PPI object
             const ppiSeleccionado = ppis.find(ppi => ppi.id === selectedPpi);
-
-            // Verifica que ppiSeleccionado no sea undefined antes de proceder
-            if (!ppiSeleccionado) {
-                console.error('PPI seleccionado no encontrado.');
-                setAlerta('Error al encontrar el PPI seleccionado.');
-                setTipoAlerta('error');
-                setMostrarModal(true);
-                return;
-            }
 
             // Retrieve contextual names (sector, subsector, part, and element) for the new lot
             let sectorNombre = '', subSectorNombre = '', parteNombre = '', elementoNombre = '';
@@ -564,7 +548,7 @@ function Trazabilidad() {
                 .flatMap(parte => parte.elementos)
                 .find(elemento => elemento.id === elementoId);
             if (elementoActual && elementoActual.lotes && elementoActual.lotes.some(lote => lote.nombre.toLowerCase().trim() === nombreLoteNormalizado)) {
-                setAlerta('El nombre del lote ya existe.');
+                setAlerta('El nombre ya existe.');
                 setTipoAlerta('error');
                 setMostrarModal(true);
                 return;
@@ -574,8 +558,9 @@ function Trazabilidad() {
             // Prepare the new lot object with required details
             const nuevoLote = {
                 nombre: loteInput,
-                ppiId: selectedPpi,
-                ppiNombre: ppis.find(ppi => ppi.id === selectedPpi)?.nombre || '',
+                ppiId: selectedPpi || '', // Si no hay PPI seleccionado, deja el campo vacío
+                ppiNombre: selectedPpi ? ppis.find(ppi => ppi.id === selectedPpi)?.nombre : '', // Nombre opcional
+                totalSubactividades: ppiSeleccionado?.totalSubactividades || 0, // Si no hay PPI, total será 0
                 idSector: selectedSector,
                 idSubSector: selectedSubSector,
                 parteId: selectedParte,
@@ -588,7 +573,8 @@ function Trazabilidad() {
                 pkFinal: pkFinalInput,
                 idBim: idBimInput,
                 estado: 'pendiente',
-                totalSubactividades: ppiSeleccionado.totalSubactividades || 0,
+                idProyecto: id,
+                nombreProyecto: nameProject,
             };
 
             // Add the new lot to the specific Firestore subcollection path
@@ -600,8 +586,11 @@ function Trazabilidad() {
             await setDoc(lotePrincipalRef, nuevoLote);
 
             // Create the "inspecciones" subcollection inside the new lot with PPI details
-            const inspeccionRef = doc(collection(db, `lotes/${loteId}/inspecciones`));
-            await setDoc(inspeccionRef, ppiSeleccionado);
+            if (ppiSeleccionado) {
+                const inspeccionRef = doc(collection(db, `lotes/${loteId}/inspecciones`));
+                await setDoc(inspeccionRef, ppiSeleccionado);
+            }
+
             // Reset form inputs
             setLoteInput('');
             setSelectedPpi('');
@@ -609,7 +598,7 @@ function Trazabilidad() {
             setPkFinalInput('');
             setIdBimInput('');
             // Show success alert
-            setAlerta('Lote agregado correctamente');
+            setAlerta('Agregado correctamente');
             setTipoAlerta('success');
             setMostrarModal(true);
 
@@ -679,11 +668,13 @@ function Trazabilidad() {
         } catch (error) {
             // Handle any errors and display an error alert
             console.error('Error al agregar el lote:', error);
-            setAlerta('Error al agregar el lote.');
+            setAlerta('Error al agregar.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
     };
+
+
     // Function to fetch "lotes" (lots) from the Firestore database for a specific element
     const obtenerLotes = async (sectorId, subSectorId, parteId, elementoId) => {
         try {
@@ -762,12 +753,12 @@ function Trazabilidad() {
             // Update state with the new sectors list
             setSectores(sectoresActualizados);
             // Display success alert
-            setAlerta('Subsector eliminado correctamente.');
+            setAlerta('Eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
             console.error('Error al eliminar el subsector:', error);
-            setAlerta('Error al eliminar el subsector.');
+            setAlerta('Error al eliminar.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
@@ -836,13 +827,13 @@ function Trazabilidad() {
             }));
 
             // Step 3: Display success message and close the modal
-            setAlerta('Lote eliminado correctamente.');
+            setAlerta('Eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
             // Step 4: Handle errors and display an error message
             console.error('Error al eliminar el lote:', error);
-            setAlerta('Error al eliminar el lote.');
+            setAlerta('Error al eliminar.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
@@ -886,13 +877,13 @@ function Trazabilidad() {
             const sectoresActualizados = sectores.filter(sector => sector.id !== sectorIdAEliminar);
             setSectores(sectoresActualizados);
             // Step 4: Display success message
-            setAlerta('Sector eliminado correctamente.');
+            setAlerta('Eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
             // Step 5: Handle any errors during the deletion process
-            console.error('Error al eliminar el sector:', error);
-            setAlerta('Error al eliminar el sector.');
+            console.error('Error al eliminar:', error);
+            setAlerta('Error al eliminar.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
@@ -939,13 +930,13 @@ function Trazabilidad() {
             // Step 4: Update state with the new sectors list
             setSectores(sectoresActualizados);
             // Step 5: Show a success message
-            setAlerta('Parte eliminada correctamente.');
+            setAlerta('Eliminada correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
             // Step 6: Handle any errors and show an error message
-            console.error('Error al eliminar la parte:', error);
-            setAlerta('Error al eliminar la parte.');
+            console.error('Error al eliminar:', error);
+            setAlerta('Error al eliminar.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
@@ -1002,13 +993,13 @@ function Trazabilidad() {
             // Step 4: Update the state with the new list of sectors
             setSectores(sectoresActualizados);
             // Step 5: Display a success alert
-            setAlerta('Elemento eliminado correctamente.');
+            setAlerta('Eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
             // Step 6: Handle any errors and display an error alert
-            console.error('Error al eliminar el elemento:', error);
-            setAlerta('Error al eliminar el elemento.');
+            console.error('Error al eliminar:', error);
+            setAlerta('Error al eliminar.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
@@ -1044,31 +1035,45 @@ function Trazabilidad() {
         }
 
         try {
-            // Reference to the sector document in Firestore
+            // Actualizar el sector en su subcolección
             const docRef = doc(db, `proyectos/${id}/sector`, sectorIdAEditar);
-            // Update the 'nombre' field with the new value
             await updateDoc(docRef, { nombre: nuevoNombreSector });
-            // Update the state with the new sector name
-            const sectoresActualizados = sectores.map(sector =>
+
+            // Propagar el cambio a la colección 'lotes'
+            const lotesQuery = query(
+                collection(db, 'lotes'),
+                where('idSector', '==', sectorIdAEditar)
+            );
+            const lotesSnapshot = await getDocs(lotesQuery);
+            const batch = writeBatch(db);
+
+            lotesSnapshot.docs.forEach((loteDoc) => {
+                batch.update(loteDoc.ref, { sectorNombre: nuevoNombreSector });
+            });
+
+            await batch.commit();
+
+            // Actualizar el estado local
+            const sectoresActualizados = sectores.map((sector) =>
                 sector.id === sectorIdAEditar ? { ...sector, nombre: nuevoNombreSector } : sector
             );
-            // Show a success message
             setSectores(sectoresActualizados);
-            setAlerta('Sector actualizado correctamente.');
+
+            setAlerta('Actualizado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
-            // Handle any errors during the update process
-            console.error('Error al actualizar el sector:', error);
-            setAlerta('Error al actualizar el sector.');
+            console.error('Error al actualizar:', error);
+            setAlerta('Error al actualizar.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-        // Reset editing state and close the modal
+
         setMostrarModalEditarSector(false);
         setSectorIdAEditar('');
         setNuevoNombreSector('');
     };
+
 
 
 
@@ -1089,7 +1094,6 @@ function Trazabilidad() {
 
     // Function to save the edited subsector name to Firestore
     const guardarEdicionSubSector = async () => {
-        // Validate that the new name is not empty
         if (!nuevoNombreSubSector.trim()) {
             setAlerta('El nombre no puede estar vacío.');
             setTipoAlerta('error');
@@ -1098,39 +1102,54 @@ function Trazabilidad() {
         }
 
         try {
-            // Reference to the subsector document in Firestore
+            // Actualizar el subsector en su subcolección
             const docRef = doc(db, `proyectos/${id}/sector/${sectorIdAEditar}/subsector`, subSectorIdAEditar);
-            // Update the 'nombre' field with the new value
             await updateDoc(docRef, { nombre: nuevoNombreSubSector });
-            // Update the state to reflect the change in the subsector name
-            const sectoresActualizados = sectores.map(sector => {
+
+            // Propagar el cambio a la colección 'lotes'
+            const lotesQuery = query(
+                collection(db, 'lotes'),
+                where('idSubSector', '==', subSectorIdAEditar)
+            );
+            const lotesSnapshot = await getDocs(lotesQuery);
+            const batch = writeBatch(db);
+
+            lotesSnapshot.docs.forEach((loteDoc) => {
+                batch.update(loteDoc.ref, { subSectorNombre: nuevoNombreSubSector });
+            });
+
+            await batch.commit();
+
+            // Actualizar el estado local
+            const sectoresActualizados = sectores.map((sector) => {
                 if (sector.id === sectorIdAEditar) {
                     return {
                         ...sector,
-                        subsectores: sector.subsectores.map(subsector =>
+                        subsectores: sector.subsectores.map((subsector) =>
                             subsector.id === subSectorIdAEditar ? { ...subsector, nombre: nuevoNombreSubSector } : subsector
-                        )
+                        ),
                     };
                 }
                 return sector;
             });
-
             setSectores(sectoresActualizados);
-            setAlerta('Subsector actualizado correctamente.');
+
+            setAlerta('Actualizado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
-            console.error('Error al actualizar el subsector:', error);
-            setAlerta('Error al actualizar el subsector.');
+            console.error('Error al actualizar:', error);
+            setAlerta('Error al actualizar.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-        // Reset editing state and close the modal
+
         setMostrarModalEditarSubSector(false);
         setSectorIdAEditar('');
         setSubSectorIdAEditar('');
         setNuevoNombreSubSector('');
     };
+
 
     /// PARTE ///
     // States for managing the editing of a specific part
@@ -1149,7 +1168,6 @@ function Trazabilidad() {
 
     // Function to save the edits made to the part
     const guardarEdicionParte = async () => {
-        // Step 1: Validate that the new name is not empty
         if (!nuevoNombreParte.trim()) {
             setAlerta('El nombre no puede estar vacío.');
             setTipoAlerta('error');
@@ -1158,49 +1176,64 @@ function Trazabilidad() {
         }
 
         try {
-            // Step 2: Reference the specific part document in Firestore
+            // Actualizar la parte en su subcolección
             const docRef = doc(db, `proyectos/${id}/sector/${sectorIdAEditar}/subsector/${subSectorIdAEditar}/parte`, parteIdAEditar);
-            // Step 3: Update the 'name' field in Firestore
             await updateDoc(docRef, { nombre: nuevoNombreParte });
-            // Step 4: Update the local 'sectores' state to reflect changes in the UI
-            const sectoresActualizados = sectores.map(sector => {
+
+            // Propagar el cambio a la colección 'lotes'
+            const lotesQuery = query(
+                collection(db, 'lotes'),
+                where('parteId', '==', parteIdAEditar)
+            );
+            const lotesSnapshot = await getDocs(lotesQuery);
+            const batch = writeBatch(db);
+
+            lotesSnapshot.docs.forEach((loteDoc) => {
+                batch.update(loteDoc.ref, { parteNombre: nuevoNombreParte });
+            });
+
+            await batch.commit();
+
+            // Actualizar el estado local
+            const sectoresActualizados = sectores.map((sector) => {
                 if (sector.id === sectorIdAEditar) {
                     return {
                         ...sector,
-                        subsectores: sector.subsectores.map(subsector => {
+                        subsectores: sector.subsectores.map((subsector) => {
                             if (subsector.id === subSectorIdAEditar) {
                                 return {
                                     ...subsector,
-                                    partes: subsector.partes.map(parte =>
+                                    partes: subsector.partes.map((parte) =>
                                         parte.id === parteIdAEditar ? { ...parte, nombre: nuevoNombreParte } : parte
-                                    )
+                                    ),
                                 };
                             }
                             return subsector;
-                        })
+                        }),
                     };
                 }
                 return sector;
             });
-            // Step 5: Update the UI state and display a success message
+
             setSectores(sectoresActualizados);
-            setAlerta('Parte actualizada correctamente.');
+
+            setAlerta('Actualizada correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
-            // Step 6: Handle any errors during the update
-            console.error('Error al actualizar la parte:', error);
-            setAlerta('Error al actualizar la parte.');
+            console.error('Error al actualizar:', error);
+            setAlerta('Error al actualizar.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-        // Step 7: Clean up states and close the modal
+
         setMostrarModalEditarParte(false);
         setSectorIdAEditar('');
         setSubSectorIdAEditar('');
         setParteIdAEditar('');
         setNuevoNombreParte('');
     };
+
 
     /// ELEMENTO /// 
 
@@ -1218,7 +1251,6 @@ function Trazabilidad() {
         setMostrarModalEditarElemento(true);
     };
 
-    // Función para guardar la edición de un elemento
     const guardarEdicionElemento = async () => {
         if (!nuevoNombreElemento.trim()) {
             setAlerta('El nombre no puede estar vacío.');
@@ -1228,48 +1260,70 @@ function Trazabilidad() {
         }
 
         try {
+            // Actualizar el nombre del elemento en la subcolección
             const docRef = doc(db, `proyectos/${id}/sector/${sectorIdAEditar}/subsector/${subSectorIdAEditar}/parte/${parteIdAEditar}/elemento`, elementoIdAEditar);
             await updateDoc(docRef, { nombre: nuevoNombreElemento });
 
-            const sectoresActualizados = sectores.map(sector => {
+            // Propagar el cambio a la colección 'lotes'
+            const lotesQuery = query(
+                collection(db, 'lotes'),
+                where('elementoId', '==', elementoIdAEditar) // Asegurarse de que coincide correctamente con elementoId
+            );
+            const lotesSnapshot = await getDocs(lotesQuery);
+
+            if (!lotesSnapshot.empty) {
+                const batch = writeBatch(db);
+
+                lotesSnapshot.docs.forEach((loteDoc) => {
+                    batch.update(loteDoc.ref, { elementoNombre: nuevoNombreElemento });
+                });
+
+                await batch.commit();
+            }
+
+            // Actualizar el estado local
+            const sectoresActualizados = sectores.map((sector) => {
                 if (sector.id === sectorIdAEditar) {
                     return {
                         ...sector,
-                        subsectores: sector.subsectores.map(subsector => {
+                        subsectores: sector.subsectores.map((subsector) => {
                             if (subsector.id === subSectorIdAEditar) {
                                 return {
                                     ...subsector,
-                                    partes: subsector.partes.map(parte => {
+                                    partes: subsector.partes.map((parte) => {
                                         if (parte.id === parteIdAEditar) {
                                             return {
                                                 ...parte,
-                                                elementos: parte.elementos.map(elemento =>
-                                                    elemento.id === elementoIdAEditar ? { ...elemento, nombre: nuevoNombreElemento } : elemento
-                                                )
+                                                elementos: parte.elementos.map((elemento) =>
+                                                    elemento.id === elementoIdAEditar
+                                                        ? { ...elemento, nombre: nuevoNombreElemento }
+                                                        : elemento
+                                                ),
                                             };
                                         }
                                         return parte;
-                                    })
+                                    }),
                                 };
                             }
                             return subsector;
-                        })
+                        }),
                     };
                 }
                 return sector;
             });
 
             setSectores(sectoresActualizados);
-            setAlerta('Elemento actualizado correctamente.');
+            setAlerta('Actualizado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
-            console.error('Error al actualizar el elemento:', error);
-            setAlerta('Error al actualizar el elemento.');
+            console.error('Error al actualizar:', error);
+            setAlerta('Error al actualizarA.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
 
+        // Resetear los estados relacionados
         setMostrarModalEditarElemento(false);
         setSectorIdAEditar('');
         setSubSectorIdAEditar('');
@@ -1279,30 +1333,36 @@ function Trazabilidad() {
     };
 
 
+
+
     /// LOTE ///
     // States for managing the editing of a specific element
     const [mostrarModalEditarLote, setMostrarModalEditarLote] = useState(false);
     const [loteIdAEditar, setLoteIdAEditar] = useState(null);
+    const [ppiIdAEditar, setPpiIdAEditar] = useState(null);
     const [nuevoNombreLote, setNuevoNombreLote] = useState('');
     const [nuevoPkInicial, setNuevoPkInicial] = useState('');
     const [nuevoPkFinal, setNuevoPkFinal] = useState('');
     const [nuevoIdBim, setNuevoIdBim] = useState('');
     // Function to request the editing of a specific element
-    const solicitarEditarLote = (sectorId, subSectorId, parteId, elementoId, loteId, lote) => {
+    const solicitarEditarLote = (sectorId, subSectorId, parteId, elementoId, loteId, lote, ppiId) => {
         setSectorIdAEditar(sectorId);
         setSubSectorIdAEditar(subSectorId);
         setParteIdAEditar(parteId);
         setElementoIdAEditar(elementoId);
         setLoteIdAEditar(loteId);
+        setPpiIdAEditar(ppiId);
         setNuevoNombreLote(lote.nombre);
         setNuevoPkInicial(lote.pkInicial || '');
         setNuevoPkFinal(lote.pkFinal || '');
         setNuevoIdBim(lote.idBim || '');
+        // Si no hay PPI asignado, inicializa el selector de PPI vacío
+        setSelectedPpi(lote.ppiId || '');
         setMostrarModalEditarLote(true);
+
     };
     // Function to save the edits made to the element
     const guardarEdicionLote = async () => {
-        // Step 1: Validate that the new name is not empty
         if (!nuevoNombreLote.trim()) {
             setAlerta('El nombre no puede estar vacío.');
             setTipoAlerta('error');
@@ -1310,67 +1370,127 @@ function Trazabilidad() {
             return;
         }
 
+        // Obtener el nombre del PPI seleccionado
+        const ppiSeleccionado = ppis.find(ppi => ppi.id === selectedPpi);
+        const ppiNombre = ppiSeleccionado ? ppiSeleccionado.nombre : "";
+
+        console.log(ppiNombre,'ppi seleccionado *****')
+        let ppiData = null;
+        
+        // Buscar el documento completo del PPI en Firestore
+        if (selectedPpi) {
+            const ppiRef = doc(db, `ppis/${selectedPpi}`);
+            const ppiDoc = await getDoc(ppiRef);
+
+            if (ppiDoc.exists()) {
+                ppiData = ppiDoc.data(); // Guardamos la data del PPI para usarla después
+            } else {
+                console.log("⚠️ No se encontró el documento del PPI en Firestore.");
+            }
+        }
+
+        // Actualizar el lote en su subcolección
+        const loteSubRef = doc(
+            db,
+            `proyectos/${id}/sector/${sectorIdAEditar}/subsector/${subSectorIdAEditar}/parte/${parteIdAEditar}/elemento/${elementoIdAEditar}/lote`,
+            loteIdAEditar
+        );
+
         try {
-            // Step 2: Reference the Firestore document path of the specific element
-            const docRef = doc(db, `proyectos/${id}/sector/${sectorIdAEditar}/subsector/${subSectorIdAEditar}/parte/${parteIdAEditar}/elemento/${elementoIdAEditar}/lote`, loteIdAEditar);
-            // Step 3: Update the 'nombre' field in Firestore
-            await updateDoc(docRef, {
+            // Actualizar el lote en su subcolección
+            const loteSubRef = doc(
+                db,
+                `proyectos/${id}/sector/${sectorIdAEditar}/subsector/${subSectorIdAEditar}/parte/${parteIdAEditar}/elemento/${elementoIdAEditar}/lote`,
+                loteIdAEditar
+            );
+            await updateDoc(loteSubRef, {
                 nombre: nuevoNombreLote,
                 pkInicial: nuevoPkInicial,
                 pkFinal: nuevoPkFinal,
-                idBim: nuevoIdBim
+                idBim: nuevoIdBim,
+                ppiId: selectedPpi,
+                ppiNombre: ppiNombre,
             });
-            // Step 4: Update the local 'sectores' state to reflect changes in the UI
-            const sectoresActualizados = sectores.map(sector => {
+
+            // Propagar el cambio a la colección 'lotes'
+            const lotePrincipalRef = doc(db, 'lotes', loteIdAEditar);
+            await updateDoc(lotePrincipalRef, {
+                nombre: nuevoNombreLote,
+                pkInicial: nuevoPkInicial,
+                pkFinal: nuevoPkFinal,
+                idBim: nuevoIdBim,
+                ppiId: selectedPpi,
+                ppiNombre: ppiNombre,
+            });
+
+            // Crear la subcolección 'inspecciones' y guardar la información del PPI
+        if (ppiData) {
+            const inspeccionRef = doc(collection(db, `lotes/${loteIdAEditar}/inspecciones`));
+            await setDoc(inspeccionRef, {
+                ...ppiData, // Guardamos toda la información del PPI
+            });
+            console.log("✅ Subcolección 'inspecciones' creada con éxito.");
+        } else {
+            console.log("⚠️ No se pudo crear la subcolección 'inspecciones' porque no hay PPI.");
+        }
+            
+
+            // Actualizar el estado local
+            const sectoresActualizados = sectores.map((sector) => {
                 if (sector.id === sectorIdAEditar) {
                     return {
                         ...sector,
-                        subsectores: sector.subsectores.map(subsector => {
+                        subsectores: sector.subsectores.map((subsector) => {
                             if (subsector.id === subSectorIdAEditar) {
                                 return {
                                     ...subsector,
-                                    partes: subsector.partes.map(parte => {
+                                    partes: subsector.partes.map((parte) => {
                                         if (parte.id === parteIdAEditar) {
                                             return {
                                                 ...parte,
-                                                elementos: parte.elementos.map(elemento => {
+                                                elementos: parte.elementos.map((elemento) => {
                                                     if (elemento.id === elementoIdAEditar) {
                                                         return {
                                                             ...elemento,
                                                             lotes: elemento.lotes.map(lote =>
                                                                 lote.id === loteIdAEditar
-                                                                    ? { ...lote, nombre: nuevoNombreLote, pkInicial: nuevoPkInicial, pkFinal: nuevoPkFinal, idBim: nuevoIdBim }
+                                                                    ? {
+                                                                        ...lote,
+                                                                        nombre: nuevoNombreLote,  // Mantiene el cambio de nombre
+                                                                        ppiId: selectedPpi,  // Actualiza el ID del PPI
+                                                                        ppiNombre: ppis.find(ppi => ppi.id === selectedPpi)?.nombre || '' // Actualiza el nombre del PPI
+                                                                    }
                                                                     : lote
                                                             )
                                                         };
                                                     }
                                                     return elemento;
-                                                })
+                                                }),
                                             };
                                         }
                                         return parte;
-                                    })
+                                    }),
                                 };
                             }
                             return subsector;
-                        })
+                        }),
                     };
                 }
                 return sector;
             });
-            // Step 5: Update the state and show success alert
+
             setSectores(sectoresActualizados);
-            setAlerta('Lote actualizado correctamente.');
+
+            setAlerta('Actualizado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
-            // Step 6: Handle any errors during the update
-            console.error('Error al actualizar el lote:', error);
-            setAlerta('Error al actualizar el lote.');
+            console.error('Error al actualizar:', error);
+            setAlerta('Error al actualizar.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-        // Step 7: Clean up the states and close the modal
+
         setMostrarModalEditarLote(false);
         setLoteIdAEditar('');
         setNuevoNombreLote('');
@@ -1379,6 +1499,33 @@ function Trazabilidad() {
         setNuevoIdBim('');
     };
 
+
+
+    // Objeto de lotes
+
+    const [modoLote, setModoLote] = useState("unico");
+    const [loteCampos, setLoteCampos] = useState([]);
+
+    // Manejar cambio en el select
+    const handleModoLoteChange = (event) => {
+        setModoLote(event.target.value);
+        if (event.target.value === "unico") {
+            setLoteCampos([]);
+        }
+    };
+
+    // Agregar un nuevo campo al lote
+    const agregarCampoLote = () => {
+        setLoteCampos([...loteCampos, { id: Date.now(), nombre: "", valor: "" }]);
+    };
+
+    // Manejar cambios en los inputs de los campos adicionales
+    const handleCampoChange = (id, field, value) => {
+        const nuevosCampos = loteCampos.map((campo) =>
+            campo.id === id ? { ...campo, [field]: value } : campo
+        );
+        setLoteCampos(nuevosCampos);
+    };
 
     return (
         <div className='container mx-auto min-h-screen py-2 xl:px-14 text-gray-500'>
@@ -1393,8 +1540,10 @@ function Trazabilidad() {
 
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'#'}>
-                        <h1 className='font-medium text-amber-600'>Trazabilidad </h1>
+                        <h1 className='text-gray-600'>Trazabilidad </h1>
                     </Link>
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                    <h1 className='font-medium text-amber-600'>{nameProject} </h1>
                 </div>
                 <div className='flex items-center'>
                     <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
@@ -1408,13 +1557,13 @@ function Trazabilidad() {
                     <div className='grid grid-cols-24 gap-2 xl:gap-6 text-sm'>
 
                         <div className='col-span-24 xl:col-span-6'>
-                            {/* Sector */}
+                            {/* Sector == Grupo activos */}
                             <div className="flex flex-col items-start gap-3">
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 rounded-md px-3 py-2 flex items-center gap-2 w-full'>1. Sector</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 rounded-md px-3 py-2 flex items-center gap-2 w-full'>1. Grupo activos</p>
                                 <div className="flex flex-col xl:flex-row items-center w-full">
                                     <div className='w-full flex gap-2'>
                                         <input
-                                            placeholder='Nuevo sector'
+                                            placeholder='Grupo activos'
                                             type="text"
                                             className='border px-3 py-1 rounded-lg w-full'
                                             value={sectorInput}
@@ -1437,7 +1586,7 @@ function Trazabilidad() {
                                         value={selectedSector}
                                         onChange={handleSectorChange}
                                     >
-                                        <option value="">Seleccione un sector</option>
+                                        <option value="">Seleccione un grupo activos</option>
                                         {sectores.map((sector) => (
                                             <option key={sector.id} value={sector.id}>{sector.nombre}</option>
                                         ))}
@@ -1445,15 +1594,15 @@ function Trazabilidad() {
 
                                 </div>
                             </div>
-                            {/* Sub Sector */}
+                            {/* Sub Sector == Activo */}
                             <div className="flex flex-col col-span-4 items-start gap-3 mt-3">
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>2. Sub sector</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>2. Activo</p>
 
 
                                 <div className="flex flex gap-2 xl:flex-row items-center w-full">
 
                                     <input
-                                        placeholder='Nuevo sub sector: '
+                                        placeholder='Nuevo activo: '
                                         type="text"
                                         id="subsector"
                                         className='border px-3 py-1 rounded-lg w-full'
@@ -1478,7 +1627,7 @@ function Trazabilidad() {
                                     value={selectedSubSector}
                                     onChange={handleSubSectorChange}
                                 >
-                                    <option value="">Seleccione un subsector</option>
+                                    <option value="">Seleccione un activo</option>
                                     {(sectores.find(sector => sector.id === selectedSector)?.subsectores || []).map((subsector) => (
                                         <option key={subsector.id} value={subsector.id}>{subsector.nombre}</option>
                                     ))}
@@ -1487,16 +1636,16 @@ function Trazabilidad() {
 
                         </div>
 
-                        {/* Parte */}
+                        {/* Parte == Inventario vial */}
 
                         <div className='flex flex-col col-span-24 xl:col-span-6 gap-3  mt-4 xl:mt-0'>
-                            <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>3. Parte</p>
+                            <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>3. Inventario vial</p>
 
 
                             <div className="flex gap-2 xl:flex-row items-center w-full">
 
                                 <input
-                                    placeholder='Nuevo parte: '
+                                    placeholder='Nuevo inventario vial: '
                                     type="text"
                                     id="parte"
                                     className='border px-3 py-1 rounded-lg w-full'
@@ -1519,19 +1668,21 @@ function Trazabilidad() {
                                     value={selectedParte}
                                     onChange={handleParteChange}
                                 >
-                                    <option value="">Seleccione una parte</option>
+                                    <option value="">Seleccione un inventario vial</option>
                                     {(sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes || []).map((parte) => (
                                         <option key={parte.id} value={parte.id}>{parte.nombre}</option>
                                     ))}
                                 </select>
                             </div>
 
+                            {/* Elemento == Componente */}
+
                             <div className='flex flex-col col-span-24 xl:col-span-5 gap-3    mt-5 xl:mt-0'>
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>4. Elemento</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>4. Componente</p>
                                 <div className="flex gap-2 xl:flex-row items-center w-full">
 
                                     <input
-                                        placeholder='Nuevo elemento: '
+                                        placeholder='Nuevo componente: '
                                         type="text"
                                         id="elemento"
                                         className='border px-3 py-1 rounded-lg w-full'
@@ -1554,7 +1705,7 @@ function Trazabilidad() {
                                         value={selectedElemento}
                                         onChange={(e) => setSelectedElemento(e.target.value)}
                                     >
-                                        <option value="">Seleccione un elemento</option>
+                                        <option value="">Seleccione un componente</option>
                                         {/* Asumiendo que tienes una manera de obtener los elementos del estado para el subsector y parte seleccionados */}
                                         {sectores.find(sector => sector.id === selectedSector)?.subsectores.find(subsector => subsector.id === selectedSubSector)?.partes.find(parte => parte.id === selectedParte)?.elementos.map((elemento) => (
                                             <option key={elemento.id} value={elemento.id}>{elemento.nombre}</option>
@@ -1567,19 +1718,25 @@ function Trazabilidad() {
                             </div>
                         </div>
 
-                        {/* Lote */}
+                        {/* Lote == Actividades mantenimiento, conservación, rehabilitación */}
 
 
                         <div className='flex flex-col col-span-24 xl:col-span-12 gap-3 mt-5 xl:mt-0 '>
                             <div className='text-start'>
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>5. Lote y ppi</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>5. Actividades mantenimiento, conservación, rehabilitación</p>
                             </div>
 
+                            <div className='px-2 text-xs w-full'>
+                                <p>"Para agregar múltiples actividades, escríbelas separadas por comas. Ejemplo: 'Bacheo formal, Reparación, Sellado de fisuras'."</p>
+
+                            </div>
+
+
                             <div className='grid xl:grid-cols-12 gap-3'>
-                                <div className='flex flex-col gap-3 col-span-6'>
+                                <div className='flex flex-col gap-3 col-span-8'>
 
                                     <input
-                                        placeholder='Nuevo lote: '
+                                        placeholder='Nuevo actividades mantenimiento, conservación, rehabilitación'
                                         type="text"
                                         id="lote"
                                         className='border px-3 py-1 rounded-lg w-full'
@@ -1625,23 +1782,28 @@ function Trazabilidad() {
                                     </div>
                                 </div>
 
-                                <div className=' col-span-6 xl:px-5'>
-                                    <p className='font-medium flex items-center gap-3'><span className='text-amber-600'>*</span>Para guardar trazabilidad selecciona un item en el desplegable y posteriormente agrega la información en cada campo.</p>
+                                <div className=' col-span-4 xl:px-5'>
+                                    <p className='font-medium flex items-center gap-3 text-xs'>
+                                        <span className='text-amber-600 '>*</span>Para guardar trazabilidad selecciona un item en el desplegable
+                                        y posteriormente agrega la información en cada campo.
+                                    </p>
 
-                                    <div className='flex gap-6'>
+                                    <div className='flex flex-col gap-2'>
                                         <button
                                             onClick={() => agregarLote(selectedElemento)}
-                                            className="w-60 xl:h-14 h-10 text-white xl:px-8 mt-4 flex justify-center items-center gap-3 font-semibold bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
+                                            className="w-32 xl:h-10 h-10 text-white xl:px-8 mt-4 flex justify-center items-center gap-3 font-semibold bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"
                                         >
                                             <span className='text-white text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>
-                                            Guardar trazabilidad
+                                            Guardar
                                         </button>
 
+                                        <p className=' flex items-center gap-2'><span className='text-amber-600 text-xl'> *</span>Asigna el globalId dentro del modelo BIM</p>
+
                                         <Link to={'/visorAdmin'}>
-                                            <button className="w-20 xl:w-20 xl:h-14 h-10 text-white text-3xl mt-4 flex justify-center items-center gap-3 font-semibold bg-sky-600 hover:bg-sky-600 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"><SiBim /></button></Link>
+                                            <button className="w-20 xl:w-32 xl:h-10 h-10 text-white text-3xl flex justify-center items-center gap-3 font-semibold bg-sky-600 hover:bg-sky-600 rounded-xl shadow-md transition duration-300 ease-in-out  hover:shadow-lg hover:-translate-y-1"><SiBim /></button></Link>
 
                                     </div>
-                                    <p className=' flex items-center gap-2 mt-4'><span className='text-amber-600 text-xl'> *</span>Asigna el globalId dentro del modelo BIM</p>
+
                                 </div>
                             </div>
                         </div>
@@ -1649,12 +1811,12 @@ function Trazabilidad() {
                 </div>
                 {/* Table */}
                 <div className="mt-5">
-                    <div className="hidden xl:flex bg-gray-200 rounded-t-lg font-medium">
-                        <p className="px-4 py-2 w-1/5">Sector</p>
-                        <p className="px-4 py-2 w-1/5">Sub sector</p>
-                        <p className="px-4 py-2 w-1/5">Parte</p>
-                        <p className="px-4 py-2 w-1/5">Elemento</p>
-                        <p className="px-4 py-2 w-1/5">Lote y ppi</p>
+                    <div className="hidden xl:flex bg-gray-200 rounded-t-lg font-medium items-center">
+                        <p className="px-4 py-2 w-1/5">Grupo activos</p>
+                        <p className="px-4 py-2 w-1/5">Activo</p>
+                        <p className="px-4 py-2 w-1/5">Invetario vial</p>
+                        <p className=" py-2 w-1/5">Componente</p>
+                        <p className="mr-5 py-2 w-1/5">Actividades mantenimiento, conservación, rehabilitación</p>
                     </div>
 
                     <div className="divide-y divide-gray-200">
@@ -1753,34 +1915,34 @@ function Trazabilidad() {
                                                                             </div>
                                                                         </div>
                                                                         <div className="flex flex-col justify-center">
-                                                                            <p className="font-medium">Lote: {lote.nombre}</p>
+                                                                            <p className="font-medium">{lote.nombre}</p>
                                                                             <div className="flex justify-between">
                                                                                 <div>
-                                                                                    <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-red-500'}`}>
+                                                                                    <p className={`${lote.ppiNombre ? 'text-green-500' : 'text-amber-600'}`}>
                                                                                         {lote.ppiNombre ? <p>PPI: {lote.ppiNombre}</p> : 'Ppi sin Asignar'}
                                                                                     </p>
                                                                                 </div>
                                                                                 <div className="flex gap-4 group">
-                                                                                    {lote.ppiId && (
-                                                                                        <div className="flex gap-4">
-                                                                                            <button
-                                                                                                onClick={() =>
-                                                                                                    solicitarEditarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id, lote)
-                                                                                                }
-                                                                                                className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                                                                                            >
-                                                                                                <VscEdit />
-                                                                                            </button>
-                                                                                            <button
-                                                                                                onClick={() =>
-                                                                                                    confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)
-                                                                                                }
-                                                                                                className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                                                                                            >
-                                                                                                <RiDeleteBinLine />
-                                                                                            </button>
-                                                                                        </div>
-                                                                                    )}
+
+                                                                                    <div className="flex gap-4">
+                                                                                        <button
+                                                                                            onClick={() =>
+                                                                                                solicitarEditarLote(sector.id, subsector.id, parte.id, elemento.id, lote.id, lote, lote.ppiId)
+                                                                                            }
+                                                                                            className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                        >
+                                                                                            <VscEdit />
+                                                                                        </button>
+                                                                                        <button
+                                                                                            onClick={() =>
+                                                                                                confirmarDeleteLote(sector.id, subsector.id, parte.id, elemento.id, lote.id)
+                                                                                            }
+                                                                                            className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                        >
+                                                                                            <RiDeleteBinLine />
+                                                                                        </button>
+                                                                                    </div>
+
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -2388,6 +2550,22 @@ function Trazabilidad() {
                                     placeholder="Nuevo GlobalID"
                                     className="mt-2 border px-3 py-1 rounded-lg w-full"
                                 />
+
+                                {/* Selector de PPI para lotes sin PPI */}
+                                {ppiIdAEditar == "" && (
+                                    <select
+                                    value={selectedPpi}
+                                    onChange={(e) => setSelectedPpi(e.target.value)}
+                                    className="mt-2 border px-3 py-1 rounded-lg w-full"
+                                >
+                                    <option value="">Seleccione un PPI</option>
+                                    {ppis.map(ppi => (
+                                        <option key={ppi.id} value={ppi.id}>{ppi.nombre}</option>
+                                    ))}
+                                </select>
+                                )}
+
+                                
 
 
                                 <div className='flex justify-center gap-5 mt-3'>

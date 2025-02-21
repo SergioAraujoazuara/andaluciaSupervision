@@ -205,15 +205,30 @@ const ParteObra = () => {
       console.log("URLs de imágenes obtenidas:", imageUrls);
 
       const formDataCamelCase = Object.keys(formData).reduce((acc, key) => {
-        const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
-        acc[camelKey] = formData[key];
+        // Verificar si el campo es un subvalor
+        if (key.startsWith("subvalores_")) {
+          acc[key] = formData[key]; // Mantener el nombre del campo tal cual
+        } else {
+          // Convertir a camelCase para otros campos
+          acc[key.charAt(0).toLowerCase() + key.slice(1)] = formData[key];
+        }
         return acc;
       }, {});
 
+
       formDataCamelCase.imagenes = imageUrls.filter((url) => url !== null);
+
+      // Recuperamos el ID y el nombre del proyecto desde el localStorage
+      const selectedProjectId = localStorage.getItem("selectedProjectId");
+      const selectedProjectName = localStorage.getItem("selectedProjectName");
+
+      // Añadimos los datos del proyecto al formulario
+      formDataCamelCase.proyectoId = selectedProjectId;
+      formDataCamelCase.proyectoNombre = selectedProjectName;
 
       const nombreColeccion = `${toCamelCase(plantillaSeleccionada.nombre)}Form`;
 
+      // Guardar en Firestore
       await addDoc(collection(db, nombreColeccion), formDataCamelCase);
 
       setModalMessage("Datos enviados con éxito.");
@@ -222,7 +237,7 @@ const ParteObra = () => {
 
       // Resetear el formulario
       setFormData({ observaciones: "", imagenes: [], fechaHora: "" });
-      resetFileInputs(); // <--- Aquí reseteas los inputs de archivo
+      resetFileInputs(); // Resetea los inputs de archivo
     } catch (error) {
       console.error("Error al enviar los datos:", error);
       setModalMessage("Hubo un error al enviar los datos.");
@@ -231,11 +246,17 @@ const ParteObra = () => {
     }
   };
 
+
+
+
   const closeModal = () => {
     setModalVisible(false);
     setModalMessage("");
     setModalType("");
   };
+
+
+  const selectedProject = localStorage.getItem('selectedProjectName')
 
   return (
     <div className="min-h-screen container mx-auto xl:px-14 py-2 text-gray-500 mb-10">
@@ -259,20 +280,27 @@ const ParteObra = () => {
         </div>
       )}
 
-      <div className="flex gap-2 items-center justify-between px-5 py-3 text-md">
+      <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
         {/* Navegación */}
         <div className="flex gap-2 items-center">
-          <GoHomeFill style={{ width: 15, height: 15, fill: "#d97706" }} />
-          <Link to="#">
-            <h1 className="font-medium text-gray-600">Home</h1>
+          {/* Elementos visibles solo en pantallas medianas (md) en adelante */}
+          <GoHomeFill className="hidden md:block" style={{ width: 15, height: 15, fill: "#d97706" }} />
+          <Link to="#" className="hidden md:block font-medium text-gray-600">
+            Home
           </Link>
-          <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-          <h1 className="font-medium text-amber-600">Formularios</h1>
+          <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
+          <h1 className="hidden md:block font-medium">Ver registros</h1>
+          <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
+
+          {/* Nombre del proyecto (visible en todas las pantallas) */}
+          <h1 className="font-medium text-white bg-sky-600 px-4 py-1 rounded-lg">
+            {selectedProject}
+          </h1>
         </div>
 
         {/* Botón de volver */}
         <div className="flex items-center">
-          <button className="text-amber-600 text-3xl" onClick={() => navigate('/')}>
+          <button className="text-amber-600 text-3xl" onClick={handleGoBack}>
             <IoArrowBackCircle />
           </button>
         </div>
@@ -310,94 +338,160 @@ const ParteObra = () => {
 
           (
             <div className="px-8 pb-6">
-              <form onSubmit={handleSubmit} className="space-y-8">
-                {camposDinamicos
-                  .sort((a, b) => a.nombre.localeCompare(b.nombre))
-                  .map(
-                    (campo) =>
-                      visibilidadCampos[campo.nombre] && (
-                        <div key={campo.nombre}>
-                          <label className="block text-sm font-medium text-gray-800">
-                            {campo.nombre}
-                          </label>
-                          {campo.tipo === "desplegable" ? (
-                            <select
-                              name={campo.nombre}
-                              value={formData[campo.nombre] || ""}
-                              onChange={(e) =>
-                                setFormData({ ...formData, [campo.nombre]: e.target.value })
-                              }
-                              className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                            >
-                              <option value="">-- Seleccione una opción --</option>
-                              {campo.valores.map((valor) => (
-                                <option key={valor.id} value={valor.valor}>
-                                  {valor.valor}
-                                </option>
-                              ))}
-                            </select>
-                          ) : campo.tipo === "texto" ? (
-                            <textarea
-                              name={campo.nombre}
-                              value={formData[campo.nombre] || ""}
-                              onChange={(e) =>
-                                setFormData({ ...formData, [campo.nombre]: e.target.value })
-                              }
-                              className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                            ></textarea>
-                          ) : null}
-                        </div>
-                      )
+  <form onSubmit={handleSubmit} className="space-y-8">
+    {camposDinamicos
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+      .map(
+        (campo) =>
+          visibilidadCampos[campo.nombre] && (
+            <div key={campo.nombre}>
+              <label className="block text-sm font-medium text-gray-800">
+                {campo.nombre}
+              </label>
+              {campo.tipo === "desplegable" ? (
+                <>
+                  {/* Desplegable principal */}
+                  <select
+                    name={campo.nombre}
+                    value={formData[campo.nombre] || ""}
+                    onChange={(e) => {
+                      const selectedValue = e.target.value;
+
+                      setFormData((prevFormData) => ({
+                        ...prevFormData,
+                        [campo.nombre]: selectedValue,
+                      }));
+
+                      // Verificar si el valor seleccionado tiene subvalores
+                      const selectedOption = campo.valores.find(
+                        (valor) => valor.valor === selectedValue
+                      );
+
+                      if (selectedOption && selectedOption.subvalores?.length) {
+                        // Inicializar el subvalor seleccionado vacío
+                        setFormData((prevFormData) => ({
+                          ...prevFormData,
+                          [`subvalores_${campo.nombre}`]: "",
+                        }));
+                      } else {
+                        // Limpiar el subvalor si no hay subvalores disponibles
+                        setFormData((prevFormData) => {
+                          const { [`subvalores_${campo.nombre}`]: _, ...rest } =
+                            prevFormData;
+                          return rest;
+                        });
+                      }
+                    }}
+                    className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                  >
+                    <option value="">-- Seleccione una opción --</option>
+                    {campo.valores.map((valor) => (
+                      <option key={valor.id} value={valor.valor}>
+                        {valor.valor}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Desplegable dependiente (subvalores) */}
+                  {formData[`subvalores_${campo.nombre}`] !== undefined && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-800">
+                        Componente de {campo.nombre}
+                      </label>
+                      <select
+                        name={`subvalores_${campo.nombre}`}
+                        value={formData[`subvalores_${campo.nombre}`] || ""}
+                        onChange={(e) =>
+                          setFormData((prevFormData) => ({
+                            ...prevFormData,
+                            [`subvalores_${campo.nombre}`]: e.target.value,
+                          }))
+                        }
+                        className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                      >
+                        <option value="">-- Seleccione una opción --</option>
+                        {campo.valores
+                          .find(
+                            (valor) => valor.valor === formData[campo.nombre]
+                          )
+                          ?.subvalores?.map((subvalor) => (
+                            <option key={subvalor.id} value={subvalor.valor}>
+                              {subvalor.valor}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
                   )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">Fecha y Hora</label>
-                  <input
-                    type="datetime-local"
-                    name="fechaHora"
-                    value={formData.fechaHora}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fechaHora: e.target.value })
-                    }
-                    className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">Observaciones</label>
-                  <textarea
-                    name="observaciones"
-                    value={formData.observaciones}
-                    onChange={(e) =>
-                      setFormData({ ...formData, observaciones: e.target.value })
-                    }
-                    className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                  ></textarea>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">Imágenes</label>
-                  {[0, 1, 2, 3].map((index) => (
-                    <input
-                      key={index}
-                      type="file"
-                      accept="image/*"
-                      ref={(el) => (fileInputsRefs.current[index] = el)}
-                      onChange={(e) => handleFileChange(e, index)}
-                      className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200"
-                    />
-                  ))}
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:bg-sky-700 transition"
-                >
-                  Enviar
-                </button>
-              </form>
-
+                </>
+              ) : campo.tipo === "texto" ? (
+                <textarea
+                  name={campo.nombre}
+                  value={formData[campo.nombre] || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, [campo.nombre]: e.target.value })
+                  }
+                  className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                ></textarea>
+              ) : null}
             </div>
+          )
+      )}
+
+    <div>
+      <label className="block text-sm font-medium text-gray-800">
+        Fecha y Hora
+      </label>
+      <input
+        type="datetime-local"
+        name="fechaHora"
+        value={formData.fechaHora}
+        onChange={(e) =>
+          setFormData({ ...formData, fechaHora: e.target.value })
+        }
+        className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-800">
+        Observaciones
+      </label>
+      <textarea
+        maxLength={750}
+        name="observaciones"
+        value={formData.observaciones}
+        onChange={(e) =>
+          setFormData({ ...formData, observaciones: e.target.value })
+        }
+        className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+      ></textarea>
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-800">
+        Imágenes
+      </label>
+      {[0, 1, 2, 3].map((index) => (
+        <input
+          key={index}
+          type="file"
+          accept="image/*"
+          ref={(el) => (fileInputsRefs.current[index] = el)}
+          onChange={(e) => handleFileChange(e, index)}
+          className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200"
+        />
+      ))}
+    </div>
+
+    <button
+      type="submit"
+      className="w-full py-3 bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:bg-sky-700 transition"
+    >
+      Enviar
+    </button>
+  </form>
+</div>
+
           )
           :
           (

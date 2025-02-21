@@ -50,6 +50,7 @@ import { useAuth } from '../../context/authContext';
 import { TiLockClosedOutline } from "react-icons/ti";
 import PdfListViewer from '../../Components/FeatureSendMail/PdfListViewer';
 import Mapa from '../../Components/Geolocalizacion/Mapa'
+import useProyecto from '../../Hooks/useProyectos';
 
 
 function TablaPpi() {
@@ -64,12 +65,19 @@ function TablaPpi() {
          * - Generating a final PDF once all inspections are completed and marked as done.
          */
 
+    const id = localStorage.getItem('selectedProjectId')
+    const nameProject = localStorage.getItem('selectedProjectName')
+    const { proyecto } = useProyecto(id)
+    const logoEmpresa = proyecto?.logo
+    const logoCliente = proyecto?.logoCliente
+   
+   
 
     const { user } = useAuth();
     const titulo = "REGISTRO DE INSPECCIÓN DE OBRA REV-1"
-    const imagenPath = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Adif_wordmark.svg/1200px-Adif_wordmark.svg.png"
-    const imagenPath2 = logo
-    const [nombreProyecto, setNombreProyecto] = useState(localStorage.getItem('nombre_proyecto') || '');
+    const imagenPath = logoCliente
+    const imagenPath2 = logoEmpresa
+    const [nombreProyecto, setNombreProyecto] = useState(localStorage.getItem('selectedProjectName') || '');
     const [obra, setObra] = useState(localStorage.getItem('obra'));
     const [tramo, setTramo] = useState(localStorage.getItem('tramo'));
     const [observaciones, setObservaciones] = useState('');
@@ -1913,10 +1921,12 @@ function TablaPpi() {
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} className='hidden xl:block' />
 
                     <h1 className='cursor-pointer text-gray-500 hidden xl:block' onClick={regresar}>Elementos</h1>
+                    <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
+                                        <h1 className='font-medium text-amber-600'>{nameProject} </h1>
 
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'#'}>
-                        <div className='font-medium text-sm text-amber-600 flex gap-2 items-center'>
+                        <div className='font-medium text-sm text-gray-600 flex gap-2 items-center'>
                             <div className='flex gap-1'>
                                 <p>Lote: </p>
                                 <p>{lote}</p>

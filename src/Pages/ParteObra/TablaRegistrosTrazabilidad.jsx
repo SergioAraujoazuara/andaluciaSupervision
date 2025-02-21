@@ -1,0 +1,1147 @@
+import React, { useState, useEffect } from "react";
+import { collection, getDocs, deleteDoc, doc, updateDoc, addDoc, getDoc } from "firebase/firestore";
+import { storage } from "../../../firebase_config.js";
+import { ref, uploadBytes, getDownloadURL, } from "firebase/storage";
+import { db } from "../../../firebase_config.js";
+import InformeRegistros from "./InformeRegistros.jsx";
+import imageCompression from "browser-image-compression";
+import { FaDeleteLeft } from "react-icons/fa6";
+import { FaEdit } from "react-icons/fa";
+import { AiFillLock, AiOutlineClose, AiOutlineCheck } from "react-icons/ai"; // Icono de candado y botones
+import { FiCamera } from "react-icons/fi"; // Icono de cámara
+import { IoMdAddCircle } from "react-icons/io";
+import { FaArrowRight } from "react-icons/fa";
+import { IoArrowBackCircle } from "react-icons/io5";
+import { FaCheck } from "react-icons/fa6";
+import { MdOutlineError } from "react-icons/md";
+
+import { GoHomeFill } from "react-icons/go";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../context/authContext.jsx";
+import useUsuario from "../../Hooks/useUsuario.jsx"
+
+const TablaRegistros = () => {
+  const { user } = useAuth();
+  const userId = user?.uid; // Asegúrate de que 'uid' existe
+  const {usuario} = useUsuario(userId)
+  const roleUsuario = usuario?.role
+  const [nombreUsuario, setNombreUsuario] = useState("");
+  const selectedProjectName = localStorage.getItem("selectedProjectName");
+  const [registrosParteDeObra, setRegistrosParteDeObra] = useState([]);
+  const [columnas, setColumnas] = useState([]);
+  const [registrosFiltrados, setRegistrosFiltrados] = useState([]);
+  const [registroAEliminar, setRegistroAEliminar] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [valoresFiltro, setValoresFiltro] = useState({
+    sectorNombre: "",
+    subSectorNombre: "",
+    parteNombre: "",
+    elementoNombre: "",
+    nombre: "",
+  });
+  const [valoresUnicos, setValoresUnicos] = useState({
+    sectorNombre: [],
+    subSectorNombre: [],
+    parteNombre: [],
+    elementoNombre: [],
+    nombre: [],
+  });
+  const fechaHora = new Date().toISOString().replace(/:/g, "-").split(".")[0];
+  const fileName = `${selectedProjectName}_${fechaHora}`
+
+  const obtenerFechaActual = () => {
+    const hoy = new Date();
+    return hoy.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+  };
+  
+
+  useEffect(() => {
+    const actualizarValoresUnicos = () => {
+      const nuevosValoresUnicos = {
+        sectorNombre: [...new Set(registrosParteDeObra.map((reg) => reg.sectorNombre || ""))],
+        subSectorNombre: [
+          ...new Set(
+            registrosParteDeObra
+              .filter((reg) => !valoresFiltro.sectorNombre || reg.sectorNombre === valoresFiltro.sectorNombre)
+              .map((reg) => reg.subSectorNombre || "")
+          ),
+        ],
+        parteNombre: [
+          ...new Set(
+            registrosParteDeObra
+              .filter(
+                (reg) =>
+                  (!valoresFiltro.sectorNombre || reg.sectorNombre === valoresFiltro.sectorNombre) &&
+                  (!valoresFiltro.subSectorNombre || reg.subSectorNombre === valoresFiltro.subSectorNombre)
+              )
+              .map((reg) => reg.parteNombre || "")
+          ),
+        ],
+        elementoNombre: [
+          ...new Set(
+            registrosParteDeObra
+              .filter(
+                (reg) =>
+                  (!valoresFiltro.sectorNombre || reg.sectorNombre === valoresFiltro.sectorNombre) &&
+                  (!valoresFiltro.subSectorNombre || reg.subSectorNombre === valoresFiltro.subSectorNombre) &&
+                  (!valoresFiltro.parteNombre || reg.parteNombre === valoresFiltro.parteNombre)
+              )
+              .map((reg) => reg.elementoNombre || "")
+          ),
+        ],
+        nombre: [
+          ...new Set(
+            registrosParteDeObra
+              .filter(
+                (reg) =>
+                  (!valoresFiltro.sectorNombre || reg.sectorNombre === valoresFiltro.sectorNombre) &&
+                  (!valoresFiltro.subSectorNombre || reg.subSectorNombre === valoresFiltro.subSectorNombre) &&
+                  (!valoresFiltro.parteNombre || reg.parteNombre === valoresFiltro.parteNombre) &&
+                  (!valoresFiltro.elementoNombre || reg.elementoNombre === valoresFiltro.elementoNombre)
+              )
+              .flatMap((reg) =>
+                (reg.nombre || "").split(/[,|\-\/]+/).map((actividad) => actividad.trim())
+              ) // Divide y limpia las actividades relacionadas
+          ),
+        ],
+      };
+
+      setValoresUnicos(nuevosValoresUnicos);
+    };
+
+    actualizarValoresUnicos();
+  }, [valoresFiltro, registrosParteDeObra]);
+
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+
+    setValoresFiltro((prev) => ({
+      ...prev,
+      [name]: value, // Actualiza el filtro seleccionado
+    }));
+  };
+
+
+  // useEffect para obtener el nombre del usuario al cargar el componente
+  useEffect(() => {
+    const fetchNombreUsuario = async (userId) => {
+      try {
+        const userDocRef = doc(db, "usuarios", userId); // Ruta en Firestore: 'usuarios/{uid}'
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          console.log(userData)
+          setNombreUsuario(userData.nombre || 'Sin nombre')
+          console.log(userData.nombre)
+        } else {
+          console.error(`No se encontró un usuario con UID: ${userId}`);
+          return "Usuario desconocido";
+        }
+      } catch (error) {
+        console.error("Error al obtener el nombre del usuario:", error);
+        return "Error al obtener nombre";
+      }
+    };
+
+    fetchNombreUsuario(userId); // Llama a la función para obtener el nombre
+  }, [userId]); // Solo se ejecuta si userId cambia
+
+  useEffect(() => {
+    const fetchRegistrosParteDeObra = async () => {
+      try {
+        const selectedProjectId = localStorage.getItem("selectedProjectId"); // Obtén el ID del proyecto del localStorage
+
+        if (!selectedProjectId) {
+          console.error("No se encontró un 'selectedProjectId' en el localStorage");
+          return;
+        }
+
+        // Realiza la consulta a Firestore
+        const registrosSnapshot = await getDocs(collection(db, "registrosParteDeObra"));
+        const registros = registrosSnapshot.docs
+          .map((docSnapshot) => ({
+            id: docSnapshot.id, // ID del documento
+            ...docSnapshot.data(),
+          }))
+          .filter((registro) => registro.idProyecto === selectedProjectId); // Filtrar por idProyecto
+
+        if (registros.length > 0) {
+          // Obtener columnas dinámicas excluyendo ID e imágenes
+          const columnasDinamicas = Object.keys(registros[0])
+            .filter(
+              (columna) =>
+                !columna.toLowerCase().includes("id") &&
+                !columna.toLowerCase().includes("imagen")
+            )
+            .sort((a, b) => a.localeCompare(b));
+
+          // Ordenamos columnas, asegurando que "fechahora" aparezca primero
+          const columnasOrdenadas = [
+            ...columnasDinamicas.filter((col) => col.toLowerCase() === "fechahora"),
+            ...columnasDinamicas.filter((col) => col.toLowerCase() !== "fechahora"),
+          ];
+
+          setColumnas(columnasOrdenadas);
+
+          // Obtener valores únicos de cada columna para los filtros
+          const valoresUnicos = columnasOrdenadas.reduce((acc, columna) => {
+            acc[columna] = [...new Set(registros.map((registro) => registro[columna] || ""))];
+            return acc;
+          }, {});
+
+          // Configurar filtros iniciales con valores únicos
+          setValoresFiltro(
+            columnasOrdenadas.reduce((acc, columna) => {
+              acc[columna] = "";
+              return acc;
+            }, {})
+          );
+
+          setValoresUnicos(valoresUnicos); // Guardamos valores únicos para desplegables
+        }
+
+        setRegistrosParteDeObra(registros);
+        setRegistrosFiltrados(registros);
+      } catch (error) {
+        console.error("Error al obtener registrosParteDeObra:", error);
+      }
+    };
+
+    fetchRegistrosParteDeObra();
+  }, []);
+
+
+
+  useEffect(() => {
+    const registrosFiltrados = registrosParteDeObra.filter((registro) => {
+      const fechaRegistro = new Date(registro.fechaHora).toISOString().split("T")[0]; // Convertir fecha del registro a YYYY-MM-DD
+      const fechaHoy = obtenerFechaActual();
+  
+      // Si no hay filtro de fecha, mostrar solo los registros de hoy
+      const filtroFechaInicio = valoresFiltro.fechaInicio || fechaHoy;
+      const filtroFechaFin = valoresFiltro.fechaFin || fechaHoy;
+  
+      const cumpleFecha =
+        (!filtroFechaInicio || fechaRegistro >= filtroFechaInicio) &&
+        (!filtroFechaFin || fechaRegistro <= filtroFechaFin);
+  
+      // Filtro de actividad y otros
+      const cumpleOtrosFiltros = Object.keys(valoresFiltro).every((campo) => {
+        if (campo === "fechaInicio" || campo === "fechaFin") return true;
+        return !valoresFiltro[campo] || (registro[campo] || "").includes(valoresFiltro[campo]);
+      });
+  
+      return cumpleFecha && cumpleOtrosFiltros;
+    });
+  
+    setRegistrosFiltrados(registrosFiltrados);
+  }, [valoresFiltro, registrosParteDeObra]);
+  
+
+
+
+  const handleEliminarRegistro = async () => {
+    console.log(registroAEliminar)
+    try {
+      if (registroAEliminar) {
+        // Eliminar el documento usando su ID en Firestore
+        await deleteDoc(doc(db, "registrosParteDeObra", registroAEliminar.id));
+
+        // Actualizar el estado local para eliminar el registro eliminado
+        setRegistrosParteDeObra((prev) =>
+          prev.filter((registro) => registro.id !== registroAEliminar.id)
+        );
+        setRegistrosFiltrados((prev) =>
+          prev.filter((registro) => registro.id !== registroAEliminar.id)
+        );
+
+        // Cerrar el modal de confirmación
+        setShowConfirmModal(false);
+        setRegistroAEliminar(null);
+      }
+    } catch (error) {
+      console.error("Error al eliminar el registro:", error);
+    }
+  };
+
+
+  // Estado para almacenar las imágenes seleccionadas y sus previsualizaciones
+  const [imagenesEditadas, setImagenesEditadas] = useState([]);
+  const [previsualizaciones, setPrevisualizaciones] = useState([]);
+
+  // Estado para el registro que se está editando
+  const [registroEditando, setRegistroEditando] = useState(null);
+  // Estado para almacenar el registro que se está editando
+
+  // Estado para abrir/cerrar el modal de edición
+  const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false);
+
+  const handleSeleccionarImagen = async (e, index) => {
+    const file = e.target.files[0]; // Obtener la imagen seleccionada
+    if (!file) return;
+
+    try {
+      // Comprimir la imagen
+      const imagenComprimida = await comprimirImagen(file);
+
+      // Crear URL temporal para previsualizar la imagen comprimida
+      const imageUrl = URL.createObjectURL(imagenComprimida);
+      setPrevisualizaciones((prev) => {
+        const newPreviews = [...prev];
+        newPreviews[index] = imageUrl;
+        return newPreviews;
+      });
+
+      // Guardar la imagen comprimida en el estado para procesarla después
+      setImagenesEditadas((prev) => {
+        const updatedImages = [...prev];
+        updatedImages[index] = imagenComprimida;
+        return updatedImages;
+      });
+    } catch (error) {
+      console.error("Error al procesar la imagen:", error);
+    }
+  };
+
+  const handleGuardarEdicion = async () => {
+    try {
+      if (!registroEditando) return;
+
+      // Crear una copia del registro original (antes de los cambios)
+      const registroOriginal = { ...registroEditando };
+
+      // Crear una copia de las imágenes actuales para conservar las no editadas
+      const imagenesFinales = [...(registroEditando.imagenes || [])];
+
+      // Subir solo las imágenes editadas
+      await Promise.all(
+        imagenesEditadas.map(async (file, index) => {
+          if (file) {
+            const url = await subirImagenConMetadatos(file, index);
+            imagenesFinales[index] = url; // Solo reemplazar la imagen editada
+          }
+        })
+      );
+
+      // Crear el objeto actualizado con las imágenes modificadas
+      const registroActualizado = {
+        ...registroEditando,
+        imagenes: imagenesFinales,
+      };
+
+      // Guardar el historial del cambio en Firestore
+      const historialCambio = {
+        registroId: registroEditando.id, // ID del registro modificado
+        responsable: nombreUsuario, // Cambia esto por el usuario actual si lo tienes
+        fechaHora: new Date().toISOString(), // Fecha y hora actual
+        motivoCambio: motivoCambio, // Agrega el motivo desde el formulario
+        registroOriginal, // Estado original antes del cambio
+        registroEditado: registroActualizado, // Estado después del cambio
+      };
+
+      await addDoc(collection(db, "historialRegistrosParteDeObra"), historialCambio);
+
+      // Actualizar el registro principal en Firestore
+      const docRef = doc(db, "registrosParteDeObra", registroEditando.id);
+      await updateDoc(docRef, registroActualizado);
+
+      // Actualizar la tabla en tiempo real
+      setRegistrosParteDeObra((prev) =>
+        prev.map((registro) =>
+          registro.id === registroEditando.id ? registroActualizado : registro
+        )
+      );
+      setRegistrosFiltrados((prev) =>
+        prev.map((registro) =>
+          registro.id === registroEditando.id ? registroActualizado : registro
+        )
+      );
+
+      // Cerrar el modal y limpiar estados
+      setModalEdicionAbierto(false);
+      setImagenesEditadas([]);
+      setPrevisualizaciones([]);
+      setRegistroEditando(null);
+
+      console.log("Registro y historial actualizados correctamente");
+    } catch (error) {
+      console.error("Error al guardar los cambios:", error);
+    }
+  };
+
+
+
+
+  // Comprimir la imagen antes de
+  const comprimirImagen = async (file) => {
+    try {
+      const opciones = {
+        maxSizeMB: 0.3, // Tamaño máximo de la imagen (en MB)
+        maxWidthOrHeight: 1920, // Dimensiones máximas
+        useWebWorker: true, // Usa WebWorker para no bloquear la UI
+      };
+
+      const imagenComprimida = await imageCompression(file, opciones);
+      return imagenComprimida;
+    } catch (error) {
+      console.error("Error al comprimir la imagen:", error);
+      return file; // Si falla, devuelve la imagen original
+    }
+  };
+
+  const subirImagenConMetadatos = async (file, index) => {
+    try {
+      // Crear referencia en Storage con un nombre único
+      const storageRef = ref(storage, `imagenes/${Date.now()}_${index}`);
+
+      // Metadatos de la imagen (aquí puedes agregar coordenadas si es necesario)
+      const metadata = {
+        contentType: file.type,
+      };
+
+      // Subir la imagen a Firebase Storage
+      await uploadBytes(storageRef, file, metadata);
+
+      // Obtener la URL de descarga
+      const url = await getDownloadURL(storageRef);
+      return url;
+    } catch (error) {
+      console.error("Error al subir la imagen:", error);
+      return null;
+    }
+  };
+
+
+  const handleGoBack = () => {
+    navigate(-1); // Navega hacia atrás en el historial
+  };
+
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedObservation, setSelectedObservation] = useState("");
+
+  const openModal = (observation) => {
+    setSelectedObservation(observation);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedObservation("");
+  };
+
+  // Limpiar filtros
+  const resetFilters = () => {
+    // Restablece los filtros a su estado inicial (todos los valores vacíos)
+    setValoresFiltro((prev) =>
+      Object.keys(prev).reduce((acc, key) => {
+        acc[key] = ""; // Limpia cada filtro
+        return acc;
+      }, {})
+    );
+
+    console.log("Filtros restablecidos"); // Para verificar en consola
+  };
+
+  // Historial de cambios
+
+  const [motivoCambio, setMotivoCambio] = useState("");
+  const [modalModificacionesAbierto, setModalModificacionesAbierto] = useState(false);
+  const [historialModificaciones, setHistorialModificaciones] = useState([]);
+
+  const handleAbrirModalModificaciones = async (registro) => {
+    try {
+      // Consulta a la colección de historial
+      const historialSnapshot = await getDocs(
+        collection(db, "historialRegistrosParteDeObra")
+      );
+
+      // Filtrar los cambios asociados al registro seleccionado
+      const historial = historialSnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((item) => item.registroId === registro.id);
+
+      setHistorialModificaciones(historial);
+      setModalModificacionesAbierto(true); // Abre el modal
+    } catch (error) {
+      console.error("Error al cargar el historial de modificaciones:", error);
+    }
+  };
+
+
+
+  const columnasMap = {
+    fechaHora: "Fecha y hora",
+    sectorNombre: "Grupo activos",
+    subSectorNombre: "Activo",
+    parteNombre: "Inventario vial",
+    elementoNombre: "Componente",
+    nombre: "Actividades mantenimiento, conservación, rehabilitación",
+    actividad: "Actividades mantenimiento, conservación, rehabilitación", // Nuevo mapeo para la columna actividad
+    observaciones: "Observaciones",
+  };
+
+  // Orden específico de las columnas
+  const ordenColumnas = [
+    "fechaHora",
+    "sectorNombre",
+    "subSectorNombre",
+    "parteNombre",
+    "elementoNombre",
+    "nombre",
+    "actividad",
+    "observaciones",
+  ];
+
+  const formatFecha = (fecha) => {
+    if (!fecha) return "";
+    const fechaObj = new Date(fecha);
+    const dia = fechaObj.getDate().toString().padStart(2, "0");
+    const mes = (fechaObj.getMonth() + 1).toString().padStart(2, "0");
+    const anio = fechaObj.getFullYear();
+    const horas = fechaObj.getHours().toString().padStart(2, "0");
+    const minutos = fechaObj.getMinutes().toString().padStart(2, "0");
+    const segundos = fechaObj.getSeconds().toString().padStart(2, "0");
+
+    return `${dia}/${mes}/${anio} ${horas}:${minutos}:${segundos}`;
+  };
+
+  const formatFechaActual = () => {
+    const hoy = new Date();
+    return `${hoy.getDate().toString().padStart(2, "0")}/${(hoy.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}/${hoy.getFullYear()}`;
+  };
+  
+  const formatFechaSolo = (fecha) => {
+    if (!fecha) return "";
+    const fechaObj = new Date(fecha);
+    const dia = fechaObj.getDate().toString().padStart(2, "0");
+    const mes = (fechaObj.getMonth() + 1).toString().padStart(2, "0");
+    const anio = fechaObj.getFullYear();
+    
+    return `${dia}/${mes}/${anio}`; // Devuelve solo DD/MM/YYYY
+  };
+
+
+  return (
+    <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
+      <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
+        {/* Navegación */}
+        <div className="flex gap-2 items-center">
+          {/* Elementos visibles solo en pantallas medianas (md) en adelante */}
+          <GoHomeFill className="hidden md:block" style={{ width: 15, height: 15, fill: "#d97706" }} />
+          <Link to="#" className="hidden md:block font-medium text-gray-600">
+            Home
+          </Link>
+          <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
+          <h1 className="hidden md:block font-medium">Ver registros</h1>
+          <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
+
+          {/* Nombre del proyecto (visible en todas las pantallas) */}
+          <h1 className="font-medium text-amber-600 px-2 py-1 rounded-lg">
+            {selectedProjectName}
+          </h1>
+        </div>
+
+        {/* Botón de volver */}
+        <div className="flex items-center">
+          <button className="text-amber-600 text-3xl" onClick={handleGoBack}>
+            <IoArrowBackCircle />
+          </button>
+        </div>
+      </div>
+
+      <div className="w-full border-b-2"></div>
+
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs mt-6 mb-2 items-end px-6">
+        {/* Fecha Inicial y Fecha Final */}
+        <div className="flex flex-col">
+          <label className="font-semibold text-gray-700 mb-2">Fecha Inicial</label>
+          <input
+            type="date"
+            value={valoresFiltro.fechaInicio || ""}
+            onChange={(e) => {
+              const fechaInicioSeleccionada = e.target.value;
+              console.log("Fecha Inicial seleccionada:", fechaInicioSeleccionada);
+              setValoresFiltro((prev) => ({ ...prev, fechaInicio: fechaInicioSeleccionada }));
+            }}
+            className="border border-gray-300 rounded-md p-2"
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="font-semibold text-gray-700 mb-2">Fecha Final</label>
+          <input
+            type="date"
+            value={valoresFiltro.fechaFin || ""}
+            onChange={(e) => {
+              const fechaFinSeleccionada = e.target.value;
+              console.log("Fecha Final seleccionada:", fechaFinSeleccionada);
+              setValoresFiltro((prev) => ({ ...prev, fechaFin: fechaFinSeleccionada }));
+            }}
+            className="border border-gray-300 rounded-md p-2"
+          />
+        </div>
+
+        {/* Filtros dinámicos sin "fechaHora" */}
+        {ordenColumnas
+          .filter((filtro) => filtro !== "observaciones" && filtro !== "fechaHora" && filtro !== "actividad") // Excluir "observaciones" si no es necesario
+          .map((filtro) => (
+            <div key={filtro} className="flex flex-col">
+              <label className="font-semibold text-gray-700 mb-2">
+                {columnasMap[filtro]}
+              </label>
+              <select
+                name={filtro}
+                value={valoresFiltro[filtro] || ""}
+                onChange={(e) =>
+                  setValoresFiltro((prev) => ({ ...prev, [filtro]: e.target.value }))
+                }
+                className="border border-gray-300 rounded-md p-2"
+              >
+                <option value="">Todos</option>
+                {valoresUnicos[filtro]?.map((valor) => (
+                  <option key={valor} value={valor}>
+                    {valor}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+      </div>
+
+
+      <div className="flex justify-start px-6 py-4 mb-2 gap-5">
+        {/* Botón para borrar filtros */}
+        <div className="flex justify-end col-span-3">
+          <button
+            onClick={resetFilters}
+            className="px-4 py-2 bg-gray-500 text-white font-semibold rounded-md hover:bg-gray-600 transition duration-200"
+          >
+            Borrar Filtros
+          </button>
+        </div>
+
+        <InformeRegistros registros={registrosFiltrados} columnas={columnas} formatFechaActual={formatFechaActual()} fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)} fechaFin={formatFechaSolo(valoresFiltro.fechaFin)} fileName={fileName} />
+      </div>
+
+
+      <div className="overflow-x-auto px-6">
+        {/* Vista en modo tabla para dispositivos medianos en adelante */}
+        <table className="hidden sm:table min-w-full bg-white shadow rounded-lg overflow-hidden">
+          <thead className="border-gray-200 bg-sky-600 text-white">
+            <tr>
+              {ordenColumnas
+                .filter((columna) => columna !== "nombre") // Ocultar "nombre"
+                .map((columna) => (
+                  <th
+                    key={columna}
+                    className="text-left px-6 py-3 text-sm font-semibold tracking-wide"
+                  >
+                    {columnasMap[columna]}
+                  </th>
+                ))}
+              <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">
+                Acción
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {registrosFiltrados
+              .sort((a, b) => {
+                // // Primero ordenamos por sectorNombre (Grupo activos)
+                // if (a.sectorNombre < b.sectorNombre) return -1;
+                // if (a.sectorNombre > b.sectorNombre) return 1;
+
+                // Si el sectorNombre es igual, ordenamos por fechaHora
+                const fechaA = new Date(a.fechaHora);
+                const fechaB = new Date(b.fechaHora);
+                return fechaB - fechaA; // Orden ascendente por fecha
+              })
+              .map((registro) => (
+                <tr
+                  key={registro.id}
+                  className="hover:bg-gray-50 transition duration-150 ease-in-out"
+                >
+                  {ordenColumnas
+                    .filter((columna) => columna !== "nombre") // Ocultar "nombre"
+                    .map((columna) => (
+                      <td
+                        key={columna}
+                        className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap"
+                      >
+                        {columna === "fechaHora"
+                          ? formatFecha(registro[columna]) // Aplicar formato a la fecha
+                          : columna === "observaciones" ? (
+                            <button
+                              onClick={() => openModal(registro[columna])}
+                              className="text-blue-500 hover:underline"
+                            >
+                              Ver observaciones
+                            </button>
+                          ) : columna === "actividad" ? ( // Renderizar el campo `actividad`
+                            registro.actividad || "—"
+                          ) : (
+                            registro[columna] || "—"
+                          )}
+                      </td>
+                    ))}
+
+                  <td className="px-6 py-4 text-sm whitespace-nowrap">
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => {
+                          setRegistroEditando(registro);
+                          setModalEdicionAbierto(true);
+                          setPrevisualizaciones(registro.imagenes || []);
+                          setImagenesEditadas([]);
+                        }}
+                        className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-sky-700 transition duration-150 flex gap-2 items-center"
+                      >
+                        Editar
+                      </button>
+                      {roleUsuario === 'admin' && (
+                        <button
+                        onClick={() => {
+                          setShowConfirmModal(true);
+                          setRegistroAEliminar(registro);
+                        }}
+                        className="px-4 py-2 bg-red-700 text-white font-medium rounded-md shadow-sm hover:bg-red-700 transition duration-150"
+                      >
+                        Eliminar
+                      </button>
+                      )
+                    }
+                      
+                      <button
+                        onClick={() => handleAbrirModalModificaciones(registro)}
+                        className="px-4 py-2 bg-yellow-600 text-white font-medium rounded-md shadow-sm hover:bg-yellow-700 transition duration-150"
+                      >
+                        Historial
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+          </tbody>
+        </table>
+
+        {/* Vista en modo cards para dispositivos pequeños */}
+        <div className="sm:hidden grid gap-4">
+          {registrosFiltrados
+            .sort((a, b) => {
+              // Primero ordenamos por sectorNombre (Grupo activos)
+              if (a.sectorNombre < b.sectorNombre) return -1;
+              if (a.sectorNombre > b.sectorNombre) return 1;
+
+              // Si el sectorNombre es igual, ordenamos por fechaHora
+              const fechaA = new Date(a.fechaHora);
+              const fechaB = new Date(b.fechaHora);
+              return fechaA - fechaB; // Orden ascendente por fecha
+            })
+            .map((registro) => (
+              <div
+                key={registro.id}
+                className="bg-white shadow rounded-lg p-4 border border-gray-200"
+              >
+                {ordenColumnas.map((columna) => (
+                  <div key={columna} className="mb-2">
+                    <span className="font-semibold text-gray-700 block">
+                      {columnasMap[columna]}:
+                    </span>
+                    <span className="text-gray-600">
+                      {columna === "fechaHora" ? (
+                        formatFecha(registro[columna]) // Aplicar formato a la fecha
+                      ) : columna === "observaciones" ? (
+                        <button
+                          onClick={() => openModal(registro[columna])}
+                          className="text-blue-500 hover:underline"
+                        >
+                          Ver observaciones
+                        </button>
+                      ) : (
+                        registro[columna] || "—"
+                      )}
+                    </span>
+                  </div>
+                ))}
+                <div className="flex gap-4 mt-4">
+                  <button
+                    onClick={() => {
+                      setRegistroEditando(registro);
+                      setModalEdicionAbierto(true);
+                      setPrevisualizaciones(registro.imagenes || []);
+                      setImagenesEditadas([]);
+                    }}
+                    className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-sky-700 transition duration-150 flex gap-2 items-center"
+                  >
+                    Editar
+                  </button>
+
+                 
+                  {roleUsuario === 'admin' && (
+                        <button
+                        onClick={() => {
+                          setShowConfirmModal(true);
+                          setRegistroAEliminar(registro);
+                        }}
+                        className="px-4 py-2 bg-red-700 text-white font-medium rounded-md shadow-sm hover:bg-red-700 transition duration-150"
+                      >
+                        Eliminar
+                      </button>
+                      )
+                    }
+                  
+                  
+                </div>
+              </div>
+            ))}
+
+        </div>
+      </div>;
+
+
+
+      {/* Modal para observaciones */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Observaciones</h2>
+            <p className="text-gray-600">{selectedObservation}</p>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-md shadow-lg">
+            <h3 className="text-lg font-semibold mb-4">
+              ¿Estás seguro de que deseas eliminar este registro?
+            </h3>
+            <div className="flex justify-end gap-4">
+
+              <button
+                onClick={handleEliminarRegistro}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
+              >
+                Eliminar
+              </button>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500 transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {modalEdicionAbierto && registroEditando && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 px-4">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+
+            {/* Header con icono de cierre */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Editar Registro</h2>
+              <button onClick={() => setModalEdicionAbierto(false)} className="text-gray-500 hover:text-gray-700">
+                <AiOutlineClose size={24} />
+              </button>
+            </div>
+
+            {/* Campos del registro */}
+            {Object.keys(registroEditando)
+              .filter((campo) =>
+                campo !== "imagenes" &&
+                campo !== "id" &&
+                campo !== "idBim" &&
+                campo !== "nombreProyecto" &&
+                campo !== "elementoId" &&
+                campo !== "idSector" &&
+                campo !== "idSubSector" &&
+                campo !== "parteId" &&
+                campo !== "ppiId" &&
+                campo !== "loteId" &&
+                campo !== "totalSubactividades" &&
+                campo !== "pkFinal" &&
+                campo !== "pkInicial" &&
+                campo !== "idProyecto" &&
+                campo !== "estado" &&
+                campo !== "ppiNombre"
+              )
+              .map((campo, index) => (
+                <div key={index} className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center">
+                    {/* Mapear los nombres personalizados */}
+                    {{
+                      fechaHora: "Fecha y hora",
+                      sectorNombre: "Grupo activos",
+                      subSectorNombre: "Activo",
+                      parteNombre: "Inventario vial",
+                      elementoNombre: "Componente",
+                      nombre: "Actividades mantenimiento, conservación, rehabilitación",
+                    }[campo] || campo}
+                    <AiFillLock className="ml-2 text-gray-500" size={16} />
+                  </label>
+                  <input
+                    type="text"
+                    value={registroEditando[campo] || ""}
+                    readOnly // Todos los campos bloqueados
+                    className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
+                  />
+                </div>
+              ))}
+
+            {/* Observaciones - Editable y al final */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Observaciones</label>
+              <textarea
+                value={registroEditando.observaciones || ""}
+                onChange={(e) =>
+                  setRegistroEditando((prev) => ({
+                    ...prev,
+                    observaciones: e.target.value,
+                  }))
+                }
+                className="w-full px-4 py-2 border rounded-md border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                rows={3}
+              />
+            </div>
+
+            {/* Sección de imágenes */}
+            <h3 className="text-md font-semibold mb-3 text-gray-700">Imágenes</h3>
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="flex flex-col items-start mb-4">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
+                  Imagen {index + 1}
+                </label>
+
+                {/* Mostrar imagen actual o previsualización */}
+                {previsualizaciones[index] || registroEditando?.imagenes?.[index] ? (
+                  <img
+                    src={previsualizaciones[index] || registroEditando?.imagenes?.[index]}
+                    alt={`Imagen ${index + 1}`}
+                    className="w-28 h-28 object-cover mb-2 border border-gray-300 rounded-lg shadow-sm"
+                  />
+                ) : (
+                  <div className="w-28 h-28 bg-gray-100 border border-gray-300 rounded-lg flex items-center justify-center text-gray-400 mb-2">
+                    <FiCamera size={24} />
+                  </div>
+                )}
+
+                {/* Input de carga de imagen */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleSeleccionarImagen(e, index)}
+                  className="block w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border file:border-gray-300 file:bg-gray-100 hover:file:bg-gray-200 cursor-pointer"
+                />
+              </div>
+            ))}
+
+            {/* Motivo del cambio */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Motivo del cambio</label>
+              <textarea
+                value={motivoCambio}
+                onChange={(e) => setMotivoCambio(e.target.value)}
+                placeholder="Describe el motivo de este cambio"
+                className="w-full px-4 py-2 border rounded-md border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                rows={3}
+                required
+              />
+            </div>
+
+            {/* Botones de acción */}
+            <div className="flex justify-end gap-4 mt-6">
+              {/* Botón de Cancelar */}
+              <button
+                className="px-5 py-2 text-gray-700 font-semibold bg-gray-200 rounded-md hover:bg-gray-300 transition flex items-center gap-2"
+                onClick={() => setModalEdicionAbierto(false)} // Lógica para cerrar el modal
+              >
+                <AiOutlineClose size={18} /> Cancelar
+              </button>
+
+              {/* Botón de Guardar Cambios */}
+              <button
+                className={`px-5 py-2 font-semibold rounded-md transition flex items-center gap-2 ${motivoCambio.trim()
+                  ? "bg-sky-600 text-white hover:bg-sky-700"
+                  : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  }`}
+                onClick={handleGuardarEdicion}
+                disabled={!motivoCambio.trim()} // Deshabilita si no hay motivo
+              >
+                <AiOutlineCheck size={18} /> Guardar Cambios
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+      {modalModificacionesAbierto && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
+            {/* Header del modal */}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-semibold text-gray-800">
+                Historial de Modificaciones
+              </h2>
+              <button
+                onClick={() => setModalModificacionesAbierto(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <AiOutlineClose size={24} />
+              </button>
+            </div>
+
+            {/* Tabla Comparativa */}
+            <div className="overflow-x-auto overflow-y-auto max-h-[75vh] border rounded-lg">
+              <table className="min-w-full bg-white shadow-lg">
+                <thead className="bg-sky-600 text-white">
+                  <tr>
+                    <th className="px-4 py-3 text-sm font-semibold text-center">Fecha</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-center">Responsable</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-center">Motivo</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-center">Estado Original</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-center">Estado Editado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historialModificaciones.map((modificacion, index) => (
+                    <tr
+                      key={modificacion.id || index}
+                      className={`border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
+                    >
+                      {/* Fecha */}
+                      <td className="px-4 py-3 text-sm text-gray-700 text-center">
+                        {new Date(modificacion.fechaHora).toLocaleString()}
+                      </td>
+
+                      {/* Responsable */}
+                      <td className="px-4 py-3 text-sm text-gray-700 text-center">
+                        {modificacion.responsable}
+                      </td>
+
+                      {/* Motivo */}
+                      <td className="px-4 py-3 text-sm text-gray-700 text-center">
+                        {modificacion.motivoCambio}
+                      </td>
+
+                      {/* Estado Original */}
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        <ul className="space-y-1">
+                          {Object.entries(modificacion.registroOriginal || {})
+                            .filter(([key]) => key !== "totalSubactividades" && key !== "ppiId" && key !== "loteId" && key !== "pkFinal" && key !== "pkInicial" && key !== "idBim" && key !== "idSubSector" && key !== "idSector" && key !== "parteId" && key !== "idProyecto" && key !== "id" && key !== "ppiNombre" && key !== "nombreProyecto" && key !== "elementoId")
+                            .map(([key, value]) => (
+                              <li key={key}>
+                                <strong>
+                                  {{
+                                    fechaHora: "Fecha y hora",
+                                    sectorNombre: "Grupo activos",
+                                    subSectorNombre: "Activo",
+                                    parteNombre: "Inventario vial",
+                                    elementoNombre: "Componente",
+                                    nombre: "Actividades mantenimiento, conservación, rehabilitación",
+                                    observaciones: "Observaciones",
+                                  }[key] || key}
+                                  :
+                                </strong>{" "}
+                                {Array.isArray(value) && value.every((v) => typeof v === "string") ? (
+                                  value.map((url, i) => (
+                                    <a
+                                      key={i}
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-500 underline"
+                                    >
+                                      Link {i + 1}
+                                    </a>
+                                  ))
+                                ) : typeof value === "string" ? (
+                                  value
+                                ) : (
+                                  JSON.stringify(value)
+                                )}
+                              </li>
+                            ))}
+                        </ul>
+                      </td>
+
+                      {/* Estado Editado */}
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        <ul className="space-y-1">
+                          {Object.entries(modificacion.registroEditado || {})
+                            .filter(([key]) => key !== "totalSubactividades" && key !== "ppiId" && key !== "loteId" && key !== "pkFinal" && key !== "pkInicial" && key !== "idBim" && key !== "idSubSector" && key !== "idSector" && key !== "parteId" && key !== "idProyecto" && key !== "id" && key !== "ppiNombre" && key !== "nombreProyecto" && key !== "elementoId")
+                            .map(([key, value]) => (
+                              <li key={key}>
+                                <strong>
+                                  {{
+                                    fechaHora: "Fecha y hora",
+                                    sectorNombre: "Grupo activos",
+                                    subSectorNombre: "Activo",
+                                    parteNombre: "Inventario vial",
+                                    elementoNombre: "Componente",
+                                    nombre: "Actividades mantenimiento, conservación, rehabilitación",
+                                    observaciones: "Observaciones",
+                                  }[key] || key}
+                                  :
+                                </strong>{" "}
+                                {Array.isArray(value) && value.every((v) => typeof v === "string") ? (
+                                  value.map((url, i) => (
+                                    <a
+                                      key={i}
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-500 underline"
+                                    >
+                                      Link {i + 1}
+                                    </a>
+                                  ))
+                                ) : typeof value === "string" ? (
+                                  value
+                                ) : (
+                                  JSON.stringify(value)
+                                )}
+                              </li>
+                            ))}
+                        </ul>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+
+
+
+
+
+    </div>
+  );
+};
+
+export default TablaRegistros;

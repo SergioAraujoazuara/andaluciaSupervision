@@ -1,95 +1,24 @@
-/**
- * AdminPanel Component
- *
- * Component Flow:
- * 1. **User Data Fetching**:
- *    - On component mount, fetch the list of users from Firestore.
- *    - Use `onSnapshot` to subscribe to real-time updates for the user collection.
- *
- * 2. **Image Upload and Compression**:
- *    - Users can upload a signature image.
- *    - The image is compressed using `browser-image-compression` and converted to PNG format.
- *    - The final image is stored as a base64 data URL in the component state.
- *
- * 3. **Role and Signature Update**:
- *    - Users select a target user and assign a new role (e.g., admin, user, or guest).
- *    - Optionally, a compressed signature image is uploaded and included in the update.
- *    - The `handleRoleUpdate` function updates Firestore with the new role and image.
- *
- * 4. **Feedback to User**:
- *    - After a successful update, a confirmation modal is displayed to notify the user.
- *
- * 5. **Navigation**:
- *    - Users can navigate back to the main admin page using a "back" button.
- *
- * This component uses Firebase Firestore for database operations and `imageCompression` for image processing.
- */
-
 import React, { useEffect, useState } from 'react';
 import { db } from '../../../firebase_config';
-import { collection, getDocs, query, updateDoc, doc, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, onSnapshot, getDoc } from 'firebase/firestore';
 import { FaArrowAltCircleRight } from "react-icons/fa";
 import { GoHomeFill } from "react-icons/go";
 import { IoArrowBackCircle } from "react-icons/io5";
 import { Link, useNavigate } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
 import imageCompression from 'browser-image-compression';
-
+import useProjects from '../../Hooks/useProjects'; // Importamos el hook useProjects
 
 function AdminPanel() {
-    // State for storing user list
     const [users, setUsers] = useState([]);
-    // State to hold selected user and their new role
     const [selectedUserId, setSelectedUserId] = useState('');
     const [newRole, setNewRole] = useState('');
-    // State to control success modal display
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    // State for managing compressed signature image
     const [signatureImage, setSignatureImage] = useState(null);
-    /**
-         * Handles image upload:
-         * - Compresses the image using browser-image-compression.
-         * - Converts it to PNG format and stores it as a base64 data URL in state.
-         */
-    const handleImagenChange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            try {
-                const options = {
-                    maxSizeMB: 0.2,
-                    maxWidthOrHeight: 500,
-                    useWebWorker: true,
-                };
-                const compressedFile = await imageCompression(file, options);
-                console.log(`Tamaño del archivo comprimido: ${compressedFile.size} bytes`);
+    const [selectedProjects, setSelectedProjects] = useState([]);
 
-                const reader = new FileReader();
-                reader.onload = async () => {
-                    const imgElement = document.createElement("img");
-                    imgElement.src = reader.result;
-                    imgElement.onload = () => {
-                        const canvas = document.createElement("canvas");
-                        canvas.width = imgElement.width;
-                        canvas.height = imgElement.height;
-                        const ctx = canvas.getContext("2d");
-                        ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
-                        const pngDataUrl = canvas.toDataURL("image/png");
-                        setSignatureImage(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
-                    };
-                };
-                reader.readAsDataURL(compressedFile);
-            } catch (error) {
-                console.error('Error durante la compresión de la segunda imagen:', error);
-            }
-        }
-    };
+    const { projects, loading: loadingProjects } = useProjects();
 
-
-    /**
-     * useEffect Hook:
-     * - Fetches the list of users from Firestore on component mount.
-     * - Subscribes to real-time changes in the 'usuarios' collection using `onSnapshot`.
-     */
     useEffect(() => {
         const fetchUsers = async () => {
             const querySnapshot = await getDocs(collection(db, 'usuarios'));
@@ -113,10 +42,39 @@ function AdminPanel() {
 
         return () => unsubscribe();
     }, []);
-    /**
-         * Updates the selected user's role and optionally uploads a new signature image.
-         * Updates the Firestore document with the new data.
-         */
+
+    // Handle image compression (already implemented)
+    const handleImagenChange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            try {
+                const options = {
+                    maxSizeMB: 0.2,
+                    maxWidthOrHeight: 500,
+                    useWebWorker: true,
+                };
+                const compressedFile = await imageCompression(file, options);
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const imgElement = document.createElement("img");
+                    imgElement.src = reader.result;
+                    imgElement.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        canvas.width = imgElement.width;
+                        canvas.height = imgElement.height;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
+                        const pngDataUrl = canvas.toDataURL("image/png");
+                        setSignatureImage(pngDataUrl);
+                    };
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (error) {
+                console.error('Error during image compression:', error);
+            }
+        }
+    };
+
     const handleRoleUpdate = async () => {
         if (!selectedUserId) {
             alert('Seleccione un usuario para actualizar.');
@@ -124,56 +82,112 @@ function AdminPanel() {
         }
 
         const userDocRef = doc(db, 'usuarios', selectedUserId);
+
+        // Obtener los proyectos actuales del usuario, si los tiene
+        const userSnapshot = await getDoc(userDocRef);
+        const currentProjects = userSnapshot.data().proyectos || [];
+
+        // Filtramos los proyectos seleccionados para evitar duplicados
+        const uniqueProjects = selectedProjects.filter(newProject =>
+            !currentProjects.some(existingProject => existingProject.id === newProject.id)
+        );
+
+        // Verificamos si hay un nuevo rol seleccionado, si no lo hay, mantendremos el rol actual
+        const updatedRole = newRole || userSnapshot.data().role;  // Si no hay rol seleccionado, mantenemos el actual
+
+        // Actualizar proyectos asignados
+        const updatedProjects = [
+            ...currentProjects,
+            ...uniqueProjects // Solo añadimos los proyectos que no estaban previamente asignados
+        ];
+
         const updates = {
-            role: newRole,
+            role: updatedRole,
+            proyectos: updatedProjects,  // Actualizamos el array de proyectos asignados
         };
 
-        // Include signature image if uploaded
+        // Incluir firma si fue subida
         if (signatureImage) updates.signature = signatureImage;
 
+        // Actualizar la base de datos con los nuevos datos
         await updateDoc(userDocRef, updates);
-        setNewRole(''); // Reset role selection
-        setSignatureImage(''); // Reset image state
-        setShowSuccessModal(true);
+
+        // Limpiar los estados
+        setNewRole(''); // Resetear la selección de rol
+        setSignatureImage(''); // Resetear la firma
+        setSelectedProjects([]); // Limpiar los proyectos seleccionados
+
+        setShowSuccessModal(true); // Mostrar el modal de éxito
     };
 
+    const handleProjectChange = (e) => {
+        const selectedOptions = Array.from(e.target.selectedOptions, option => {
+            const project = projects.find(p => p.id === option.value);
+            return { id: project.id, name: project.obra }; // Guardamos el id y el nombre del proyecto
+        });
+        setSelectedProjects(selectedOptions);
+    };
 
-    // Function to close the success modal
     const handleCloseSuccessModal = () => {
         setShowSuccessModal(false);
     };
-    // Navigation function to return to Admin Dashboard
+
     const navigate = useNavigate();
     const handleGoBack = () => {
-        navigate('/admin'); // Esto navega hacia atrás en la historia
+        navigate('/admin');
     };
 
+    const handleProjectRemoval = async (projectId, userId) => {
+        // Primero, obtenemos la referencia al documento del usuario usando el ID
+        const userDocRef = doc(db, 'usuarios', userId);
+    
+        // Obtenemos los proyectos actuales del usuario
+        const userSnapshot = await getDoc(userDocRef);
+        const currentProjects = userSnapshot.data().proyectos || [];
+    
+        // Filtramos el proyecto que se debe eliminar
+        const updatedProjects = currentProjects.filter(proj => proj.id !== projectId);
+    
+        // Actualizamos el documento del usuario con el nuevo array de proyectos
+        await updateDoc(userDocRef, {
+            proyectos: updatedProjects,  // Asignamos el nuevo array sin el proyecto eliminado
+        });
+    
+        // Actualizamos el estado local para reflejar los cambios en la interfaz de usuario
+        setUsers(users.map(user => {
+            if (user.id === userId) {
+                return {
+                    ...user,
+                    proyectos: updatedProjects  // Actualizamos el array de proyectos localmente
+                };
+            }
+            return user;
+        }));
+    
+        // Opcionalmente, si quieres eliminar el proyecto también de los proyectos seleccionados
+        setSelectedProjects(selectedProjects.filter(proj => proj.id !== projectId));
+    };
+    
     return (
         <div className="container mx-auto min-h-screen text-gray-500 xl:px-14 py-2">
             {/* Navigation Header */}
-            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3  text-base'>
-
+            <div className='flex gap-2 items-center justify-between bg-white px-5 py-3 text-base'>
                 <div className='flex gap-2 items-center'>
                     <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-
-
                     <Link to={'/admin'}>
                         <h1 className='font-normal text-gray-500'>Administración</h1>
                     </Link>
-
                     <FaArrowRight style={{ width: 15, height: 15, fill: '#d97706' }} />
                     <Link to={'#'}>
-                        <h1 className='font-medium text-amber-600'>Roles usuario </h1>
+                        <h1 className='font-medium text-amber-600'>Roles usuario</h1>
                     </Link>
                 </div>
 
-
                 <div className='flex items-center'>
                     <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
-
                 </div>
-
             </div>
+
             {/* Role Update Section */}
             <div className='w-full border-b-2 border-gray-200'></div>
             <div className="bg-white p-4 mt-2 text-sm">
@@ -196,18 +210,30 @@ function AdminPanel() {
                                                 <p>Sin firma</p>
                                             )}
                                         </div>
+                                        {/* Mostrar los proyectos asignados y permitir eliminarlos */}
+                                        <div className="mt-2">
+                                            <p><strong>Proyectos asignados:</strong></p>
+                                            {user.proyectos?.map((proj, i) => (
+                                                <div key={i} className="flex justify-between items-center">
+                                                    <p>{proj.name}</p>
+                                                    <button
+                                                        onClick={() => handleProjectRemoval(proj.id, user.id)} // Eliminamos el proyecto del usuario
+                                                        className="text-red-600 ms-8">
+                                                        Eliminar
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 ))}
+
                             </div>
                         </div>
                     </div>
 
-
-
-                    <div className='xl:col-span-2 col-span-4 w full'>
+                    <div className='xl:col-span-2 col-span-4'>
                         <div className="rounded-md p-4">
                             <h2 className="bg-sky-500 text-white text-lg font-semibold px-4 py-1 rounded-t-lg">Actualizar Roles</h2>
-                            <h2 className="text-lg font-semibold mb-4"></h2>
                             <select
                                 value={selectedUserId}
                                 onChange={(e) => setSelectedUserId(e.target.value)}
@@ -218,6 +244,7 @@ function AdminPanel() {
                                     <option key={user.id} value={user.id}>{user.email}</option>
                                 ))}
                             </select>
+
                             <select
                                 value={newRole}
                                 onChange={(e) => setNewRole(e.target.value)}
@@ -227,6 +254,19 @@ function AdminPanel() {
                                 <option value="invitado">Invitado</option>
                                 <option value="usuario">Usuario</option>
                                 <option value="admin">Admin</option>
+                            </select>
+
+                            {/* Projects Dropdown */}
+                            <select
+                                multiple
+                                value={selectedProjects.map(proj => proj.id)} // Se seleccionan los ids
+                                onChange={handleProjectChange}
+                                className="w-full py-2 px-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500 text-gray-700"
+                            >
+                                <option value="">Seleccione proyectos</option>
+                                {projects.map((proj) => (
+                                    <option key={proj.id} value={proj.id}>{proj.obra}</option>
+                                ))}
                             </select>
 
                             <input
@@ -248,7 +288,7 @@ function AdminPanel() {
                 </div>
             </div>
 
-            {/* Modal de éxito */}
+            {/* Success Modal */}
             {showSuccessModal && (
                 <div className="fixed z-10 inset-0 overflow-y-auto">
                     <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">

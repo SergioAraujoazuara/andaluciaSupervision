@@ -283,7 +283,7 @@ function PlantillaPpi() {
                             <div className="py-3 px-2 text-left whitespace-normal">Criterio de aceptación</div>
                             <div className="py-3 px-2 text-left whitespace-normal">Documentación de referencia</div>
                             <div className="py-3 px-2 text-left">Tipo de inspección</div>
-                            <div className="py-3 px-2 text-left">Punto</div>
+                            <div className="py-3 px-2 text-left">Área</div>
                             <div className="py-3 px-2 text-left">Responsable</div>
                         </div>
 
@@ -354,7 +354,7 @@ function PlantillaPpi() {
                                                 />
                                                 <input
                                                     name="punto"
-                                                    placeholder="Punto"
+                                                    placeholder="Área"
                                                     value={sub.punto}
                                                     onChange={e => handleSubactividadChange(i, j, e)}
                                                     required

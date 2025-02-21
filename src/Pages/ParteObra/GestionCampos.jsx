@@ -8,6 +8,9 @@ import {
   deleteValor,
   updateCampo,
   updateValor,
+  addSubvalor,
+  deleteSubvalor,
+  updateSubvalor
 } from "./Helpers/firebaseHelpers";
 import { IoIosAddCircle } from "react-icons/io";
 
@@ -237,8 +240,85 @@ const GestionCampos = () => {
     }
   };
 
+
+
+
+  const [subvalorCampo, setSubvalorCampo] = useState("");
+  const [valorSeleccionado, setValorSeleccionado] = useState(null);
+
+  // Función para manejar la adición de un subvalor
+  const handleAddSubvalor = async () => {
+    if (!subvalorCampo.trim()) {
+      mostrarModal("El subvalor no puede estar vacío.", "error");
+      return;
+    }
+
+    if (!valorSeleccionado) {
+      mostrarModal("Debes seleccionar un valor primero.", "error");
+      return;
+    }
+
+    const { campoId, valorId } = valorSeleccionado;
+
+    try {
+      const nuevosCampos = await addSubvalor(docId, campos, campoId, valorId, capitalizeWords(subvalorCampo));
+      setCampos(nuevosCampos);
+      setSubvalorCampo(""); // Limpiar el input del subvalor
+     
+    } catch (error) {
+      mostrarModal(error.message, "error");
+    }
+  };
+
+
+
+  const handleDeleteSubvalor = async (campoId, valorId, subvalorId) => {
+    console.log(campoId, valorId, subvalorId)
+    mostrarModal(
+      "¿Estás seguro de que deseas eliminar este subvalor?",
+      "warning",
+      async () => {
+        try {
+          const nuevosCampos = await deleteSubvalor(docId, campos, campoId, valorId, subvalorId);
+          setCampos(nuevosCampos); // Actualizar el estado
+          mostrarModal("Subvalor eliminado correctamente.", "success");
+        } catch (error) {
+          mostrarModal(error.message, "error");
+        }
+      }
+    );
+  };
+
+
+  const [editandoSubvalor, setEditandoSubvalor] = useState(null); // Contiene { campoId, valorId, subvalorId }
+  const [subvalorEditado, setSubvalorEditado] = useState(""); // El valor editado del subvalor
+  const handleUpdateSubvalor = async (campoId, valorId, subvalorId) => {
+    if (!subvalorEditado.trim()) {
+      mostrarModal("El subvalor no puede estar vacío.", "error");
+      return;
+    }
+
+    try {
+      const nuevosCampos = await updateSubvalor(
+        docId,
+        campos,
+        campoId,
+        valorId,
+        subvalorId,
+        capitalizeWords(subvalorEditado)
+      );
+      setCampos(nuevosCampos); // Actualiza los campos en el estado
+      setEditandoSubvalor(null); // Limpia el estado de edición
+      setSubvalorEditado(""); // Resetea el input
+      mostrarModal("Subvalor actualizado correctamente.", "success");
+    } catch (error) {
+      mostrarModal(error.message, "error");
+    }
+  };
+
+
   return (
-    <div className="p-8 max-w-6xl mx-auto text-gray-500">
+    <div className="p-8 max-w-6xl mx-auto text-gray-500 min-h-screen" >
       {/* Modal para Notificaciones */}
       {modalVisible && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 px-4">
@@ -348,85 +428,222 @@ const GestionCampos = () => {
       {/* Tabla de Campos y Valores */}
       <div className="mt-8 grid grid-cols-1 xl:grid-cols-3 gap-8">
         {campos.map((campo) => (
-          <div key={campo.id} className="bg-gray-50 p-4 rounded-md shadow">
-            {editandoCampo === campo.id ? (
-              <div className="flex gap-2">
+          <div key={campo.id} className=" p-4 rounded-md shadow max-h-64 overflow-y-auto">
+            <h4 className="text-lg font-semibold text-gray-600 border-b-2 w-full flex justify-between items-center bg-gray-200 p-2 rounded-xl">
+              {editandoCampo === campo.id ? (
                 <input
                   type="text"
                   value={nombreEditado}
                   onChange={(e) => setNombreEditado(e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                  className="px-2 py-1 border rounded"
                 />
-                <button
-                  onClick={() => handleUpdateCampo(campo.id)}
-                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-                >
-                  <FaCheck />
-                </button>
-              </div>
-            ) : (
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="text-lg font-semibold text-sky-600 border-b-2 w-full pb-4">
-                  {capitalizeFirstLetter(campo.nombre)}{" "}
-                  <span className="text-sm text-gray-500">({campo.tipo})</span>
-                </h4>
-                <div className="flex gap-2">
-                  <FaEdit
-                    className="text-gray-600 cursor-pointer hover:text-gray-800"
-                    onClick={() => {
-                      setEditandoCampo(campo.id);
-                      setNombreEditado(campo.nombre);
-                    }}
-                  />
-                  <FaTrash
-                    className="text-red-400 cursor-pointer hover:text-red-700"
-                    onClick={() => handleDeleteCampo(campo.id)}
-                  />
-                </div>
-              </div>
-            )}
-
-            {campo.tipo === "desplegable" && (
-              <ul className="list-disc pl-5">
-                {campo.valores.map((valor) =>
-                  editandoValor.campoId === campo.id && editandoValor.valorId === valor.id ? (
-                    <li key={valor.id} className="flex gap-2 items-center">
-                      <input
-                        type="text"
-                        value={valorEditado}
-                        onChange={(e) => setValorEditado(e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded-md"
-                      />
-                      <button
-                        onClick={() => handleUpdateValor(campo.id, valor.id)}
-                        className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-                      >
-                        <FaCheck />
-                      </button>
-                    </li>
-                  ) : (
-                    <li key={valor.id} className="flex justify-between items-center">
-                      <span>{capitalizeFirstLetter(valor.valor)}</span>
-                      <div className="flex gap-2">
-                        <FaEdit
-                          className="text-gray-600 cursor-pointer hover:text-gray-800"
-                          onClick={() => {
-                            setEditandoValor({ campoId: campo.id, valorId: valor.id });
-                            setValorEditado(valor.valor);
-                          }}
-                        />
-                        <FaTrash
-                          className="text-red-400 cursor-pointer hover:text-red-700"
-                          onClick={() => handleDeleteValor(campo.id, valor.id)}
-                        />
-                      </div>
-                    </li>
-                  )
+              ) : (
+                capitalizeFirstLetter(campo.nombre)
+              )}
+              <div className="flex gap-2">
+                {editandoCampo === campo.id ? (
+                  <>
+                    <button
+                      onClick={() => handleUpdateCampo(campo.id)}
+                      className="text-green-500 hover:underline"
+                    >
+                      Guardar
+                    </button>
+                    <button
+                      onClick={() => setEditandoCampo(null)}
+                      className="text-gray-500 hover:underline"
+                    >
+                      Cancelar
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        setEditandoCampo(campo.id);
+                        setNombreEditado(campo.nombre);
+                      }}
+                      className="text-amber-600 hover:underline text-xs"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCampo(campo.id)}
+                      className="text-red-500 hover:underline text-xs"
+                    >
+                      Eliminar
+                    </button>
+                  </>
                 )}
+              </div>
+            </h4>
+
+            {/* Lógica para manejar los valores del campo */}
+            {campo.tipo === "desplegable" && (
+              <ul className="list-disc pl-5 mt-4 text-sm">
+                {campo.valores.map((valor) => (
+                  <li key={valor.id} className="mb-4">
+                    <div className="flex justify-between items-center">
+                      {editandoValor?.valorId === valor.id ? (
+                        <input
+                          type="text"
+                          value={valorEditado}
+                          onChange={(e) => setValorEditado(e.target.value)}
+                          className="px-2 py-1 border rounded"
+                        />
+                      ) : (
+                        capitalizeFirstLetter(valor.valor)
+                      )}
+                      <div className="flex gap-2">
+                        {editandoValor?.valorId === valor.id ? (
+                          <>
+                            <button
+                              onClick={() => handleUpdateValor(campo.id, valor.id)}
+                              className="text-green-500 hover:underline"
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              onClick={() => setEditandoValor({ campoId: null, valorId: null })}
+                              className="text-gray-500 hover:underline"
+                            >
+                              Cancelar
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() =>
+                                setEditandoValor({ campoId: campo.id, valorId: valor.id }) ||
+                                setValorEditado(valor.valor)
+                              }
+                              className="text-amber-600 hover:underline text-xs"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => handleDeleteValor(campo.id, valor.id)}
+                              className="text-red-500 hover:underline text-xs"
+                            >
+                              Eliminar
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Subvalores */}
+                    <ul className="list-disc pl-5 mt-2">
+                      {valor.subvalores.map((subvalor) => (
+                        <li key={subvalor.id} className="flex justify-between items-center">
+                          {editandoSubvalor?.subvalorId === subvalor.id ? (
+                            <input
+                              type="text"
+                              value={subvalorEditado}
+                              onChange={(e) => setSubvalorEditado(e.target.value)}
+                              className="px-2 py-1 border rounded"
+                            />
+                          ) : (
+                            capitalizeFirstLetter(subvalor.valor)
+                          )}
+                          <div className="flex gap-2">
+                            {editandoSubvalor?.subvalorId === subvalor.id ? (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    handleUpdateSubvalor(campo.id, valor.id, subvalor.id)
+                                  }
+                                  className="text-green-500 hover:underline"
+                                >
+                                  Guardar
+                                </button>
+                                <button
+                                  onClick={() => setEditandoSubvalor(null)}
+                                  className="text-gray-500 hover:underline"
+                                >
+                                  Cancelar
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    setEditandoSubvalor({
+                                      campoId: campo.id,
+                                      valorId: valor.id,
+                                      subvalorId: subvalor.id,
+                                    }) || setSubvalorEditado(subvalor.valor)
+                                  }
+                                  className="text-amber-600 hover:underline text-xs"
+                                >
+                                  Editar
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteSubvalor(campo.id, valor.id, subvalor.id)}
+                                  className="text-red-500 hover:underline text-xs"
+                                >
+                                  Eliminar
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                      {/* Botón para agregar subvalor */}
+                      <li>
+                        <button
+                          onClick={() =>
+                            setValorSeleccionado({ campoId: campo.id, valorId: valor.id })
+                          }
+                          className="text-teal-500 hover:underline text-xs"
+                        >
+                          Agregar subvalor
+                        </button>
+                      </li>
+                    </ul>
+                  </li>
+                ))}
               </ul>
             )}
           </div>
         ))}
+
+
+
+        {/* Modal para agregar subvalores */}
+        {valorSeleccionado && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-6 rounded-md shadow-md text-center max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex gap-2 items-center">
+                <IoIosAddCircle className="text-amber-600" /> Agregar Subvalor
+              </h3>
+              <div className="flex flex-col gap-4">
+                <input
+                  type="text"
+                  value={subvalorCampo}
+                  onChange={(e) => setSubvalorCampo(e.target.value)}
+                  placeholder="Nombre del nuevo subvalor"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500"
+                />
+                <div className="flex justify-center gap-4">
+                  <button
+                    onClick={handleAddSubvalor}
+                    className="px-6 py-2 bg-amber-600 text-white font-semibold rounded-md shadow hover:bg-amber-700 transition"
+                  >
+                    Agregar Subvalor
+                  </button>
+                  <button
+                    onClick={() => setValorSeleccionado(null)}
+                    className="px-6 py-2 bg-gray-500 text-white rounded-md shadow hover:bg-gray-600 transition"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { useAuth } from '../context/authContext';
 import { getDoc, doc } from 'firebase/firestore';
 import Imagen from '../assets/tpf_marca.png'; // Asegúrate de que la ruta de la imagen está correcta
 import { db } from '../../firebase_config';
+import { HiFolderOpen } from "react-icons/hi2";
 
 import { FaUserAlt, FaDoorOpen, FaBars, FaCaretDown } from "react-icons/fa";
 
@@ -18,6 +19,7 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false); // Parte de obra
   const [dropdownInspectionOpen, setDropdownInspectionOpen] = useState(false); // Inspección
   const [dropdownAuscultationOpen, setDropdownAuscultationOpen] = useState(false); // Auscultación
+
 
   // Referencias para detectar clics fuera de los menús
   const dropdownRef = useRef(null);
@@ -88,17 +90,20 @@ const Navbar = () => {
               <img className="h-auto" src={Imagen} width={150} alt="logo" />
             </div>
 
+
+
             {menuOpen && (
               <div className="xl:hidden bg-white shadow-md absolute top-24 left-0 w-full z-50">
                 <div className="flex flex-col space-y-4 p-4">
 
                   <NavLink to="/" linkName="Home" onClick={handleLinkClick} />
 
+                  
                   {(userRol === 'usuario' || userRol === 'admin') && (
                     <div>
                       <button
                         onClick={() => handleDropdownClick(setDropdownInspectionOpen, dropdownInspectionOpen)}
-                        className="flex justify-between items-center w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100"
+                        className="font-medium flex justify-between items-center w-full text-left px-6 py-2 text-gray-600 hover:bg-gray-100"
                       >
                         Inspección <FaCaretDown />
                       </button>
@@ -129,12 +134,12 @@ const Navbar = () => {
                       )}
                     </div>
                   )}
-
+ 
                   {(userRol === 'usuario' || userRol === 'admin') && (
                     <div>
                       <button
                         onClick={() => handleDropdownClick(setDropdownOpen, dropdownOpen)}
-                        className="flex justify-between items-center w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100"
+                        className="font-medium flex justify-between items-center w-full text-left px-6 py-2 text-gray-600 hover:bg-gray-100"
                       >
                         Parte de obra <FaCaretDown />
                       </button>
@@ -159,7 +164,7 @@ const Navbar = () => {
                     </div>
                   )}
 
-                  {(userRol === 'usuario' || userRol === 'admin') && (
+                  {/* {(userRol === 'usuario' || userRol === 'admin') && (
                     <div>
                       <button
                         onClick={() => handleDropdownClick(setDropdownAuscultationOpen, dropdownAuscultationOpen)}
@@ -193,16 +198,16 @@ const Navbar = () => {
                         </div>
                       )}
                     </div>
-                  )}
+                  )} */}
 
                   {/* Administración */}
-                  {(userRol === 'admin' || userRol === 'usuario') && (
+                  {(userRol === 'admin') && (
                     <NavLink to="/admin" linkName="Administración" onClick={handleLinkClick} />
                   )}
 
 
                   {user && (
-                    <div className='px-6 font-medium text-gray-500'>
+                    <div className='px-6 font-medium text-amber-600'>
                       <p className=''>Usuario: {userNombre}</p>
                       <button
                         onClick={toggleLogoutConfirmation}
@@ -224,6 +229,7 @@ const Navbar = () => {
                 <NavLink to="/" linkName="Home" onClick={handleLinkClick} />
 
                 {/* Inspección */}
+                
                 {(userRol === 'usuario' || userRol === 'admin') && (
                   <div className="relative" ref={inspectionRef}>
                     <button
@@ -297,7 +303,7 @@ const Navbar = () => {
                 )}
 
                 {/* Auscultación */}
-                {(userRol === 'usuario' || userRol === 'admin') && (
+                {/* {(userRol === 'usuario' || userRol === 'admin') && (
                   <div className="relative" ref={auscultationRef}>
                     <button
                       onClick={() => {
@@ -334,10 +340,10 @@ const Navbar = () => {
                       </div>
                     )}
                   </div>
-                )}
+                )} */}
 
                 {/* Administración */}
-                {(userRol === 'admin' || userRol === 'usuario') && (
+                {(userRol === 'admin') && (
                   <NavLink to="/admin" linkName="Administración" onClick={handleLinkClick} />
                 )}
               </div>
@@ -345,36 +351,41 @@ const Navbar = () => {
 
           </div>
 
-          {/* Botón de usuario */}
-          <div className="flex items-center">
-            {user ? (
-              <>
-                <div className="hidden xl:flex items-center font-medium text-gray-500 pr-5 gap-5 text-base">
-                  <div className="flex gap-2 items-center text-gray-500">
-                    <FaUserAlt className="hidden xl:block" />
-                    <p className="hidden xl:block">{userNombre || 'Usuario'}</p>
+          <div className='flex items-center gap-8'>
+            
+
+            {/* Botón de usuario */}
+            <div className="flex items-center">
+              {user ? (
+                <>
+                  <div className="hidden xl:flex items-center font-medium text-gray-500 pr-5 gap-5 text-base">
+                    <div className="flex gap-2 items-center text-gray-500">
+                      <FaUserAlt className="hidden xl:block" />
+                      <p className="hidden xl:block">{userNombre || 'Usuario'}</p>
+                    </div>
+                    <div className="relative bg-sky-600 text-white px-4 py-2 rounded-lg">
+                      <button className="flex items-center text-md" onClick={toggleLogoutConfirmation}>
+                        Salir
+                      </button>
+                    </div>
                   </div>
-                  <div className="relative bg-sky-600 text-white px-4 py-2 rounded-lg">
-                    <button className="flex items-center text-md" onClick={toggleLogoutConfirmation}>
-                      Salir
+                  <div className="xl:hidden">
+                    <button onClick={toggleMenu} className="text-gray-500 focus:outline-none">
+                      <FaBars className="text-2xl" />
                     </button>
                   </div>
-                </div>
-                <div className="xl:hidden">
-                  <button onClick={toggleMenu} className="text-gray-500 focus:outline-none">
-                    <FaBars className="text-2xl" />
-                  </button>
-                </div>
-              </>
-            ) : (
-              <button
-                onClick={() => navigate('/authTabs')}
-                className="bg-sky-600 text-white font-medium py-2 px-4 h-12 rounded-lg"
-              >
-                Iniciar sesión | Registrarse
-              </button>
-            )}
+                </>
+              ) : (
+                <button
+                  onClick={() => navigate('/authTabs')}
+                  className="bg-sky-600 text-white font-medium py-2 px-4 h-12 rounded-lg"
+                >
+                  Iniciar sesión | Registrarse
+                </button>
+              )}
+            </div>
           </div>
+
         </div>
 
         {/* Modal de confirmación de logout */}

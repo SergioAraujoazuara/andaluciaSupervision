@@ -1,131 +1,205 @@
-/**
- * Component: Projects
- * 
- * Description:
- * This component retrieves and displays a project from the Firestore database. 
- * Users can edit project details, including uploading a new logo and client logo.
- * 
- * Key Features:
- * 1. **Fetch Project**: Loads project details from Firestore when the component is mounted.
- * 2. **Edit Project**: Allows editing project fields (name, work site, section, contract) and uploading new logos.
- * 3. **Update Project**: Updates project details in Firestore and Storage.
- * 4. **Responsive UI**: Displays project details in a table and opens a modal for editing.
- * 5. **Navigate Back**: Users can navigate back to the previous page.
- * 
- * Component Flow:
- * 1. **Data Fetching**: 
- *    - `fetchProyecto` fetches the project from Firestore's "proyectos" collection.
- * 2. **Edit Modal**:
- *    - Clicking "Edit" opens a modal with pre-filled fields from the selected project.
- * 3. **Update Workflow**:
- *    - If a new logo or client logo is uploaded, it is stored in Firebase Storage.
- *    - Updates are saved to Firestore via `updateDoc`.
- * 4. **UI Interaction**:
- *    - Editing opens the modal, and saving updates the project.
- *    - Users can cancel editing to close the modal without changes.
- */
-
-
-
 import React, { useState, useEffect } from "react";
 import { db, storage } from "../../../firebase_config";
-import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, addDoc, deleteDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Link, useNavigate } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
 import { FaArrowRight } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
 
+// Modal Component to show success or error messages
+const Modal = ({ message, type, onClose }) => {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full relative">
+        <div className={`text-center font-bold text-lg mb-4 ${type === "success" ? "text-green-600" : "text-red-600"}`}>
+          {type === "success" ? "Éxito" : "Error"}
+        </div>
+        <p className="text-gray-700 text-center mb-6">{message}</p>
+        <div className="flex justify-center">
+          <button
+            onClick={onClose}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function Projects() {
-  const [proyecto, setProyecto] = useState(null); // Proyecto existente
-  const [isEditing, setIsEditing] = useState(false); // Para mostrar el modal de edición
+  // State for storing multiple projects
+  const [projects, setProjects] = useState([]); // Store all projects
+  const [isEditing, setIsEditing] = useState(false); // Flag to toggle edit mode
+  const [isAdding, setIsAdding] = useState(false); // Flag to toggle add project form
+  const [modalVisible, setModalVisible] = useState(false); // Flag to control modal visibility
+  const [modalMessage, setModalMessage] = useState(""); // Modal message
+  const [modalType, setModalType] = useState("success"); // Modal type (success/error)
 
-  // Editable project fields
-  const [nombre, setNombre] = useState("");
-  const [obra, setObra] = useState("");
-  const [tramo, setTramo] = useState("");
-  const [contrato, setContrato] = useState("");
-  const [logo, setLogo] = useState(null);
-  const [logoCliente, setLogoCliente] = useState(null);
+  // Fields for project data
+  const [name, setName] = useState(""); 
+  const [work, setWork] = useState(""); 
+  const [section, setSection] = useState(""); 
+  const [contract, setContract] = useState(""); 
+  const [logo, setLogo] = useState(null); 
+  const [clientLogo, setClientLogo] = useState(null);
 
-  // Function: Fetch project data from Firestore
-  const fetchProyecto = async () => {
-    const proyectosCollection = collection(db, "proyectos");
-    const proyectosSnapshot = await getDocs(proyectosCollection);
+  // Function to show success/error modal
+  const showModal = (message, type) => {
+    setModalMessage(message);
+    setModalType(type);
+    setModalVisible(true);
+  };
 
-    if (!proyectosSnapshot.empty) {
-      const doc = proyectosSnapshot.docs[0];
-      setProyecto({ id: doc.id, ...doc.data() });
+  // Fetch all projects from Firestore
+  const fetchProjects = async () => {
+    const projectsCollection = collection(db, "proyectos");
+    const projectsSnapshot = await getDocs(projectsCollection);
+
+    if (!projectsSnapshot.empty) {
+      const projectsList = projectsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setProjects(projectsList); // Store all fetched projects
     }
   };
 
-  // Load project data when the component mounts
+  // Fetch projects when the component mounts
   useEffect(() => {
-    fetchProyecto();
+    fetchProjects();
   }, []);
 
-  // Function: Open the edit modal and pre-fill fields with current project data
-  const openEditModal = () => {
+  // Open the edit modal with selected project data
+  const openEditModal = (proj) => {
     setIsEditing(true);
-    setNombre(proyecto.nombre);
-    setObra(proyecto.obra);
-    setTramo(proyecto.tramo);
-    setContrato(proyecto.contrato);
-    setLogo(null); // No se selecciona nuevo logo por defecto
-    setLogoCliente(null); // No se selecciona nuevo logoCliente por defecto
+    setName(proj.nombre);
+    setWork(proj.obra);
+    setSection(proj.tramo);
+    setContract(proj.contrato);
+    setLogo(null);
+    setClientLogo(null);
   };
 
-  // Function: Update project data in Firestore
-  const actualizarProyecto = async () => {
-    if (!nombre || !obra || !contrato) {
-      alert("Por favor, completa todos los campos.");
+  // Update existing project
+  const updateProject = async (proj) => {
+    if (!name || !work || !contract) {
+      showModal("Por favor, completa todos los campos.", "error");
       return;
     }
 
     try {
-      // Update project details in Firestore
-      const projectRef = doc(db, "proyectos", proyecto.id);
+      const projectRef = doc(db, "proyectos", proj.id);
 
-      let updatedLogoURL = proyecto.logo;
+      // Upload new logo if provided
+      let updatedLogoURL = proj.logo;
       if (logo) {
         const logoRef = ref(storage, `logos/${logo.name}`);
         await uploadBytes(logoRef, logo);
         updatedLogoURL = await getDownloadURL(logoRef);
       }
 
-      let updatedLogoClienteURL = proyecto.logoCliente || null;
-      if (logoCliente) {
-        const logoClienteRef = ref(storage, `logos_clientes/${logoCliente.name}`);
-        await uploadBytes(logoClienteRef, logoCliente);
-        updatedLogoClienteURL = await getDownloadURL(logoClienteRef);
+      // Upload new client logo if provided
+      let updatedClientLogoURL = proj.logoCliente;
+      if (clientLogo) {
+        const clientLogoRef = ref(storage, `logos_clientes/${clientLogo.name}`);
+        await uploadBytes(clientLogoRef, clientLogo);
+        updatedClientLogoURL = await getDownloadURL(clientLogoRef);
       }
-      // Update project details in Firestore
+
+      // Update project in Firestore
       await updateDoc(projectRef, {
-        nombre,
-        obra,
-        tramo,
-        contrato,
+        nombre: name,
+        obra: work,
+        tramo: section,
+        contrato: contract,
         logo: updatedLogoURL,
-        logoCliente: updatedLogoClienteURL,
+        logoCliente: updatedClientLogoURL,
       });
 
-      // Update local state with the updated project data
-      setProyecto({ ...proyecto, nombre, obra, tramo, contrato, logo: updatedLogoURL, logoCliente: updatedLogoClienteURL });
+      // Update local state with new project data
+      setProjects(projects.map((p) => (p.id === proj.id ? { ...p, nombre: name, obra: work, tramo: section, contrato: contract, logo: updatedLogoURL, logoCliente: updatedClientLogoURL } : p)));
       setIsEditing(false);
+      showModal("Proyecto actualizado exitosamente.", "success");
     } catch (error) {
       console.error("Error al actualizar el proyecto:", error);
+      showModal("Error al actualizar el proyecto.", "error");
     }
   };
-  // Function: Navigate back to the previous page
+
+  // Delete a project
+  const deleteProject = async (id) => {
+    try {
+      const projectRef = doc(db, "proyectos", id);
+      await deleteDoc(projectRef);
+      setProjects(projects.filter((proj) => proj.id !== id)); // Remove from local state
+      showModal("Proyecto eliminado exitosamente.", "success");
+    } catch (error) {
+      console.error("Error al eliminar el proyecto:", error);
+      showModal("Error al eliminar el proyecto.", "error");
+    }
+  };
+
+  // Add a new project
+  const addProject = async () => {
+    if (!name || !work || !contract) {
+      showModal("Por favor, completa todos los campos.", "error");
+      return;
+    }
+
+    try {
+      let logoURL = null;
+      if (logo) {
+        const logoRef = ref(storage, `logos/${logo.name}`);
+        await uploadBytes(logoRef, logo);
+        logoURL = await getDownloadURL(logoRef);
+      }
+
+      let clientLogoURL = null;
+      if (clientLogo) {
+        const clientLogoRef = ref(storage, `logos_clientes/${clientLogo.name}`);
+        await uploadBytes(clientLogoRef, clientLogo);
+        clientLogoURL = await getDownloadURL(clientLogoRef);
+      }
+
+      const projectsCollection = collection(db, "proyectos");
+      await addDoc(projectsCollection, {
+        nombre: name,
+        obra: work,
+        tramo: section,
+        contrato: contract,
+        logo: logoURL,
+        logoCliente: clientLogoURL,
+      });
+
+      // Fetch projects after adding a new one
+      
+      setIsAdding(false);
+      setName("");
+      setWork("");
+      setSection("");
+      setContract("");
+      setLogo(null);
+      setClientLogo(null);
+      showModal("Proyecto agregado exitosamente.", "success");
+      fetchProjects();
+    } catch (error) {
+      console.error("Error al agregar el proyecto:", error);
+      showModal("Error al agregar el proyecto.", "error");
+    }
+  };
+
+  // Navigate back to previous page
   const navigate = useNavigate();
   const handleGoBack = () => {
-    navigate(-1); // Esto navega hacia atrás en la historia
+    navigate(-1);
   };
 
   return (
     <div className="container mx-auto p-8 min-h-screen">
       <div className="flex gap-2 items-center justify-between px-4 py-3 text-base">
-        {/* Header Navigation */}
         <div className="flex gap-2 items-center">
           <GoHomeFill style={{ width: 15, height: 15, fill: "#d97706" }} />
           <Link to={"/admin"}>
@@ -137,16 +211,25 @@ function Projects() {
           </Link>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsAdding(true)}
+            className="bg-green-500 text-white px-4 py-2 rounded"
+          >
+            Agregar Proyecto
+          </button>
           <button className="text-amber-600 text-3xl">
             <IoArrowBackCircle onClick={handleGoBack} />
           </button>
         </div>
       </div>
-      {/* Project Details Table */}
-      {proyecto ? (
+
+      {modalVisible && <Modal message={modalMessage} type={modalType} onClose={() => setModalVisible(false)} />}
+
+      {/* Render the list of projects */}
+      {projects.length > 0 ? (
         <div className="overflow-x-auto text-gray-500">
-          <h2 className="text-lg font-bold text-gray-500 mb-4 mt-4">Proyecto</h2>
+          <h2 className="text-lg font-bold text-gray-500 mb-4 mt-4">Proyectos</h2>
           <table className="table-auto w-full text-left border-collapse">
             <thead>
               <tr className="border-b">
@@ -154,100 +237,183 @@ function Projects() {
                 <th className="px-4 py-2">Obra</th>
                 <th className="px-4 py-2">Tramo</th>
                 <th className="px-4 py-2">Contrato</th>
-                <th className="px-4 py-2">Logo</th>
-                <th className="px-4 py-2">Logo Cliente</th>
                 <th className="px-4 py-2">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b">
-                <td className="px-4 py-2">{proyecto.nombre}</td>
-                <td className="px-4 py-2">{proyecto.obra}</td>
-                <td className="px-4 py-2">{proyecto.tramo}</td>
-                <td className="px-4 py-2">{proyecto.contrato}</td>
-                <td className="px-4 py-2">
-                  <img src={proyecto.logo} alt="Logo" className="w-16 h-16" />
-                </td>
-                <td className="px-4 py-2">
-                  {proyecto.logoCliente && (
-                    <img src={proyecto.logoCliente} alt="Logo Cliente" className="w-16 h-16" />
-                  )}
-                </td>
-                <td className="px-4 py-2">
-                  <button
-                    onClick={openEditModal}
-                    className="bg-blue-500 text-white px-4 py-2 rounded"
-                  >
-                    Editar
-                  </button>
-                </td>
-              </tr>
+              {projects.map((proj) => (
+                <tr key={proj.id} className="border-b">
+                  <td className="px-4 py-2">{proj.nombre}</td>
+                  <td className="px-4 py-2">{proj.obra}</td>
+                  <td className="px-4 py-2">{proj.tramo}</td>
+                  <td className="px-4 py-2">{proj.contrato}</td>
+                  <td className="px-4 py-2 flex gap-2">
+                    <button
+                      onClick={() => openEditModal(proj)}
+                      className="bg-blue-500 text-white px-4 py-2 rounded"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => deleteProject(proj.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
-
-          {/* Edit Modal */}
-          {isEditing && (
-            <div className="fixed inset-0 z-10 flex justify-center items-center bg-black bg-opacity-50">
-              <div className="bg-white p-8 rounded-lg w-full max-w-lg">
-                <h2 className="text-lg font-bold mb-4">Editar Proyecto</h2>
-                <input
-                  type="text"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Nombre"
-                  className="block w-full mb-4 px-4 py-2 border rounded"
-                />
-                <input
-                  type="text"
-                  value={obra}
-                  onChange={(e) => setObra(e.target.value)}
-                  placeholder="Obra"
-                  className="block w-full mb-4 px-4 py-2 border rounded"
-                />
-                <input
-                  type="text"
-                  value={tramo}
-                  onChange={(e) => setTramo(e.target.value)}
-                  placeholder="Tramo"
-                  className="block w-full mb-4 px-4 py-2 border rounded"
-                />
-                <input
-                  type="text"
-                  value={contrato}
-                  onChange={(e) => setContrato(e.target.value)}
-                  placeholder="Contrato"
-                  className="block w-full mb-4 px-4 py-2 border rounded"
-                />
-                <input
-                  type="file"
-                  onChange={(e) => setLogo(e.target.files[0])}
-                  className="block w-full mb-4"
-                />
-                <input
-                  type="file"
-                  onChange={(e) => setLogoCliente(e.target.files[0])}
-                  className="block w-full mb-4"
-                />
-                <div className="flex justify-end gap-4">
-                  <button
-                    onClick={actualizarProyecto}
-                    className="bg-blue-500 text-white px-4 py-2 rounded"
-                  >
-                    Guardar
-                  </button>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="bg-gray-300 px-4 py-2 rounded"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       ) : (
-        <p>Cargando proyecto...</p>
+        <p>Cargando proyectos...</p>
+      )}
+
+      {/* Add Project Form */}
+      {isAdding && (
+        <div className="fixed inset-0 z-10 flex justify-center items-center bg-black bg-opacity-50">
+          <div className="bg-white p-8 rounded-lg w-full max-w-lg">
+            <h2 className="text-lg font-bold mb-4">Agregar Proyecto</h2>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nombre"
+              className="block w-full mb-4 px-4 py-2 border rounded"
+            />
+            <input
+              type="text"
+              value={work}
+              onChange={(e) => setWork(e.target.value)}
+              placeholder="Obra"
+              className="block w-full mb-4 px-4 py-2 border rounded"
+            />
+            <input
+              type="text"
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+              placeholder="Tramo"
+              className="block w-full mb-4 px-4 py-2 border rounded"
+            />
+            <input
+              type="text"
+              value={contract}
+              onChange={(e) => setContract(e.target.value)}
+              placeholder="Contrato"
+              className="block w-full mb-4 px-4 py-2 border rounded"
+            />
+            <input
+              type="file"
+              onChange={(e) => setLogo(e.target.files[0])}
+              className="block w-full mb-4"
+            />
+            {logo && (
+              <div className="mb-4">
+                <h3>Vista previa Logo Proyecto:</h3>
+                <img src={URL.createObjectURL(logo)} alt="Vista previa Logo" className="mt-2" width="100" />
+              </div>
+            )}
+            <input
+              type="file"
+              onChange={(e) => setClientLogo(e.target.files[0])}
+              className="block w-full mb-4"
+            />
+            {clientLogo && (
+              <div className="mb-4">
+                <h3>Vista previa Logo Cliente:</h3>
+                <img src={URL.createObjectURL(clientLogo)} alt="Vista previa Logo Cliente" className="mt-2" width="100" />
+              </div>
+            )}
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={addProject}
+                className="bg-green-500 text-white px-4 py-2 rounded"
+              >
+                Agregar
+              </button>
+              <button
+                onClick={() => setIsAdding(false)}
+                className="bg-gray-300 px-4 py-2 rounded"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Project Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 z-10 flex justify-center items-center bg-black bg-opacity-50">
+          <div className="bg-white p-8 rounded-lg w-full max-w-lg">
+            <h2 className="text-lg font-bold mb-4">Editar Proyecto</h2>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nombre"
+              className="block w-full mb-4 px-4 py-2 border rounded"
+            />
+            <input
+              type="text"
+              value={work}
+              onChange={(e) => setWork(e.target.value)}
+              placeholder="Obra"
+              className="block w-full mb-4 px-4 py-2 border rounded"
+            />
+            <input
+              type="text"
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+              placeholder="Tramo"
+              className="block w-full mb-4 px-4 py-2 border rounded"
+            />
+            <input
+              type="text"
+              value={contract}
+              onChange={(e) => setContract(e.target.value)}
+              placeholder="Contrato"
+              className="block w-full mb-4 px-4 py-2 border rounded"
+            />
+            <input
+              type="file"
+              onChange={(e) => setLogo(e.target.files[0])}
+              className="block w-full mb-4"
+            />
+            {logo && (
+              <div className="mb-4">
+                <h3>Vista previa Logo Proyecto:</h3>
+                <img src={URL.createObjectURL(logo)} alt="Vista previa Logo" className="mt-2" width="100" />
+              </div>
+            )}
+            <input
+              type="file"
+              onChange={(e) => setClientLogo(e.target.files[0])}
+              className="block w-full mb-4"
+            />
+            {clientLogo && (
+              <div className="mb-4">
+                <h3>Vista previa Logo Cliente:</h3>
+                <img src={URL.createObjectURL(clientLogo)} alt="Vista previa Logo Cliente" className="mt-2" width="100" />
+              </div>
+            )}
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => updateProject({ id: "" })}
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Guardar
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="bg-gray-300 px-4 py-2 rounded"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
