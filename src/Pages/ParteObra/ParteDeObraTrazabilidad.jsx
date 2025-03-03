@@ -25,9 +25,16 @@ const ParteObra = () => {
   const [selectedLote, setSelectedLote] = useState(null);
   const [formData, setFormData] = useState({
     observaciones: "",
+    observacionesActividad: "",
+    observacionesLocalizacion: "",
     fechaHora: "",
     imagenes: [],
+    registroEmpresas: "",
+    controlAccesos: "",
+    controlSubcontratacion: "",
+    controlSiniestraidad: ""
   });
+
   const fileInputsRefs = useRef([]);
   const [geolocalizacion, setGeolocalizacion] = useState(null);
 
@@ -62,7 +69,23 @@ const ParteObra = () => {
   // Estado para almacenar los checkbox seleccionados
   const [selectedSubactivities, setSelectedSubactivities] = useState({});
   const [activityObservations, setActivityObservations] = useState({});
+  const [observacionesActividad, setObservacionesActividad] = useState(""); // Estado para actividad seleccionada
+  const [observacionesLocalizacion, setObservacionesLocalizacion] = useState(""); // Estado para localización
 
+
+  const [selectedActivities, setSelectedActivities] = useState({});
+  useEffect(() => {
+    console.log("Estado actual de selectedActivities:", selectedActivities);
+  }, [selectedActivities]);
+
+  // Separar los manejadores de eventos para cada textarea
+  const handleObservacionesActividadChange = (e) => {
+    setObservacionesActividad(e.target.value);
+  };
+
+  const handleObservacionesLocalizacionChange = (e) => {
+    setObservacionesLocalizacion(e.target.value);
+  };
 
   // Generar valores únicos al cargar los lotes
   useEffect(() => {
@@ -225,20 +248,32 @@ const ParteObra = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setModalSend(false)
+    setModalSend(false);
     setSelectedLote(null);
-    setFormData({ observaciones: "", fechaHora: "", imagenes: [] });
-    setSelectedLoteOption("")
+    setFormData({ observaciones: "", fechaHora: "", imagenes: [], observacionesActividad: "", observacionesLocalizacion: "" });
+    setSelectedLoteOption("");
+
+    // Reseteamos los checkboxes de actividades y subactividades
+    setSelectedActivities({});
+    setSelectedSubactivities({});
+    setActivityObservations({});
+
+    // Limpiar referencias de archivos
     fileInputsRefs.current.forEach((input) => {
       if (input) input.value = null;
     });
   };
 
+
   // Manejar los cambios en los inputs del formulario
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
+
 
   const handleFileChange = async (e, index) => {
     const file = e.target.files[0];
@@ -324,9 +359,11 @@ const ParteObra = () => {
       const registro = {
         ...selectedLote,
         ...formData,
+        actividades: selectedActivities,
         imagenes: imageUrls,
         fechaHora: new Date(formData.fechaHora).toISOString(),
         actividad: selectedLoteOption,
+
       };
 
       // Guardar en Firebase
@@ -417,29 +454,69 @@ const ParteObra = () => {
   // Filtrar valores del lote
 
 
-  // Manejar cambios en los checkboxes de subactividades
   const handleSubactivityChange = (actividadIndex, subIndex) => {
-    setSelectedSubactivities((prev) => {
+    setSelectedActivities((prev) => {
       const newSelected = { ...prev };
-      const key = `${actividadIndex}-${subIndex}`;
-      newSelected[key] = !newSelected[key]; // Alterna el estado del checkbox
+
+      if (!newSelected[actividadIndex]) return prev;
+
+      newSelected[actividadIndex].subactividades[subIndex].seleccionada =
+        !newSelected[actividadIndex].subactividades[subIndex].seleccionada;
+
+      const allChecked = newSelected[actividadIndex].subactividades.every((sub) => sub.seleccionada);
+      newSelected[actividadIndex].seleccionada = allChecked;
+
+      if (newSelected[actividadIndex].subactividades.some((sub) => sub.seleccionada)) {
+        newSelected[actividadIndex].noAplica = false;
+      }
+
       return newSelected;
     });
   };
 
-  // Manejar cambios en el checkbox de actividad (Seleccionar todas las subactividades)
-  const handleActivityChange = (actividadIndex, subactividades) => {
-    setSelectedSubactivities((prev) => {
-      const newSelected = { ...prev };
-      const allChecked = subactividades.every((_, subIndex) => newSelected[`${actividadIndex}-${subIndex}`]);
 
-      subactividades.forEach((_, subIndex) => {
-        newSelected[`${actividadIndex}-${subIndex}`] = !allChecked; // Si todas están seleccionadas, las desmarca
-      });
+
+
+
+
+  const handleActivityChange = (actividadIndex, actividadNombre, subactividades) => {
+    setSelectedActivities((prev) => {
+      const newSelected = { ...prev };
+
+      if (!newSelected[actividadIndex]) {
+        newSelected[actividadIndex] = {
+          nombre: actividadNombre,
+          seleccionada: true,
+          noAplica: false,  // Desactivar "No Aplica" si se selecciona la actividad
+          subactividades: subactividades.map((sub) => ({
+            nombre: sub.nombre,
+            seleccionada: true,
+          })),
+        };
+      } else {
+        const isSelected = !newSelected[actividadIndex].seleccionada;
+        newSelected[actividadIndex].seleccionada = isSelected;
+
+        newSelected[actividadIndex].subactividades = newSelected[actividadIndex].subactividades.map((sub) => ({
+          ...sub,
+          seleccionada: isSelected,
+        }));
+
+        if (isSelected) {
+          newSelected[actividadIndex].noAplica = false; // Si se selecciona, se desactiva "No Aplica"
+        }
+      }
 
       return newSelected;
     });
   };
+
+
+
+
+
+
+
 
   // Manejar cambios en la observación de la actividad
   const handleObservationChange = (actividadIndex, value) => {
@@ -448,6 +525,47 @@ const ParteObra = () => {
       [actividadIndex]: value,
     }));
   };
+
+
+  // Enviar formulario
+
+
+  const handleNoAplicaChange = (actividadIndex) => {
+    setSelectedActivities((prev) => {
+      const newSelected = { ...prev };
+
+      // Si la actividad aún no está en el estado, la creamos con `noAplica: true`
+      if (!newSelected[actividadIndex]) {
+        newSelected[actividadIndex] = {
+          seleccionada: false,
+          noAplica: true,
+          subactividades: [],
+        };
+      } else {
+        // Alternamos el estado de "No Aplica"
+        newSelected[actividadIndex].noAplica = !newSelected[actividadIndex].noAplica;
+
+        // Si se activa "No Aplica", desmarcamos la actividad, subactividades y borramos observaciones
+        if (newSelected[actividadIndex].noAplica) {
+          newSelected[actividadIndex].seleccionada = false;
+          newSelected[actividadIndex].subactividades = newSelected[actividadIndex].subactividades.map((sub) => ({
+            ...sub,
+            seleccionada: false,
+          }));
+          setActivityObservations((prev) => ({
+            ...prev,
+            [actividadIndex]: "", // Borra la observación de la actividad
+          }));
+        }
+      }
+
+      return newSelected;
+    });
+  };
+
+
+
+
 
   return (
     <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
@@ -596,7 +714,7 @@ const ParteObra = () => {
       {/* Modal para el formulario */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-sm">
-          <div className="bg-white p-8 rounded-2xl shadow-xl w-11/12 max-w-lg relative max-h-[600px] max-w-[800px] overflow-y-auto">
+          <div className="bg-white p-8 rounded-2xl shadow-xl w-11/12 max-w-lg md:max-w-xl lg:max-w-2xl max-h-[90vh] relative overflow-y-auto">
             {/* Botón de cerrar */}
             <button
               onClick={handleCloseModal}
@@ -611,44 +729,121 @@ const ParteObra = () => {
               <BsClipboardData className="text-2xl" />
               Registro de actividades
             </h2>
-            <p className="text-md">Mantenimiento, conservación, rehabilitación.</p>
+            <p className="text-md ps-8">Formulario seguridad y salud.</p>
 
             <div className="w-full border-b-2 mt-2 mb-6"></div>
 
-            {
-              ppiDetails && (
-                <div>
-                  <p className="text-lg font-semibold mb-2">Detalles del PPI</p>
+            <div>
+              <div>
+                <p className="font-medium bg-sky-600 text-white rounded-t-lg px-4 py-2">
+                  Actividad seleccionada
+                </p>
+                {selectedLote && (
+                  <p className="bg-gray-200 p-2 rounded-b-lg px-4 py-2 font-medium">{selectedLote.nombre}</p>
+                )}
 
-                  {/* Contenedor con scroll vertical */}
-                  <div className="max-h-[300px] overflow-y-auto border p-4 rounded-md bg-gray-50">
-                    {ppiDetails.actividades.map((actividad, actividadIndex) => {
-                      const allSubactivitiesChecked = actividad.subactividades.every(
-                        (_, subIndex) => selectedSubactivities[`${actividadIndex}-${subIndex}`]
-                      );
 
-                      return (
-                        <div key={actividadIndex} className="mb-4 border-b pb-3">
-                          {/* Checkbox y título de la actividad */}
+
+                <textarea
+                  maxLength={700}
+                  name="observacionesActividad"
+                  value={formData.observacionesActividad}
+                  onChange={handleInputChange}
+                  placeholder="Escribe tus observaciones aquí..."
+                  className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
+                ></textarea>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium bg-gray-200 px-4 py-2 rounded-md">
+                  Locazalización
+                </label>
+                <textarea
+                  maxLength={700}
+                  name="observacionesLocalizacion"
+                  value={formData.observacionesLocalizacion}
+                  onChange={handleInputChange}
+                  placeholder="Escribe tus observaciones aquí..."
+                  className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
+                ></textarea>
+              </div>
+            </div>
+
+            {/* Fecha y Hora */}
+            <div>
+              <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
+                Fecha y Hora
+              </label>
+              <input
+                type="datetime-local"
+                name="fechaHora"
+                value={formData.fechaHora}
+                onChange={handleInputChange}
+                className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+              />
+            </div>
+
+            {ppiDetails && (
+              <div className="mt-6">
+                <p className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">PPI asignado</p>
+
+                {/* Contenedor con scroll vertical */}
+                <div className="mt-4 ">
+                  {ppiDetails.actividades.map((actividad, actividadIndex) => {
+                    // Filtramos las subactividades que tienen nombre válido
+                    const subactividadesValidas = Array.isArray(actividad.subactividades)
+                      ? actividad.subactividades.filter((sub) => sub.nombre.trim() !== "")
+                      : [];
+
+                    return (
+                      <div key={actividadIndex} className="mb-4 border-b pb-3">
+                        {/* Checkbox y título de la actividad */}
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={allSubactivitiesChecked}
-                              onChange={() => handleActivityChange(actividadIndex, actividad.subactividades)}
-                              className="form-checkbox h-4 w-4 text-sky-600"
-                            />
+                            <button
+                              onClick={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas)}
+                              disabled={selectedActivities[actividadIndex]?.noAplica}
+                              className={`relative w-14 h-7 flex items-center rounded-full p-1 transition-all duration-300
+      ${selectedActivities[actividadIndex]?.seleccionada ? "bg-sky-600" : "bg-amber-700"}
+      ${selectedActivities[actividadIndex]?.noAplica ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                            >
+                              <div
+                                className={`absolute left-1 w- h- bg-white rounded-full shadow-md flex items-center justify-center transform transition-transform duration-300
+        ${selectedActivities[actividadIndex]?.seleccionada ? "translate-x-7" : "translate-x-0"}`}
+                              >
+                             <span className="text-gray-500 text-xs"> {/* Iconos ahora son grises */}
+        {selectedActivities[actividadIndex]?.seleccionada ? "✔️" : "✖️"}
+      </span>
+                              </div>
+                            </button>
                             <p className="font-semibold text-sky-700">{actividad.numero}-</p>
                             <p className="font-semibold text-sky-700">{actividad.actividad}</p>
                           </div>
 
-                          
-                          {/* Lista de subactividades */}
-                          {actividad.subactividades.map((sub, subIndex) => (
+
+
+
+                          {/* Checkbox "No Aplica" */}
+                          <div className="flex items-center gap-2">
+                            <label className="text-amber-600 text-sm font-medium">No Aplica</label>
+                            <input
+                              type="checkbox"
+                              checked={selectedActivities[actividadIndex]?.noAplica || false}
+                              onChange={() => handleNoAplicaChange(actividadIndex)}
+                              className="form-checkbox h-4 w-4 text-gray-500"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Mostrar subactividades solo si existen y tienen nombre válido */}
+                        {subactividadesValidas.length > 0 &&
+                          subactividadesValidas.map((sub, subIndex) => (
                             <div key={subIndex} className="ml-4 flex items-center gap-2 text-xs border-l-4 border-sky-500 pl-2 mt-2">
                               <input
                                 type="checkbox"
-                                checked={selectedSubactivities[`${actividadIndex}-${subIndex}`] || false}
+                                checked={selectedActivities[actividadIndex]?.subactividades[subIndex]?.seleccionada || false}
                                 onChange={() => handleSubactivityChange(actividadIndex, subIndex)}
+                                disabled={selectedActivities[actividadIndex]?.noAplica}
                                 className="form-checkbox h-3 w-3 text-sky-600"
                               />
                               <div>
@@ -658,79 +853,133 @@ const ParteObra = () => {
                             </div>
                           ))}
 
-                          {/* Observaciones de la actividad */}
-                          <textarea
-                            value={activityObservations[actividadIndex] || ""}
-                            onChange={(e) => handleObservationChange(actividadIndex, e.target.value)}
-                            placeholder="Escribe observaciones aquí..."
-                            className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
-                          />
+                        {/* Observaciones de la actividad */}
+                        <textarea
+                          disabled={selectedActivities[actividadIndex]?.noAplica}
+                          value={activityObservations[actividadIndex] || ""}
+                          onChange={(e) => handleObservationChange(actividadIndex, e.target.value)}
+                          placeholder="Escribe observaciones aquí..."
+                          className={`mt-2 block w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none 
+    ${selectedActivities[actividadIndex]?.noAplica
+                              ? "bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed"
+                              : "border-gray-300 focus:ring-sky-500 focus:border-sky-500"
+                            }`}
+                        />
 
-                        </div>
-                      );
-                    })}
-                  </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              )
-            }
+              </div>
+            )}
 
 
 
-            {/* Título del modal */}
-            <p className="text-sm font-semibold text-start my-2">
-              Actividad
-            </p>
-            <select
-              value={selectedLoteOption}
-              onChange={(e) => setSelectedLoteOption(e.target.value)}
-              className="border px-3 py-1 rounded-lg w-full"
-            >
-              <option value="" disabled>Selecciona una actividad</option>
-              {loteOptions.map((option, index) => (
-                <option key={index} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
 
 
             {/* Formulario */}
             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-              {/* Observaciones */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Observaciones
-                </label>
-                <textarea
-                  maxLength={700}
-                  name="observaciones"
-                  value={formData.observaciones}
-                  onChange={handleInputChange}
-                  placeholder="Escribe tus observaciones aquí..."
-                  className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
-                ></textarea>
+
+
+
+              <div className="mt-6">
+
+                {/* Registro Documental de Empresas */}
+                <div className="mb-4">
+                  <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
+                    Registro Documental de Empresas, Trabajadores y Maquinaria.
+                  </label>
+                  <textarea
+                    name="registroEmpresas"
+                    value={formData.registroEmpresas || ""}
+                    onChange={handleInputChange}
+                    placeholder="Escribe observaciones..."
+                    className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
+                  ></textarea>
+                </div>
+
+                {/* Control de Accesos a la Obra */}
+                <div className="mb-4">
+                  <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
+                    Control de Accesos a la Obra
+                  </label>
+                  <textarea
+                    name="controlAccesos"
+                    value={formData.controlAccesos || ""}
+                    onChange={handleInputChange}
+                    placeholder="Escribe observaciones..."
+                    className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
+                  ></textarea>
+                </div>
+
+                {/* Control de la Subcontratación */}
+                <div>
+                  <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
+                    Control de la Subcontratación. Registro del Libro y Comunicaciones.
+                  </label>
+                  <textarea
+                    name="controlSubcontratacion"
+                    value={formData.controlSubcontratacion || ""}
+                    onChange={handleInputChange}
+                    placeholder="Escribe observaciones..."
+                    className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
+                    Sinisestralidad y planificación de actuaciones de emergencia
+                  </label>
+                  <textarea
+                    name="controlSiniestraidad"
+                    value={formData.controlSiniestraidad || ""}
+                    onChange={handleInputChange}
+                    placeholder="Escribe observaciones..."
+                    className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
+                  ></textarea>
+                </div>
+
               </div>
 
-              {/* Fecha y Hora */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Fecha y Hora
+
+
+              {/* Resultado */}
+
+              <div className="mt-12">
+                <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+
+                  Resultado inspección
                 </label>
-                <input
-                  type="datetime-local"
-                  name="fechaHora"
-                  value={formData.fechaHora}
-                  onChange={handleInputChange}
-                  className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                />
+                <div className="relative">
+                  <select
+                    name="apto"
+                    value={formData.apto || ""}
+                    onChange={handleInputChange}
+                    className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 bg-white appearance-none"
+                  >
+                    <option value="" disabled>Selecciona una opción</option>
+                    <option value="apto">✅ Apto</option>
+                    <option value="no_apto">❌ No Apto</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <FaCheck className={`text-green-600 ${formData.apto === "apto" ? "block" : "hidden"}`} />
+                    <MdOutlineError className={`text-red-600 ${formData.apto === "no_apto" ? "block" : "hidden"}`} />
+                  </div>
+                </div>
               </div>
+
+
+
+
+
 
               {/* Imágenes */}
-              <div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">
-                  Imágenes (Mínimo 1)
+                  Registro fotográfico
+                  <p className="text-amber-600 text-xs">* Mínimo 1 imagen</p>
                 </label>
-                <div className="grid grid-cols-2 gap-4 mt-2">
+                <div className="grid grid-cols-2 gap-4 mt-4">
                   {[0, 1, 2, 3].map((index) => (
                     <div key={index} className="relative">
                       <input
@@ -754,6 +1003,25 @@ const ParteObra = () => {
                   ))}
                 </div>
               </div>
+              {/* Observaciones */}
+              <div>
+                <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
+                  Observaciones
+                </label>
+                <textarea
+                  maxLength={700}
+                  name="observaciones"
+                  value={formData.observaciones}
+                  onChange={handleInputChange}
+                  placeholder="Escribe tus observaciones aquí..."
+                  className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
+                ></textarea>
+              </div>
+
+
+
+
+
 
 
               {/* Botones */}
@@ -761,6 +1029,7 @@ const ParteObra = () => {
                 <button
                   type="submit"
                   className="w-2/3 py-2 bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:bg-sky-700 transition"
+                  onClick={handleSubmit}
                 >
                   Enviar
                 </button>

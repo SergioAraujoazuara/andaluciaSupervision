@@ -297,7 +297,7 @@ function PlantillaPpi() {
                                                 placeholder="Número"
                                                 value={actividad.numero}
                                                 onChange={e => handleActividadChange(i, e)}
-                                                required
+                                                
                                                 className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100"
                                             />
                                             <input
@@ -305,7 +305,7 @@ function PlantillaPpi() {
                                                 placeholder="Nombre"
                                                 value={actividad.actividad}
                                                 onChange={e => handleActividadChange(i, e)}
-                                                required
+                                                
                                                 className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100"
                                             />
                                         </div>
@@ -317,7 +317,7 @@ function PlantillaPpi() {
                                                     placeholder="Número de subactividad"
                                                     value={sub.numero}
                                                     onChange={e => handleSubactividadChange(i, j, e)}
-                                                    required
+                                                    
                                                     className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                 />
                                                 <input
@@ -325,7 +325,7 @@ function PlantillaPpi() {
                                                     placeholder="Descripción"
                                                     value={sub.nombre}
                                                     onChange={e => handleSubactividadChange(i, j, e)}
-                                                    required
+                                                    
                                                     className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                 />
                                                 <input
@@ -333,7 +333,7 @@ function PlantillaPpi() {
                                                     placeholder="Criterio de aceptación"
                                                     value={sub.criterio_aceptacion}
                                                     onChange={e => handleSubactividadChange(i, j, e)}
-                                                    required
+                                                    
                                                     className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                 />
                                                 <input
@@ -341,7 +341,7 @@ function PlantillaPpi() {
                                                     placeholder="Documentación de referencia"
                                                     value={sub.documentacion_referencia}
                                                     onChange={e => handleSubactividadChange(i, j, e)}
-                                                    required
+                                                    
                                                     className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                 />
                                                 <input
@@ -349,7 +349,7 @@ function PlantillaPpi() {
                                                     placeholder="Tipo de inspección"
                                                     value={sub.tipo_inspeccion}
                                                     onChange={e => handleSubactividadChange(i, j, e)}
-                                                    required
+                                                    
                                                     className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                 />
                                                 <input
@@ -357,7 +357,7 @@ function PlantillaPpi() {
                                                     placeholder="Área"
                                                     value={sub.punto}
                                                     onChange={e => handleSubactividadChange(i, j, e)}
-                                                    required
+                                                    
                                                     className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                 />
                                                 <input
@@ -365,7 +365,7 @@ function PlantillaPpi() {
                                                     placeholder="Responsable"
                                                     value={sub.responsable}
                                                     onChange={e => handleSubactividadChange(i, j, e)}
-                                                    required
+                                                    
                                                     className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                 />
                                             </div>
