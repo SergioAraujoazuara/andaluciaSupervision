@@ -68,8 +68,16 @@ const ParteObra = () => {
 
   // Estado para almacenar los checkbox seleccionados
   const [selectedSubactivities, setSelectedSubactivities] = useState({});
-  const [activityObservations, setActivityObservations] = useState({});
+
   const [stats, setStats] = useState({ totalSi: 0, totalNo: 0, totalActividades: 0, porcentajeApto: 0 });
+  const [activityObservations, setActivityObservations] = useState({});
+
+  const handleObservationChange = (actividadIndex, value) => {
+    setActivityObservations((prev) => ({
+      ...prev,
+      [actividadIndex]: value, // Guarda la observación con el índice de la actividad
+    }));
+  };
 
 
 
@@ -81,24 +89,24 @@ const ParteObra = () => {
   useEffect(() => {
     if (ppiDetails && ppiDetails.actividades) {
       const totalActividadesInicial = ppiDetails.actividades.length;
-  
+
       // Contar cuántas actividades NO están en "No Aplica"
       const totalActividades = totalActividadesInicial - Object.values(selectedActivities).filter(act => act.noAplica).length;
-  
+
       const totalSi = Object.values(selectedActivities).filter(act => act.seleccionada === true).length;
       const totalNo = Object.values(selectedActivities).filter(act => act.seleccionada === false).length;
-  
+
       // Si aún no se han seleccionado actividades, el porcentaje es 0%
       const porcentajeApto = totalActividades > 0 ? Math.round((totalSi / totalActividades) * 100) : 0;
-  
+
       setStats({ totalSi, totalNo, totalActividades, porcentajeApto, totalActividadesInicial });
     }
   }, [selectedActivities, ppiDetails]);
-  
+
   useEffect(() => {
     console.log("PPI Details:", ppiDetails);
   }, [ppiDetails]);
-  
+
   // Generar valores únicos al cargar los lotes
   useEffect(() => {
     if (lotes.length > 0) {
@@ -409,11 +417,16 @@ const ParteObra = () => {
           .map(async (image, index) => await uploadImageWithMetadata(image, index))
       );
 
+      const actividadesConObservaciones = Object.keys(selectedActivities).map((index) => ({
+        ...selectedActivities[index], // Copiamos los datos originales de la actividad
+        observacion: activityObservations[index] || "", // Agregamos la observación si existe
+      }));
+
       // Crear el registro sin imágenes undefined o null
       const registro = {
         ...selectedLote,
         ...formData,
-        actividades: selectedActivities,
+        actividades: actividadesConObservaciones,
         imagenes: imageUrls,
         fechaHora: new Date(formData.fechaHora).toISOString(),
         actividad: selectedLote.nombre,
@@ -422,7 +435,7 @@ const ParteObra = () => {
           totalActividades: stats.totalActividades,
           porcentajeApto: stats.porcentajeApto
         }
-       
+
       };
 
       // Guardar en Firebase
@@ -587,13 +600,7 @@ const ParteObra = () => {
 
 
 
-  // Manejar cambios en la observación de la actividad
-  const handleObservationChange = (actividadIndex, value) => {
-    setActivityObservations((prev) => ({
-      ...prev,
-      [actividadIndex]: value,
-    }));
-  };
+
 
 
   // Enviar formulario
@@ -943,16 +950,13 @@ const ParteObra = () => {
                           ))}
 
                         {/* Observaciones de la actividad */}
+                        {/* Input de observaciones */}
                         <textarea
-                          disabled={selectedActivities[actividadIndex]?.noAplica}
-                          value={activityObservations[actividadIndex] || ""}
+                          value={activityObservations[actividadIndex] || ""} // Valor del estado
                           onChange={(e) => handleObservationChange(actividadIndex, e.target.value)}
                           placeholder="Escribe observaciones aquí..."
-                          className={`mt-2 block w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none 
-    ${selectedActivities[actividadIndex]?.noAplica
-                              ? "bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed"
-                              : "border-gray-300 focus:ring-sky-500 focus:border-sky-500"
-                            }`}
+                          className="mt-2 block w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none 
+        border-gray-300 focus:ring-sky-500 focus:border-sky-500"
                         />
 
                       </div>

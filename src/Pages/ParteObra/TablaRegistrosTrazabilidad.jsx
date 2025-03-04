@@ -309,41 +309,13 @@ const TablaRegistros = () => {
     try {
       if (!registroEditando) return;
 
-      // Crear una copia del registro original (antes de los cambios)
-      const registroOriginal = { ...registroEditando };
-
-      // Crear una copia de las imágenes actuales para conservar las no editadas
-      const imagenesFinales = [...(registroEditando.imagenes || [])];
-
-      // Subir solo las imágenes editadas
-      await Promise.all(
-        imagenesEditadas.map(async (file, index) => {
-          if (file) {
-            const url = await subirImagenConMetadatos(file, index);
-            imagenesFinales[index] = url; // Solo reemplazar la imagen editada
-          }
-        })
-      );
-
-      // Crear el objeto actualizado con las imágenes modificadas
+      // Crear objeto actualizado con las actividades modificadas
       const registroActualizado = {
         ...registroEditando,
-        imagenes: imagenesFinales,
+        actividades: registroEditando.actividades, // Guardamos "Sí", "No" y "No Aplica"
       };
 
-      // Guardar el historial del cambio en Firestore
-      const historialCambio = {
-        registroId: registroEditando.id, // ID del registro modificado
-        responsable: nombreUsuario, // Cambia esto por el usuario actual si lo tienes
-        fechaHora: new Date().toISOString(), // Fecha y hora actual
-        motivoCambio: motivoCambio, // Agrega el motivo desde el formulario
-        registroOriginal, // Estado original antes del cambio
-        registroEditado: registroActualizado, // Estado después del cambio
-      };
-
-      await addDoc(collection(db, "historialRegistrosParteDeObra"), historialCambio);
-
-      // Actualizar el registro principal en Firestore
+      // Actualizar en Firestore
       const docRef = doc(db, "registrosParteDeObra", registroEditando.id);
       await updateDoc(docRef, registroActualizado);
 
@@ -353,23 +325,21 @@ const TablaRegistros = () => {
           registro.id === registroEditando.id ? registroActualizado : registro
         )
       );
+
       setRegistrosFiltrados((prev) =>
         prev.map((registro) =>
           registro.id === registroEditando.id ? registroActualizado : registro
         )
       );
 
-      // Cerrar el modal y limpiar estados
+      // Cerrar modal
       setModalEdicionAbierto(false);
-      setImagenesEditadas([]);
-      setPrevisualizaciones([]);
       setRegistroEditando(null);
-
-      console.log("Registro y historial actualizados correctamente");
     } catch (error) {
       console.error("Error al guardar los cambios:", error);
     }
   };
+
 
 
 
@@ -525,7 +495,11 @@ const TablaRegistros = () => {
     return `${dia}/${mes}/${anio}`; // Devuelve solo DD/MM/YYYY
   };
 
-
+  const formatCamelCase = (text) => {
+    return text
+      .replace(/([a-z])([A-Z])/g, "$1 $2") // Separa camelCase en palabras
+      .replace(/\b[a-z]/g, (c) => c.toUpperCase()); // Capitaliza cada palabra
+  };
   return (
     <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
       <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
@@ -693,24 +667,55 @@ const TablaRegistros = () => {
                       </td>
                     ))}
                   <td className="px-6 py-4 text-sm whitespace-nowrap flex flex-col items-center gap-2">
-                    <div className="flex justify-between text-gray-700 font-medium">
-                      <span>{registro.resumenPuntosControl.totalSi} / {registro.resumenPuntosControl.totalActividades}</span>
+                    {(() => {
+                      const actividades = registro.actividades || {};
 
-                    </div>
+                      // ✅ Total inicial antes de "No Aplica"
+                      const totalInicial = Object.keys(actividades).length;
 
-                    <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${registro.resumenPuntosControl.porcentajeApto}%`,
-                          backgroundColor:
-                            registro.resumenPuntosControl.porcentajeApto === 100 ? "#10B981" :
-                              registro.resumenPuntosControl.porcentajeApto >= 50 ? "#FBBF24" : "#EF4444",
-                        }}
-                      ></div>
-                    </div>
-                    <span className="font-medium">{registro.resumenPuntosControl.porcentajeApto}%</span>
+                      // ✅ Filtramos actividades válidas (sin "No Aplica")
+                      const actividadesValidas = Object.values(actividades).filter((actividad) => !actividad.noAplica);
+                      const totalActividades = actividadesValidas.length;
+
+                      // ✅ Contamos cuántas tienen cada estado
+                      const totalSi = actividadesValidas.filter((actividad) => actividad.seleccionada === true).length;
+                      const totalNo = actividadesValidas.filter((actividad) => actividad.seleccionada === false).length;
+                      const totalNoAplica = totalInicial - totalActividades; // Restamos las "No Aplica"
+
+                      // ✅ Calculamos el porcentaje considerando solo actividades válidas
+                      const porcentajeApto = totalActividades > 0 ? Math.round((totalSi / totalActividades) * 100) : 0;
+
+                      return (
+                        <>
+                          {/* 🔹 Totales claros y bien estructurados */}
+                          <div className="flex flex-col items-start gap-1 text-gray-700 font-medium">
+                            <span>Total actividades: {totalInicial}</span>
+                            <div className="flex gap-2"> <span className="text-green-600">✅ Sí: {totalSi}</span>
+                              <span className="text-red-600">❌ No: {totalNo}</span></div>
+
+                            <span className="text-gray-500">⚪ No Aplica: {totalNoAplica}</span>
+                          </div>
+
+                          {/* 🔹 Barra de progreso visual */}
+                          <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{
+                                width: `${porcentajeApto}%`,
+                                backgroundColor:
+                                  porcentajeApto === 100 ? "#10B981" :
+                                    porcentajeApto >= 50 ? "#FBBF24" : "#EF4444",
+                              }}
+                            ></div>
+                          </div>
+
+                          {/* 🔹 Mostrar porcentaje final */}
+                          <span className="font-medium">{porcentajeApto}%</span>
+                        </>
+                      );
+                    })()}
                   </td>
+
 
 
                   <td className="px-6 py-4 text-sm whitespace-nowrap">
@@ -886,181 +891,188 @@ const TablaRegistros = () => {
               </button>
             </div>
 
-            {/* Campos del registro */}
             {Object.keys(registroEditando)
-              .filter((campo) =>
-                campo !== "imagenes" &&
-                campo !== "id" &&
-                campo !== "idBim" &&
-                campo !== "nombreProyecto" &&
-                campo !== "elementoId" &&
-                campo !== "idSector" &&
-                campo !== "idSubSector" &&
-                campo !== "parteId" &&
-                campo !== "ppiId" &&
-                campo !== "loteId" &&
-                campo !== "totalSubactividades" &&
-                campo !== "pkFinal" &&
-                campo !== "pkInicial" &&
-                campo !== "idProyecto" &&
-                campo !== "estado" &&
-                campo !== "ppiNombre" &&
-                campo !== "actividades" &&
-                campo !== "sectorNombre" &&
-                campo !== "subSectorNombre" &&
-                campo !== "parteNombre" &&
-                campo !== "elementoNombre"
-              )
-              .map((campo, index) => (
-                <div key={index} className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center">
-                    {/* Mapear los nombres personalizados */}
-                    {{
-                      fechaHora: "Fecha y hora",
-                      sectorNombre: "Grupo activos",
-                      subSectorNombre: "Activo",
-                      parteNombre: "Inventario vial",
-                      elementoNombre: "Componente",
-                      nombre: "Actividad",
-                    }[campo] || campo}
-                    <AiFillLock className="ml-2 text-gray-500" size={16} />
-                  </label>
-                  <input
-                    type="text"
-                    value={registroEditando[campo] || ""}
-                    readOnly // Todos los campos bloqueados
-                    className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
-                  />
-                </div>
-              ))}
+  .filter((campo) =>
+    ![
+      "imagenes",
+      "id",
+      "idBim",
+      "nombreProyecto",
+      "elementoId",
+      "idSector",
+      "idSubSector",
+      "parteId",
+      "ppiId",
+      "loteId",
+      "totalSubactividades",
+      "pkFinal",
+      "pkInicial",
+      "idProyecto",
+      "estado",
+      "ppiNombre",
+      "actividades",
+      "sectorNombre",
+      "subSectorNombre",
+      "parteNombre",
+      "elementoNombre",
+    ].includes(campo)
+  )
+  .map((campo, index) => (
+    <div key={index} className="mb-4">
+      <label className="block text-sm font-semibold bg-gray-200 p-2 text-gray-700 mb-1 flex items-center">
+        {formatCamelCase(campo)}
+        <AiFillLock className="ml-2 text-gray-500" size={16} />
+      </label>
 
-            {/* Editar actividades */}
-{/* Editar actividades */}
-<div className="mb-4">
-  <label className="block text-md font-semibold text-gray-700 mb-2">Actividades</label>
-  {Object.entries(registroEditando.actividades || {}).map(([index, actividad]) => (
-    <div 
-      key={index} 
-      className={`mb-3 p-3 border rounded-lg shadow-sm flex flex-col ${
-        actividad.noAplica ? "bg-gray-200 border-gray-400 opacity-70" : "bg-white border-gray-300"
-      }`}
-    >
-      {/* Información de la actividad */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <p className="font-semibold text-sky-700">{actividad.numero || index}-</p>
-          <p className={`font-semibold text-sky-700 ${actividad.noAplica ? "line-through italic text-gray-500" : ""}`}>
-            {actividad.nombre || "Actividad sin nombre"}
-          </p>
-        </div>
-
-        {/* Opciones de selección */}
-        <div className="flex items-center gap-4">
-          {/* Radio button para "Sí" */}
-          <label 
-            className={`flex items-center gap-1 text-sm font-medium ${
-              actividad.noAplica ? "text-gray-400 cursor-not-allowed" : "text-gray-700"
-            }`}
-          >
+      {/* Si es un objeto, mostrar cada propiedad dentro de él */}
+      {typeof registroEditando[campo] === "object" && registroEditando[campo] !== null ? (
+        Object.entries(registroEditando[campo]).map(([subCampo, valor]) => (
+          <div key={subCampo} className="mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              {formatCamelCase(subCampo)}
+            </label>
             <input
-              type="radio"
-              name={`actividad-${index}`}
-              value="si"
-              checked={actividad.seleccionada === true}
-              onChange={() => {
-                setRegistroEditando((prev) => {
-                  const newActividades = { ...prev.actividades };
-                  newActividades[index] = {
-                    ...newActividades[index],
-                    seleccionada: true,
-                    noAplica: false, // Desactivar "No Aplica"
-                  };
-                  return { ...prev, actividades: newActividades };
-                });
-              }}
-              disabled={actividad.noAplica} 
-              className="form-radio text-sky-600"
+              type="text"
+              value={valor || ""}
+              readOnly
+              className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
             />
-            Sí
-          </label>
-
-          {/* Radio button para "No" */}
-          <label 
-            className={`flex items-center gap-1 text-sm font-medium ${
-              actividad.noAplica ? "text-gray-400 cursor-not-allowed" : "text-gray-700"
-            }`}
-          >
-            <input
-              type="radio"
-              name={`actividad-${index}`}
-              value="no"
-              checked={actividad.seleccionada === false}
-              onChange={() => {
-                setRegistroEditando((prev) => {
-                  const newActividades = { ...prev.actividades };
-                  newActividades[index] = {
-                    ...newActividades[index],
-                    seleccionada: false,
-                    noAplica: false, // Desactivar "No Aplica"
-                  };
-                  return { ...prev, actividades: newActividades };
-                });
-              }}
-              disabled={actividad.noAplica}
-              className="form-radio text-sky-600"
-            />
-            No
-          </label>
-
-          {/* Checkbox "No Aplica" */}
-          <label className="flex items-center gap-1 text-amber-600 text-sm font-medium">
-            <input
-              type="checkbox"
-              checked={actividad.noAplica || false}
-              onChange={() => {
-                setRegistroEditando((prev) => {
-                  const newActividades = { ...prev.actividades };
-                  newActividades[index].noAplica = !newActividades[index].noAplica;
-
-                  // Si "No Aplica" se marca, desactivar "Sí" y "No"
-                  if (newActividades[index].noAplica) {
-                    newActividades[index].seleccionada = null;
-                  }
-
-                  return { ...prev, actividades: newActividades };
-                });
-              }}
-              className="form-checkbox h-4 w-4 text-gray-500"
-            />
-            No Aplica
-          </label>
-        </div>
-      </div>
-
-      {/* Observaciones - Editable */}
-      <div className="mt-2">
-        <label className="block text-sm font-medium text-gray-700">Observaciones</label>
-        <textarea
-          value={actividad.observaciones || ""}
-          onChange={(e) => {
-            setRegistroEditando((prev) => {
-              const newActividades = { ...prev.actividades };
-              newActividades[index] = {
-                ...newActividades[index],
-                observaciones: e.target.value,
-              };
-              return { ...prev, actividades: newActividades };
-            });
-          }}
-          disabled={actividad.noAplica} // Deshabilitar si está en "No Aplica"
-          className="w-full px-3 py-2 border rounded-md text-gray-700 focus:ring-2 focus:ring-sky-600 focus:border-sky-600 disabled:bg-gray-200 disabled:text-gray-500"
-          rows={2}
+          </div>
+        ))
+      ) : (
+        <input
+          type="text"
+          value={registroEditando[campo] || ""}
+          readOnly
+          className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
         />
-      </div>
+      )}
     </div>
   ))}
-</div>
 
+
+            {/* Editar actividades */}
+            <div className="mb-4">
+              <label className="block text-md font-semibold text-gray-700 mb-2">Actividades</label>
+              {Object.entries(registroEditando.actividades || {}).map(([index, actividad]) => (
+                <div
+                  key={index}
+                  className={`mb-3 p-3 border rounded-lg shadow-sm flex flex-col ${actividad.noAplica ? "bg-gray-200 border-gray-400 opacity-70" : "bg-white border-gray-300"
+                    }`}
+                >
+                  {/* Información de la actividad */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-sky-700">{actividad.numero || index}-</p>
+                      <p className={`font-semibold text-sky-700 ${actividad.noAplica ? "line-through italic text-gray-500" : ""}`}>
+                        {actividad.nombre || "Actividad sin nombre"}
+                      </p>
+                    </div>
+
+                    {/* Opciones de selección */}
+                    <div className="flex items-center gap-4">
+                      {/* Radio button para "Sí" */}
+                      <label
+                        className={`flex items-center gap-1 text-sm font-medium ${actividad.noAplica ? "text-gray-400 cursor-not-allowed" : "text-gray-700"
+                          }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`actividad-${index}`}
+                          value="si"
+                          checked={actividad.seleccionada === true}
+                          onChange={() => {
+                            setRegistroEditando((prev) => {
+                              const newActividades = { ...prev.actividades };
+                              newActividades[index] = {
+                                ...newActividades[index],
+                                seleccionada: true,
+                                noAplica: false, // Desactivar "No Aplica"
+                              };
+                              return { ...prev, actividades: newActividades };
+                            });
+                          }}
+                          disabled={actividad.noAplica}
+                          className="form-radio text-sky-600"
+                        />
+                        Sí
+                      </label>
+
+                      {/* Radio button para "No" */}
+                      <label
+                        className={`flex items-center gap-1 text-sm font-medium ${actividad.noAplica ? "text-gray-400 cursor-not-allowed" : "text-gray-700"
+                          }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`actividad-${index}`}
+                          value="no"
+                          checked={actividad.seleccionada === false}
+                          onChange={() => {
+                            setRegistroEditando((prev) => {
+                              const newActividades = { ...prev.actividades };
+                              newActividades[index] = {
+                                ...newActividades[index],
+                                seleccionada: false,
+                                noAplica: false, // Desactivar "No Aplica"
+                              };
+                              return { ...prev, actividades: newActividades };
+                            });
+                          }}
+                          disabled={actividad.noAplica}
+                          className="form-radio text-sky-600"
+                        />
+                        No
+                      </label>
+
+                      {/* Checkbox "No Aplica" */}
+                      <label className="flex items-center gap-1 text-amber-600 text-sm font-medium">
+                        <input
+                          type="checkbox"
+                          checked={actividad.noAplica || false}
+                          onChange={() => {
+                            setRegistroEditando((prev) => {
+                              const newActividades = { ...prev.actividades };
+                              newActividades[index].noAplica = !newActividades[index].noAplica;
+
+                              // Si "No Aplica" se marca, desactivar "Sí" y "No"
+                              if (newActividades[index].noAplica) {
+                                newActividades[index].seleccionada = null;
+                              }
+
+                              return { ...prev, actividades: newActividades };
+                            });
+                          }}
+                          className="form-checkbox h-4 w-4 text-gray-500"
+                        />
+                        No Aplica
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Observaciones - Editable */}
+                  <div className="mt-2">
+                    <label className="block text-sm font-medium text-gray-700">Observaciones</label>
+                    <textarea
+                      value={actividad.observacion || ""}
+                      onChange={(e) => {
+                        setRegistroEditando((prev) => {
+                          const newActividades = { ...prev.actividades };
+                          newActividades[index] = {
+                            ...newActividades[index],
+                            observaciones: e.target.value,
+                          };
+                          return { ...prev, actividades: newActividades };
+                        });
+                      }}
+                      disabled={actividad.noAplica} // Deshabilitar si está en "No Aplica"
+                      className="w-full px-3 py-2 border rounded-md text-gray-700 focus:ring-2 focus:ring-sky-600 focus:border-sky-600 disabled:bg-gray-200 disabled:text-gray-500"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
 
 
 
