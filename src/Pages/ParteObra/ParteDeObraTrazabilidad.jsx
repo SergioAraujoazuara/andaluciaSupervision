@@ -31,8 +31,8 @@ const ParteObra = () => {
     imagenes: [],
     registroEmpresas: "",
     controlAccesos: "",
-    controlSubcontratacion: "",
-    controlSiniestraidad: ""
+    controlSubcontratacion: { seleccionada: null, nombreEmpresaSubcontrata: "", controlSubcontratacion: "" },
+    controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" }
   });
 
   const fileInputsRefs = useRef([]);
@@ -69,8 +69,8 @@ const ParteObra = () => {
   // Estado para almacenar los checkbox seleccionados
   const [selectedSubactivities, setSelectedSubactivities] = useState({});
   const [activityObservations, setActivityObservations] = useState({});
-  const [observacionesActividad, setObservacionesActividad] = useState(""); // Estado para actividad seleccionada
-  const [observacionesLocalizacion, setObservacionesLocalizacion] = useState(""); // Estado para localización
+  const [stats, setStats] = useState({ totalSi: 0, totalNo: 0, totalActividades: 0, porcentajeApto: 0 });
+
 
 
   const [selectedActivities, setSelectedActivities] = useState({});
@@ -78,15 +78,27 @@ const ParteObra = () => {
     console.log("Estado actual de selectedActivities:", selectedActivities);
   }, [selectedActivities]);
 
-  // Separar los manejadores de eventos para cada textarea
-  const handleObservacionesActividadChange = (e) => {
-    setObservacionesActividad(e.target.value);
-  };
-
-  const handleObservacionesLocalizacionChange = (e) => {
-    setObservacionesLocalizacion(e.target.value);
-  };
-
+  useEffect(() => {
+    if (ppiDetails && ppiDetails.actividades) {
+      const totalActividadesInicial = ppiDetails.actividades.length;
+  
+      // Contar cuántas actividades NO están en "No Aplica"
+      const totalActividades = totalActividadesInicial - Object.values(selectedActivities).filter(act => act.noAplica).length;
+  
+      const totalSi = Object.values(selectedActivities).filter(act => act.seleccionada === true).length;
+      const totalNo = Object.values(selectedActivities).filter(act => act.seleccionada === false).length;
+  
+      // Si aún no se han seleccionado actividades, el porcentaje es 0%
+      const porcentajeApto = totalActividades > 0 ? Math.round((totalSi / totalActividades) * 100) : 0;
+  
+      setStats({ totalSi, totalNo, totalActividades, porcentajeApto, totalActividadesInicial });
+    }
+  }, [selectedActivities, ppiDetails]);
+  
+  useEffect(() => {
+    console.log("PPI Details:", ppiDetails);
+  }, [ppiDetails]);
+  
   // Generar valores únicos al cargar los lotes
   useEffect(() => {
     if (lotes.length > 0) {
@@ -250,13 +262,25 @@ const ParteObra = () => {
     setIsModalOpen(false);
     setModalSend(false);
     setSelectedLote(null);
-    setFormData({ observaciones: "", fechaHora: "", imagenes: [], observacionesActividad: "", observacionesLocalizacion: "" });
     setSelectedLoteOption("");
 
     // Reseteamos los checkboxes de actividades y subactividades
     setSelectedActivities({});
     setSelectedSubactivities({});
     setActivityObservations({});
+
+    // Restablece el estado del formulario asegurando la estructura correcta
+    setFormData({
+      observaciones: "",
+      observacionesActividad: "",
+      observacionesLocalizacion: "",
+      fechaHora: "",
+      imagenes: [],
+      registroEmpresas: "",
+      controlAccesos: "",
+      controlSubcontratacion: { seleccionada: null, nombreEmpresaSubcontrata: "", controlSubcontratacion: "" },
+      controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" }
+    });
 
     // Limpiar referencias de archivos
     fileInputsRefs.current.forEach((input) => {
@@ -265,14 +289,44 @@ const ParteObra = () => {
   };
 
 
+
   // Manejar los cambios en los inputs del formulario
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    const { name, value, type } = e.target;
+
+    setFormData((prev) => {
+      // Manejo de campos dentro de objetos anidados
+      if (name.startsWith("controlSubcontratacion.")) {
+        const field = name.split(".")[1]; // Extrae la propiedad dentro del objeto
+
+        return {
+          ...prev,
+          controlSubcontratacion: {
+            ...prev.controlSubcontratacion,
+            [field]: value, // Actualiza solo la propiedad específica
+          },
+        };
+      }
+
+      if (name.startsWith("controlSiniestraidad.")) {
+        const field = name.split(".")[1]; // Extrae la propiedad dentro del objeto
+
+        return {
+          ...prev,
+          controlSiniestraidad: {
+            ...prev.controlSiniestraidad,
+            [field]: field === "seleccionado" ? value === "true" : value, // Convierte "true"/"false" en booleano
+          },
+        };
+      }
+
+
+      // Manejo de otros campos normales
+      return { ...prev, [name]: value };
+    });
   };
+
+
 
 
   const handleFileChange = async (e, index) => {
@@ -362,16 +416,31 @@ const ParteObra = () => {
         actividades: selectedActivities,
         imagenes: imageUrls,
         fechaHora: new Date(formData.fechaHora).toISOString(),
-        actividad: selectedLoteOption,
-
+        actividad: selectedLote.nombre,
+        resumenPuntosControl: {
+          totalSi: stats.totalSi,
+          totalActividades: stats.totalActividades,
+          porcentajeApto: stats.porcentajeApto
+        }
+       
       };
 
       // Guardar en Firebase
       await addDoc(collection(db, "registrosParteDeObra"), registro);
       console.log("Registro guardado con éxito:", registro);
 
-      // Resetea los inputs y cierra el modal principal
-      setFormData({ observaciones: "", fechaHora: "", imagenes: [] });
+      // Restablece el estado del formulario asegurando la estructura correcta
+      setFormData({
+        observaciones: "",
+        observacionesActividad: "",
+        observacionesLocalizacion: "",
+        fechaHora: "",
+        imagenes: [],
+        registroEmpresas: "",
+        controlAccesos: "",
+        controlSubcontratacion: { seleccionada: null, nombreEmpresaSubcontrata: "", controlSubcontratacion: "" },
+        controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" }
+      })
       setSelectedLoteOption("")
       fileInputsRefs.current.forEach((input) => {
         if (input) input.value = null;
@@ -566,6 +635,11 @@ const ParteObra = () => {
 
 
 
+  const getBackgroundColor = () => {
+    if (stats.porcentajeApto === 100) return "bg-green-200 text-gray-500";
+    if (stats.porcentajeApto >= 50) return "bg-amber-200 text-gray-500";
+    return "bg-red-200 text-gray-500";
+  };
 
   return (
     <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
@@ -800,39 +874,54 @@ const ParteObra = () => {
                         {/* Checkbox y título de la actividad */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas)}
-                              disabled={selectedActivities[actividadIndex]?.noAplica}
-                              className={`relative w-14 h-7 flex items-center rounded-full p-1 transition-all duration-300
-      ${selectedActivities[actividadIndex]?.seleccionada ? "bg-sky-600" : "bg-amber-700"}
-      ${selectedActivities[actividadIndex]?.noAplica ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                            >
-                              <div
-                                className={`absolute left-1 w- h- bg-white rounded-full shadow-md flex items-center justify-center transform transition-transform duration-300
-        ${selectedActivities[actividadIndex]?.seleccionada ? "translate-x-7" : "translate-x-0"}`}
-                              >
-                             <span className="text-gray-500 text-xs"> {/* Iconos ahora son grises */}
-        {selectedActivities[actividadIndex]?.seleccionada ? "✔️" : "✖️"}
-      </span>
-                              </div>
-                            </button>
                             <p className="font-semibold text-sky-700">{actividad.numero}-</p>
                             <p className="font-semibold text-sky-700">{actividad.actividad}</p>
+
+                            {/* Checkbox para marcar Sí */}
+                            <label className="flex items-center gap-1 text-sm text-gray-700">
+                              <input
+                                type="radio"
+                                name={`actividad-${actividadIndex}`}
+                                value="si"
+                                checked={selectedActivities[actividadIndex]?.seleccionada === true}
+                                onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas)}
+                                disabled={selectedActivities[actividadIndex]?.noAplica}
+                                className="form-radio text-sky-600"
+                              />
+                              Sí
+                            </label>
+
+                            {/* Checkbox para marcar No */}
+                            <label className="flex items-center gap-1 text-sm text-gray-700">
+                              <input
+                                type="radio"
+                                name={`actividad-${actividadIndex}`}
+                                value="no"
+                                checked={selectedActivities[actividadIndex]?.seleccionada === false}
+                                onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas)}
+                                disabled={selectedActivities[actividadIndex]?.noAplica}
+                                className="form-radio text-sky-600"
+                              />
+                              No
+                            </label>
+
+                            {/* Checkbox "No Aplica" */}
+                            <label className="flex items-center gap-1 text-amber-600 text-sm font-medium">
+                              <input
+                                type="checkbox"
+                                checked={selectedActivities[actividadIndex]?.noAplica || false}
+                                onChange={() => handleNoAplicaChange(actividadIndex)}
+                                className="form-checkbox h-4 w-4 text-gray-500"
+                              />
+                              No Aplica
+                            </label>
                           </div>
 
 
 
 
-                          {/* Checkbox "No Aplica" */}
-                          <div className="flex items-center gap-2">
-                            <label className="text-amber-600 text-sm font-medium">No Aplica</label>
-                            <input
-                              type="checkbox"
-                              checked={selectedActivities[actividadIndex]?.noAplica || false}
-                              onChange={() => handleNoAplicaChange(actividadIndex)}
-                              className="form-checkbox h-4 w-4 text-gray-500"
-                            />
-                          </div>
+
+
                         </div>
 
                         {/* Mostrar subactividades solo si existen y tienen nombre válido */}
@@ -874,6 +963,11 @@ const ParteObra = () => {
             )}
 
 
+            {/* Estadísticas de apto debajo de los checkboxes */}
+            <div className={` font-medium py-2 px-4 rounded-lg flex gap-5 justify-between ${getBackgroundColor()}`}>
+              <span>Resumen total</span><p>{stats.totalSi} puntos de {stats.totalActividades}  ({stats.porcentajeApto}%)</p>
+            </div>
+
 
 
 
@@ -913,31 +1007,140 @@ const ParteObra = () => {
                 </div>
 
                 {/* Control de la Subcontratación */}
+                {/* Opciones Sí / No para Control de la Subcontratación */}
+                <div className="flex items-center gap-4 mt-2">
+                  <label className="ml-4 flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <input
+                      type="radio"
+                      name="controlSubcontratacion.seleccionada"
+                      value="si"
+                      checked={formData.controlSubcontratacion.seleccionada === "si"}
+                      onChange={handleInputChange}
+                      className="form-radio text-sky-600"
+                    />
+                    Sí
+                  </label>
+
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <input
+                      type="radio"
+                      name="controlSubcontratacion.seleccionada"
+                      value="no"
+                      checked={formData.controlSubcontratacion.seleccionada === "no"}
+                      onChange={handleInputChange}
+                      className="form-radio text-sky-600"
+                    />
+                    No
+                  </label>
+                </div>
+
+                {/* Input para ingresar el nombre de la empresa (Solo si selecciona "Sí") */}
+                {formData.controlSubcontratacion.seleccionada === "si" && (
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      name="controlSubcontratacion.nombreEmpresaSubcontrata"
+                      value={formData.controlSubcontratacion.nombreEmpresaSubcontrata || ""}
+                      onChange={handleInputChange}
+                      placeholder="Nombre de la empresa"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-sky-500 focus:border-sky-500"
+                    />
+                  </div>
+                )}
+
+                {/* Observaciones de la Subcontratación */}
+                <textarea
+                  name="controlSubcontratacion.controlSubcontratacion"
+                  value={formData.controlSubcontratacion.controlSubcontratacion || ""}
+                  onChange={handleInputChange}
+                  placeholder="Escribe observaciones..."
+                  className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
+                />
+
+
+
+
+                {/* Previsión de Actividades de Próximo Inicio */}
+                <div className="mt-6">
+                  <label className="block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
+                    Previsión de Actividades de Próximo Inicio
+                  </label>
+
+                  {/* Actividades de Próximo Inicio */}
+                  <div className="">
+                    <label className="mt-2 block px-4 py-2 rounded-md text-sm font-medium">
+                      Actividades de Próximo Inicio
+                    </label>
+                    <textarea
+                      name="actividadesProximoInicio"
+                      value={formData.actividadesProximoInicio || ""}
+                      onChange={handleInputChange}
+                      placeholder="Escribe las actividades previstas..."
+                      className=" block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
+                    ></textarea>
+                  </div>
+
+                  {/* Medidas Preventivas a Implantar */}
+                  <div>
+                    <label className="block px-4 py-2 rounded-md text-sm font-medium">
+                      Medidas Preventivas a Implantar en Obra
+                    </label>
+                    <textarea
+                      name="medidasPreventivas"
+                      value={formData.medidasPreventivas || ""}
+                      onChange={handleInputChange}
+                      placeholder="Escribe las medidas preventivas..."
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
+                    ></textarea>
+                  </div>
+                </div>
+
+
+                {/* Siniestralidad y planificación de actuaciones de emergencia */}
                 <div>
                   <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
-                    Control de la Subcontratación. Registro del Libro y Comunicaciones.
+                    Siniestralidad y planificación de actuaciones de emergencia
                   </label>
+
+                  {/* Checkbox Sí / No */}
+                  <div className="flex items-center gap-4 mt-2">
+                    <label className="ml-4 flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <input
+                        type="radio"
+                        name="controlSiniestraidad.seleccionado"
+                        value="true"
+                        checked={formData.controlSiniestraidad.seleccionado === true}
+                        onChange={handleInputChange}
+                        className="form-radio text-sky-600"
+                      />
+                      Sí
+                    </label>
+
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <input
+                        type="radio"
+                        name="controlSiniestraidad.seleccionado"
+                        value="false"
+                        checked={formData.controlSiniestraidad.seleccionado === false}
+                        onChange={handleInputChange}
+                        className="form-radio text-sky-600"
+                      />
+                      No
+                    </label>
+                  </div>
+
+
+                  {/* Observaciones de siniestralidad */}
                   <textarea
-                    name="controlSubcontratacion"
-                    value={formData.controlSubcontratacion || ""}
+                    name="controlSiniestraidad.observacionesSiniestralidad"
+                    value={formData.controlSiniestraidad.observacionesSiniestralidad}
                     onChange={handleInputChange}
                     placeholder="Escribe observaciones..."
                     className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
                   ></textarea>
                 </div>
 
-                <div>
-                  <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
-                    Sinisestralidad y planificación de actuaciones de emergencia
-                  </label>
-                  <textarea
-                    name="controlSiniestraidad"
-                    value={formData.controlSiniestraidad || ""}
-                    onChange={handleInputChange}
-                    placeholder="Escribe observaciones..."
-                    className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
-                  ></textarea>
-                </div>
+
 
               </div>
 
@@ -1006,7 +1209,7 @@ const ParteObra = () => {
               {/* Observaciones */}
               <div>
                 <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
-                  Observaciones
+                  Observaciones generales
                 </label>
                 <textarea
                   maxLength={700}

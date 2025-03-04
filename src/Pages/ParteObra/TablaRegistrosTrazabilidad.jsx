@@ -23,7 +23,7 @@ import useUsuario from "../../Hooks/useUsuario.jsx"
 const TablaRegistros = () => {
   const { user } = useAuth();
   const userId = user?.uid; // Asegúrate de que 'uid' existe
-  const {usuario} = useUsuario(userId)
+  const { usuario } = useUsuario(userId)
   const roleUsuario = usuario?.role
   const [nombreUsuario, setNombreUsuario] = useState("");
   const selectedProjectName = localStorage.getItem("selectedProjectName");
@@ -53,7 +53,7 @@ const TablaRegistros = () => {
     const hoy = new Date();
     return hoy.toISOString().split("T")[0]; // Formato YYYY-MM-DD
   };
-  
+
 
   useEffect(() => {
     const actualizarValoresUnicos = () => {
@@ -218,27 +218,27 @@ const TablaRegistros = () => {
     const registrosFiltrados = registrosParteDeObra.filter((registro) => {
       const fechaRegistro = new Date(registro.fechaHora).toISOString().split("T")[0]; // Convertir fecha del registro a YYYY-MM-DD
       const fechaHoy = obtenerFechaActual();
-  
+
       // Si no hay filtro de fecha, mostrar solo los registros de hoy
       const filtroFechaInicio = valoresFiltro.fechaInicio || fechaHoy;
       const filtroFechaFin = valoresFiltro.fechaFin || fechaHoy;
-  
+
       const cumpleFecha =
         (!filtroFechaInicio || fechaRegistro >= filtroFechaInicio) &&
         (!filtroFechaFin || fechaRegistro <= filtroFechaFin);
-  
+
       // Filtro de actividad y otros
       const cumpleOtrosFiltros = Object.keys(valoresFiltro).every((campo) => {
         if (campo === "fechaInicio" || campo === "fechaFin") return true;
         return !valoresFiltro[campo] || (registro[campo] || "").includes(valoresFiltro[campo]);
       });
-  
+
       return cumpleFecha && cumpleOtrosFiltros;
     });
-  
+
     setRegistrosFiltrados(registrosFiltrados);
   }, [valoresFiltro, registrosParteDeObra]);
-  
+
 
 
 
@@ -478,8 +478,8 @@ const TablaRegistros = () => {
     subSectorNombre: "Activo",
     parteNombre: "Inventario vial",
     elementoNombre: "Componente",
-    nombre: "Actividades mantenimiento, conservación, rehabilitación",
-    actividad: "Actividades mantenimiento, conservación, rehabilitación", // Nuevo mapeo para la columna actividad
+    nombre: "Actividad",
+    actividad: "Actividad", // Nuevo mapeo para la columna actividad
     observaciones: "Observaciones",
   };
 
@@ -514,14 +514,14 @@ const TablaRegistros = () => {
       .toString()
       .padStart(2, "0")}/${hoy.getFullYear()}`;
   };
-  
+
   const formatFechaSolo = (fecha) => {
     if (!fecha) return "";
     const fechaObj = new Date(fecha);
     const dia = fechaObj.getDate().toString().padStart(2, "0");
     const mes = (fechaObj.getMonth() + 1).toString().padStart(2, "0");
     const anio = fechaObj.getFullYear();
-    
+
     return `${dia}/${mes}/${anio}`; // Devuelve solo DD/MM/YYYY
   };
 
@@ -635,7 +635,7 @@ const TablaRegistros = () => {
           <thead className="border-gray-200 bg-sky-600 text-white">
             <tr>
               {ordenColumnas
-                .filter((columna) => columna !== "nombre") // Ocultar "nombre"
+                .filter((columna) => columna !== "nombre" && columna !== "sectorNombre" && columna !== "subSectorNombre" && columna !== "elementoNombre" && columna !== "parteNombre") // Ocultar "nombre"
                 .map((columna) => (
                   <th
                     key={columna}
@@ -645,7 +645,10 @@ const TablaRegistros = () => {
                   </th>
                 ))}
               <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">
-                Acción
+                Progreso
+              </th>
+              <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">
+                Avance
               </th>
             </tr>
           </thead>
@@ -667,7 +670,7 @@ const TablaRegistros = () => {
                   className="hover:bg-gray-50 transition duration-150 ease-in-out"
                 >
                   {ordenColumnas
-                    .filter((columna) => columna !== "nombre") // Ocultar "nombre"
+                    .filter((columna) => columna !== "nombre" && columna !== "sectorNombre" && columna !== "subSectorNombre" && columna !== "elementoNombre" && columna !== "parteNombre")// Ocultar "nombre"
                     .map((columna) => (
                       <td
                         key={columna}
@@ -689,6 +692,26 @@ const TablaRegistros = () => {
                           )}
                       </td>
                     ))}
+                  <td className="px-6 py-4 text-sm whitespace-nowrap flex flex-col items-center gap-2">
+                    <div className="flex justify-between text-gray-700 font-medium">
+                      <span>{registro.resumenPuntosControl.totalSi} / {registro.resumenPuntosControl.totalActividades}</span>
+
+                    </div>
+
+                    <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${registro.resumenPuntosControl.porcentajeApto}%`,
+                          backgroundColor:
+                            registro.resumenPuntosControl.porcentajeApto === 100 ? "#10B981" :
+                              registro.resumenPuntosControl.porcentajeApto >= 50 ? "#FBBF24" : "#EF4444",
+                        }}
+                      ></div>
+                    </div>
+                    <span className="font-medium">{registro.resumenPuntosControl.porcentajeApto}%</span>
+                  </td>
+
 
                   <td className="px-6 py-4 text-sm whitespace-nowrap">
                     <div className="flex gap-4">
@@ -705,17 +728,17 @@ const TablaRegistros = () => {
                       </button>
                       {roleUsuario === 'admin' && (
                         <button
-                        onClick={() => {
-                          setShowConfirmModal(true);
-                          setRegistroAEliminar(registro);
-                        }}
-                        className="px-4 py-2 bg-red-700 text-white font-medium rounded-md shadow-sm hover:bg-red-700 transition duration-150"
-                      >
-                        Eliminar
-                      </button>
+                          onClick={() => {
+                            setShowConfirmModal(true);
+                            setRegistroAEliminar(registro);
+                          }}
+                          className="px-4 py-2 bg-red-700 text-white font-medium rounded-md shadow-sm hover:bg-red-700 transition duration-150"
+                        >
+                          Eliminar
+                        </button>
                       )
-                    }
-                      
+                      }
+
                       <button
                         onClick={() => handleAbrirModalModificaciones(registro)}
                         className="px-4 py-2 bg-yellow-600 text-white font-medium rounded-md shadow-sm hover:bg-yellow-700 transition duration-150"
@@ -782,21 +805,21 @@ const TablaRegistros = () => {
                     Editar
                   </button>
 
-                 
+
                   {roleUsuario === 'admin' && (
-                        <button
-                        onClick={() => {
-                          setShowConfirmModal(true);
-                          setRegistroAEliminar(registro);
-                        }}
-                        className="px-4 py-2 bg-red-700 text-white font-medium rounded-md shadow-sm hover:bg-red-700 transition duration-150"
-                      >
-                        Eliminar
-                      </button>
-                      )
-                    }
-                  
-                  
+                    <button
+                      onClick={() => {
+                        setShowConfirmModal(true);
+                        setRegistroAEliminar(registro);
+                      }}
+                      className="px-4 py-2 bg-red-700 text-white font-medium rounded-md shadow-sm hover:bg-red-700 transition duration-150"
+                    >
+                      Eliminar
+                    </button>
+                  )
+                  }
+
+
                 </div>
               </div>
             ))}
@@ -881,7 +904,12 @@ const TablaRegistros = () => {
                 campo !== "pkInicial" &&
                 campo !== "idProyecto" &&
                 campo !== "estado" &&
-                campo !== "ppiNombre"
+                campo !== "ppiNombre" &&
+                campo !== "actividades" &&
+                campo !== "sectorNombre" &&
+                campo !== "subSectorNombre" &&
+                campo !== "parteNombre" &&
+                campo !== "elementoNombre"
               )
               .map((campo, index) => (
                 <div key={index} className="mb-4">
@@ -893,7 +921,7 @@ const TablaRegistros = () => {
                       subSectorNombre: "Activo",
                       parteNombre: "Inventario vial",
                       elementoNombre: "Componente",
-                      nombre: "Actividades mantenimiento, conservación, rehabilitación",
+                      nombre: "Actividad",
                     }[campo] || campo}
                     <AiFillLock className="ml-2 text-gray-500" size={16} />
                   </label>
@@ -905,6 +933,136 @@ const TablaRegistros = () => {
                   />
                 </div>
               ))}
+
+            {/* Editar actividades */}
+{/* Editar actividades */}
+<div className="mb-4">
+  <label className="block text-md font-semibold text-gray-700 mb-2">Actividades</label>
+  {Object.entries(registroEditando.actividades || {}).map(([index, actividad]) => (
+    <div 
+      key={index} 
+      className={`mb-3 p-3 border rounded-lg shadow-sm flex flex-col ${
+        actividad.noAplica ? "bg-gray-200 border-gray-400 opacity-70" : "bg-white border-gray-300"
+      }`}
+    >
+      {/* Información de la actividad */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-sky-700">{actividad.numero || index}-</p>
+          <p className={`font-semibold text-sky-700 ${actividad.noAplica ? "line-through italic text-gray-500" : ""}`}>
+            {actividad.nombre || "Actividad sin nombre"}
+          </p>
+        </div>
+
+        {/* Opciones de selección */}
+        <div className="flex items-center gap-4">
+          {/* Radio button para "Sí" */}
+          <label 
+            className={`flex items-center gap-1 text-sm font-medium ${
+              actividad.noAplica ? "text-gray-400 cursor-not-allowed" : "text-gray-700"
+            }`}
+          >
+            <input
+              type="radio"
+              name={`actividad-${index}`}
+              value="si"
+              checked={actividad.seleccionada === true}
+              onChange={() => {
+                setRegistroEditando((prev) => {
+                  const newActividades = { ...prev.actividades };
+                  newActividades[index] = {
+                    ...newActividades[index],
+                    seleccionada: true,
+                    noAplica: false, // Desactivar "No Aplica"
+                  };
+                  return { ...prev, actividades: newActividades };
+                });
+              }}
+              disabled={actividad.noAplica} 
+              className="form-radio text-sky-600"
+            />
+            Sí
+          </label>
+
+          {/* Radio button para "No" */}
+          <label 
+            className={`flex items-center gap-1 text-sm font-medium ${
+              actividad.noAplica ? "text-gray-400 cursor-not-allowed" : "text-gray-700"
+            }`}
+          >
+            <input
+              type="radio"
+              name={`actividad-${index}`}
+              value="no"
+              checked={actividad.seleccionada === false}
+              onChange={() => {
+                setRegistroEditando((prev) => {
+                  const newActividades = { ...prev.actividades };
+                  newActividades[index] = {
+                    ...newActividades[index],
+                    seleccionada: false,
+                    noAplica: false, // Desactivar "No Aplica"
+                  };
+                  return { ...prev, actividades: newActividades };
+                });
+              }}
+              disabled={actividad.noAplica}
+              className="form-radio text-sky-600"
+            />
+            No
+          </label>
+
+          {/* Checkbox "No Aplica" */}
+          <label className="flex items-center gap-1 text-amber-600 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={actividad.noAplica || false}
+              onChange={() => {
+                setRegistroEditando((prev) => {
+                  const newActividades = { ...prev.actividades };
+                  newActividades[index].noAplica = !newActividades[index].noAplica;
+
+                  // Si "No Aplica" se marca, desactivar "Sí" y "No"
+                  if (newActividades[index].noAplica) {
+                    newActividades[index].seleccionada = null;
+                  }
+
+                  return { ...prev, actividades: newActividades };
+                });
+              }}
+              className="form-checkbox h-4 w-4 text-gray-500"
+            />
+            No Aplica
+          </label>
+        </div>
+      </div>
+
+      {/* Observaciones - Editable */}
+      <div className="mt-2">
+        <label className="block text-sm font-medium text-gray-700">Observaciones</label>
+        <textarea
+          value={actividad.observaciones || ""}
+          onChange={(e) => {
+            setRegistroEditando((prev) => {
+              const newActividades = { ...prev.actividades };
+              newActividades[index] = {
+                ...newActividades[index],
+                observaciones: e.target.value,
+              };
+              return { ...prev, actividades: newActividades };
+            });
+          }}
+          disabled={actividad.noAplica} // Deshabilitar si está en "No Aplica"
+          className="w-full px-3 py-2 border rounded-md text-gray-700 focus:ring-2 focus:ring-sky-600 focus:border-sky-600 disabled:bg-gray-200 disabled:text-gray-500"
+          rows={2}
+        />
+      </div>
+    </div>
+  ))}
+</div>
+
+
+
 
             {/* Observaciones - Editable y al final */}
             <div className="mb-4">
@@ -1057,7 +1215,7 @@ const TablaRegistros = () => {
                                     subSectorNombre: "Activo",
                                     parteNombre: "Inventario vial",
                                     elementoNombre: "Componente",
-                                    nombre: "Actividades mantenimiento, conservación, rehabilitación",
+                                    nombre: "Actividad",
                                     observaciones: "Observaciones",
                                   }[key] || key}
                                   :
@@ -1098,7 +1256,7 @@ const TablaRegistros = () => {
                                     subSectorNombre: "Activo",
                                     parteNombre: "Inventario vial",
                                     elementoNombre: "Componente",
-                                    nombre: "Actividades mantenimiento, conservación, rehabilitación",
+                                    nombre: "Actividad",
                                     observaciones: "Observaciones",
                                   }[key] || key}
                                   :
