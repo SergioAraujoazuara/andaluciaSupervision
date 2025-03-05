@@ -71,6 +71,9 @@ const ParteObra = () => {
 
   const [stats, setStats] = useState({ totalSi: 0, totalNo: 0, totalActividades: 0, porcentajeApto: 0 });
   const [activityObservations, setActivityObservations] = useState({});
+  const [errorMessages, setErrorMessages] = useState([]);
+
+
 
   const handleObservationChange = (actividadIndex, value) => {
     setActivityObservations((prev) => ({
@@ -82,9 +85,7 @@ const ParteObra = () => {
 
 
   const [selectedActivities, setSelectedActivities] = useState({});
-  useEffect(() => {
-    console.log("Estado actual de selectedActivities:", selectedActivities);
-  }, [selectedActivities]);
+
 
   useEffect(() => {
     if (ppiDetails && ppiDetails.actividades) {
@@ -103,9 +104,6 @@ const ParteObra = () => {
     }
   }, [selectedActivities, ppiDetails]);
 
-  useEffect(() => {
-    console.log("PPI Details:", ppiDetails);
-  }, [ppiDetails]);
 
   // Generar valores únicos al cargar los lotes
   useEffect(() => {
@@ -214,7 +212,7 @@ const ParteObra = () => {
     if (modalSend) {
       const timer = setTimeout(() => {
         setModalSend(false);// Cierra el modal después de 3 segundos
-      }, 2000); // 3000 ms = 3 segundos
+      }, 5000); // 3000 ms = 3 segundos
 
       return () => clearTimeout(timer); // Limpia el temporizador si el componente se desmonta
     }
@@ -403,9 +401,33 @@ const ParteObra = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    let errors = [];
 
-    if (!selectedLote) {
-      console.error("No hay un lote seleccionado.");
+    // Validar fecha y hora
+    if (!formData.fechaHora) {
+      errors.push("⚠️ Debes seleccionar una fecha y hora.");
+    }
+
+    // Validar observaciones de actividad y localización
+    if (!formData.observacionesActividad.trim()) {
+      errors.push("⚠️ Debes llenar las observaciones de la actividad.");
+    }
+    if (!formData.observacionesLocalizacion.trim()) {
+      errors.push("⚠️ Debes llenar las observaciones de la localización.");
+    }
+
+    // Validar que todas las actividades tengan Cumple, No Cumple o No Aplica
+    Object.keys(selectedActivities).forEach((index) => {
+      const actividad = selectedActivities[index];
+      if (!actividad.seleccionada && !actividad.noAplica) {
+        errors.push(`⚠️ La actividad "${actividad.nombre}" no tiene selección (Cumple, No Cumple o No Aplica).`);
+      }
+    });
+
+    // Si hay errores, mostrar en el modal
+    if (errors.length > 0) {
+      setErrorMessages(errors);
+      setModalSend(true);
       return;
     }
 
@@ -417,6 +439,7 @@ const ParteObra = () => {
           .map(async (image, index) => await uploadImageWithMetadata(image, index))
       );
 
+      // Formatear actividades con observaciones
       const actividadesConObservaciones = Object.keys(selectedActivities).map((index) => ({
         ...selectedActivities[index], // Copiamos los datos originales de la actividad
         observacion: activityObservations[index] || "", // Agregamos la observación si existe
@@ -435,7 +458,6 @@ const ParteObra = () => {
           totalActividades: stats.totalActividades,
           porcentajeApto: stats.porcentajeApto
         }
-
       };
 
       // Guardar en Firebase
@@ -453,22 +475,25 @@ const ParteObra = () => {
         controlAccesos: "",
         controlSubcontratacion: { seleccionada: null, nombreEmpresaSubcontrata: "", controlSubcontratacion: "" },
         controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" }
-      })
-      setSelectedLoteOption("")
+      });
+
+      // Limpiar referencias de archivos
       fileInputsRefs.current.forEach((input) => {
         if (input) input.value = null;
       });
-      setIsModalOpen(false);
 
-      // Mostrar modal de éxito
+      setIsModalOpen(false);
       setModalSend(true);
       setMessageModalSend("Registro enviado");
+      setErrorMessages([]); // Limpiar errores si el envío fue exitoso
+
     } catch (error) {
       console.error("Error al guardar el registro:", error);
+      setErrorMessages(["❌ Error al guardar. Revisa los datos antes de enviar."]);
       setModalSend(true);
-      setMessageModalSend("Error, revisa los datos antes de enviar.");
     }
   };
+
 
 
   if (loading) {
@@ -561,37 +586,39 @@ const ParteObra = () => {
 
 
 
-  const handleActivityChange = (actividadIndex, actividadNombre, subactividades) => {
+  const handleActivityChange = (actividadIndex, actividadNombre, subactividades, value) => {
     setSelectedActivities((prev) => {
       const newSelected = { ...prev };
 
+      // Si no existe la actividad en el estado, la creamos
       if (!newSelected[actividadIndex]) {
         newSelected[actividadIndex] = {
           nombre: actividadNombre,
-          seleccionada: true,
-          noAplica: false,  // Desactivar "No Aplica" si se selecciona la actividad
+          seleccionada: value === "si",
+          noAplica: false,
           subactividades: subactividades.map((sub) => ({
             nombre: sub.nombre,
-            seleccionada: true,
+            seleccionada: value === "si",
           })),
         };
       } else {
-        const isSelected = !newSelected[actividadIndex].seleccionada;
-        newSelected[actividadIndex].seleccionada = isSelected;
+        // Actualizar la selección dependiendo de si es "Cumple" o "No Cumple"
+        newSelected[actividadIndex].seleccionada = value === "si";
 
+        // Actualizar las subactividades con la misma selección
         newSelected[actividadIndex].subactividades = newSelected[actividadIndex].subactividades.map((sub) => ({
           ...sub,
-          seleccionada: isSelected,
+          seleccionada: value === "si",
         }));
 
-        if (isSelected) {
-          newSelected[actividadIndex].noAplica = false; // Si se selecciona, se desactiva "No Aplica"
-        }
+        // Si se selecciona "Cumple" o "No Cumple", desactivar "No Aplica"
+        newSelected[actividadIndex].noAplica = false;
       }
 
       return newSelected;
     });
   };
+
 
 
 
@@ -816,7 +843,7 @@ const ParteObra = () => {
 
             <div>
               <div>
-                <p className="font-medium bg-sky-600 text-white rounded-t-lg px-4 py-2">
+                <p className="font-semibold bg-sky-600 text-white rounded-t-lg px-4 py-2">
                   Actividad seleccionada
                 </p>
                 {selectedLote && (
@@ -826,6 +853,7 @@ const ParteObra = () => {
 
 
                 <textarea
+                  required
                   maxLength={700}
                   name="observacionesActividad"
                   value={formData.observacionesActividad}
@@ -840,6 +868,7 @@ const ParteObra = () => {
                   Locazalización
                 </label>
                 <textarea
+                  required
                   maxLength={700}
                   name="observacionesLocalizacion"
                   value={formData.observacionesLocalizacion}
@@ -856,6 +885,7 @@ const ParteObra = () => {
                 Fecha y Hora
               </label>
               <input
+                required
                 type="datetime-local"
                 name="fechaHora"
                 value={formData.fechaHora}
@@ -867,6 +897,7 @@ const ParteObra = () => {
             {ppiDetails && (
               <div className="mt-6">
                 <p className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">PPI asignado</p>
+                <p className="text-xs font-medium ps-4 mt-2">* Evalua cada actividad y agrega observaciones si es necesario</p>
 
                 {/* Contenedor con scroll vertical */}
                 <div className="mt-4 ">
@@ -879,49 +910,67 @@ const ParteObra = () => {
                     return (
                       <div key={actividadIndex} className="mb-4 border-b pb-3">
                         {/* Checkbox y título de la actividad */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-sky-700">{actividad.numero}-</p>
-                            <p className="font-semibold text-sky-700">{actividad.actividad}</p>
+                        <div className="">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex gap-2">
+                              <p className="font-semibold text-sky-700">{actividad.numero}-</p>
+                              <p className="font-semibold text-sky-700">{actividad.actividad}</p>
+                            </div>
 
-                            {/* Checkbox para marcar Sí */}
-                            <label className="flex items-center gap-1 text-sm text-gray-700">
-                              <input
-                                type="radio"
-                                name={`actividad-${actividadIndex}`}
-                                value="si"
-                                checked={selectedActivities[actividadIndex]?.seleccionada === true}
-                                onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas)}
-                                disabled={selectedActivities[actividadIndex]?.noAplica}
-                                className="form-radio text-sky-600"
-                              />
-                              Sí
-                            </label>
 
-                            {/* Checkbox para marcar No */}
-                            <label className="flex items-center gap-1 text-sm text-gray-700">
-                              <input
-                                type="radio"
-                                name={`actividad-${actividadIndex}`}
-                                value="no"
-                                checked={selectedActivities[actividadIndex]?.seleccionada === false}
-                                onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas)}
-                                disabled={selectedActivities[actividadIndex]?.noAplica}
-                                className="form-radio text-sky-600"
-                              />
-                              No
-                            </label>
+                            {/* Estado de la actividad (Cumple, No cumple, No aplica) */}
+<div className="flex gap-3 text-xs text-gray-700 font-medium">
+  
+  {/* ✅ Checkbox para marcar Sí (Cumple) */}
+  <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
+    ${selectedActivities[actividadIndex]?.noAplica ? "text-gray-400 bg-gray-100 border-gray-300 cursor-not-allowed" : 
+    selectedActivities[actividadIndex]?.seleccionada === true ? "text-gray-800 font-bold bg-gray-200 border-gray-500" : "text-gray-500 border-gray-300"}`}
+  >
+    <input
+      type="radio"
+      name={`actividad-${actividadIndex}`}
+      value="si"
+      checked={selectedActivities[actividadIndex]?.seleccionada === true}
+      onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas, "si")}
+      disabled={selectedActivities[actividadIndex]?.noAplica}
+      className="hidden"
+    />
+    ✅ Cumple
+  </label>
 
-                            {/* Checkbox "No Aplica" */}
-                            <label className="flex items-center gap-1 text-amber-600 text-sm font-medium">
-                              <input
-                                type="checkbox"
-                                checked={selectedActivities[actividadIndex]?.noAplica || false}
-                                onChange={() => handleNoAplicaChange(actividadIndex)}
-                                className="form-checkbox h-4 w-4 text-gray-500"
-                              />
-                              No Aplica
-                            </label>
+  {/* ❌ Checkbox para marcar No (No Cumple) */}
+  <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
+    ${selectedActivities[actividadIndex]?.noAplica ? "text-gray-400 bg-gray-100 border-gray-300 cursor-not-allowed" : 
+    selectedActivities[actividadIndex]?.seleccionada === false ? "text-gray-800 font-bold bg-gray-200 border-gray-500" : "text-gray-500 border-gray-300"}`}
+  >
+    <input
+      type="radio"
+      name={`actividad-${actividadIndex}`}
+      value="no"
+      checked={selectedActivities[actividadIndex]?.seleccionada === false}
+      onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas, "no")}
+      disabled={selectedActivities[actividadIndex]?.noAplica}
+      className="hidden"
+    />
+    ❌ No cumple
+  </label>
+
+  {/* ⚪ Checkbox "No Aplica" */}
+  <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
+    ${selectedActivities[actividadIndex]?.noAplica ? "text-gray-800 font-bold bg-gray-200 border-gray-500" : "text-gray-500 border-gray-300"}`}
+  >
+    <input
+      type="checkbox"
+      checked={selectedActivities[actividadIndex]?.noAplica || false}
+      onChange={() => handleNoAplicaChange(actividadIndex)}
+      className="hidden"
+    />
+    ⚪ No Aplica
+  </label>
+
+</div>
+
+
                           </div>
 
 
@@ -934,7 +983,7 @@ const ParteObra = () => {
                         {/* Mostrar subactividades solo si existen y tienen nombre válido */}
                         {subactividadesValidas.length > 0 &&
                           subactividadesValidas.map((sub, subIndex) => (
-                            <div key={subIndex} className="ml-4 flex items-center gap-2 text-xs border-l-4 border-sky-500 pl-2 mt-2">
+                            <div key={subIndex} className="ml-4 flex items-center gap-2 text-xs border-l-4 border-gray-500 pl-2 mt-2">
                               <input
                                 type="checkbox"
                                 checked={selectedActivities[actividadIndex]?.subactividades[subIndex]?.seleccionada || false}
@@ -950,14 +999,19 @@ const ParteObra = () => {
                           ))}
 
                         {/* Observaciones de la actividad */}
+
+
                         {/* Input de observaciones */}
                         <textarea
                           value={activityObservations[actividadIndex] || ""} // Valor del estado
                           onChange={(e) => handleObservationChange(actividadIndex, e.target.value)}
                           placeholder="Escribe observaciones aquí..."
-                          className="mt-2 block w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none 
-        border-gray-300 focus:ring-sky-500 focus:border-sky-500"
+                          disabled={selectedActivities[actividadIndex]?.noAplica} // 🔴 Se desactiva si "No Aplica" está activado
+                          className={`mt-2 block w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none 
+    border-gray-300 focus:ring-sky-500 focus:border-sky-500 
+    ${selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""}`} // 🔴 Agrega un fondo gris y bloquea el cursor
                         />
+
 
                       </div>
                     );
@@ -1012,30 +1066,36 @@ const ParteObra = () => {
 
                 {/* Control de la Subcontratación */}
                 {/* Opciones Sí / No para Control de la Subcontratación */}
-                <div className="flex items-center gap-4 mt-2">
-                  <label className="ml-4 flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <input
-                      type="radio"
-                      name="controlSubcontratacion.seleccionada"
-                      value="si"
-                      checked={formData.controlSubcontratacion.seleccionada === "si"}
-                      onChange={handleInputChange}
-                      className="form-radio text-sky-600"
-                    />
-                    Sí
+                <div className="mt-2">
+                  <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
+                    Control de Accesos a la Obra
                   </label>
 
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <input
-                      type="radio"
-                      name="controlSubcontratacion.seleccionada"
-                      value="no"
-                      checked={formData.controlSubcontratacion.seleccionada === "no"}
-                      onChange={handleInputChange}
-                      className="form-radio text-sky-600"
-                    />
-                    No
-                  </label>
+                  <div className="flex gap-4 ps-4 mt-2">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <input
+                        type="radio"
+                        name="controlSubcontratacion.seleccionada"
+                        value="si"
+                        checked={formData.controlSubcontratacion.seleccionada === "si"}
+                        onChange={handleInputChange}
+                        className="form-radio text-sky-600"
+                      />
+                      Dar de alta
+                    </label>
+
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <input
+                        type="radio"
+                        name="controlSubcontratacion.seleccionada"
+                        value="no"
+                        checked={formData.controlSubcontratacion.seleccionada === "no"}
+                        onChange={handleInputChange}
+                        className="form-radio text-sky-600"
+                      />
+                      No dar de alta
+                    </label>
+                  </div>
                 </div>
 
                 {/* Input para ingresar el nombre de la empresa (Solo si selecciona "Sí") */}
@@ -1181,7 +1241,7 @@ const ParteObra = () => {
 
 
               {/* Imágenes */}
-              <div className="mb-4">
+              <div className="mb-4 ps-4">
                 <label className="block text-sm font-medium text-gray-700">
                   Registro fotográfico
                   <p className="text-amber-600 text-xs">* Mínimo 1 imagen</p>
@@ -1271,6 +1331,37 @@ const ParteObra = () => {
           </div>
         </div>
       )}
+
+      {modalSend && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-3">
+            <button
+              onClick={() => setModalSend(false)}
+              className="absolute top-4 right-4 text-gray-500 text-2xl hover:text-gray-800 transition"
+            >
+              <IoClose />
+            </button>
+
+            {errorMessages.length > 0 ? (
+              <>
+                <MdOutlineError className="text-red-500 text-3xl" />
+                <p className="text-lg font-medium text-red-600">Error en el formulario</p>
+                <div className="text-sm text-gray-600 list-disc px-4">
+                  {errorMessages.map((msg, index) => (
+                    <p key={index}>{msg}</p>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <FaCheck className="text-teal-500 text-3xl" />
+                <p className="text-lg font-medium text-green-600">{messageModalSend}</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

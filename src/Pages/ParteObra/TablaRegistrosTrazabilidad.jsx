@@ -19,6 +19,7 @@ import { GoHomeFill } from "react-icons/go";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/authContext.jsx";
 import useUsuario from "../../Hooks/useUsuario.jsx"
+import ModalFechaVisita from "./ComponentesInforme/ModalFechaVisita.jsx";
 
 const TablaRegistros = () => {
   const { user } = useAuth();
@@ -46,6 +47,16 @@ const TablaRegistros = () => {
     elementoNombre: [],
     nombre: [],
   });
+  const [datosVisita, setDatosVisita] = useState({
+    fechaVisita: "",
+    hora: "",
+    visitaNumero: "",
+  });
+  
+  const handleGuardarVisita = (datos) => {
+    setDatosVisita(datos);
+  };
+    
   const fechaHora = new Date().toISOString().replace(/:/g, "-").split(".")[0];
   const fileName = `${selectedProjectName}_${fechaHora}`
 
@@ -215,19 +226,19 @@ const TablaRegistros = () => {
 
 
   useEffect(() => {
-    const registrosFiltrados = registrosParteDeObra.filter((registro) => {
-      const fechaRegistro = new Date(registro.fechaHora).toISOString().split("T")[0]; // Convertir fecha del registro a YYYY-MM-DD
-      const fechaHoy = obtenerFechaActual();
+    if (!valoresFiltro.fechaInicio || !valoresFiltro.fechaFin) {
+      setRegistrosFiltrados([]); // No mostrar registros hasta que se seleccione una fecha
+      return;
+    }
 
-      // Si no hay filtro de fecha, mostrar solo los registros de hoy
-      const filtroFechaInicio = valoresFiltro.fechaInicio || fechaHoy;
-      const filtroFechaFin = valoresFiltro.fechaFin || fechaHoy;
+    const registrosFiltrados = registrosParteDeObra.filter((registro) => {
+      const fechaRegistro = new Date(registro.fechaHora).toISOString().split("T")[0]; // Convertir fecha a YYYY-MM-DD
 
       const cumpleFecha =
-        (!filtroFechaInicio || fechaRegistro >= filtroFechaInicio) &&
-        (!filtroFechaFin || fechaRegistro <= filtroFechaFin);
+        (!valoresFiltro.fechaInicio || fechaRegistro >= valoresFiltro.fechaInicio) &&
+        (!valoresFiltro.fechaFin || fechaRegistro <= valoresFiltro.fechaFin);
 
-      // Filtro de actividad y otros
+      // Filtros adicionales
       const cumpleOtrosFiltros = Object.keys(valoresFiltro).every((campo) => {
         if (campo === "fechaInicio" || campo === "fechaFin") return true;
         return !valoresFiltro[campo] || (registro[campo] || "").includes(valoresFiltro[campo]);
@@ -238,6 +249,7 @@ const TablaRegistros = () => {
 
     setRegistrosFiltrados(registrosFiltrados);
   }, [valoresFiltro, registrosParteDeObra]);
+
 
 
 
@@ -309,15 +321,35 @@ const TablaRegistros = () => {
     try {
       if (!registroEditando) return;
 
+      const docRef = doc(db, "registrosParteDeObra", registroEditando.id);
+      const docSnapshot = await getDoc(docRef);
+
+      if (!docSnapshot.exists()) {
+        console.error("El documento no existe en Firestore.");
+        return;
+      }
+
+      const registroOriginal = docSnapshot.data(); // Datos actuales antes de la edición
+
       // Crear objeto actualizado con las actividades modificadas
       const registroActualizado = {
         ...registroEditando,
-        actividades: registroEditando.actividades, // Guardamos "Sí", "No" y "No Aplica"
+        actividades: registroEditando.actividades, // Mantener "Sí", "No" y "No Aplica"
       };
 
-      // Actualizar en Firestore
-      const docRef = doc(db, "registrosParteDeObra", registroEditando.id);
+      // Actualizar el registro en Firestore
       await updateDoc(docRef, registroActualizado);
+
+      // Guardar en el historial de modificaciones
+      const historialRef = collection(db, "historialRegistrosParteDeObra");
+      await addDoc(historialRef, {
+        registroId: registroEditando.id,
+        fechaHora: new Date().toISOString(),
+        responsable: nombreUsuario, // Usuario que hizo la modificación
+        motivoCambio: motivoCambio || "Sin motivo", // Guarda el motivo de la edición
+        registroOriginal,
+        registroEditado: registroActualizado,
+      });
 
       // Actualizar la tabla en tiempo real
       setRegistrosParteDeObra((prev) =>
@@ -335,10 +367,12 @@ const TablaRegistros = () => {
       // Cerrar modal
       setModalEdicionAbierto(false);
       setRegistroEditando(null);
+      setMotivoCambio(""); // Limpiar motivo de cambio después de guardar
     } catch (error) {
       console.error("Error al guardar los cambios:", error);
     }
   };
+
 
 
 
@@ -562,7 +596,7 @@ const TablaRegistros = () => {
 
         {/* Filtros dinámicos sin "fechaHora" */}
         {ordenColumnas
-          .filter((filtro) => filtro !== "observaciones" && filtro !== "fechaHora" && filtro !== "actividad") // Excluir "observaciones" si no es necesario
+          .filter((filtro) => filtro !== "observaciones" && filtro !== "fechaHora" && filtro !== "actividad" && filtro !== "sectorNombre" && filtro !== "subSectorNombre" && filtro !== "parteNombre" && filtro !== "elementoNombre") // Excluir "observaciones" si no es necesario
           .map((filtro) => (
             <div key={filtro} className="flex flex-col">
               <label className="font-semibold text-gray-700 mb-2">
@@ -598,14 +632,21 @@ const TablaRegistros = () => {
             Borrar Filtros
           </button>
         </div>
-
-        <InformeRegistros registros={registrosFiltrados} columnas={columnas} formatFechaActual={formatFechaActual()} fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)} fechaFin={formatFechaSolo(valoresFiltro.fechaFin)} fileName={fileName} />
+       
+        <InformeRegistros registros={registrosFiltrados} columnas={columnas} datosVisita={datosVisita} formatFechaActual={formatFechaActual()} fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)} fechaFin={formatFechaSolo(valoresFiltro.fechaFin)} fileName={fileName} />
       </div>
 
-
       <div className="overflow-x-auto px-6">
-        {/* Vista en modo tabla para dispositivos medianos en adelante */}
-        <table className="hidden sm:table min-w-full bg-white shadow rounded-lg overflow-hidden">
+        {(!valoresFiltro.fechaInicio || !valoresFiltro.fechaFin) ? (
+          <div className="text-center text-gray-600 py-10">
+            <p className="text-lg font-semibold">📅 Por favor, selecciona un rango de fechas para consultar los registros.</p>
+          </div>
+        ) : registrosFiltrados.length === 0 ? (
+          <div className="text-center text-gray-600 py-10">
+            <p className="text-lg font-semibold">❌ No se encontraron registros en el rango de fechas seleccionado.</p>
+          </div>
+        ) : (
+          <table className="hidden sm:table min-w-full bg-white shadow rounded-lg overflow-hidden">
           <thead className="border-gray-200 bg-sky-600 text-white">
             <tr>
               {ordenColumnas
@@ -757,7 +798,10 @@ const TablaRegistros = () => {
 
           </tbody>
         </table>
+        )}
+      </div>
 
+      <div className="overflow-x-auto px-6">
         {/* Vista en modo cards para dispositivos pequeños */}
         <div className="sm:hidden grid gap-4">
           {registrosFiltrados
@@ -886,199 +930,136 @@ const TablaRegistros = () => {
             {/* Header con icono de cierre */}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-800">Editar Registro</h2>
+
               <button onClick={() => setModalEdicionAbierto(false)} className="text-gray-500 hover:text-gray-700">
                 <AiOutlineClose size={24} />
               </button>
             </div>
+            <div className="border-b-2 w-full mb-4"></div>
 
             {Object.keys(registroEditando)
-  .filter((campo) =>
-    ![
-      "imagenes",
-      "id",
-      "idBim",
-      "nombreProyecto",
-      "elementoId",
-      "idSector",
-      "idSubSector",
-      "parteId",
-      "ppiId",
-      "loteId",
-      "totalSubactividades",
-      "pkFinal",
-      "pkInicial",
-      "idProyecto",
-      "estado",
-      "ppiNombre",
-      "actividades",
-      "sectorNombre",
-      "subSectorNombre",
-      "parteNombre",
-      "elementoNombre",
-    ].includes(campo)
-  )
-  .map((campo, index) => (
-    <div key={index} className="mb-4">
-      <label className="block text-sm font-semibold bg-gray-200 p-2 text-gray-700 mb-1 flex items-center">
-        {formatCamelCase(campo)}
-        <AiFillLock className="ml-2 text-gray-500" size={16} />
-      </label>
+              .filter((campo) =>
+                ![
+                  "imagenes",
+                  "id",
+                  "idBim",
+                  "nombreProyecto",
+                  "elementoId",
+                  "idSector",
+                  "idSubSector",
+                  "parteId",
+                  "ppiId",
+                  "loteId",
+                  "totalSubactividades",
+                  "pkFinal",
+                  "pkInicial",
+                  "idProyecto",
+                  "estado",
+                  "ppiNombre",
+                  "actividades",
+                  "sectorNombre",
+                  "subSectorNombre",
+                  "parteNombre",
+                  "elementoNombre",
+                ].includes(campo)
+              )
+              .sort((a, b) => a.localeCompare(b)) // Ordena alfabéticamente
+              .map((campo, index) => (
+                <div key={index} className="mb-4 tex-xs">
+                  <label className="block text-sm font-semibold bg-gray-200 p-2 text-gray-700 mb-1 flex items-center">
+                    {formatCamelCase(campo)}
+                    <AiFillLock className="ml-2 text-gray-500" size={16} />
+                  </label>
 
-      {/* Si es un objeto, mostrar cada propiedad dentro de él */}
-      {typeof registroEditando[campo] === "object" && registroEditando[campo] !== null ? (
-        Object.entries(registroEditando[campo]).map(([subCampo, valor]) => (
-          <div key={subCampo} className="mb-2">
-            <label className="block text-sm font-medium text-gray-700">
-              {formatCamelCase(subCampo)}
-            </label>
-            <input
-              type="text"
-              value={valor || ""}
-              readOnly
-              className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
-            />
-          </div>
-        ))
-      ) : (
-        <input
-          type="text"
-          value={registroEditando[campo] || ""}
-          readOnly
-          className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
-        />
-      )}
-    </div>
-  ))}
+                  {/* Si es un objeto, mostrar cada propiedad dentro de él */}
+                  {typeof registroEditando[campo] === "object" && registroEditando[campo] !== null ? (
+                    Object.entries(registroEditando[campo])
+                      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) // Ordena alfabéticamente las subpropiedades
+                      .map(([subCampo, valor]) => (
+                        <div key={subCampo} className="mb-2">
+                          <label className="ps-2 block text-sm font-medium text-gray-700">
+                            {formatCamelCase(subCampo)}
+                          </label>
+                          <input
+                            type="text"
+                            value={valor || ""}
+                            readOnly
+                            className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
+                          />
+                        </div>
+                      ))
+                  ) : (
+                    <input
+                      type="text"
+                      value={registroEditando[campo] || ""}
+                      readOnly
+                      className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
+                    />
+                  )}
+                </div>
+              ))}
+
 
 
             {/* Editar actividades */}
             <div className="mb-4">
-              <label className="block text-md font-semibold text-gray-700 mb-2">Actividades</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1 bg-gray-200 p-2 flex gap-2">Actividades<span><AiFillLock className="ml-2 text-gray-500" size={16} /></span></label>
               {Object.entries(registroEditando.actividades || {}).map(([index, actividad]) => (
                 <div
                   key={index}
-                  className={`mb-3 p-3 border rounded-lg shadow-sm flex flex-col ${actividad.noAplica ? "bg-gray-200 border-gray-400 opacity-70" : "bg-white border-gray-300"
-                    }`}
+                  className="mb-3 p-4 border border-gray-300 rounded-lg shadow-sm bg-white"
                 >
                   {/* Información de la actividad */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-sky-700">{actividad.numero || index}-</p>
-                      <p className={`font-semibold text-sky-700 ${actividad.noAplica ? "line-through italic text-gray-500" : ""}`}>
-                        {actividad.nombre || "Actividad sin nombre"}
-                      </p>
-                    </div>
-
-                    {/* Opciones de selección */}
-                    <div className="flex items-center gap-4">
-                      {/* Radio button para "Sí" */}
-                      <label
-                        className={`flex items-center gap-1 text-sm font-medium ${actividad.noAplica ? "text-gray-400 cursor-not-allowed" : "text-gray-700"
-                          }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`actividad-${index}`}
-                          value="si"
-                          checked={actividad.seleccionada === true}
-                          onChange={() => {
-                            setRegistroEditando((prev) => {
-                              const newActividades = { ...prev.actividades };
-                              newActividades[index] = {
-                                ...newActividades[index],
-                                seleccionada: true,
-                                noAplica: false, // Desactivar "No Aplica"
-                              };
-                              return { ...prev, actividades: newActividades };
-                            });
-                          }}
-                          disabled={actividad.noAplica}
-                          className="form-radio text-sky-600"
-                        />
-                        Sí
-                      </label>
-
-                      {/* Radio button para "No" */}
-                      <label
-                        className={`flex items-center gap-1 text-sm font-medium ${actividad.noAplica ? "text-gray-400 cursor-not-allowed" : "text-gray-700"
-                          }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`actividad-${index}`}
-                          value="no"
-                          checked={actividad.seleccionada === false}
-                          onChange={() => {
-                            setRegistroEditando((prev) => {
-                              const newActividades = { ...prev.actividades };
-                              newActividades[index] = {
-                                ...newActividades[index],
-                                seleccionada: false,
-                                noAplica: false, // Desactivar "No Aplica"
-                              };
-                              return { ...prev, actividades: newActividades };
-                            });
-                          }}
-                          disabled={actividad.noAplica}
-                          className="form-radio text-sky-600"
-                        />
-                        No
-                      </label>
-
-                      {/* Checkbox "No Aplica" */}
-                      <label className="flex items-center gap-1 text-amber-600 text-sm font-medium">
-                        <input
-                          type="checkbox"
-                          checked={actividad.noAplica || false}
-                          onChange={() => {
-                            setRegistroEditando((prev) => {
-                              const newActividades = { ...prev.actividades };
-                              newActividades[index].noAplica = !newActividades[index].noAplica;
-
-                              // Si "No Aplica" se marca, desactivar "Sí" y "No"
-                              if (newActividades[index].noAplica) {
-                                newActividades[index].seleccionada = null;
-                              }
-
-                              return { ...prev, actividades: newActividades };
-                            });
-                          }}
-                          className="form-checkbox h-4 w-4 text-gray-500"
-                        />
-                        No Aplica
-                      </label>
-                    </div>
+                  <div className="flex items-center gap-2 mb-2 text-sm">
+                    <p className="font-semibold text-gray-800">{actividad.numero || index}-</p>
+                    <p className="font-semibold text-gray-800">
+                      {actividad.nombre || "Actividad sin nombre"}
+                    </p>
                   </div>
 
-                  {/* Observaciones - Editable */}
+                  {/* Estado de la actividad (Cumple, No cumple, No aplica) */}
+                  <div className="flex items-center gap-4 text-sm font-medium text-gray-600">
+                    {/* "Cumple" solo si NO está en "No Aplica" */}
+                    <span className={`min-w-[90px] flex items-center justify-center px-3 py-1 
+    ${actividad.noAplica ? "text-gray-400" : actividad.seleccionada === true ? "text-gray-800 font-bold bg-gray-200 border rounded-md" : "text-gray-500"}`}>
+                      ✅ Cumple
+                    </span>
+
+                    {/* "No Cumple" solo si NO está en "No Aplica" */}
+                    <span className={`min-w-[90px] flex items-center justify-center px-3 py-1 
+    ${actividad.noAplica ? "text-gray-400" : actividad.seleccionada === false ? "text-gray-800 font-bold bg-gray-200 border rounded-md" : "text-gray-500"}`}>
+                      ❌ No cumple
+                    </span>
+
+                    {/* "No Aplica" siempre se muestra */}
+                    <span className={`min-w-[90px] flex items-center justify-center px-3 py-1 
+    ${actividad.noAplica ? "text-gray-800 font-bold bg-gray-200 border rounded-md" : "text-gray-500"}`}>
+                      ⚪ No Aplica
+                    </span>
+                  </div>
+
+
+                  {/* Observaciones (solo lectura) */}
                   <div className="mt-2">
                     <label className="block text-sm font-medium text-gray-700">Observaciones</label>
                     <textarea
-                      value={actividad.observacion || ""}
-                      onChange={(e) => {
-                        setRegistroEditando((prev) => {
-                          const newActividades = { ...prev.actividades };
-                          newActividades[index] = {
-                            ...newActividades[index],
-                            observaciones: e.target.value,
-                          };
-                          return { ...prev, actividades: newActividades };
-                        });
-                      }}
-                      disabled={actividad.noAplica} // Deshabilitar si está en "No Aplica"
-                      className="w-full px-3 py-2 border rounded-md text-gray-700 focus:ring-2 focus:ring-sky-600 focus:border-sky-600 disabled:bg-gray-200 disabled:text-gray-500"
+                      value={actividad.observacion || "Sin observaciones"}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-200 text-gray-700 cursor-not-allowed"
                       rows={2}
                     />
                   </div>
                 </div>
               ))}
+
             </div>
 
 
 
             {/* Observaciones - Editable y al final */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Observaciones</label>
+
+              <label className="block text-sm font-semibold text-gray-700 mb-1 bg-gray-200 p-2">Observaciones</label>
               <textarea
                 value={registroEditando.observaciones || ""}
                 onChange={(e) =>
@@ -1093,7 +1074,7 @@ const TablaRegistros = () => {
             </div>
 
             {/* Sección de imágenes */}
-            <h3 className="text-md font-semibold mb-3 text-gray-700">Imágenes</h3>
+            <h3 className="text-sm font-semibold mb-3 text-gray-700 bg-gray-200 p-2">Registro fotográfico</h3>
             {Array.from({ length: 4 }).map((_, index) => (
               <div key={index} className="flex flex-col items-start mb-4">
                 <label className="block text-sm font-semibold text-gray-600 mb-2">
@@ -1125,7 +1106,7 @@ const TablaRegistros = () => {
 
             {/* Motivo del cambio */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Motivo del cambio</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1 bg-gray-200 p-2">Motivo del cambio</label>
               <textarea
                 value={motivoCambio}
                 onChange={(e) => setMotivoCambio(e.target.value)}
@@ -1167,11 +1148,10 @@ const TablaRegistros = () => {
       {modalModificacionesAbierto && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
+
             {/* Header del modal */}
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">
-                Historial de Modificaciones
-              </h2>
+              <h2 className="text-2xl font-semibold text-gray-800">Historial de Modificaciones</h2>
               <button
                 onClick={() => setModalModificacionesAbierto(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -1217,83 +1197,65 @@ const TablaRegistros = () => {
                       <td className="px-4 py-3 text-sm text-gray-700">
                         <ul className="space-y-1">
                           {Object.entries(modificacion.registroOriginal || {})
-                            .filter(([key]) => key !== "totalSubactividades" && key !== "ppiId" && key !== "loteId" && key !== "pkFinal" && key !== "pkInicial" && key !== "idBim" && key !== "idSubSector" && key !== "idSector" && key !== "parteId" && key !== "idProyecto" && key !== "id" && key !== "ppiNombre" && key !== "nombreProyecto" && key !== "elementoId")
+                            .filter(([key]) => ["imagenes", "observaciones"].includes(key)) // 🔥 Solo mostrar imágenes y observaciones
                             .map(([key, value]) => (
                               <li key={key}>
-                                <strong>
-                                  {{
-                                    fechaHora: "Fecha y hora",
-                                    sectorNombre: "Grupo activos",
-                                    subSectorNombre: "Activo",
-                                    parteNombre: "Inventario vial",
-                                    elementoNombre: "Componente",
-                                    nombre: "Actividad",
-                                    observaciones: "Observaciones",
-                                  }[key] || key}
-                                  :
-                                </strong>{" "}
-                                {Array.isArray(value) && value.every((v) => typeof v === "string") ? (
+                                <strong>{formatCamelCase(key)}:</strong>{" "}
+
+                                {/* Imágenes como enlaces clickeables */}
+                                {key === "imagenes" && Array.isArray(value) ? (
                                   value.map((url, i) => (
-                                    <a
-                                      key={i}
-                                      href={url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-blue-500 underline"
-                                    >
-                                      Link {i + 1}
-                                    </a>
+                                    <div key={i}>
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-500 underline"
+                                      >
+                                        Imagen {i + 1}
+                                      </a>
+                                    </div>
                                   ))
-                                ) : typeof value === "string" ? (
-                                  value
                                 ) : (
-                                  JSON.stringify(value)
+                                  value
                                 )}
                               </li>
                             ))}
                         </ul>
                       </td>
 
+
                       {/* Estado Editado */}
                       <td className="px-4 py-3 text-sm text-gray-700">
                         <ul className="space-y-1">
                           {Object.entries(modificacion.registroEditado || {})
-                            .filter(([key]) => key !== "totalSubactividades" && key !== "ppiId" && key !== "loteId" && key !== "pkFinal" && key !== "pkInicial" && key !== "idBim" && key !== "idSubSector" && key !== "idSector" && key !== "parteId" && key !== "idProyecto" && key !== "id" && key !== "ppiNombre" && key !== "nombreProyecto" && key !== "elementoId")
+                            .filter(([key]) => ["imagenes", "observaciones"].includes(key)) // 🔥 Solo mostrar imágenes y observaciones
                             .map(([key, value]) => (
                               <li key={key}>
-                                <strong>
-                                  {{
-                                    fechaHora: "Fecha y hora",
-                                    sectorNombre: "Grupo activos",
-                                    subSectorNombre: "Activo",
-                                    parteNombre: "Inventario vial",
-                                    elementoNombre: "Componente",
-                                    nombre: "Actividad",
-                                    observaciones: "Observaciones",
-                                  }[key] || key}
-                                  :
-                                </strong>{" "}
-                                {Array.isArray(value) && value.every((v) => typeof v === "string") ? (
+                                <strong>{formatCamelCase(key)}:</strong>{" "}
+
+                                {/* Imágenes como enlaces clickeables */}
+                                {key === "imagenes" && Array.isArray(value) ? (
                                   value.map((url, i) => (
-                                    <a
-                                      key={i}
-                                      href={url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-blue-500 underline"
-                                    >
-                                      Link {i + 1}
-                                    </a>
+                                    <div key={i}>
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-500 underline"
+                                      >
+                                        Imagen {i + 1}
+                                      </a>
+                                    </div>
                                   ))
-                                ) : typeof value === "string" ? (
-                                  value
                                 ) : (
-                                  JSON.stringify(value)
+                                  value
                                 )}
                               </li>
                             ))}
                         </ul>
                       </td>
+
                     </tr>
                   ))}
                 </tbody>
@@ -1302,6 +1264,7 @@ const TablaRegistros = () => {
           </div>
         </div>
       )}
+
 
 
 

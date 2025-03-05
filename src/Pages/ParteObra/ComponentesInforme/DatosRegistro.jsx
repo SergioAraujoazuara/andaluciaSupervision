@@ -55,7 +55,7 @@ const columnasMap = {
   subSectorNombre: "Activo",
   parteNombre: "Inventario vial",
   elementoNombre: "Componente",
-  actividad: "Actividades mantenimiento, conservación, rehabilitación",
+  actividad: "Actividad",
   observaciones: "Observaciones",
 };
 

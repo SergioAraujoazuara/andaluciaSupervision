@@ -55,7 +55,7 @@ const AddProjectForm = ({
         {/* Descripción */}
         <div className="mb-4">
           <label className="block font-semibold mb-2" htmlFor="descripcion">
-            Descripción
+            Contratista
           </label>
           <textarea
             id="descripcion"
@@ -69,7 +69,7 @@ const AddProjectForm = ({
         {/* Contrato */}
         <div className="mb-4">
           <label className="block font-semibold mb-2" htmlFor="contract">
-            Contrato
+          Identificación documento
           </label>
           <input
             type="text"
