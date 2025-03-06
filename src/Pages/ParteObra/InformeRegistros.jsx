@@ -15,6 +15,7 @@ import GaleriaImagenes from "./ComponentesInforme/GaleriaImagenes";
 import ObservacionesRegistro from "./ComponentesInforme/ObservacionesRegistro";
 import useProyecto from "../../Hooks/useProyectos";
 import { AiOutlineClose } from "react-icons/ai";
+import { FaFilePdf } from "react-icons/fa6";
 
 
 
@@ -26,7 +27,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, fileName, formatFechaActual, datosVisita }) => {
+const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, fileName, formatFechaActual, datosVisita, dataRegister, registro }) => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [fechaVisita, setFechaVisita] = useState(localStorage.getItem("fechaVisita") || "");
@@ -106,6 +107,9 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     }
   };
 
+
+
+
   // Descargar imágenes y metadatos
   const fetchImagesWithMetadata = async (imagePaths) => {
     return await Promise.all(
@@ -134,65 +138,68 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
 
 
   const downloadPdf = async () => {
+    console.log(dataRegister, 'valor del objeto');
+
+
     await fetchUserDetails();
+
+    // Descargar imágenes antes de renderizar el PDF
+    let imagesWithMetadata = [];
+    if (dataRegister.imagenes && dataRegister.imagenes.length > 0) {
+      imagesWithMetadata = await fetchImagesWithMetadata(dataRegister.imagenes);
+    }
 
     const docContent = (
       <Document>
-        {/* Páginas con registros */}
-        {await Promise.all(
-          registros.map(async (registro, index) => {
-            const imagesWithMetadata = await fetchImagesWithMetadata(registro.imagenes || []);
-            return (
-              <Page key={index} size="A4" style={styles.page}>
-                <EncabezadoInforme
-                  empresa={proyecto?.empresa || "Mi Empresa"}
-                  obra={proyecto?.obra || "Obra Desconocida"}
-                  contrato={proyecto?.contrato || "Sin Contrato"}
-                  description={proyecto?.descripcion || "Sin Descripción"}
-                  rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin}` : ""}`}
-                  titlePdf="TPF GETINSA-EUROESTUDIOS S.L."
-                  subTitlePdf="Informativo ejecutivo"
-                  logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
+        {/* Página con los datos del único registro */}
+        <Page size="A4" style={styles.page}>
+          <EncabezadoInforme
+            empresa={proyecto?.empresa || "Mi Empresa"}
+            obra={proyecto?.obra || "Obra Desconocida"}
+            contrato={proyecto?.contrato || "Sin Contrato"}
+            description={proyecto?.descripcion || "Sin Descripción"}
+            rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin}` : ""}`}
+            titlePdf="TPF GETINSA-EUROESTUDIOS S.L."
+            subTitlePdf="Informativo ejecutivo"
+            logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
+          />
 
-                />
-                <TituloInforme plantillaSeleccionada="Acta de inspección de coordinación de seguridad y salud" />
-                <DatosRegistro
-                  registro={registro}
-                  excluirClaves={[
-                    "id",
-                    "parteId",
-                    "ppiId",
-                    "idSubSector",
-                    "idSector",
-                    "idBim",
-                    "elementoId",
-                    "imagenes",
-                    "observaciones",
-                    "idProyecto",
-                    "ppiNombre",
-                    "loteid",
-                    "totalSubactividades",
-                    "nombreProyecto",
-                    "estado",
-                    "pkInicial",
-                    "pkFinal",
-                    "loteId",
-                    "sectorNombre",
-                    "subSectorNombre",
-                    "parteNombre",
-                    "elementoNombre"
-                  ]}
-                  columnasMap={columnasMap}
-                />
+          <TituloInforme plantillaSeleccionada="Acta de inspección de coordinación de seguridad y salud" />
 
-                <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
-                <ObservacionesRegistro observaciones={registro.observaciones} />
-              </Page>
-            );
-          })
-        )}
+          <DatosRegistro
+            registro={dataRegister}
+            excluirClaves={[
+              "id", "parteId", "ppiId", "idSubSector", "idSector", "idBim", "elementoId",
+              "imagenes", "observaciones", "idProyecto", "ppiNombre", "loteid", "totalSubactividades",
+              "nombreProyecto", "estado", "pkInicial", "pkFinal", "loteId",
+              "sectorNombre", "subSectorNombre", "parteNombre", "elementoNombre"
+            ]}
+            columnasMap={columnasMap}
+          />
 
-        {/* Página final con la firma */}
+
+        </Page>
+
+        <Page size="A4" style={styles.page}>
+        <EncabezadoInforme
+            empresa={proyecto?.empresa || "Mi Empresa"}
+            obra={proyecto?.obra || "Obra Desconocida"}
+            contrato={proyecto?.contrato || "Sin Contrato"}
+            description={proyecto?.descripcion || "Sin Descripción"}
+            rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin}` : ""}`}
+            titlePdf="TPF GETINSA-EUROESTUDIOS S.L."
+            subTitlePdf="Informativo ejecutivo"
+            logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
+          />
+          {/* Insertar Galería de Imágenes solo si hay imágenes */}
+          {imagesWithMetadata.length > 0 && (
+            <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
+          )}
+
+          <ObservacionesRegistro observaciones={dataRegister.observaciones} />
+        </Page>
+
+        {/* Página final con firma */}
         <Page size="A4" style={styles.page}>
           <EncabezadoInforme
             empresa={proyecto?.empresa || "Mi Empresa"}
@@ -208,33 +215,43 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
         </Page>
       </Document>
     );
+
+    // Generar el PDF y abrirlo en una nueva pestaña
     const blob = await pdf(docContent).toBlob();
-    // Crear una URL temporal del PDF y abrir en nueva pestaña
-  const pdfURL = URL.createObjectURL(blob);
-  window.open(pdfURL, "_blank");
+    const pdfURL = URL.createObjectURL(blob);
+    window.open(pdfURL, "_blank");
   };
 
+
   const handlegeneratePDF = () => {
+    if (!dataRegister || Object.keys(dataRegister).length === 0) {
+      console.error("⚠️ No hay datos para generar el PDF");
+      return;
+    }
+
     setModalOpen(true); // Abre el modal
-  
-    downloadPdf(); // Genera el PDF
-  
+
+    setTimeout(() => {
+      downloadPdf(); // Genera el PDF
+    }, 200); // Espera un pequeño tiempo para asegurarse que `dataRegister` está listo
+
     setTimeout(() => {
       // Resetea las variables en localStorage
       localStorage.removeItem("fechaVisita");
       localStorage.removeItem("hora");
       localStorage.removeItem("visitaNumero");
-  
+
       // Resetea los estados locales
       setFechaVisita("");
       setHora("");
       setVisitaNumero("");
-  
+
       setModalOpen(false); // Cierra el modal
     }, 2000); // Espera 2 segundos antes de limpiar y cerrar
   };
-  
-  
+
+
+
 
   return (
     <div>
@@ -253,10 +270,10 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
         <div>
           {/* Botón para abrir el modal */}
           <button
-            className="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700"
+            className="px-4 py-2 bg-amber-600 text-white font-medium rounded-md hover:bg-amber-700 flex gap-2 items-center"
             onClick={() => setModalOpen(true)}
           >
-            Generar informe de visita
+            <FaFilePdf /> Generar informe
           </button>
 
           {modalOpen && (

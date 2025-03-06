@@ -14,6 +14,7 @@ import { FaArrowRight } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
 import { FaCheck } from "react-icons/fa6";
 import { MdOutlineError } from "react-icons/md";
+import { FaFilePdf } from "react-icons/fa6";
 
 import { GoHomeFill } from "react-icons/go";
 import { Link } from "react-router-dom";
@@ -52,11 +53,11 @@ const TablaRegistros = () => {
     hora: "",
     visitaNumero: "",
   });
-  
+
   const handleGuardarVisita = (datos) => {
     setDatosVisita(datos);
   };
-    
+
   const fechaHora = new Date().toISOString().replace(/:/g, "-").split(".")[0];
   const fileName = `${selectedProjectName}_${fechaHora}`
 
@@ -534,6 +535,14 @@ const TablaRegistros = () => {
       .replace(/([a-z])([A-Z])/g, "$1 $2") // Separa camelCase en palabras
       .replace(/\b[a-z]/g, (c) => c.toUpperCase()); // Capitaliza cada palabra
   };
+
+  // generar informe del registro
+  const [dataRegister, setDataRegister] = useState({})
+
+  const handleGeneratePdfRegistro = (registro) => {
+    setDataRegister(registro)
+    console.log(registro)
+  }
   return (
     <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
       <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
@@ -632,8 +641,8 @@ const TablaRegistros = () => {
             Borrar Filtros
           </button>
         </div>
-       
-        <InformeRegistros registros={registrosFiltrados} columnas={columnas} datosVisita={datosVisita} formatFechaActual={formatFechaActual()} fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)} fechaFin={formatFechaSolo(valoresFiltro.fechaFin)} fileName={fileName} />
+
+
       </div>
 
       <div className="overflow-x-auto px-6">
@@ -647,157 +656,186 @@ const TablaRegistros = () => {
           </div>
         ) : (
           <table className="hidden sm:table min-w-full bg-white shadow rounded-lg overflow-hidden">
-          <thead className="border-gray-200 bg-sky-600 text-white">
-            <tr>
-              {ordenColumnas
-                .filter((columna) => columna !== "nombre" && columna !== "sectorNombre" && columna !== "subSectorNombre" && columna !== "elementoNombre" && columna !== "parteNombre") // Ocultar "nombre"
-                .map((columna) => (
-                  <th
-                    key={columna}
-                    className="text-left px-6 py-3 text-sm font-semibold tracking-wide"
+            <thead className="border-gray-200 bg-sky-600 text-white">
+              <tr>
+                {ordenColumnas
+                  .filter((columna) => columna !== "nombre" && columna !== "sectorNombre" && columna !== "subSectorNombre" && columna !== "elementoNombre" && columna !== "parteNombre") // Ocultar "nombre"
+                  .map((columna) => (
+                    <th
+                      key={columna}
+                      className="text-left px-6 py-3 text-sm font-semibold tracking-wide"
+                    >
+                      {columnasMap[columna]}
+                    </th>
+                  ))}
+                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">
+                  Progreso
+                </th>
+                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">
+                  Avance
+                </th>
+                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">
+                  Informe
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {registrosFiltrados
+                .sort((a, b) => {
+                  // // Primero ordenamos por sectorNombre (Grupo activos)
+                  // if (a.sectorNombre < b.sectorNombre) return -1;
+                  // if (a.sectorNombre > b.sectorNombre) return 1;
+
+                  // Si el sectorNombre es igual, ordenamos por fechaHora
+                  const fechaA = new Date(a.fechaHora);
+                  const fechaB = new Date(b.fechaHora);
+                  return fechaB - fechaA; // Orden ascendente por fecha
+                })
+                .map((registro) => (
+                  <tr
+                    key={registro.id}
+                    className="hover:bg-gray-50 transition duration-150 ease-in-out"
                   >
-                    {columnasMap[columna]}
-                  </th>
-                ))}
-              <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">
-                Progreso
-              </th>
-              <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">
-                Avance
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {registrosFiltrados
-              .sort((a, b) => {
-                // // Primero ordenamos por sectorNombre (Grupo activos)
-                // if (a.sectorNombre < b.sectorNombre) return -1;
-                // if (a.sectorNombre > b.sectorNombre) return 1;
+                    {ordenColumnas
+                      .filter((columna) => columna !== "nombre" && columna !== "sectorNombre" && columna !== "subSectorNombre" && columna !== "elementoNombre" && columna !== "parteNombre")// Ocultar "nombre"
+                      .map((columna) => (
+                        <td
+                          key={columna}
+                          className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap"
+                        >
+                          {columna === "fechaHora"
+                            ? formatFecha(registro[columna]) // Aplicar formato a la fecha
+                            : columna === "observaciones" ? (
+                              <button
+                                onClick={() => openModal(registro[columna])}
+                                className="text-blue-500 hover:underline"
+                              >
+                                Ver observaciones
+                              </button>
+                            ) : columna === "actividad" ? ( // Renderizar el campo `actividad`
+                              registro.actividad || "—"
+                            ) : (
+                              registro[columna] || "—"
+                            )}
+                        </td>
+                      ))}
+                    <td className="px-6 py-4 text-sm whitespace-nowrap flex flex-col items-center gap-2">
+                      {(() => {
+                        const actividades = registro.actividades || {};
 
-                // Si el sectorNombre es igual, ordenamos por fechaHora
-                const fechaA = new Date(a.fechaHora);
-                const fechaB = new Date(b.fechaHora);
-                return fechaB - fechaA; // Orden ascendente por fecha
-              })
-              .map((registro) => (
-                <tr
-                  key={registro.id}
-                  className="hover:bg-gray-50 transition duration-150 ease-in-out"
-                >
-                  {ordenColumnas
-                    .filter((columna) => columna !== "nombre" && columna !== "sectorNombre" && columna !== "subSectorNombre" && columna !== "elementoNombre" && columna !== "parteNombre")// Ocultar "nombre"
-                    .map((columna) => (
-                      <td
-                        key={columna}
-                        className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap"
-                      >
-                        {columna === "fechaHora"
-                          ? formatFecha(registro[columna]) // Aplicar formato a la fecha
-                          : columna === "observaciones" ? (
-                            <button
-                              onClick={() => openModal(registro[columna])}
-                              className="text-blue-500 hover:underline"
-                            >
-                              Ver observaciones
-                            </button>
-                          ) : columna === "actividad" ? ( // Renderizar el campo `actividad`
-                            registro.actividad || "—"
-                          ) : (
-                            registro[columna] || "—"
-                          )}
-                      </td>
-                    ))}
-                  <td className="px-6 py-4 text-sm whitespace-nowrap flex flex-col items-center gap-2">
-                    {(() => {
-                      const actividades = registro.actividades || {};
+                        // ✅ Total inicial antes de "No Aplica"
+                        const totalInicial = Object.keys(actividades).length;
 
-                      // ✅ Total inicial antes de "No Aplica"
-                      const totalInicial = Object.keys(actividades).length;
+                        // ✅ Filtramos actividades válidas (sin "No Aplica")
+                        const actividadesValidas = Object.values(actividades).filter((actividad) => !actividad.noAplica);
+                        const totalActividades = actividadesValidas.length;
 
-                      // ✅ Filtramos actividades válidas (sin "No Aplica")
-                      const actividadesValidas = Object.values(actividades).filter((actividad) => !actividad.noAplica);
-                      const totalActividades = actividadesValidas.length;
+                        // ✅ Contamos cuántas tienen cada estado
+                        const totalSi = actividadesValidas.filter((actividad) => actividad.seleccionada === true).length;
+                        const totalNo = actividadesValidas.filter((actividad) => actividad.seleccionada === false).length;
+                        const totalNoAplica = totalInicial - totalActividades; // Restamos las "No Aplica"
 
-                      // ✅ Contamos cuántas tienen cada estado
-                      const totalSi = actividadesValidas.filter((actividad) => actividad.seleccionada === true).length;
-                      const totalNo = actividadesValidas.filter((actividad) => actividad.seleccionada === false).length;
-                      const totalNoAplica = totalInicial - totalActividades; // Restamos las "No Aplica"
+                        // ✅ Calculamos el porcentaje considerando solo actividades válidas
+                        const porcentajeApto = totalActividades > 0 ? Math.round((totalSi / totalActividades) * 100) : 0;
 
-                      // ✅ Calculamos el porcentaje considerando solo actividades válidas
-                      const porcentajeApto = totalActividades > 0 ? Math.round((totalSi / totalActividades) * 100) : 0;
+                        return (
+                          <>
+                            {/* 🔹 Totales claros y bien estructurados */}
+                            <div className="flex flex-col items-start gap-1 text-gray-700 font-medium">
+                              <span>Total actividades: {totalInicial}</span>
+                              <div className="flex gap-2"> <span className="text-green-600">✅ Sí: {totalSi}</span>
+                                <span className="text-red-600">❌ No: {totalNo}</span></div>
 
-                      return (
-                        <>
-                          {/* 🔹 Totales claros y bien estructurados */}
-                          <div className="flex flex-col items-start gap-1 text-gray-700 font-medium">
-                            <span>Total actividades: {totalInicial}</span>
-                            <div className="flex gap-2"> <span className="text-green-600">✅ Sí: {totalSi}</span>
-                              <span className="text-red-600">❌ No: {totalNo}</span></div>
+                              <span className="text-gray-500">⚪ No Aplica: {totalNoAplica}</span>
+                            </div>
 
-                            <span className="text-gray-500">⚪ No Aplica: {totalNoAplica}</span>
-                          </div>
+                            {/* 🔹 Barra de progreso visual */}
+                            <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all"
+                                style={{
+                                  width: `${porcentajeApto}%`,
+                                  backgroundColor:
+                                    porcentajeApto === 100 ? "#10B981" :
+                                      porcentajeApto >= 50 ? "#FBBF24" : "#EF4444",
+                                }}
+                              ></div>
+                            </div>
 
-                          {/* 🔹 Barra de progreso visual */}
-                          <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all"
-                              style={{
-                                width: `${porcentajeApto}%`,
-                                backgroundColor:
-                                  porcentajeApto === 100 ? "#10B981" :
-                                    porcentajeApto >= 50 ? "#FBBF24" : "#EF4444",
-                              }}
-                            ></div>
-                          </div>
-
-                          {/* 🔹 Mostrar porcentaje final */}
-                          <span className="font-medium">{porcentajeApto}%</span>
-                        </>
-                      );
-                    })()}
-                  </td>
+                            {/* 🔹 Mostrar porcentaje final */}
+                            <span className="font-medium">{porcentajeApto}%</span>
+                          </>
+                        );
+                      })()}
+                    </td>
 
 
 
-                  <td className="px-6 py-4 text-sm whitespace-nowrap">
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => {
-                          setRegistroEditando(registro);
-                          setModalEdicionAbierto(true);
-                          setPrevisualizaciones(registro.imagenes || []);
-                          setImagenesEditadas([]);
-                        }}
-                        className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-sky-700 transition duration-150 flex gap-2 items-center"
-                      >
-                        Editar
-                      </button>
-                      {roleUsuario === 'admin' && (
+
+
+                    <td className="px-6 py-4 text-sm whitespace-nowrap">
+                      <div className="flex gap-4">
                         <button
                           onClick={() => {
-                            setShowConfirmModal(true);
-                            setRegistroAEliminar(registro);
+                            setRegistroEditando(registro);
+                            setModalEdicionAbierto(true);
+                            setPrevisualizaciones(registro.imagenes || []);
+                            setImagenesEditadas([]);
                           }}
-                          className="px-4 py-2 bg-red-700 text-white font-medium rounded-md shadow-sm hover:bg-red-700 transition duration-150"
+                          className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-gray-500 transition duration-150 flex gap-2 items-center"
                         >
-                          Eliminar
+                          Editar
                         </button>
-                      )
-                      }
+                        
 
-                      <button
-                        onClick={() => handleAbrirModalModificaciones(registro)}
-                        className="px-4 py-2 bg-yellow-600 text-white font-medium rounded-md shadow-sm hover:bg-yellow-700 transition duration-150"
-                      >
-                        Historial
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        <button
+                          onClick={() => handleAbrirModalModificaciones(registro)}
+                          className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-gray-600 transition duration-150"
+                        >
+                          Historial
+                        </button>
 
-          </tbody>
-        </table>
+                        {roleUsuario === 'admin' && (
+                          <button
+                            onClick={() => {
+                              setShowConfirmModal(true);
+                              setRegistroAEliminar(registro);
+                            }}
+                            className="px-4 py-2 bg-red-500 text-white font-medium rounded-md shadow-sm hover:bg-red-600 transition duration-150"
+                          >
+                            Eliminar
+                          </button>
+                        )
+                        }
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 text-sm whitespace-nowrap">
+                      <InformeRegistros
+                        onClick={() => {
+                          handleGeneratePdfRegistro(registro); // Guarda el registro en `dataRegister`
+                          setTimeout(() => {
+                            handlegeneratePDF(); // Espera un momento para que React actualice el estado
+                          }, 100); // Pequeño delay para asegurar que `dataRegister` se actualice
+                        }}
+                        registros={registrosFiltrados}
+                        columnas={columnas}
+                        datosVisita={datosVisita}
+                        dataRegister={registro} // 🔹 Usamos directamente `registro`
+                        formatFechaActual={formatFechaActual()}
+                        fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)}
+                        fechaFin={formatFechaSolo(valoresFiltro.fechaFin)}
+                        fileName={fileName}
+                      />
+                    </td>
+
+
+
+                  </tr>
+                ))}
+
+            </tbody>
+          </table>
         )}
       </div>
 
@@ -861,7 +899,7 @@ const TablaRegistros = () => {
                         setShowConfirmModal(true);
                         setRegistroAEliminar(registro);
                       }}
-                      className="px-4 py-2 bg-red-700 text-white font-medium rounded-md shadow-sm hover:bg-red-700 transition duration-150"
+                      className="px-4 py-2 bg-red-400 text-white font-medium rounded-md shadow-sm hover:bg-red-400 transition duration-150"
                     >
                       Eliminar
                     </button>
@@ -913,7 +951,7 @@ const TablaRegistros = () => {
               </button>
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500 transition"
+                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-500 transition"
               >
                 Cancelar
               </button>
@@ -1131,7 +1169,7 @@ const TablaRegistros = () => {
               <button
                 className={`px-5 py-2 font-semibold rounded-md transition flex items-center gap-2 ${motivoCambio.trim()
                   ? "bg-sky-600 text-white hover:bg-sky-700"
-                  : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  : "bg-gray-500 text-gray-200 cursor-not-allowed"
                   }`}
                 onClick={handleGuardarEdicion}
                 disabled={!motivoCambio.trim()} // Deshabilita si no hay motivo
