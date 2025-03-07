@@ -99,7 +99,7 @@ const Navbar = () => {
                   <NavLink to="/" linkName="Home" onClick={handleLinkClick} />
 
                   
-                  {(userRol === 'usuario' || userRol === 'admin') && (
+                  {/* {(userRol === 'usuario' || userRol === 'admin') && (
                     <div>
                       <button
                         onClick={() => handleDropdownClick(setDropdownInspectionOpen, dropdownInspectionOpen)}
@@ -133,7 +133,7 @@ const Navbar = () => {
                         </div>
                       )}
                     </div>
-                  )}
+                  )} */}
  
                   {(userRol === 'usuario' || userRol === 'admin') && (
                     <div>
@@ -141,7 +141,7 @@ const Navbar = () => {
                         onClick={() => handleDropdownClick(setDropdownOpen, dropdownOpen)}
                         className="font-medium flex justify-between items-center w-full text-left px-6 py-2 text-gray-600 hover:bg-gray-100"
                       >
-                        Parte de obra <FaCaretDown />
+                         Prevención<FaCaretDown />
                       </button>
                       {dropdownOpen && (
                         <div className="pl-6">
@@ -230,7 +230,7 @@ const Navbar = () => {
 
                 {/* Inspección */}
                 
-                {(userRol === 'usuario' || userRol === 'admin') && (
+                {/* {(userRol === 'usuario' || userRol === 'admin') && (
                   <div className="relative" ref={inspectionRef}>
                     <button
                       onClick={() => {
@@ -267,7 +267,7 @@ const Navbar = () => {
                       </div>
                     )}
                   </div>
-                )}
+                )} */}
 
                 {/* Parte de obra */}
                 {(userRol === 'usuario' || userRol === 'admin') && (
@@ -279,7 +279,7 @@ const Navbar = () => {
                       }}
                       className="flex items-center gap-1 px-3 py-2 rounded-md text-md font-medium text-gray-500 hover:text-sky-600"
                     >
-                      Parte de obra <FaCaretDown />
+                      Prevención <FaCaretDown />
                     </button>
                     {dropdownOpen && (
                       <div className="absolute bg-white shadow-lg rounded-md mt-2 py-2 w-48 z-50">

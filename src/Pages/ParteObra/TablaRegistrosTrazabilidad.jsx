@@ -227,19 +227,15 @@ const TablaRegistros = () => {
 
 
   useEffect(() => {
-    if (!valoresFiltro.fechaInicio || !valoresFiltro.fechaFin) {
-      setRegistrosFiltrados([]); // No mostrar registros hasta que se seleccione una fecha
-      return;
-    }
-
     const registrosFiltrados = registrosParteDeObra.filter((registro) => {
       const fechaRegistro = new Date(registro.fechaHora).toISOString().split("T")[0]; // Convertir fecha a YYYY-MM-DD
 
+      // ✅ Si NO hay filtro de fecha, no se filtra por fecha
       const cumpleFecha =
         (!valoresFiltro.fechaInicio || fechaRegistro >= valoresFiltro.fechaInicio) &&
         (!valoresFiltro.fechaFin || fechaRegistro <= valoresFiltro.fechaFin);
 
-      // Filtros adicionales
+      // ✅ Aplicar otros filtros
       const cumpleOtrosFiltros = Object.keys(valoresFiltro).every((campo) => {
         if (campo === "fechaInicio" || campo === "fechaFin") return true;
         return !valoresFiltro[campo] || (registro[campo] || "").includes(valoresFiltro[campo]);
@@ -250,6 +246,7 @@ const TablaRegistros = () => {
 
     setRegistrosFiltrados(registrosFiltrados);
   }, [valoresFiltro, registrosParteDeObra]);
+
 
 
 
@@ -646,20 +643,16 @@ const TablaRegistros = () => {
       </div>
 
       <div className="overflow-x-auto px-6">
-        {(!valoresFiltro.fechaInicio || !valoresFiltro.fechaFin) ? (
+        {registrosFiltrados.length === 0 ? (
           <div className="text-center text-gray-600 py-10">
-            <p className="text-lg font-semibold">📅 Por favor, selecciona un rango de fechas para consultar los registros.</p>
-          </div>
-        ) : registrosFiltrados.length === 0 ? (
-          <div className="text-center text-gray-600 py-10">
-            <p className="text-lg font-semibold">❌ No se encontraron registros en el rango de fechas seleccionado.</p>
+            <p className="text-lg font-semibold"> 📂 No se encontraron registros.</p>
           </div>
         ) : (
           <table className="hidden sm:table min-w-full bg-white shadow rounded-lg overflow-hidden">
             <thead className="border-gray-200 bg-sky-600 text-white">
               <tr>
                 {ordenColumnas
-                  .filter((columna) => columna !== "nombre" && columna !== "sectorNombre" && columna !== "subSectorNombre" && columna !== "elementoNombre" && columna !== "parteNombre") // Ocultar "nombre"
+                  .filter((columna) => columna !== "nombre" && columna !== "sectorNombre" && columna !== "subSectorNombre" && columna !== "elementoNombre" && columna !== "parteNombre")
                   .map((columna) => (
                     <th
                       key={columna}
@@ -668,43 +661,28 @@ const TablaRegistros = () => {
                       {columnasMap[columna]}
                     </th>
                   ))}
-                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">
-                  Progreso
-                </th>
-                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">
-                  Avance
-                </th>
-                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">
-                  Informe
-                </th>
+                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">Progreso</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">Avance</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">Informe</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {registrosFiltrados
-                .sort((a, b) => {
-                  // // Primero ordenamos por sectorNombre (Grupo activos)
-                  // if (a.sectorNombre < b.sectorNombre) return -1;
-                  // if (a.sectorNombre > b.sectorNombre) return 1;
-
-                  // Si el sectorNombre es igual, ordenamos por fechaHora
-                  const fechaA = new Date(a.fechaHora);
-                  const fechaB = new Date(b.fechaHora);
-                  return fechaB - fechaA; // Orden ascendente por fecha
-                })
+                .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora)) // Ordenar por fecha descendente
                 .map((registro) => (
                   <tr
                     key={registro.id}
                     className="hover:bg-gray-50 transition duration-150 ease-in-out"
                   >
                     {ordenColumnas
-                      .filter((columna) => columna !== "nombre" && columna !== "sectorNombre" && columna !== "subSectorNombre" && columna !== "elementoNombre" && columna !== "parteNombre")// Ocultar "nombre"
+                      .filter((columna) => columna !== "nombre" && columna !== "sectorNombre" && columna !== "subSectorNombre" && columna !== "elementoNombre" && columna !== "parteNombre")
                       .map((columna) => (
                         <td
                           key={columna}
                           className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap"
                         >
                           {columna === "fechaHora"
-                            ? formatFecha(registro[columna]) // Aplicar formato a la fecha
+                            ? formatFecha(registro[columna]) // Formato de fecha
                             : columna === "observaciones" ? (
                               <button
                                 onClick={() => openModal(registro[columna])}
@@ -712,7 +690,7 @@ const TablaRegistros = () => {
                               >
                                 Ver observaciones
                               </button>
-                            ) : columna === "actividad" ? ( // Renderizar el campo `actividad`
+                            ) : columna === "actividad" ? (
                               registro.actividad || "—"
                             ) : (
                               registro[columna] || "—"
@@ -720,59 +698,8 @@ const TablaRegistros = () => {
                         </td>
                       ))}
                     <td className="px-6 py-4 text-sm whitespace-nowrap flex flex-col items-center gap-2">
-                      {(() => {
-                        const actividades = registro.actividades || {};
-
-                        // ✅ Total inicial antes de "No Aplica"
-                        const totalInicial = Object.keys(actividades).length;
-
-                        // ✅ Filtramos actividades válidas (sin "No Aplica")
-                        const actividadesValidas = Object.values(actividades).filter((actividad) => !actividad.noAplica);
-                        const totalActividades = actividadesValidas.length;
-
-                        // ✅ Contamos cuántas tienen cada estado
-                        const totalSi = actividadesValidas.filter((actividad) => actividad.seleccionada === true).length;
-                        const totalNo = actividadesValidas.filter((actividad) => actividad.seleccionada === false).length;
-                        const totalNoAplica = totalInicial - totalActividades; // Restamos las "No Aplica"
-
-                        // ✅ Calculamos el porcentaje considerando solo actividades válidas
-                        const porcentajeApto = totalActividades > 0 ? Math.round((totalSi / totalActividades) * 100) : 0;
-
-                        return (
-                          <>
-                            {/* 🔹 Totales claros y bien estructurados */}
-                            <div className="flex flex-col items-start gap-1 text-gray-700 font-medium">
-                              <span>Total actividades: {totalInicial}</span>
-                              <div className="flex gap-2"> <span className="text-green-600">✅ Sí: {totalSi}</span>
-                                <span className="text-red-600">❌ No: {totalNo}</span></div>
-
-                              <span className="text-gray-500">⚪ No Aplica: {totalNoAplica}</span>
-                            </div>
-
-                            {/* 🔹 Barra de progreso visual */}
-                            <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all"
-                                style={{
-                                  width: `${porcentajeApto}%`,
-                                  backgroundColor:
-                                    porcentajeApto === 100 ? "#10B981" :
-                                      porcentajeApto >= 50 ? "#FBBF24" : "#EF4444",
-                                }}
-                              ></div>
-                            </div>
-
-                            {/* 🔹 Mostrar porcentaje final */}
-                            <span className="font-medium">{porcentajeApto}%</span>
-                          </>
-                        );
-                      })()}
+                      {/* Lógica de progreso aquí */}
                     </td>
-
-
-
-
-
                     <td className="px-6 py-4 text-sm whitespace-nowrap">
                       <div className="flex gap-4">
                         <button
@@ -786,15 +713,12 @@ const TablaRegistros = () => {
                         >
                           Editar
                         </button>
-                        
-
                         <button
                           onClick={() => handleAbrirModalModificaciones(registro)}
                           className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-gray-600 transition duration-150"
                         >
                           Historial
                         </button>
-
                         {roleUsuario === 'admin' && (
                           <button
                             onClick={() => {
@@ -805,39 +729,34 @@ const TablaRegistros = () => {
                           >
                             Eliminar
                           </button>
-                        )
-                        }
+                        )}
                       </div>
                     </td>
-
                     <td className="px-6 py-4 text-sm whitespace-nowrap">
                       <InformeRegistros
                         onClick={() => {
-                          handleGeneratePdfRegistro(registro); // Guarda el registro en `dataRegister`
+                          handleGeneratePdfRegistro(registro);
                           setTimeout(() => {
-                            handlegeneratePDF(); // Espera un momento para que React actualice el estado
-                          }, 100); // Pequeño delay para asegurar que `dataRegister` se actualice
+                            handlegeneratePDF();
+                          }, 100);
                         }}
                         registros={registrosFiltrados}
                         columnas={columnas}
                         datosVisita={datosVisita}
-                        dataRegister={registro} // 🔹 Usamos directamente `registro`
+                        dataRegister={registro}
                         formatFechaActual={formatFechaActual()}
                         fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)}
                         fechaFin={formatFechaSolo(valoresFiltro.fechaFin)}
                         fileName={fileName}
                       />
                     </td>
-
-
-
                   </tr>
                 ))}
-
             </tbody>
           </table>
         )}
       </div>
+
 
       <div className="overflow-x-auto px-6">
         {/* Vista en modo cards para dispositivos pequeños */}
@@ -912,7 +831,7 @@ const TablaRegistros = () => {
             ))}
 
         </div>
-      </div>;
+      </div>
 
 
 
@@ -999,6 +918,7 @@ const TablaRegistros = () => {
                   "subSectorNombre",
                   "parteNombre",
                   "elementoNombre",
+                  "elementoNombre",
                 ].includes(campo)
               )
               .sort((a, b) => a.localeCompare(b)) // Ordena alfabéticamente
@@ -1042,53 +962,51 @@ const TablaRegistros = () => {
             {/* Editar actividades */}
             <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-700 mb-1 bg-gray-200 p-2 flex gap-2">Actividades<span><AiFillLock className="ml-2 text-gray-500" size={16} /></span></label>
-              {Object.entries(registroEditando.actividades || {}).map(([index, actividad]) => (
-                <div
-                  key={index}
-                  className="mb-3 p-4 border border-gray-300 rounded-lg shadow-sm bg-white"
-                >
-                  {/* Información de la actividad */}
-                  <div className="flex items-center gap-2 mb-2 text-sm">
-                    <p className="font-semibold text-gray-800">{actividad.numero || index}-</p>
-                    <p className="font-semibold text-gray-800">
-                      {actividad.nombre || "Actividad sin nombre"}
-                    </p>
-                  </div>
+              {Object.entries(registroEditando.actividades || {})
+                .filter(([_, actividad]) => !actividad.noAplica)
+                .map(([index, actividad]) => (
+                  <div
+                    key={index}
+                    className="mb-3 p-4 border border-gray-300 rounded-lg shadow-sm bg-white"
+                  >
+                    {/* Información de la actividad */}
+                    <div className="flex items-center gap-2 mb-2 text-sm">
+                      <p className="font-semibold text-gray-800">{actividad.numero || index}-</p>
+                      <p className="font-semibold text-gray-800">
+                        {actividad.nombre || "Actividad sin nombre"}
+                      </p>
+                    </div>
 
-                  {/* Estado de la actividad (Cumple, No cumple, No aplica) */}
-                  <div className="flex items-center gap-4 text-sm font-medium text-gray-600">
-                    {/* "Cumple" solo si NO está en "No Aplica" */}
-                    <span className={`min-w-[90px] flex items-center justify-center px-3 py-1 
+                    {/* Estado de la actividad (Cumple, No cumple, No aplica) */}
+                    <div className="flex items-center gap-4 text-sm font-medium text-gray-600">
+                      {/* "Cumple" solo si NO está en "No Aplica" */}
+                      <span className={`min-w-[90px] flex items-center justify-center px-3 py-1 
     ${actividad.noAplica ? "text-gray-400" : actividad.seleccionada === true ? "text-gray-800 font-bold bg-gray-200 border rounded-md" : "text-gray-500"}`}>
-                      ✅ Cumple
-                    </span>
+                        ✅ Aplica
+                      </span>
 
-                    {/* "No Cumple" solo si NO está en "No Aplica" */}
-                    <span className={`min-w-[90px] flex items-center justify-center px-3 py-1 
-    ${actividad.noAplica ? "text-gray-400" : actividad.seleccionada === false ? "text-gray-800 font-bold bg-gray-200 border rounded-md" : "text-gray-500"}`}>
-                      ❌ No cumple
-                    </span>
 
-                    {/* "No Aplica" siempre se muestra */}
-                    <span className={`min-w-[90px] flex items-center justify-center px-3 py-1 
+
+                      {/* "No Aplica" siempre se muestra */}
+                      <span className={`min-w-[90px] flex items-center justify-center px-3 py-1 
     ${actividad.noAplica ? "text-gray-800 font-bold bg-gray-200 border rounded-md" : "text-gray-500"}`}>
-                      ⚪ No Aplica
-                    </span>
-                  </div>
+                        ⚪ No Aplica
+                      </span>
+                    </div>
 
 
-                  {/* Observaciones (solo lectura) */}
-                  <div className="mt-2">
-                    <label className="block text-sm font-medium text-gray-700">Observaciones</label>
-                    <textarea
-                      value={actividad.observacion || "Sin observaciones"}
-                      readOnly
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-200 text-gray-700 cursor-not-allowed"
-                      rows={2}
-                    />
+                    {/* Observaciones (solo lectura) */}
+                    <div className="mt-2">
+                      <label className="block text-sm font-medium text-gray-700">Observaciones</label>
+                      <textarea
+                        value={actividad.observacion || "Sin observaciones"}
+                        readOnly
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-200 text-gray-700 cursor-not-allowed"
+                        rows={2}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
             </div>
 

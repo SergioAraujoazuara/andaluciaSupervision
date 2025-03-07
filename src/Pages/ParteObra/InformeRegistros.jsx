@@ -16,6 +16,7 @@ import ObservacionesRegistro from "./ComponentesInforme/ObservacionesRegistro";
 import useProyecto from "../../Hooks/useProyectos";
 import { AiOutlineClose } from "react-icons/ai";
 import { FaFilePdf } from "react-icons/fa6";
+import DatosRegistroTabla from "./ComponentesInforme/DatosRegistroTabla";
 
 
 
@@ -177,11 +178,29 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             columnasMap={columnasMap}
           />
 
+       
+
+          
+
 
         </Page>
 
         <Page size="A4" style={styles.page}>
-        <EncabezadoInforme
+          <DatosRegistroTabla
+            registro={dataRegister}
+            excluirClaves={[
+              "id", "parteId", "ppiId", "idSubSector", "idSector", "idBim", "elementoId",
+              "imagenes", "observaciones", "idProyecto", "ppiNombre", "loteid", "totalSubactividades",
+              "nombreProyecto", "estado", "pkInicial", "pkFinal", "loteId",
+              "sectorNombre", "subSectorNombre", "parteNombre", "elementoNombre"
+            ]}
+            columnasMap={columnasMap}
+          />
+
+          </Page>
+
+        <Page size="A4" style={styles.page}>
+          <EncabezadoInforme
             empresa={proyecto?.empresa || "Mi Empresa"}
             obra={proyecto?.obra || "Obra Desconocida"}
             contrato={proyecto?.contrato || "Sin Contrato"}

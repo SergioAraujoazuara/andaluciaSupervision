@@ -32,7 +32,8 @@ const ParteObra = () => {
     registroEmpresas: "",
     controlAccesos: "",
     controlSubcontratacion: { seleccionada: null, nombreEmpresaSubcontrata: "", controlSubcontratacion: "" },
-    controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" }
+    controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" },
+    mediosDisponibles: { nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }
   });
 
   const fileInputsRefs = useRef([]);
@@ -285,7 +286,8 @@ const ParteObra = () => {
       registroEmpresas: "",
       controlAccesos: "",
       controlSubcontratacion: { seleccionada: null, nombreEmpresaSubcontrata: "", controlSubcontratacion: "" },
-      controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" }
+      controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" },
+      mediosDisponibles: { nombreEmpresa: "", numeroTrabajadores: 0, maquinaria: "" }
     });
 
     // Limpiar referencias de archivos
@@ -325,6 +327,34 @@ const ParteObra = () => {
           },
         };
       }
+
+      if (name.startsWith("mediosDisponibles.")) {
+        const field = name.split(".")[1];
+  
+        if (field === "numeroTrabajadores") {
+          const numericValue = value.replace(/\D/g, "");
+          return {
+            ...prev,
+            mediosDisponibles: {
+              ...prev.mediosDisponibles,
+              [field]: numericValue === "" ? "" : Number(numericValue),
+            },
+          };
+        }
+  
+        return {
+          ...prev,
+          mediosDisponibles: {
+            ...prev.mediosDisponibles,
+            [field]: value,
+          },
+        };
+      }
+
+      
+
+
+
 
 
       // Manejo de otros campos normales
@@ -474,7 +504,8 @@ const ParteObra = () => {
         registroEmpresas: "",
         controlAccesos: "",
         controlSubcontratacion: { seleccionada: null, nombreEmpresaSubcontrata: "", controlSubcontratacion: "" },
-        controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" }
+        controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" },
+        mediosDisponibles: { nombreEmpresa: "", numeroTrabajadores: 0, maquinaria: "" }
       });
 
       // Limpiar referencias de archivos
@@ -842,8 +873,9 @@ const ParteObra = () => {
             <div className="w-full border-b-2 mt-2 mb-6"></div>
 
             <div>
+
               <div>
-                <p className="font-semibold bg-sky-600 text-white rounded-t-lg px-4 py-2">
+                <p className="font-semibold bg-gray-300 rounded-t-lg px-4 py-2">
                   Actividad seleccionada
                 </p>
                 {selectedLote && (
@@ -851,10 +883,13 @@ const ParteObra = () => {
                 )}
 
 
+                <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">1. Trabajos inspeccionados</h3>
 
+                <label className="block text-sm font-medium px-4">
+                  ¿Qué se inspecciona?</label>
                 <textarea
                   required
-                  maxLength={700}
+                  maxLength={300}
                   name="observacionesActividad"
                   value={formData.observacionesActividad}
                   onChange={handleInputChange}
@@ -864,12 +899,12 @@ const ParteObra = () => {
               </div>
 
               <div className="mt-4">
-                <label className="block text-sm font-medium bg-gray-200 px-4 py-2 rounded-md">
-                  Locazalización
+                <label className="block text-sm font-medium px-4">
+                  ¿Dónde se ubica?
                 </label>
                 <textarea
                   required
-                  maxLength={700}
+                  maxLength={300}
                   name="observacionesLocalizacion"
                   value={formData.observacionesLocalizacion}
                   onChange={handleInputChange}
@@ -878,6 +913,49 @@ const ParteObra = () => {
                 ></textarea>
               </div>
             </div>
+
+            {/* Medios disponibles, empresa y trabajadores */}
+
+            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">2. Medios disponibles en obra: Empresas, trabajadores y maquinaria.</h3>
+
+            <div>
+              <input
+                type="text"
+                required
+                maxLength={300}
+                name="mediosDisponibles.nombreEmpresa"
+                value={formData.mediosDisponibles.nombreEmpresa}
+                onChange={handleInputChange}
+                placeholder="Nombre empresa"
+                className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
+              />
+
+              <input
+                type="text"
+                name="mediosDisponibles.numeroTrabajadores"
+                value={formData.mediosDisponibles.numeroTrabajadores}
+                onChange={handleInputChange}
+                placeholder="Número trabajadores"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400"
+              />
+
+
+
+              <input
+                type="text"
+                required
+                maxLength={300}
+                name="mediosDisponibles.maquinaria"
+                value={formData.mediosDisponibles.maquinaria}
+                onChange={handleInputChange}
+                placeholder="Nombre empresa"
+                className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
+              />
+            </div>
+
+
 
             {/* Fecha y Hora */}
             <div>
@@ -894,13 +972,32 @@ const ParteObra = () => {
               />
             </div>
 
+
+            {/* Observaciones en materia seguridad y salud */}
+            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">3. Observaciones en materia de seguridad y salud</h3>
+
+            <div>
+              <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
+                Observaciones generales
+              </label>
+              <textarea
+                maxLength={300}
+                name="observaciones"
+                value={formData.observaciones}
+                onChange={handleInputChange}
+                placeholder="Escribe tus observaciones aquí..."
+                className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
+              ></textarea>
+            </div>
+
+            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">4. Detalles de la inspección</h3>
+
             {ppiDetails && (
-              <div className="mt-6">
-                <p className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">PPI asignado</p>
-                <p className="text-xs font-medium ps-4 mt-2">* Evalua cada actividad y agrega observaciones si es necesario</p>
+              <div>
+
 
                 {/* Contenedor con scroll vertical */}
-                <div className="mt-4 ">
+                <div className="mt-4 ps-4">
                   {ppiDetails.actividades.map((actividad, actividadIndex) => {
                     // Filtramos las subactividades que tienen nombre válido
                     const subactividadesValidas = Array.isArray(actividad.subactividades)
@@ -919,56 +1016,42 @@ const ParteObra = () => {
 
 
                             {/* Estado de la actividad (Cumple, No cumple, No aplica) */}
-<div className="flex gap-3 text-xs text-gray-700 font-medium">
-  
-  {/* ✅ Checkbox para marcar Sí (Cumple) */}
-  <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
-    ${selectedActivities[actividadIndex]?.noAplica ? "text-gray-400 bg-gray-100 border-gray-300 cursor-not-allowed" : 
-    selectedActivities[actividadIndex]?.seleccionada === true ? "text-gray-800 font-bold bg-gray-200 border-gray-500" : "text-gray-500 border-gray-300"}`}
-  >
-    <input
-      type="radio"
-      name={`actividad-${actividadIndex}`}
-      value="si"
-      checked={selectedActivities[actividadIndex]?.seleccionada === true}
-      onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas, "si")}
-      disabled={selectedActivities[actividadIndex]?.noAplica}
-      className="hidden"
-    />
-    ✅ Cumple
-  </label>
+                            <div className="flex gap-3 text-xs text-gray-700 font-medium">
 
-  {/* ❌ Checkbox para marcar No (No Cumple) */}
-  <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
-    ${selectedActivities[actividadIndex]?.noAplica ? "text-gray-400 bg-gray-100 border-gray-300 cursor-not-allowed" : 
-    selectedActivities[actividadIndex]?.seleccionada === false ? "text-gray-800 font-bold bg-gray-200 border-gray-500" : "text-gray-500 border-gray-300"}`}
-  >
-    <input
-      type="radio"
-      name={`actividad-${actividadIndex}`}
-      value="no"
-      checked={selectedActivities[actividadIndex]?.seleccionada === false}
-      onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas, "no")}
-      disabled={selectedActivities[actividadIndex]?.noAplica}
-      className="hidden"
-    />
-    ❌ No cumple
-  </label>
+                              {/* ✅ Checkbox para marcar Sí (Cumple) */}
+                              <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
+    ${selectedActivities[actividadIndex]?.noAplica ? "text-gray-400 bg-gray-100 border-gray-300 cursor-not-allowed" :
+                                  selectedActivities[actividadIndex]?.seleccionada === true ? "text-gray-800 font-bold bg-gray-300 border-gray-500" : "text-gray-500 border-gray-300"}`}
+                              >
+                                <input
+                                  maxLength={300}
+                                  type="radio"
+                                  name={`actividad-${actividadIndex}`}
+                                  value="si"
+                                  checked={selectedActivities[actividadIndex]?.seleccionada === true}
+                                  onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas, "si")}
+                                  disabled={selectedActivities[actividadIndex]?.noAplica}
+                                  className="hidden"
+                                />
+                                ✅ Aplica
+                              </label>
 
-  {/* ⚪ Checkbox "No Aplica" */}
-  <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
+
+
+                              {/* ⚪ Checkbox "No Aplica" */}
+                              <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
     ${selectedActivities[actividadIndex]?.noAplica ? "text-gray-800 font-bold bg-gray-200 border-gray-500" : "text-gray-500 border-gray-300"}`}
-  >
-    <input
-      type="checkbox"
-      checked={selectedActivities[actividadIndex]?.noAplica || false}
-      onChange={() => handleNoAplicaChange(actividadIndex)}
-      className="hidden"
-    />
-    ⚪ No Aplica
-  </label>
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedActivities[actividadIndex]?.noAplica || false}
+                                  onChange={() => handleNoAplicaChange(actividadIndex)}
+                                  className="hidden"
+                                />
+                                ⚪ No Aplica
+                              </label>
 
-</div>
+                            </div>
 
 
                           </div>
@@ -1037,36 +1120,38 @@ const ParteObra = () => {
               <div className="mt-6">
 
                 {/* Registro Documental de Empresas */}
-                <div className="mb-4">
+                {/* <div className="mb-4">
                   <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
                     Registro Documental de Empresas, Trabajadores y Maquinaria.
                   </label>
                   <textarea
+                    maxLength={300}
                     name="registroEmpresas"
                     value={formData.registroEmpresas || ""}
                     onChange={handleInputChange}
                     placeholder="Escribe observaciones..."
                     className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
                   ></textarea>
-                </div>
+                </div> */}
 
                 {/* Control de Accesos a la Obra */}
-                <div className="mb-4">
+                {/* <div className="mb-4">
                   <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
                     Control de Accesos a la Obra
                   </label>
                   <textarea
+                    maxLength={300}
                     name="controlAccesos"
                     value={formData.controlAccesos || ""}
                     onChange={handleInputChange}
                     placeholder="Escribe observaciones..."
                     className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
                   ></textarea>
-                </div>
+                </div> */}
 
                 {/* Control de la Subcontratación */}
                 {/* Opciones Sí / No para Control de la Subcontratación */}
-                <div className="mt-2">
+                {/* <div className="mt-2">
                   <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
                     Control de Accesos a la Obra
                   </label>
@@ -1096,12 +1181,13 @@ const ParteObra = () => {
                       No dar de alta
                     </label>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Input para ingresar el nombre de la empresa (Solo si selecciona "Sí") */}
-                {formData.controlSubcontratacion.seleccionada === "si" && (
+                {/* {formData.controlSubcontratacion.seleccionada === "si" && (
                   <div className="mt-2">
                     <input
+                      maxLength={300}
                       type="text"
                       name="controlSubcontratacion.nombreEmpresaSubcontrata"
                       value={formData.controlSubcontratacion.nombreEmpresaSubcontrata || ""}
@@ -1110,20 +1196,21 @@ const ParteObra = () => {
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-sky-500 focus:border-sky-500"
                     />
                   </div>
-                )}
+                )} */}
 
                 {/* Observaciones de la Subcontratación */}
-                <textarea
+                {/* <textarea
+                  maxLength={300}
                   name="controlSubcontratacion.controlSubcontratacion"
                   value={formData.controlSubcontratacion.controlSubcontratacion || ""}
                   onChange={handleInputChange}
                   placeholder="Escribe observaciones..."
                   className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
-                />
+                /> */}
 
 
 
-
+                <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.</h3>
                 {/* Previsión de Actividades de Próximo Inicio */}
                 <div className="mt-6">
                   <label className="block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
@@ -1136,6 +1223,7 @@ const ParteObra = () => {
                       Actividades de Próximo Inicio
                     </label>
                     <textarea
+                      maxLength={300}
                       name="actividadesProximoInicio"
                       value={formData.actividadesProximoInicio || ""}
                       onChange={handleInputChange}
@@ -1150,6 +1238,7 @@ const ParteObra = () => {
                       Medidas Preventivas a Implantar en Obra
                     </label>
                     <textarea
+                      maxLength={300}
                       name="medidasPreventivas"
                       value={formData.medidasPreventivas || ""}
                       onChange={handleInputChange}
@@ -1161,12 +1250,12 @@ const ParteObra = () => {
 
 
                 {/* Siniestralidad y planificación de actuaciones de emergencia */}
-                <div>
+                {/* <div>
                   <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
                     Siniestralidad y planificación de actuaciones de emergencia
                   </label>
 
-                  {/* Checkbox Sí / No */}
+                
                   <div className="flex items-center gap-4 mt-2">
                     <label className="ml-4 flex items-center gap-2 text-sm font-medium text-gray-700">
                       <input
@@ -1194,52 +1283,23 @@ const ParteObra = () => {
                   </div>
 
 
-                  {/* Observaciones de siniestralidad */}
+                  Observaciones de siniestralidad
                   <textarea
+                    maxLength={300}
                     name="controlSiniestraidad.observacionesSiniestralidad"
                     value={formData.controlSiniestraidad.observacionesSiniestralidad}
                     onChange={handleInputChange}
                     placeholder="Escribe observaciones..."
                     className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
                   ></textarea>
-                </div>
+                </div> */}
 
 
 
               </div>
 
 
-
-              {/* Resultado */}
-
-              <div className="mt-12">
-                <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2">
-
-                  Resultado inspección
-                </label>
-                <div className="relative">
-                  <select
-                    name="apto"
-                    value={formData.apto || ""}
-                    onChange={handleInputChange}
-                    className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 bg-white appearance-none"
-                  >
-                    <option value="" disabled>Selecciona una opción</option>
-                    <option value="apto">✅ Apto</option>
-                    <option value="no_apto">❌ No Apto</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                    <FaCheck className={`text-green-600 ${formData.apto === "apto" ? "block" : "hidden"}`} />
-                    <MdOutlineError className={`text-red-600 ${formData.apto === "no_apto" ? "block" : "hidden"}`} />
-                  </div>
-                </div>
-              </div>
-
-
-
-
-
-
+              <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">6. Reportaje fotográfico de la visita.</h3>
               {/* Imágenes */}
               <div className="mb-4 ps-4">
                 <label className="block text-sm font-medium text-gray-700">
@@ -1247,7 +1307,7 @@ const ParteObra = () => {
                   <p className="text-amber-600 text-xs">* Mínimo 1 imagen</p>
                 </label>
                 <div className="grid grid-cols-2 gap-4 mt-4">
-                  {[0, 1, 2, 3].map((index) => (
+                  {[0, 1, 2, 3, 4, 5].map((index) => (
                     <div key={index} className="relative">
                       <input
                         type="file"
@@ -1270,32 +1330,42 @@ const ParteObra = () => {
                   ))}
                 </div>
               </div>
-              {/* Observaciones */}
-              <div>
-                <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
-                  Observaciones generales
-                </label>
-                <textarea
-                  maxLength={700}
-                  name="observaciones"
-                  value={formData.observaciones}
+
+
+
+
+
+
+
+
+              {/* Resultado */}
+
+              <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2">7. Resultado de la inspección.</h3>
+              <div className="relative">
+                <select
+                  name="apto"
+                  value={formData.apto || ""}
                   onChange={handleInputChange}
-                  placeholder="Escribe tus observaciones aquí..."
-                  className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
-                ></textarea>
+                  className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 bg-white appearance-none"
+                >
+                  <option value="" disabled>Selecciona una opción</option>
+                  <option value="apto">✅ Apto</option>
+                  <option value="no_apto">❌ No Apto</option>
+                </select>
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                  <FaCheck className={`text-green-600 ${formData.apto === "apto" ? "block" : "hidden"}`} />
+                  <MdOutlineError className={`text-red-600 ${formData.apto === "no_apto" ? "block" : "hidden"}`} />
+                </div>
               </div>
 
 
 
 
-
-
-
               {/* Botones */}
-              <div className="flex justify-between items-center gap-4">
+              <div className="flex justify-between items-center gap-4 mt-12">
                 <button
                   type="submit"
-                  className="w-2/3 py-2 bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:bg-sky-700 transition"
+                  className="w-2/3 py-2 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-700 transition mt-4"
                   onClick={handleSubmit}
                 >
                   Enviar
@@ -1303,7 +1373,7 @@ const ParteObra = () => {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="w-1/3 py-2 bg-gray-400 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition"
+                  className="w-1/3 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition mt-4"
                 >
                   Cancelar
                 </button>

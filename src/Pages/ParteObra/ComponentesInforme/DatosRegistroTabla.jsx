@@ -152,57 +152,88 @@ const ordenColumnas = [
   "registroEmpresas",
 ];
 
-const DatosRegistro = ({ registro, excluirClaves = [] }) => {
+const DatosRegistroTabla = ({ registro, excluirClaves = [] }) => {
   return (
     <View style={styles.fieldGroup}>
-      {ordenColumnas
-        .filter((key) => registro[key] !== undefined && !excluirClaves.includes(key))
-        .map((key, i) => {
-          const label = columnasMap[key] || key;
-          let formattedValue = "N/A";
-
-          if (key === "apto") {
-            const isApto = registro.apto === "apto";
-            formattedValue = registro.apto || "Sin definir";
-          } else if (key === "controlSubcontratacion") {
-            formattedValue = registro.nombreEmpresaSubcontrata || "No registrada";
-          } else if (key === "controlSiniestraidad") {
-            formattedValue = registro.controlSiniestraidad?.observacionesSiniestralidad || "Sin observaciones";
-          } else if (key === "fechaHora" && registro[key]) {
-            formattedValue = convertirFechaISOaVisual(registro[key]);
-          } else if (Array.isArray(registro[key])) {
-            formattedValue = registro[key].join(", ");
-          } else if (typeof registro[key] === "object" && registro[key] !== null) {
-            formattedValue = Object.entries(registro[key])
-              .map(([subKey, subValue]) => `${subKey}: ${subValue}`)
-              .join(" | ");
-          } else {
-            formattedValue = registro[key] || "N/A";
-          }
-
-          return (
-            <View key={i} style={styles.fieldColumn}>
-              <Text style={styles.fieldLabel}>{label}:</Text>
-              {key === "apto" ? (
-                <Text
-                  style={[
-                    styles.aptoText,
-                    { color: registro.apto === "apto" ? "green" : "red" },
-                  ]}
-                >
-                  {formattedValue.toUpperCase()}
-                </Text>
-              ) : (
-                <Text style={styles.fieldValue}>{formattedValue}</Text>
-              )}
-            </View>
-          );
-        })}
+     
 
 
-    
+      {/* 🔹 Sección de Actividades y Subactividades */}
+      {registro.actividades && (
+        <View style={styles.tableContainer}>
+          {/* Encabezado de la Tabla */}
+          <View style={styles.tableHeader}>
+            <Text style={styles.tableCellHeader}>Actividad</Text>
+            <Text style={styles.tableCellHeader}>Estado</Text>
+            <Text style={styles.tableCellHeader}>Observación</Text>
+          </View>
 
-      
+          {/* 🔥 Filtrar actividades para ocultar "No Aplica" y "No Cumple" */}
+          {Object.values(registro.actividades)
+            .filter((actividad) => actividad.seleccionada === true) // 🔥 Solo muestra actividades "Aplica"
+            .map((actividad, index) => {
+              return (
+                <View key={index}>
+                  <View style={styles.tableRow}>
+                    <Text style={styles.tableCell}>{actividad.nombre || `Actividad ${index + 1}`}</Text>
+                    <Text style={[styles.tableCell, { color: "green", fontWeight: "bold" }]}>
+                      Aplica ✅
+                    </Text>
+                    <Text style={styles.tableCell}>{actividad.observacion || "—"}</Text>
+                  </View>
+
+                  {/* Subactividades (🔹 También ocultamos las que no aplican o no cumplen) */}
+                  {actividad.subactividades &&
+                    actividad.subactividades.filter((sub) => sub.seleccionada === true).length > 0 && (
+                      <>
+                        <View style={styles.subActividadRow}>
+                          <Text style={[styles.subActividadCell, { fontWeight: "bold" }]}>
+                            Subactividades
+                          </Text>
+                          <Text style={styles.subActividadCell}></Text>
+                          <Text style={styles.subActividadCell}></Text>
+                        </View>
+                        {actividad.subactividades
+                          .filter((sub) => sub.seleccionada === true) // 🔥 Solo subactividades que "Aplican"
+                          .map((subactividad, subIndex) => {
+                            return (
+                              <View key={subIndex} style={styles.subActividadRow}>
+                                <Text style={styles.subActividadCell}>
+                                  {subactividad.nombre || `Subactividad ${subIndex + 1}`}
+                                </Text>
+                                <Text style={[styles.subActividadCell, { color: "green", fontWeight: "bold" }]}>
+                                  Aplica ✅
+                                </Text>
+                                <Text style={styles.subActividadCell}>
+                                  {subactividad.observacion || "—"}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                      </>
+                    )}
+                </View>
+              );
+            })}
+        </View>
+      )}
+
+      {/* 🔹 Resultado de la Visita - Agregado debajo de la tabla */}
+      <View style={styles.resultadoVisita}>
+        <Text style={styles.fieldValue} >
+          Resultado de la Visita:{" "}
+          <Text
+            style={{
+              color: registro.apto === "apto" ? "green" : "red",
+              fontWeight: "bold",
+              fontSize: 10,
+            }}
+          >
+            {registro.apto === "apto" ? "APTO ✅" : "NO APTO ❌"}
+          </Text>
+        </Text>
+      </View>
+
 
 
 
@@ -210,4 +241,4 @@ const DatosRegistro = ({ registro, excluirClaves = [] }) => {
   );
 };
 
-export default DatosRegistro;
+export default DatosRegistroTabla;
