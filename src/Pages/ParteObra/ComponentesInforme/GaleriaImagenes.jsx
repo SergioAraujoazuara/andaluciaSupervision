@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Image, Text, StyleSheet } from "@react-pdf/renderer";
+import TituloInforme from "./TituloInforme";
 
 const styles = StyleSheet.create({
   imageGrid: {
@@ -31,16 +32,25 @@ const styles = StyleSheet.create({
 });
 
 const GaleriaImagenes = ({ imagesWithMetadata }) => (
-  <View style={styles.imageGrid}>
-    {imagesWithMetadata.map((imageData, imgIndex) => (
-      <View key={imgIndex} style={styles.imageContainer}>
-        {imageData.imageBase64 && <Image style={styles.image} src={imageData.imageBase64} />}
-        {imageData.googleMapsLink && (
-          <Text style={styles.imageLink}>{imageData.googleMapsLink}</Text>
-        )}
-      </View>
-    ))}
-  </View>
+  <>
+
+    <TituloInforme plantillaSeleccionada="6. Registro fotográfico" />
+    <View style={styles.imageGrid}>
+      {imagesWithMetadata.map((imageData, imgIndex) => (
+        <View key={imgIndex} style={styles.imageContainer}>
+          {imageData.imageBase64 && <Image style={styles.image} src={imageData.imageBase64} />}
+          {imageData.googleMapsLink && (
+            <>
+             <Text style={styles.imageLink}>{imageData.googleMapsLink}</Text>
+             <Text style={styles.imageLink}>{imageData.observacion}</Text>
+             </>
+           
+          )}
+        </View>
+      ))}
+    </View>
+  </>
+
 );
 
 export default GaleriaImagenes;

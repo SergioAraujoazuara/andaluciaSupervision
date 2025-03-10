@@ -7,21 +7,24 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "left",
     color: "#4b5563",
-    backgroundColor: "#cbd5e1",
-    padding: 5,
-    marginBottom: 15,
+    backgroundColor: "#0284C7",
+    color: "#FFFFFF",
+    paddingHorizontal: 8,
+    paddingVertical:8,
     paddingLeft: 10,
+    marginBottom:15,
+    width:"536px"
   },
   sectionTitle: {
     fontSize: 10,
     fontWeight: "bold",
     marginBottom: 8,
     textAlign: "left",
-    color: "#4b5563",
+    color: "#FFFFFF",
     backgroundColor: "#E5E7EB",
     padding: 5,
     paddingLeft: 10,
-    marginBottom: 10,
+    width:"536px"
   },
 });
 

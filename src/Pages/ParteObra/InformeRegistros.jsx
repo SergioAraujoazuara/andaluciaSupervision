@@ -12,7 +12,7 @@ import PiePaginaInforme from "./ComponentesInforme/PieDePaginaInforme";
 import TituloInforme from "./ComponentesInforme/TituloInforme";
 import DatosRegistro from "./ComponentesInforme/DatosRegistro";
 import GaleriaImagenes from "./ComponentesInforme/GaleriaImagenes";
-import ObservacionesRegistro from "./ComponentesInforme/ObservacionesRegistro";
+import ObservacionesRegistro from "./ComponentesInforme/SeccionesDatosRegistros";
 import useProyecto from "../../Hooks/useProyectos";
 import { AiOutlineClose } from "react-icons/ai";
 import { FaFilePdf } from "react-icons/fa6";
@@ -109,7 +109,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   };
 
 
-
+ 
 
   // Descargar imágenes y metadatos
   const fetchImagesWithMetadata = async (imagePaths) => {
@@ -121,13 +121,14 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
           const metadata = await getMetadata(storageRef);
           const latitude = metadata.customMetadata?.latitude || null;
           const longitude = metadata.customMetadata?.longitude || null;
+          const observacion = metadata.customMetadata?.observacion || null;
 
           const googleMapsLink =
             latitude && longitude
               ? `https://www.google.com/maps?q=${latitude},${longitude}`
               : null;
 
-          return { imageBase64: url, googleMapsLink };
+          return { imageBase64: url, googleMapsLink, observacion };
         } catch (error) {
           console.error(`Error al descargar la imagen ${path}:`, error);
           return null;
@@ -148,6 +149,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     let imagesWithMetadata = [];
     if (dataRegister.imagenes && dataRegister.imagenes.length > 0) {
       imagesWithMetadata = await fetchImagesWithMetadata(dataRegister.imagenes);
+      console.log(imagesWithMetadata, 'imagenes ******+')
     }
 
     const docContent = (
@@ -165,27 +167,38 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />
 
-          <TituloInforme plantillaSeleccionada="Acta de inspección de coordinación de seguridad y salud" />
+          
 
           <DatosRegistro
             registro={dataRegister}
             excluirClaves={[
               "id", "parteId", "ppiId", "idSubSector", "idSector", "idBim", "elementoId",
-              "imagenes", "observaciones", "idProyecto", "ppiNombre", "loteid", "totalSubactividades",
+              "imagenes", "idProyecto", "ppiNombre", "loteid", "totalSubactividades",
               "nombreProyecto", "estado", "pkInicial", "pkFinal", "loteId",
               "sectorNombre", "subSectorNombre", "parteNombre", "elementoNombre"
             ]}
+            dataRegister={dataRegister}
             columnasMap={columnasMap}
           />
 
-       
 
-          
+
+
 
 
         </Page>
 
         <Page size="A4" style={styles.page}>
+        <EncabezadoInforme
+            empresa={proyecto?.empresa || "Mi Empresa"}
+            obra={proyecto?.obra || "Obra Desconocida"}
+            contrato={proyecto?.contrato || "Sin Contrato"}
+            description={proyecto?.descripcion || "Sin Descripción"}
+            rangoFechas={`De ${fechaInicio || "N/A"} al ${fechaFin || "N/A"}`}
+            titlePdf="Informe Final"
+            subTitlePdf="Detalles Generales"
+            logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
+          />
           <DatosRegistroTabla
             registro={dataRegister}
             excluirClaves={[
@@ -196,8 +209,8 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             ]}
             columnasMap={columnasMap}
           />
-
-          </Page>
+        
+        </Page>
 
         <Page size="A4" style={styles.page}>
           <EncabezadoInforme
@@ -210,12 +223,13 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             subTitlePdf="Informativo ejecutivo"
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />
+
           {/* Insertar Galería de Imágenes solo si hay imágenes */}
           {imagesWithMetadata.length > 0 && (
             <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
           )}
 
-          <ObservacionesRegistro observaciones={dataRegister.observaciones} />
+
         </Page>
 
         {/* Página final con firma */}

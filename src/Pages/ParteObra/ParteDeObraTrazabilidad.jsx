@@ -29,10 +29,6 @@ const ParteObra = () => {
     observacionesLocalizacion: "",
     fechaHora: "",
     imagenes: [],
-    registroEmpresas: "",
-    controlAccesos: "",
-    controlSubcontratacion: { seleccionada: null, nombreEmpresaSubcontrata: "", controlSubcontratacion: "" },
-    controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" },
     mediosDisponibles: { nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }
   });
 
@@ -73,6 +69,9 @@ const ParteObra = () => {
   const [stats, setStats] = useState({ totalSi: 0, totalNo: 0, totalActividades: 0, porcentajeApto: 0 });
   const [activityObservations, setActivityObservations] = useState({});
   const [errorMessages, setErrorMessages] = useState([]);
+
+  const [observacionesImagenes, setObservacionesImagenes] = useState({});
+
 
 
 
@@ -283,10 +282,6 @@ const ParteObra = () => {
       observacionesLocalizacion: "",
       fechaHora: "",
       imagenes: [],
-      registroEmpresas: "",
-      controlAccesos: "",
-      controlSubcontratacion: { seleccionada: null, nombreEmpresaSubcontrata: "", controlSubcontratacion: "" },
-      controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" },
       mediosDisponibles: { nombreEmpresa: "", numeroTrabajadores: 0, maquinaria: "" }
     });
 
@@ -304,33 +299,9 @@ const ParteObra = () => {
 
     setFormData((prev) => {
       // Manejo de campos dentro de objetos anidados
-      if (name.startsWith("controlSubcontratacion.")) {
-        const field = name.split(".")[1]; // Extrae la propiedad dentro del objeto
-
-        return {
-          ...prev,
-          controlSubcontratacion: {
-            ...prev.controlSubcontratacion,
-            [field]: value, // Actualiza solo la propiedad específica
-          },
-        };
-      }
-
-      if (name.startsWith("controlSiniestraidad.")) {
-        const field = name.split(".")[1]; // Extrae la propiedad dentro del objeto
-
-        return {
-          ...prev,
-          controlSiniestraidad: {
-            ...prev.controlSiniestraidad,
-            [field]: field === "seleccionado" ? value === "true" : value, // Convierte "true"/"false" en booleano
-          },
-        };
-      }
-
       if (name.startsWith("mediosDisponibles.")) {
         const field = name.split(".")[1];
-  
+
         if (field === "numeroTrabajadores") {
           const numericValue = value.replace(/\D/g, "");
           return {
@@ -341,7 +312,7 @@ const ParteObra = () => {
             },
           };
         }
-  
+
         return {
           ...prev,
           mediosDisponibles: {
@@ -351,7 +322,7 @@ const ParteObra = () => {
         };
       }
 
-      
+
 
 
 
@@ -420,6 +391,7 @@ const ParteObra = () => {
         proyecto: selectedProjectName,
         lote: loteNombre,
         fecha: fechaActual,
+        observacion: observacionesImagenes[index] || ""
       },
     };
 
@@ -466,7 +438,7 @@ const ParteObra = () => {
       const imageUrls = await Promise.all(
         formData.imagenes
           .filter((image) => image) // Filtra imágenes no válidas antes de mapear
-          .map(async (image, index) => await uploadImageWithMetadata(image, index))
+          .map(async (image, index) => await uploadImageWithMetadata(image, index,  observacionesImagenes[index] || ""))
       );
 
       // Formatear actividades con observaciones
@@ -501,10 +473,6 @@ const ParteObra = () => {
         observacionesLocalizacion: "",
         fechaHora: "",
         imagenes: [],
-        registroEmpresas: "",
-        controlAccesos: "",
-        controlSubcontratacion: { seleccionada: null, nombreEmpresaSubcontrata: "", controlSubcontratacion: "" },
-        controlSiniestraidad: { seleccionado: null, observacionesSiniestralidad: "" },
         mediosDisponibles: { nombreEmpresa: "", numeroTrabajadores: 0, maquinaria: "" }
       });
 
@@ -943,16 +911,7 @@ const ParteObra = () => {
 
 
 
-              <input
-                type="text"
-                required
-                maxLength={300}
-                name="mediosDisponibles.maquinaria"
-                value={formData.mediosDisponibles.maquinaria}
-                onChange={handleInputChange}
-                placeholder="Nombre empresa"
-                className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
-              />
+
             </div>
 
 
@@ -990,7 +949,45 @@ const ParteObra = () => {
               ></textarea>
             </div>
 
-            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">4. Detalles de la inspección</h3>
+            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">4. Previsión de actividades de próximo inicio. Medias preventivas y pasos.</h3>
+            {/* Previsión de Actividades de Próximo Inicio */}
+            <div className="mt-6">
+              <label className="block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
+                Previsión de Actividades de Próximo Inicio
+              </label>
+
+              {/* Actividades de Próximo Inicio */}
+              <div className="">
+                <label className="mt-2 block px-4 py-2 rounded-md text-sm font-medium">
+                  Actividades de Próximo Inicio
+                </label>
+                <textarea
+                  maxLength={300}
+                  name="actividadesProximoInicio"
+                  value={formData.actividadesProximoInicio || ""}
+                  onChange={handleInputChange}
+                  placeholder="Escribe las actividades previstas..."
+                  className=" block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
+                ></textarea>
+              </div>
+
+              {/* Medidas Preventivas a Implantar */}
+              <div>
+                <label className="block px-4 py-2 rounded-md text-sm font-medium">
+                  Medidas Preventivas a Implantar en Obra
+                </label>
+                <textarea
+                  maxLength={300}
+                  name="medidasPreventivas"
+                  value={formData.medidasPreventivas || ""}
+                  onChange={handleInputChange}
+                  placeholder="Escribe las medidas preventivas..."
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
+                ></textarea>
+              </div>
+            </div>
+
+            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">5. Detalles de la inspección</h3>
 
             {ppiDetails && (
               <div>
@@ -1118,7 +1115,48 @@ const ParteObra = () => {
 
 
               <div className="mt-6">
+                <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">6. Reportaje fotográfico de la visita.</h3>
+                {/* Imágenes */}
+                <div className="mb-4 ps-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Registro fotográfico
+                    <p className="text-amber-600 text-xs">* Mínimo 1 imagen</p>
+                  </label>
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    {[0, 1, 2, 3, 4, 5].map((index) => (
+                      <div key={index} className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          ref={(el) => (fileInputsRefs.current[index] = el)}
+                          onChange={(e) => handleFileChange(e, index)}
+                          className="hidden" // Oculta el input original
+                          id={`file-upload-${index}`}
+                        />
+                        <label
+                          htmlFor={`file-upload-${index}`}
+                          className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg shadow-sm py-2 px-4 text-center bg-indigo-100 text-indigo-600 font-semibold cursor-pointer hover:bg-indigo-200"
+                        >
+                          Seleccionar archivo
+                        </label>
+                        <p className="mt-2 text-sm text-gray-500 text-center">
+                          {fileInputsRefs.current[index]?.files[0]?.name || "Ningún archivo seleccionado"}
+                        </p>
 
+                        {/* 🔹 Campo para observaciones */}
+                        <textarea
+                          placeholder="Observaciones de la imagen..."
+                          value={observacionesImagenes[index] || ""}
+                          onChange={(e) => setObservacionesImagenes((prev) => ({
+                            ...prev,
+                            [index]: e.target.value
+                          }))}
+                          className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
+                        ></textarea>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 {/* Registro Documental de Empresas */}
                 {/* <div className="mb-4">
                   <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
@@ -1210,45 +1248,6 @@ const ParteObra = () => {
 
 
 
-                <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.</h3>
-                {/* Previsión de Actividades de Próximo Inicio */}
-                <div className="mt-6">
-                  <label className="block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
-                    Previsión de Actividades de Próximo Inicio
-                  </label>
-
-                  {/* Actividades de Próximo Inicio */}
-                  <div className="">
-                    <label className="mt-2 block px-4 py-2 rounded-md text-sm font-medium">
-                      Actividades de Próximo Inicio
-                    </label>
-                    <textarea
-                      maxLength={300}
-                      name="actividadesProximoInicio"
-                      value={formData.actividadesProximoInicio || ""}
-                      onChange={handleInputChange}
-                      placeholder="Escribe las actividades previstas..."
-                      className=" block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
-                    ></textarea>
-                  </div>
-
-                  {/* Medidas Preventivas a Implantar */}
-                  <div>
-                    <label className="block px-4 py-2 rounded-md text-sm font-medium">
-                      Medidas Preventivas a Implantar en Obra
-                    </label>
-                    <textarea
-                      maxLength={300}
-                      name="medidasPreventivas"
-                      value={formData.medidasPreventivas || ""}
-                      onChange={handleInputChange}
-                      placeholder="Escribe las medidas preventivas..."
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
-                    ></textarea>
-                  </div>
-                </div>
-
-
                 {/* Siniestralidad y planificación de actuaciones de emergencia */}
                 {/* <div>
                   <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
@@ -1299,48 +1298,10 @@ const ParteObra = () => {
               </div>
 
 
-              <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">6. Reportaje fotográfico de la visita.</h3>
-              {/* Imágenes */}
-              <div className="mb-4 ps-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Registro fotográfico
-                  <p className="text-amber-600 text-xs">* Mínimo 1 imagen</p>
-                </label>
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  {[0, 1, 2, 3, 4, 5].map((index) => (
-                    <div key={index} className="relative">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        ref={(el) => (fileInputsRefs.current[index] = el)}
-                        onChange={(e) => handleFileChange(e, index)}
-                        className="hidden" // Oculta el input original
-                        id={`file-upload-${index}`}
-                      />
-                      <label
-                        htmlFor={`file-upload-${index}`}
-                        className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg shadow-sm py-2 px-4 text-center bg-indigo-100 text-indigo-600 font-semibold cursor-pointer hover:bg-indigo-200"
-                      >
-                        Seleccionar archivo
-                      </label>
-                      <p className="mt-2 text-sm text-gray-500 text-center">
-                        {fileInputsRefs.current[index]?.files[0]?.name || "Ningún archivo seleccionado"}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-
-
-
-
-
-
 
               {/* Resultado */}
 
-              <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2">7. Resultado de la inspección.</h3>
+              {/* <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2">7. Resultado de la inspección.</h3>
               <div className="relative">
                 <select
                   name="apto"
@@ -1356,11 +1317,11 @@ const ParteObra = () => {
                   <FaCheck className={`text-green-600 ${formData.apto === "apto" ? "block" : "hidden"}`} />
                   <MdOutlineError className={`text-red-600 ${formData.apto === "no_apto" ? "block" : "hidden"}`} />
                 </div>
-              </div>
+              </div> */}
 
 
 
-
+              <div className="w-full p-2 border-b-4"></div>
               {/* Botones */}
               <div className="flex justify-between items-center gap-4 mt-12">
                 <button

@@ -1,5 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
+import TituloInforme from "./TituloInforme";
+import SeccionesDatosRegistros from "./SeccionesDatosRegistros";
 
 const styles = StyleSheet.create({
   fieldGroup: {
@@ -7,11 +9,17 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "space-between",
     marginBottom: 6,
-    marginLeft: 8,
+    marginLeft: 2,
   },
   fieldColumn: {
     width: "100%",
     marginBottom: 5,
+  },
+  fieldLabelContainer: {
+    backgroundColor: "#E5E7EB",
+    paddingHorizontal: 8,
+    paddingVertical: 4
+
   },
   fieldLabel: {
     fontWeight: "bold",
@@ -20,11 +28,13 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   fieldValue: {
-    color: "#4b5563",
+    color: "#374151",
     fontSize: 9,
     lineHeight: 1.5,
     wordBreak: "break-word",
     marginBottom: 2,
+    marginTop: 6,
+    paddingHorizontal: 8,
   },
   tableContainer: {
     marginTop: 10,
@@ -94,7 +104,7 @@ const styles = StyleSheet.create({
     borderColor: "#D1D5DB",
     textAlign: "center",
   },
-  
+
   resultadoTexto: {
     fontSize: 12,
     fontWeight: "bold",
@@ -123,7 +133,7 @@ const columnasMap = {
   parteNombre: "Inventario vial",
   elementoNombre: "Componente",
   actividad: "Actividad",
-  observaciones: "Observaciones",
+  observaciones: "Observaciones en materia de seguridad  salud",
   actividadesProximoInicio: "Actividades Próximo Inicio",
   controlAccesos: "Control de Accesos",
   controlSiniestraidad: "Control de Siniestralidad",
@@ -141,7 +151,6 @@ const ordenColumnas = [
   "parteNombre",
   "elementoNombre",
   "actividad",
-  "observaciones",
   "actividadesProximoInicio",
   "controlAccesos",
   "controlSiniestraidad",
@@ -150,62 +159,36 @@ const ordenColumnas = [
   "observacionesActividad",
   "observacionesLocalizacion",
   "registroEmpresas",
+  "observaciones",
 ];
 
-const DatosRegistro = ({ registro, excluirClaves = [] }) => {
+
+const DatosRegistro = ({ registro, excluirClaves = [], dataRegister }) => {
   return (
     <View style={styles.fieldGroup}>
-      {ordenColumnas
-        .filter((key) => registro[key] !== undefined && !excluirClaves.includes(key))
-        .map((key, i) => {
-          const label = columnasMap[key] || key;
-          let formattedValue = "N/A";
 
-          if (key === "apto") {
-            const isApto = registro.apto === "apto";
-            formattedValue = registro.apto || "Sin definir";
-          } else if (key === "controlSubcontratacion") {
-            formattedValue = registro.nombreEmpresaSubcontrata || "No registrada";
-          } else if (key === "controlSiniestraidad") {
-            formattedValue = registro.controlSiniestraidad?.observacionesSiniestralidad || "Sin observaciones";
-          } else if (key === "fechaHora" && registro[key]) {
-            formattedValue = convertirFechaISOaVisual(registro[key]);
-          } else if (Array.isArray(registro[key])) {
-            formattedValue = registro[key].join(", ");
-          } else if (typeof registro[key] === "object" && registro[key] !== null) {
-            formattedValue = Object.entries(registro[key])
-              .map(([subKey, subValue]) => `${subKey}: ${subValue}`)
-              .join(" | ");
-          } else {
-            formattedValue = registro[key] || "N/A";
-          }
+      {/* Seccion 1 */}
 
-          return (
-            <View key={i} style={styles.fieldColumn}>
-              <Text style={styles.fieldLabel}>{label}:</Text>
-              {key === "apto" ? (
-                <Text
-                  style={[
-                    styles.aptoText,
-                    { color: registro.apto === "apto" ? "green" : "red" },
-                  ]}
-                >
-                  {formattedValue.toUpperCase()}
-                </Text>
-              ) : (
-                <Text style={styles.fieldValue}>{formattedValue}</Text>
-              )}
-            </View>
-          );
-        })}
+      <TituloInforme plantillaSeleccionada="1. Trabajos inspeccionados" />
+      <SeccionesDatosRegistros nombreCampo={'Observaciones actividad'} valorDelCampo={dataRegister.observacionesActividad} />
+      <SeccionesDatosRegistros nombreCampo={'Observaciones localización'} valorDelCampo={dataRegister.observacionesLocalizacion} />
 
+      {/* Seccion 2 */}
+      <TituloInforme plantillaSeleccionada="2. Medios disponibles en obra: Empresas, trabajadores y maquinaria" />
+      <SeccionesDatosRegistros nombreCampo={'Maquinaria'} valorDelCampo={dataRegister.mediosDisponibles.maquinaria} />
+      <SeccionesDatosRegistros nombreCampo={'Nombre de la empresa'} valorDelCampo={dataRegister.mediosDisponibles.nombreEmpresa} />
+      <SeccionesDatosRegistros nombreCampo={'Número de trabajadores'} valorDelCampo={dataRegister.mediosDisponibles.numeroTrabajadores} />
 
-    
+      {/* Seccion 3 */}
+      <TituloInforme  plantillaSeleccionada="3. Observaciones en materia de seguridad y salud" />
+      <SeccionesDatosRegistros nombreCampo={'Observaciones'} valorDelCampo={dataRegister.observaciones} />
+
+      {/* Seccion 4 */}
+      <TituloInforme plantillaSeleccionada="4. Previsión de actividades de próximo inicio. Medias preventivas y pasos." />
+      <SeccionesDatosRegistros nombreCampo={'Actividades próximo inicio'} valorDelCampo={dataRegister.actividadesProximoInicio} />
+      <SeccionesDatosRegistros nombreCampo={'Medidas preventivas'} valorDelCampo={dataRegister.medidasPreventivas} />
 
       
-
-
-
     </View>
   );
 };

@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
+import TituloInforme from "../TituloInforme";
 
 const styles = StyleSheet.create({
   fieldRow: {
@@ -25,17 +26,18 @@ const styles = StyleSheet.create({
  *
  * Displays the observations for a specific record.
  *
- * @param {string} observaciones - Observations text for the record.
+ 
  */
-const ObservacionesRegistro = ({ observaciones }) => {
-  if (!observaciones) return null;
+const TrabajosInspeccionados = ({ dataRegister }) => {
+  if (!dataRegister) return null;
 
   return (
     <View style={styles.fieldRow}>
-      <Text style={styles.fieldLabel}>OBSERVACIONES:</Text>
-      <Text style={styles.fieldLabelObservaciones}>{observaciones}</Text>
+       <TituloInforme plantillaSeleccionada="Acta de inspección de coordinación de seguridad y salud" />
+      <Text style={styles.fieldLabelObservaciones}>{dataRegister.observacionesActividad}</Text>
+      <Text style={styles.fieldLabelObservaciones}>{dataRegister.observacionesLocalizacion}</Text>
     </View>
   );
 };
 
-export default ObservacionesRegistro;
+export default TrabajosInspeccionados;
