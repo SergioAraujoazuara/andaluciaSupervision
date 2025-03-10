@@ -21,6 +21,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/authContext.jsx";
 import useUsuario from "../../Hooks/useUsuario.jsx"
 import ModalFechaVisita from "./ComponentesInforme/ModalFechaVisita.jsx";
+import Firma from "../../Components/Firma/Firma.jsx";
 
 const TablaRegistros = () => {
   const { user } = useAuth();
@@ -53,6 +54,83 @@ const TablaRegistros = () => {
     hora: "",
     visitaNumero: "",
   });
+
+  const [isFirmaModalOpen, setIsFirmaModalOpen] = useState(false); // Estado para abrir/cerrar el modal
+  const [tipoFirma, setTipoFirma] = useState(null); // Almacena si es "empresa" o "cliente"
+  const [registroSeleccionado, setRegistroSeleccionado] = useState(null); // Guarda el registro que se firmará
+  const [firmaEmpresa, setFirmaEmpresa] = useState(null);
+  const [firmaCliente, setFirmaCliente] = useState(null);
+  const [modalFirma, setModalFirma] = useState(false)
+  const [modalFirmaMensaje, setModalFirmaMensaje] = useState(false)
+
+
+  const handleAbrirModalFirma = async (registro) => {
+    try {
+      const docRef = doc(db, "registrosParteDeObra", registro.id);
+      const docSnap = await getDoc(docRef);
+
+
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+
+        // Si ya tiene ambas firmas, mostrar mensaje y evitar firmar
+        if (data.firmaEmpresa && data.firmaCliente) {
+          setModalFirma(true)
+          setModalFirmaMensaje("Este registro ya ha sido firmado.");
+          return;
+        }
+
+        // Si solo tiene una firma, mostrar el estado actual
+        setFirmaEmpresa(data.firmaEmpresa || null);
+        setFirmaCliente(data.firmaCliente || null);
+      }
+
+      // Permitir abrir el modal si aún se puede firmar
+      setRegistroSeleccionado(registro);
+      setIsFirmaModalOpen(true);
+
+    } catch (error) {
+      console.error("Error al verificar la firma:", error);
+    }
+  };
+
+  const saveFirmaFirestore = async (firmaURL, registroId) => {
+    if (!registroId) return;
+
+    try {
+      const docRef = doc(db, "registrosParteDeObra", registroId);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+
+        // Guardar la firma en Firestore
+        const campoFirma = tipoFirma === "empresa" ? "firmaEmpresa" : "firmaCliente";
+        await updateDoc(docRef, { [campoFirma]: firmaURL });
+      }
+    } catch (error) {
+      console.error("Error al guardar la firma:", error);
+    }
+  };
+
+
+  const handleSelectFirma = (tipo) => {
+    setTipoFirma(tipo);
+    setIsFirmaModalOpen(false);
+  };
+
+  const handleCloseFirmaModal = () => {
+    setIsFirmaModalOpen(false); // Cierra el modal
+    setRegistroSeleccionado(null); // Limpia el registro seleccionado
+    setTipoFirma(null); // Restablece el tipo de firma
+  };
+
+
+
+
+
+
 
   const handleGuardarVisita = (datos) => {
     setDatosVisita(datos);
@@ -719,6 +797,14 @@ const TablaRegistros = () => {
                         >
                           Historial
                         </button>
+
+                        <button
+                          onClick={() => handleAbrirModalFirma(registro)}
+                          className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-gray-600 transition duration-150"
+                        >
+                          Firmar
+                        </button>
+
                         {roleUsuario === 'admin' && (
                           <button
                             onClick={() => {
@@ -1216,6 +1302,120 @@ const TablaRegistros = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isFirmaModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-2xl w-96 text-center border-t-4 border-blue-600 relative">
+
+            {/* Botón de Cerrar */}
+            <button
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 transition"
+              onClick={() => setIsFirmaModalOpen(false)}
+            >
+              ✖
+            </button>
+
+            <h2 className="text-xl font-bold text-gray-700 mb-5 flex justify-center items-center gap-2">
+              🖋 Estado de Firmas
+            </h2>
+
+            {firmaEmpresa && firmaCliente ? (
+              // ✅ Registro completamente firmado
+              <div className="flex flex-col items-center">
+                <div className="bg-green-100 text-green-700 p-4 rounded-full text-3xl">
+                  ✔️
+                </div>
+                <p className="text-green-700 font-semibold text-lg mt-4">Registro Firmado ✅</p>
+                <p className="text-gray-600 text-sm mt-1">No se requieren más acciones.</p>
+              </div>
+            ) : (
+              <>
+                {/* Estado de las firmas */}
+                <div className="flex flex-col gap-3 mb-6 text-sm">
+                  <div className={`flex items-center gap-3 p-3 rounded-lg border ${firmaEmpresa ? "border-green-500 bg-green-100" : "border-gray-300 bg-gray-100"}`}>
+                    <span className="text-2xl">{firmaEmpresa ? "📑" : "🟡"}</span>
+                    <p className="font-semibold">{firmaEmpresa ? "Firma Empresa registrada" : "Pendiente Firma Empresa"}</p>
+                  </div>
+                  <div className={`flex items-center gap-3 p-3 rounded-lg border ${firmaCliente ? "border-green-500 bg-green-100" : "border-gray-300 bg-gray-100"}`}>
+                    <span className="text-2xl">{firmaCliente ? "🏢" : "🟡"}</span>
+                    <p className="font-semibold">{firmaCliente ? "Firma Cliente registrada" : "Pendiente Firma Cliente"}</p>
+                  </div>
+                </div>
+
+                {/* Botones de Firma */}
+                <div className="flex justify-center gap-4">
+                  {/* Botón Firma Empresa */}
+                  <button
+                    onClick={() => handleSelectFirma("empresa")}
+                    className={`flex items-center gap-2 px-5 py-2 rounded-md font-semibold transition ${firmaEmpresa
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-sky-600 text-white hover:bg-sky-700"}`
+                    }
+                    disabled={firmaEmpresa}
+                  >
+                    📑 Firma Empresa
+                  </button>
+
+                  {/* Botón Firma Cliente */}
+                  <button
+                    onClick={() => handleSelectFirma("cliente")}
+                    className={`flex items-center gap-2 px-5 py-2 rounded-md font-semibold transition ${firmaCliente
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-sky-600 text-white hover:bg-sky-700"}`
+                    }
+                    disabled={firmaCliente}
+                  >
+                    🏢 Firma Cliente
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+
+      {tipoFirma && registroSeleccionado && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <Firma
+            onSave={(firmaURL) => saveFirmaFirestore(firmaURL, registroSeleccionado.id)}
+            onClose={handleCloseFirmaModal} // Ahora pasamos `onClose`
+          />
+        </div>
+      )}
+
+
+      {modalFirma && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-96 text-center border-t-4 border-blue-600 relative">
+
+            <button
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 transition"
+              onClick={() => {
+                setModalFirma(false)
+                setModalFirmaMensaje("")
+              }}
+            >
+              ✖
+            </button>
+
+            <h2 className="text-lg font-bold text-gray-700 mb-4">Información</h2>
+            <p className="text-gray-600">{modalFirmaMensaje}</p>
+
+            <div className="mt-6">
+              <button
+                onClick={() => {
+                  setModalFirmaMensaje("")
+                  setModalFirma(false)
+                } }
+                className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+              >
+                OK
+              </button>
             </div>
           </div>
         </div>

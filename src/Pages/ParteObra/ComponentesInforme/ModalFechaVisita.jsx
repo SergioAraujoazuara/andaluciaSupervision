@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AiOutlineClose } from "react-icons/ai";
+import Formulario from "../../../Components/Firma/Formulario";
 
 const ModalFechaVisita = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -67,6 +68,8 @@ const ModalFechaVisita = () => {
                 className="w-full px-4 py-2 border rounded-md border-gray-300"
               />
             </div>
+
+           
 
             <div className="flex justify-end gap-4">
               <button

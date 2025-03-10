@@ -7,7 +7,7 @@ const useUpdateProject = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const updateProject = async (id, empresa, work, descripcion, contract, logo, clientLogo) => {
+  const updateProject = async (id, empresa, work, descripcion, contract, logo, clientLogo, promotor) => {
     setLoading(true);
     setError(null);
 
@@ -18,6 +18,7 @@ const useUpdateProject = () => {
       if (empresa) updatedData.empresa = empresa;
       if (work) updatedData.obra = work;
       if (descripcion) updatedData.descripcion = descripcion;
+      if (promotor) updatedData.promotor = promotor;
       if (contract) updatedData.contrato = contract;
 
       if (logo) {

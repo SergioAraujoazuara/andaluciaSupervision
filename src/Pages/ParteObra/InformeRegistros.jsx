@@ -17,6 +17,8 @@ import useProyecto from "../../Hooks/useProyectos";
 import { AiOutlineClose } from "react-icons/ai";
 import { FaFilePdf } from "react-icons/fa6";
 import DatosRegistroTabla from "./ComponentesInforme/DatosRegistroTabla";
+import Formulario from "../../Components/Firma/Formulario";
+import Firma from "../../Components/Firma/Firma";
 
 
 
@@ -34,6 +36,14 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   const [fechaVisita, setFechaVisita] = useState(localStorage.getItem("fechaVisita") || "");
   const [hora, setHora] = useState(localStorage.getItem("hora") || "");
   const [visitaNumero, setVisitaNumero] = useState(localStorage.getItem("visitaNumero") || "");
+  const [firma, setFirma] = useState(null);  // Estado para la firma
+
+  const handleSave = () => {
+    localStorage.setItem("firma", firma);  // Guardar la firma en localStorage
+    setModalOpen(false);
+  };
+  
+
 
   // Guardar valores en localStorage cada vez que cambien
   useEffect(() => {
@@ -42,9 +52,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     localStorage.setItem("visitaNumero", visitaNumero);
   }, [fechaVisita, hora, visitaNumero]);
 
-  const handleSave = () => {
-    setModalOpen(false); // Solo cierra el modal, los datos ya están en localStorage
-  };
+
 
 
 
@@ -142,7 +150,13 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   const downloadPdf = async () => {
     console.log(dataRegister, 'valor del objeto');
 
+  // Verificar si la firma está en el estado o en localStorage
+  const firmaGuardada = firma || localStorage.getItem("firma");
 
+  if (!firmaGuardada) {
+    console.error("⚠️ No hay firma guardada.");
+    return; // Evita continuar si la firma no está disponible
+  }
     await fetchUserDetails();
 
     // Descargar imágenes antes de renderizar el PDF
@@ -244,7 +258,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             subTitlePdf="Detalles Generales"
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />
-          <PiePaginaInforme userNombre={userNombre} userSignature={userSignature} />
+          <PiePaginaInforme userNombre={userNombre}  userSignature={firmaGuardada} />
         </Page>
       </Document>
     );
@@ -348,6 +362,9 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
                     className="w-full px-4 py-2 border rounded-md border-gray-300"
                   />
                 </div>
+
+                <Firma onSave={setFirma} />
+
 
                 <div className="flex justify-end gap-4">
                   <button

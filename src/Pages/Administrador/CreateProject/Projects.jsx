@@ -27,9 +27,10 @@ function Projects() {
   const [modalType, setModalType] = useState("success");
 
   // Fields for project data
-  const [empresa, setEmpresa] = useState("");
+  const [empresa, setEmpresa] = useState("TPF INGENIERÍA");
   const [work, setWork] = useState("");
   const [descripcion, setDescripcion] = useState("");
+  const [promotor, setPromotor] = useState("");
   const [contract, setContract] = useState("");
   const [logo, setLogo] = useState(null);
   const [clientLogo, setClientLogo] = useState(null);
@@ -52,6 +53,7 @@ function Projects() {
     setEmpresa(""); // Reset form fields
     setWork("");
     setDescripcion("");
+    setPromotor("")
     setContract("");
     setLogo(null);
     setClientLogo(null);
@@ -63,6 +65,7 @@ function Projects() {
     setEmpresa(proj.empresa);
     setWork(proj.obra);
     setDescripcion(proj.descripcion);
+    setPromotor(proj.promotor);
     setContract(proj.contrato);
     setLogo(null);
     setClientLogo(null);
@@ -73,7 +76,7 @@ function Projects() {
 
   // Handle updating the project
   const handleUpdateProject = async () => {
-    const result = await updateProject(selectedProject.id, empresa, work, descripcion, contract, logo, clientLogo);
+    const result = await updateProject(selectedProject.id, empresa, work, descripcion, contract, logo, clientLogo, promotor);
     showModal(result, "success");
     setIsEditing(false);
     refreshProjects(); // Refresh the project list
@@ -103,7 +106,7 @@ function Projects() {
     }
 
     try {
-      const result = await addProject(empresa, work, descripcion, contract, logo, clientLogo);
+      const result = await addProject(empresa, work, descripcion, contract, logo, clientLogo, promotor);
       showModal(result, "success");
       setIsAdding(false); // Close modal after adding project
       refreshProjects(); // Refresh the project list
@@ -159,7 +162,7 @@ function Projects() {
               <tr className="border-b">
                 <th className="px-4 py-2">Empresa</th>
                 <th className="px-4 py-2">Obra</th>
-                <th className="px-4 py-2">Contrato</th>
+                <th className="px-4 py-2">Número de contrato</th>
                 <th className="px-4 py-2">Acciones</th>
               </tr>
             </thead>
@@ -199,6 +202,8 @@ function Projects() {
           setWork={setWork}
           descripcion={descripcion}
           setDescripcion={setDescripcion}
+          promotor={promotor}
+          setPromotor={setPromotor}
           contract={contract}
           setContract={setContract}
           logo={logo}
@@ -219,6 +224,8 @@ function Projects() {
           setWork={setWork}
           descripcion={descripcion}
           setDescripcion={setDescripcion}
+          promotor={promotor}
+          setPromotor={setPromotor}
           contract={contract}
           setContract={setContract}
           logo={logo}

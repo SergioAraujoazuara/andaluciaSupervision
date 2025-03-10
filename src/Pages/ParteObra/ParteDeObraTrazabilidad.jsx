@@ -13,6 +13,7 @@ import { MdOutlineError } from "react-icons/md";
 import { BsClipboardData } from "react-icons/bs";
 import { GoHomeFill } from "react-icons/go";
 import { Link, useNavigate } from "react-router-dom";
+import Firma from "../../Components/Firma/Firma";
 
 
 const ParteObra = () => {
@@ -73,7 +74,12 @@ const ParteObra = () => {
   const [observacionesImagenes, setObservacionesImagenes] = useState({});
 
 
+  const [firma, setFirma] = useState(null);  // Estado para la firma
 
+  const handleSave = () => {
+    localStorage.setItem("firma", firma);  // Guardar la firma en localStorage
+    setModalOpen(false);
+  };
 
   const handleObservationChange = (actividadIndex, value) => {
     setActivityObservations((prev) => ({
@@ -438,7 +444,7 @@ const ParteObra = () => {
       const imageUrls = await Promise.all(
         formData.imagenes
           .filter((image) => image) // Filtra imágenes no válidas antes de mapear
-          .map(async (image, index) => await uploadImageWithMetadata(image, index,  observacionesImagenes[index] || ""))
+          .map(async (image, index) => await uploadImageWithMetadata(image, index, observacionesImagenes[index] || ""))
       );
 
       // Formatear actividades con observaciones

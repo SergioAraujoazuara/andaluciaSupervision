@@ -7,6 +7,8 @@ const AddProjectForm = ({
   setWork,
   descripcion,
   setDescripcion,
+  promotor,
+  setPromotor,
   contract,
   setContract,
   logo,
@@ -62,6 +64,20 @@ const AddProjectForm = ({
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
             placeholder="Descripción"
+            className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+
+         {/* Promotor */}
+         <div className="mb-4">
+          <label className="block font-semibold mb-2" htmlFor="promotor">
+          Promotor
+          </label>
+          <textarea
+            id="promotor"
+            value={promotor}
+            onChange={(e) => setPromotor(e.target.value)}
+            placeholder="promotor"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>

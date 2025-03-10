@@ -7,6 +7,8 @@ const EditProjectForm = ({
   setWork,
   descripcion,
   setDescripcion,
+  promotor,
+  setPromotor,
   contract,
   setContract,
   logo,
@@ -24,6 +26,7 @@ const EditProjectForm = ({
     setEmpresa("");
     setWork("");
     setDescripcion("");
+    setPromotor("");
     setContract("");
     setLogo(null);
     setClientLogo(null);
@@ -78,10 +81,24 @@ const EditProjectForm = ({
           />
         </div>
 
+         {/* Promotor */}
+         <div className="mb-4">
+          <label className="block  font-semibold mb-2" htmlFor="promotor">
+          Promotor
+          </label>
+          <textarea
+            id="promotor"
+            value={promotor}
+            onChange={(e) => setPromotor(e.target.value)}
+            placeholder="Promotor"
+            className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+
         {/* Contrato */}
         <div className="mb-4">
           <label className="block  font-semibold mb-2" htmlFor="contract">
-            Identificación documento
+            Número de contrato
           </label>
           <input
             type="text"
