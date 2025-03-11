@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, fileName, formatFechaActual, datosVisita, dataRegister, registro }) => {
+const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, fileName, formatFechaActual, datosVisita, dataRegister, registro, nombreUsuario }) => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [fechaVisita, setFechaVisita] = useState(localStorage.getItem("fechaVisita") || "");
@@ -42,7 +42,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     localStorage.setItem("firma", firma);  // Guardar la firma en localStorage
     setModalOpen(false);
   };
-  
+
 
 
   // Guardar valores en localStorage cada vez que cambien
@@ -117,7 +117,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   };
 
 
- 
+
 
   // Descargar imágenes y metadatos
   const fetchImagesWithMetadata = async (imagePaths) => {
@@ -150,14 +150,18 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   const downloadPdf = async () => {
     console.log(dataRegister, 'valor del objeto');
 
-  // Verificar si la firma está en el estado o en localStorage
-  const firmaGuardada = firma || localStorage.getItem("firma");
+    // Verificar si la firma está en el estado o en localStorage
+    const firmaGuardada = firma || localStorage.getItem("firma");
 
-  if (!firmaGuardada) {
-    console.error("⚠️ No hay firma guardada.");
-    return; // Evita continuar si la firma no está disponible
-  }
-    await fetchUserDetails();
+    if (!firmaGuardada) {
+      console.error("⚠️ No hay firma guardada.");
+      return; // Evita continuar si la firma no está disponible
+    }
+
+    if (userNombre !== "NA"){
+      await fetchUserDetails();
+    }
+    
 
     // Descargar imágenes antes de renderizar el PDF
     let imagesWithMetadata = [];
@@ -181,7 +185,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />
 
-          
+
 
           <DatosRegistro
             registro={dataRegister}
@@ -203,16 +207,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
         </Page>
 
         <Page size="A4" style={styles.page}>
-        <EncabezadoInforme
-            empresa={proyecto?.empresa || "Mi Empresa"}
-            obra={proyecto?.obra || "Obra Desconocida"}
-            contrato={proyecto?.contrato || "Sin Contrato"}
-            description={proyecto?.descripcion || "Sin Descripción"}
-            rangoFechas={`De ${fechaInicio || "N/A"} al ${fechaFin || "N/A"}`}
-            titlePdf="Informe Final"
-            subTitlePdf="Detalles Generales"
-            logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
-          />
+         
           <DatosRegistroTabla
             registro={dataRegister}
             excluirClaves={[
@@ -223,7 +218,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             ]}
             columnasMap={columnasMap}
           />
-        
+
         </Page>
 
         <Page size="A4" style={styles.page}>
@@ -258,7 +253,13 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             subTitlePdf="Detalles Generales"
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />
-          <PiePaginaInforme userNombre={userNombre}  userSignature={firmaGuardada} />
+          {/* Pie de página con ambas firmas */}
+          <PiePaginaInforme
+            userNombre={userNombre}
+            firmaEmpresa={dataRegister.firmaEmpresa}  // Firma de la empresa desde Firestore
+            firmaCliente={dataRegister.firmaCliente} 
+            nombreUsuario={nombreUsuario} // Firma del cliente desde Firestore
+          />
         </Page>
       </Document>
     );
@@ -317,13 +318,13 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
         <div>
           {/* Botón para abrir el modal */}
           <button
-            className="px-4 py-2 bg-amber-600 text-white font-medium rounded-md hover:bg-amber-700 flex gap-2 items-center"
-            onClick={() => setModalOpen(true)}
+            className="px-4 py-2 text-gray-500 text-xl font-medium rounded-md hover:text-sky-700 flex gap-2 items-center"
+            onClick={handlegeneratePDF}
           >
-            <FaFilePdf /> Generar informe
+            <FaFilePdf />
           </button>
 
-          {modalOpen && (
+          {/* {modalOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 px-4">
               <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
                 <div className="flex justify-between items-center mb-4">
@@ -363,12 +364,12 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
                   />
                 </div>
 
-                <Firma onSave={setFirma} />
+          
 
 
                 <div className="flex justify-end gap-4">
                   <button
-                    onClick={() => setModalOpen(false)}
+                    onClick={handlegeneratePDF}
                     className="px-5 py-2 text-gray-700 font-semibold bg-gray-200 rounded-md hover:bg-gray-300"
                   >
                     Cancelar
@@ -387,7 +388,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
 
         </div>

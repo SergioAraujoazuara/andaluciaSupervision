@@ -15,6 +15,8 @@ import { IoArrowBackCircle } from "react-icons/io5";
 import { FaCheck } from "react-icons/fa6";
 import { MdOutlineError } from "react-icons/md";
 import { FaFilePdf } from "react-icons/fa6";
+import { FaSignature } from "react-icons/fa";
+import { MdOutlineHistory } from "react-icons/md";
 
 import { GoHomeFill } from "react-icons/go";
 import { Link } from "react-router-dom";
@@ -787,33 +789,45 @@ const TablaRegistros = () => {
                             setPrevisualizaciones(registro.imagenes || []);
                             setImagenesEditadas([]);
                           }}
-                          className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-gray-500 transition duration-150 flex gap-2 items-center"
+                          className="px-4 py-2 text-gray-500 text-xl font-medium rounded-md shadow-sm hover:text-sky-700 transition duration-150 flex gap-2 items-center"
                         >
-                          Editar
+                          <FaEdit />
                         </button>
+
+
+                       
+
+                        <td className="px-6 py-4 text-sm whitespace-nowrap flex flex-col items-center gap-2">
+                          {registro.firmaEmpresa && registro.firmaCliente ? (
+                            <div className="flex items-center gap-2 text-green-600 font-semibold">
+                              <FaCheck className="text-green-500" /> Firmado
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleAbrirModalFirma(registro)}
+                              className="px-4 py-2 text-gray-500 text-2xl font-medium rounded-md shadow-sm hover:text-sky-700 transition duration-150 flex gap-2 items-center"
+                            >
+                              <FaSignature />
+                            </button>
+                          )}
+                        </td>
+
+
                         <button
                           onClick={() => handleAbrirModalModificaciones(registro)}
-                          className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-gray-600 transition duration-150"
+                          className="px-4 py-2 text-gray-500 text-2xl font-medium rounded-md shadow-sm hover:text-sky-700 transition duration-150 flex gap-2 items-center"
                         >
-                          Historial
+                          <MdOutlineHistory />
                         </button>
-
-                        <button
-                          onClick={() => handleAbrirModalFirma(registro)}
-                          className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-gray-600 transition duration-150"
-                        >
-                          Firmar
-                        </button>
-
                         {roleUsuario === 'admin' && (
                           <button
                             onClick={() => {
                               setShowConfirmModal(true);
                               setRegistroAEliminar(registro);
                             }}
-                            className="px-4 py-2 bg-red-500 text-white font-medium rounded-md shadow-sm hover:bg-red-600 transition duration-150"
+                            className="px-4 py-2 text-red-700 text-2xl font-medium rounded-md shadow-sm hover:text-red-800 transition duration-150 flex gap-2 items-center"
                           >
-                            Eliminar
+                            <FaDeleteLeft />
                           </button>
                         )}
                       </div>
@@ -834,6 +848,7 @@ const TablaRegistros = () => {
                         fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)}
                         fechaFin={formatFechaSolo(valoresFiltro.fechaFin)}
                         fileName={fileName}
+                        nombreUsuario={nombreUsuario}
                       />
                     </td>
                   </tr>
@@ -1309,7 +1324,7 @@ const TablaRegistros = () => {
 
       {isFirmaModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-2xl w-96 text-center border-t-4 border-blue-600 relative">
+          <div className="bg-white p-6 rounded-lg shadow-2xl w-96 text-center border-t-4 relative">
 
             {/* Botón de Cerrar */}
             <button
@@ -1336,11 +1351,11 @@ const TablaRegistros = () => {
               <>
                 {/* Estado de las firmas */}
                 <div className="flex flex-col gap-3 mb-6 text-sm">
-                  <div className={`flex items-center gap-3 p-3 rounded-lg border ${firmaEmpresa ? "border-green-500 bg-green-100" : "border-gray-300 bg-gray-100"}`}>
+                  <div className={`flex items-center gap-3 p-3  border-b-2 ${firmaEmpresa ? "border-green-500 bg-green-100" : "border-gray-300"}`}>
                     <span className="text-2xl">{firmaEmpresa ? "📑" : "🟡"}</span>
                     <p className="font-semibold">{firmaEmpresa ? "Firma Empresa registrada" : "Pendiente Firma Empresa"}</p>
                   </div>
-                  <div className={`flex items-center gap-3 p-3 rounded-lg border ${firmaCliente ? "border-green-500 bg-green-100" : "border-gray-300 bg-gray-100"}`}>
+                  <div className={`flex items-center gap-3 p-3 rounded-lg ${firmaCliente ? "border-green-500 bg-green-100" : "border-gray-300"}`}>
                     <span className="text-2xl">{firmaCliente ? "🏢" : "🟡"}</span>
                     <p className="font-semibold">{firmaCliente ? "Firma Cliente registrada" : "Pendiente Firma Cliente"}</p>
                   </div>
@@ -1353,11 +1368,11 @@ const TablaRegistros = () => {
                     onClick={() => handleSelectFirma("empresa")}
                     className={`flex items-center gap-2 px-5 py-2 rounded-md font-semibold transition ${firmaEmpresa
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-sky-600 text-white hover:bg-sky-700"}`
+                      : "bg-gray-500 text-white hover:bg-sky-700"}`
                     }
                     disabled={firmaEmpresa}
                   >
-                    📑 Firma Empresa
+                    Firma Empresa
                   </button>
 
                   {/* Botón Firma Cliente */}
@@ -1365,11 +1380,11 @@ const TablaRegistros = () => {
                     onClick={() => handleSelectFirma("cliente")}
                     className={`flex items-center gap-2 px-5 py-2 rounded-md font-semibold transition ${firmaCliente
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-sky-600 text-white hover:bg-sky-700"}`
+                      : "bg-gray-500 text-white hover:bg-sky-700"}`
                     }
                     disabled={firmaCliente}
                   >
-                    🏢 Firma Cliente
+                    Firma Cliente
                   </button>
                 </div>
               </>
@@ -1391,7 +1406,7 @@ const TablaRegistros = () => {
 
       {modalFirma && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-96 text-center border-t-4 border-blue-600 relative">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-96 text-center border-t-4 relative">
 
             <button
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 transition"
@@ -1411,8 +1426,8 @@ const TablaRegistros = () => {
                 onClick={() => {
                   setModalFirmaMensaje("")
                   setModalFirma(false)
-                } }
-                className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                }}
+                className="px-5 py-2 bg-sky-600 text-white rounded-md hover:bg-blue-700 transition"
               >
                 OK
               </button>

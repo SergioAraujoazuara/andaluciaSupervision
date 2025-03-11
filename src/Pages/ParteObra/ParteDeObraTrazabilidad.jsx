@@ -863,7 +863,7 @@ const ParteObra = () => {
                   ¿Qué se inspecciona?</label>
                 <textarea
                   required
-                  maxLength={300}
+                  maxLength={150}
                   name="observacionesActividad"
                   value={formData.observacionesActividad}
                   onChange={handleInputChange}
@@ -878,7 +878,7 @@ const ParteObra = () => {
                 </label>
                 <textarea
                   required
-                  maxLength={300}
+                  maxLength={100}
                   name="observacionesLocalizacion"
                   value={formData.observacionesLocalizacion}
                   onChange={handleInputChange}
@@ -896,7 +896,7 @@ const ParteObra = () => {
               <input
                 type="text"
                 required
-                maxLength={300}
+                maxLength={150}
                 name="mediosDisponibles.nombreEmpresa"
                 value={formData.mediosDisponibles.nombreEmpresa}
                 onChange={handleInputChange}
@@ -968,7 +968,7 @@ const ParteObra = () => {
                   Actividades de Próximo Inicio
                 </label>
                 <textarea
-                  maxLength={300}
+                  maxLength={200}
                   name="actividadesProximoInicio"
                   value={formData.actividadesProximoInicio || ""}
                   onChange={handleInputChange}
@@ -983,7 +983,7 @@ const ParteObra = () => {
                   Medidas Preventivas a Implantar en Obra
                 </label>
                 <textarea
-                  maxLength={300}
+                  maxLength={200}
                   name="medidasPreventivas"
                   value={formData.medidasPreventivas || ""}
                   onChange={handleInputChange}
