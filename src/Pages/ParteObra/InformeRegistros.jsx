@@ -181,7 +181,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             description={proyecto?.descripcion || "Sin Descripción"}
             rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin}` : ""}`}
             titlePdf="TPF GETINSA-EUROESTUDIOS S.L."
-            subTitlePdf="Informativo ejecutivo"
+            subTitlePdf="Tipo de documento Inspeccion de obra"
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />
 
@@ -229,7 +229,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             description={proyecto?.descripcion || "Sin Descripción"}
             rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin}` : ""}`}
             titlePdf="TPF GETINSA-EUROESTUDIOS S.L."
-            subTitlePdf="Informativo ejecutivo"
+            subTitlePdf="Tipo de documento Inspeccion de obra"
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />
 
@@ -248,8 +248,8 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             obra={proyecto?.obra || "Obra Desconocida"}
             contrato={proyecto?.contrato || "Sin Contrato"}
             description={proyecto?.descripcion || "Sin Descripción"}
-            rangoFechas={`De ${fechaInicio || "N/A"} al ${fechaFin || "N/A"}`}
-            titlePdf="Informe Final"
+            rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin}` : ""}`}
+            titlePdf="Tipo de documento Inspeccion de obra"
             subTitlePdf="Detalles Generales"
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />

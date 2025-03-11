@@ -110,6 +110,13 @@ const TablaRegistros = () => {
         // Guardar la firma en Firestore
         const campoFirma = tipoFirma === "empresa" ? "firmaEmpresa" : "firmaCliente";
         await updateDoc(docRef, { [campoFirma]: firmaURL });
+
+        // Cerrar el modal después de 3 segundos
+        setTimeout(() => {
+          setIsFirmaModalOpen(false);
+          setRegistroSeleccionado(null);
+          setTipoFirma(null);
+      }, 2000);
       }
     } catch (error) {
       console.error("Error al guardar la firma:", error);

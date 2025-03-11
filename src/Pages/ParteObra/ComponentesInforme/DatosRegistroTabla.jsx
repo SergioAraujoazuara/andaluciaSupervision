@@ -36,13 +36,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "start",
     color: "#374151",
-    paddingHorizontal: 4,
+    paddingHorizontal: 14,
   },
   tableCell: {
     fontSize: 9,
     textAlign: "start",
     color: "#4B5563",
-    paddingHorizontal: 4,
+    paddingHorizontal: 14,
+    paddingVertical:14,
     wordWrap: "break-word",
   },
   tableCellSmall: {

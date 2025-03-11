@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 170,
-    height: 70,
+    height: 60,
     marginBottom: 10,
   },
   line: {
@@ -64,8 +64,7 @@ const EncabezadoInforme = ({
       <Text style={styles.headerValue}>Fecha: {rangoFechas}</Text>
       <Text style={styles.headerValue}>{titlePdf}</Text>
       <Text style={styles.headerValue}>Tipo documento: {subTitlePdf}</Text>
-      <Text style={styles.headerValue}>Fecha y hora de visita: {localStorage.getItem('fechaVisita')} {localStorage.getItem('hora')}</Text>
-      <Text style={styles.headerValue}>Número de visita: {localStorage.getItem('visitaNumero')}</Text>
+      
     </View>
     <View style={styles.headerLogos}>
       {logos.map((logo, index) => (

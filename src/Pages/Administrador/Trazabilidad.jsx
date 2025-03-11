@@ -734,36 +734,59 @@ function Trazabilidad() {
     }, []);
 
 
-    // Function to delete a subsector
     const eliminarSubsector = async () => {
         try {
-            // Reference to the specific subsector document in Firestore
+            // Referencia a la subcolección 'parte' dentro del subsector
+            const partesRef = collection(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte`);
+            
+            // Obtener todas las partes dentro del subsector
+            const partesSnapshot = await getDocs(partesRef);
+    
+            // Si hay partes dentro, mostrar alerta y cancelar eliminación
+            if (!partesSnapshot.empty) {
+                setAlerta('No se puede eliminar. El subsector tiene partes dentro. Elimínalas primero.');
+                setTipoAlerta('error');
+                setMostrarModal(true);
+                return;
+            }
+    
+            // Referencia al documento 'subsector' en Firestore
             const subsectorRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector`, subsectorIdAEliminar);
+            
+            // Eliminar el subsector de Firestore
             await deleteDoc(subsectorRef);
-
-            // Update the local state to remove the deleted subsector
+    
+            // Actualizar el estado local para reflejar la eliminación
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === sectorIdAEliminar) {
-                    // Filter out the deleted subsector from the current sector
-                    const subsectoresActualizados = sector.subsectores.filter(subsector => subsector.id !== subsectorIdAEliminar);
-                    return { ...sector, subsectores: subsectoresActualizados };
+                    return {
+                        ...sector,
+                        subsectores: sector.subsectores.filter(subsector => subsector.id !== subsectorIdAEliminar),
+                    };
                 }
                 return sector;
             });
-            // Update state with the new sectors list
+    
+            // Actualizar el estado con la nueva lista de sectores
             setSectores(sectoresActualizados);
-            // Display success alert
-            setAlerta('Eliminado correctamente.');
+    
+            // Mostrar mensaje de éxito
+            setAlerta('Subsector eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
+    
         } catch (error) {
+            // Manejar errores y mostrar alerta de error
             console.error('Error al eliminar el subsector:', error);
-            setAlerta('Error al eliminar.');
+            setAlerta('Error al eliminar el subsector.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
+    
+        // Cerrar el modal de confirmación
         setMostrarModalEliminarSubSector(false);
     };
+    
 
 
     // State to manage the delete lote modal visibility and IDs
@@ -868,29 +891,47 @@ function Trazabilidad() {
     // Function to delete a sector from Firestore and update the local state
     const eliminarSector = async () => {
         try {
-            // Step 1: Reference the document for the sector to delete
+            // Referencia a la subcolección 'subsector' dentro del sector
+            const subsectoresRef = collection(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector`);
+            
+            // Obtener todos los subsectores dentro del sector
+            const subsectoresSnapshot = await getDocs(subsectoresRef);
+    
+            // Si hay subsectores dentro, mostrar alerta y cancelar eliminación
+            if (!subsectoresSnapshot.empty) {
+                setAlerta('No se puede eliminar. El sector tiene subsectores dentro. Elimínalos primero.');
+                setTipoAlerta('error');
+                setMostrarModal(true);
+                return;
+            }
+    
+            // Referencia al documento del sector en Firestore
             const sectorRef = doc(db, `proyectos/${id}/sector`, sectorIdAEliminar);
-            // Step 2: Delete the sector document from Firestore
+    
+            // Eliminar el sector de Firestore
             await deleteDoc(sectorRef);
-
-            // Step 3: Update the state by filtering out the deleted sector
+    
+            // Actualizar el estado eliminando el sector
             const sectoresActualizados = sectores.filter(sector => sector.id !== sectorIdAEliminar);
             setSectores(sectoresActualizados);
-            // Step 4: Display success message
-            setAlerta('Eliminado correctamente.');
+    
+            // Mostrar mensaje de éxito
+            setAlerta('Sector eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
+    
         } catch (error) {
-            // Step 5: Handle any errors during the deletion process
-            console.error('Error al eliminar:', error);
-            setAlerta('Error al eliminar.');
+            // Manejar errores y mostrar alerta de error
+            console.error('Error al eliminar el sector:', error);
+            setAlerta('Error al eliminar el sector.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-
+    
         // Ocultar el modal de confirmación
         setMostrarModalEliminarSector(false);
     };
+    
     // State to store the ID of the 'parte' to delete and manage the delete confirmation modal visibility
     const [parteIdAEliminar, setParteIdAEliminar] = useState(null);
     const [mostrarModalEliminarParte, setMostrarModalEliminarParte] = useState(false)
@@ -904,12 +945,27 @@ function Trazabilidad() {
     // Function to delete a 'parte' from Firestore and update the local state
     const eliminarParte = async () => {
         try {
-            // Step 1: Reference to the 'parte' document to be deleted in Firestore
+            // Referencia a la subcolección 'elemento' dentro de la parte
+            const elementosRef = collection(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento`);
+            
+            // Obtener todos los elementos dentro de la parte
+            const elementosSnapshot = await getDocs(elementosRef);
+    
+            // Si hay elementos dentro, mostrar alerta y cancelar eliminación
+            if (!elementosSnapshot.empty) {
+                setAlerta('No se puede eliminar. La parte tiene elementos dentro. Elimínalos primero.');
+                setTipoAlerta('error');
+                setMostrarModal(true);
+                return;
+            }
+    
+            // Referencia al documento 'parte' en Firestore
             const parteRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte`, parteIdAEliminar);
-            // Step 2: Delete the 'parte' document from Firestore
+            
+            // Eliminar la parte de Firestore
             await deleteDoc(parteRef);
-
-            // Step 3: Update the state to remove the deleted 'parte' from the UI
+    
+            // Actualizar el estado local para reflejar la eliminación
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === sectorIdAEliminar) {
                     return {
@@ -927,22 +983,27 @@ function Trazabilidad() {
                 }
                 return sector;
             });
-            // Step 4: Update state with the new sectors list
+    
+            // Actualizar el estado con la nueva lista de sectores
             setSectores(sectoresActualizados);
-            // Step 5: Show a success message
-            setAlerta('Eliminada correctamente.');
+    
+            // Mostrar mensaje de éxito
+            setAlerta('Parte eliminada correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
+    
         } catch (error) {
-            // Step 6: Handle any errors and show an error message
+            // Manejar errores y mostrar alerta de error
             console.error('Error al eliminar:', error);
-            setAlerta('Error al eliminar.');
+            setAlerta('Error al eliminar la parte.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-        // Step 7: Close the confirmation modal and reset deletion states
+    
+        // Cerrar el modal de confirmación
         setMostrarModalEliminarParte(false);
     };
+    
 
 
     // Eliminar elemento
@@ -959,12 +1020,27 @@ function Trazabilidad() {
     // Function to delete an 'elemento' document from Firestore and update the state
     const eliminarElemento = async () => {
         try {
-            // Step 1: Reference to the 'elemento' document in Firestore
-            const elementoRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento`, elementoIdAEliminar);
-            // Step 2: Delete the 'elemento' document
+            // Referencia a la subcolección 'lote' dentro del elemento
+            const lotesRef = collection(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento/${elementoIdAEliminar}/lote`);
+            
+            // Obtener todos los lotes dentro del elemento
+            const lotesSnapshot = await getDocs(lotesRef);
+    
+            // 🔹 Si hay lotes, mostrar alerta y cancelar la eliminación
+            if (!lotesSnapshot.empty) {
+                setAlerta("⚠️ No puedes eliminar este elemento porque contiene actividades. Elimina las actividades primero.");
+                setTipoAlerta("warning");
+                setMostrarModal(true);
+                return;
+            }
+    
+            // Referencia al documento 'elemento'
+            const elementoRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento/${elementoIdAEliminar}`);
+    
+            // Eliminar el 'elemento'
             await deleteDoc(elementoRef);
-
-            // Step 3: Update the local state to reflect the deletion
+    
+            // Actualizar el estado local
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === sectorIdAEliminar) {
                     return {
@@ -990,22 +1066,26 @@ function Trazabilidad() {
                 }
                 return sector;
             });
-            // Step 4: Update the state with the new list of sectors
+    
+            // Actualizar el estado en React
             setSectores(sectoresActualizados);
-            // Step 5: Display a success alert
-            setAlerta('Eliminado correctamente.');
+    
+            // Mostrar mensaje de éxito
+            setAlerta('✅ Elemento eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
         } catch (error) {
-            // Step 6: Handle any errors and display an error alert
-            console.error('Error al eliminar:', error);
-            setAlerta('Error al eliminar.');
+            console.error('❌ Error al eliminar:', error);
+            setAlerta('❌ Error al eliminar el elemento.');
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-        // Step 7: Close the delete confirmation modal
+    
+        // Cerrar el modal de confirmación
         setMostrarModalEliminarElemento(false);
     };
+    
+    
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1559,7 +1639,7 @@ function Trazabilidad() {
                         <div className='col-span-24 xl:col-span-6'>
                             {/* Sector == Grupo activos */}
                             <div className="flex flex-col items-start gap-3">
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 rounded-md px-3 py-2 flex items-center gap-2 w-full'>1. Grupo activos</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 rounded-md px-3 py-2 flex items-center gap-2 w-full'>1. No aplica</p>
                                 <div className="flex flex-col xl:flex-row items-center w-full">
                                     <div className='w-full flex gap-2'>
                                         <input
@@ -1596,7 +1676,7 @@ function Trazabilidad() {
                             </div>
                             {/* Sub Sector == Activo */}
                             <div className="flex flex-col col-span-4 items-start gap-3 mt-3">
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>2. Activo</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>2. No aplica</p>
 
 
                                 <div className="flex flex gap-2 xl:flex-row items-center w-full">
@@ -1639,7 +1719,7 @@ function Trazabilidad() {
                         {/* Parte == Inventario vial */}
 
                         <div className='flex flex-col col-span-24 xl:col-span-6 gap-3  mt-4 xl:mt-0'>
-                            <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>3. Inventario vial</p>
+                            <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>3. No aplica</p>
 
 
                             <div className="flex gap-2 xl:flex-row items-center w-full">
@@ -1678,7 +1758,7 @@ function Trazabilidad() {
                             {/* Elemento == Componente */}
 
                             <div className='flex flex-col col-span-24 xl:col-span-5 gap-3    mt-5 xl:mt-0'>
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>4. Componente</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>4. Sector</p>
                                 <div className="flex gap-2 xl:flex-row items-center w-full">
 
                                     <input
@@ -1723,13 +1803,10 @@ function Trazabilidad() {
 
                         <div className='flex flex-col col-span-24 xl:col-span-12 gap-3 mt-5 xl:mt-0 '>
                             <div className='text-start'>
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>5. Actividades mantenimiento, conservación, rehabilitación</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>5. Actividades</p>
                             </div>
 
-                            <div className='px-2 text-xs w-full'>
-                                <p>"Para agregar múltiples actividades, escríbelas separadas por comas. Ejemplo: 'Bacheo formal, Reparación, Sellado de fisuras'."</p>
-
-                            </div>
+                            
 
 
                             <div className='grid xl:grid-cols-12 gap-3'>
@@ -1812,11 +1889,11 @@ function Trazabilidad() {
                 {/* Table */}
                 <div className="mt-5">
                     <div className="hidden xl:flex bg-gray-200 rounded-t-lg font-medium items-center">
-                        <p className="px-4 py-2 w-1/5">Grupo activos</p>
-                        <p className="px-4 py-2 w-1/5">Activo</p>
-                        <p className="px-4 py-2 w-1/5">Invetario vial</p>
-                        <p className=" py-2 w-1/5">Componente</p>
-                        <p className="mr-5 py-2 w-1/5">Actividades mantenimiento, conservación, rehabilitación</p>
+                        <p className="px-4 py-2 w-1/5">No aplica</p>
+                        <p className="px-4 py-2 w-1/5">No aplica</p>
+                        <p className="px-4 py-2 w-1/5">No aplica</p>
+                        <p className=" py-2 w-1/5">Sector</p>
+                        <p className="mr-5 py-2 w-1/5">Actividades</p>
                     </div>
 
                     <div className="divide-y divide-gray-200">
@@ -2276,7 +2353,7 @@ function Trazabilidad() {
 
 
                 {mostrarModal && (
-                    <div className="fixed z-10 inset-0 overflow-y-auto">
+                    <div className="fixed z-50 inset-0 overflow-y-auto">
                         <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                             <div className="fixed inset-0 transition-opacity" aria-hidden="true">
                                 <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
