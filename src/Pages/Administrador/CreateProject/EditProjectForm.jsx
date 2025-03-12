@@ -1,4 +1,6 @@
 import React from "react";
+import { getDocs, collection, query, where, getFirestore, updateDoc, doc } from "firebase/firestore";
+import { db } from "../../../../firebase_config";
 
 const EditProjectForm = ({
   empresa,
@@ -20,6 +22,8 @@ const EditProjectForm = ({
   existingClientLogoURL,
   setIsEditing,
 }) => {
+
+
 
   // Función para limpiar los campos del formulario
   const resetForm = () => {
@@ -81,10 +85,10 @@ const EditProjectForm = ({
           />
         </div>
 
-         {/* Promotor */}
-         <div className="mb-4">
+        {/* Promotor */}
+        <div className="mb-4">
           <label className="block  font-semibold mb-2" htmlFor="promotor">
-          Promotor
+            Promotor
           </label>
           <textarea
             id="promotor"

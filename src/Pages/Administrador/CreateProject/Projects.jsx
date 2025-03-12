@@ -4,7 +4,7 @@ import useAddProject from "../../../Hooks/useAddProject"; // Importamos el hook 
 import useUpdateProject from "../../../Hooks/useUpdateProject"; // Importamos el hook useUpdateProject
 import useDeleteProject from "../../../Hooks/useDeleteProject"; // Importamos el hook useDeleteProject
 import { db, storage } from "../../../../firebase_config";
-import { collection, getDocs, updateDoc, doc, addDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, addDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Modal from "./Modal";
 import AddProjectForm from "./AddProjectForm";
@@ -39,6 +39,7 @@ function Projects() {
   const [existingClientLogoURL, setExistingClientLogoURL] = useState("");
 
   const [selectedProject, setSelectedProject] = useState(null);
+  const [projectIdToEdit, setProjectIdToEdit] = useState('')
 
   // Function to show success/error modal
   const showModal = (message, type) => {
@@ -59,6 +60,8 @@ function Projects() {
     setClientLogo(null);
   };
 
+   
+
   // Open the edit modal with selected project data
   const openEditModal = (proj) => {
     setIsEditing(true);
@@ -72,15 +75,37 @@ function Projects() {
     setSelectedProject(proj);
     setExistingLogoURL(proj.logo);
     setExistingClientLogoURL(proj.logoCliente);
+    setProjectIdToEdit(proj.id)
   };
 
   // Handle updating the project
   const handleUpdateProject = async () => {
-    const result = await updateProject(selectedProject.id, empresa, work, descripcion, contract, logo, clientLogo, promotor);
-    showModal(result, "success");
-    setIsEditing(false);
-    refreshProjects(); // Refresh the project list
-  };
+    try {
+        const updatedProjectData = {
+            empresa,
+            obra: work,
+            descripcion,
+            promotor,
+            contrato: contract
+        };
+
+        // 1️⃣ Actualizar proyecto en Firestore
+        const result = await updateProject(selectedProject.id, empresa, work, descripcion, contract, logo, clientLogo, promotor);
+        
+        // 2️⃣ Actualizar el proyecto en los usuarios que lo tienen asignado
+        await updateUsersWithProject(selectedProject.id, updatedProjectData);
+
+        // 3️⃣ Mostrar mensaje de éxito
+        showModal(result, "success");
+
+        // 4️⃣ Cerrar modal de edición y refrescar la lista de proyectos
+        setIsEditing(false);
+        refreshProjects(); 
+    } catch (error) {
+        showModal("Error actualizando el proyecto: " + error.message, "error");
+    }
+};
+
 
   // Handle deleting the project
   const handleDeleteProject = async (id) => {
@@ -120,6 +145,66 @@ function Projects() {
   const handleGoBack = () => {
     navigate(-1);
   };
+
+
+
+  console.log(projectIdToEdit)
+
+  // Función para obtener los usuarios con el proyecto asignado
+  const fetchUsersWithProject = async () => {
+    const usersRef = collection(db, "usuarios");
+
+    try {
+      const querySnapshot = await getDocs(usersRef);
+      const users = querySnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        .filter(user =>
+          user.proyectos?.some(proj => proj.id === projectIdToEdit) // Filtramos los que tienen el proyecto
+        );
+      console.log(users)
+      return users;
+    } catch (error) {
+      console.error("Error obteniendo los usuarios con el proyecto asignado:", error);
+      return [];
+    }
+  };
+
+
+  fetchUsersWithProject()
+
+
+
+
+  const updateUsersWithProject = async (projectId, updatedProjectData) => {
+      try {
+          const users = await fetchUsersWithProject(projectId); // Obtenemos los usuarios con el proyecto asignado
+  
+          const batch = writeBatch(db); // Creamos una batch para optimizar la actualización
+  
+          users.forEach((user) => {
+              const userRef = doc(db, "usuarios", user.id); // Referencia al documento del usuario
+  
+              // Mapeamos el array de proyectos del usuario y actualizamos solo el name (obra)
+              const updatedProjects = user.proyectos.map(proj =>
+                  proj.id === projectId ? { ...proj, name: updatedProjectData.obra } : proj
+              );
+  
+              batch.update(userRef, { proyectos: updatedProjects }); // Agregamos la actualización a la batch
+          });
+  
+          await batch.commit(); // Ejecutamos todas las actualizaciones de una vez
+  
+          console.log("Usuarios actualizados correctamente con el nuevo name.");
+      } catch (error) {
+          console.error("Error actualizando los usuarios:", error);
+      }
+  };
+  
+  
+  
 
   return (
     <div className="container mx-auto p-8 min-h-screen text-gray-500">
@@ -236,6 +321,7 @@ function Projects() {
           existingLogoURL={existingLogoURL}
           existingClientLogoURL={existingClientLogoURL}
           setIsEditing={setIsEditing}
+          projectIdToEdit={projectIdToEdit}
         />
       )}
     </div>

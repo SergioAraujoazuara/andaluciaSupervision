@@ -19,6 +19,7 @@ import { FaFilePdf } from "react-icons/fa6";
 import DatosRegistroTabla from "./ComponentesInforme/DatosRegistroTabla";
 import Formulario from "../../Components/Firma/Formulario";
 import Firma from "../../Components/Firma/Firma";
+import Spinner from "./ComponentesInforme/Spinner";
 
 
 
@@ -37,7 +38,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   const [hora, setHora] = useState(localStorage.getItem("hora") || "");
   const [visitaNumero, setVisitaNumero] = useState(localStorage.getItem("visitaNumero") || "");
   const [firma, setFirma] = useState(null);  // Estado para la firma
-
+  const [isGenerating, setIsGenerating] = useState(false); // Estado para el spinner
   const handleSave = () => {
     localStorage.setItem("firma", firma);  // Guardar la firma en localStorage
     setModalOpen(false);
@@ -276,7 +277,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       console.error("⚠️ No hay datos para generar el PDF");
       return;
     }
-
+setIsGenerating(true)
     setModalOpen(true); // Abre el modal
 
     setTimeout(() => {
@@ -289,11 +290,8 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       localStorage.removeItem("hora");
       localStorage.removeItem("visitaNumero");
 
-      // Resetea los estados locales
-      setFechaVisita("");
-      setHora("");
-      setVisitaNumero("");
-
+     
+      setIsGenerating(false)
       setModalOpen(false); // Cierra el modal
     }, 2000); // Espera 2 segundos antes de limpiar y cerrar
   };
@@ -302,98 +300,27 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
 
 
   return (
+   
+
+    
     <div>
-      {/* {proyectoLoading && <p>Cargando datos del proyecto...</p>}
-      {proyectoError && <p>Error al cargar el proyecto: {proyectoError.message}</p>}
-      {!proyectoLoading && !proyectoError && (
-        <button
-          onClick={downloadPdf}
-          className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-md flex items-center gap-4"
-        >
-          Descargar Informe PDF
-        </button>
-      )} */}
-
-      <div>
-        <div>
-          {/* Botón para abrir el modal */}
-          <button
-            className="px-4 py-2 text-gray-500 text-xl font-medium rounded-md hover:text-sky-700 flex gap-2 items-center"
-            onClick={handlegeneratePDF}
-          >
-            <FaFilePdf />
-          </button>
-
-          {/* {modalOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 px-4">
-              <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold text-gray-800">Registrar Fecha de Visita</h2>
-                  <button onClick={() => setModalOpen(false)} className="text-gray-500 hover:text-gray-700">
-                    <AiOutlineClose size={24} />
-                  </button>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Fecha de Visita</label>
-                  <input
-                    type="date"
-                    value={fechaVisita}
-                    onChange={(e) => setFechaVisita(e.target.value)}
-                    className="w-full px-4 py-2 border rounded-md border-gray-300"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Hora</label>
-                  <input
-                    type="time"
-                    value={hora}
-                    onChange={(e) => setHora(e.target.value)}
-                    className="w-full px-4 py-2 border rounded-md border-gray-300"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Visita de Obra Nº</label>
-                  <input
-                    type="text"
-                    value={visitaNumero}
-                    onChange={(e) => setVisitaNumero(e.target.value)}
-                    className="w-full px-4 py-2 border rounded-md border-gray-300"
-                  />
-                </div>
-
-          
-
-
-                <div className="flex justify-end gap-4">
-                  <button
-                    onClick={handlegeneratePDF}
-                    className="px-5 py-2 text-gray-700 font-semibold bg-gray-200 rounded-md hover:bg-gray-300"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleSave()
-                      handlegeneratePDF()
-                    }
-
-                    }
-                    className="px-5 py-2 bg-sky-600 text-white font-semibold rounded-md hover:bg-sky-700"
-                  >
-                    Guardar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )} */}
-
-
-        </div>
+    {isGenerating ? (
+      <div className="flex justify-center items-center gap-2">
+        <Spinner /> {/* Spinner en lugar del botón */}
+        
       </div>
-    </div>
+    ) : (
+      <button
+        className="px-4 py-2 text-gray-500 text-xl font-medium rounded-md hover:text-sky-700 flex gap-2 items-center"
+        onClick={handlegeneratePDF}
+      >
+        <FaFilePdf />
+      </button>
+    )}
+  </div>
+  
+    
+    
   );
 };
 

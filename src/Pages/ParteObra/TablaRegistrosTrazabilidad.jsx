@@ -24,6 +24,7 @@ import { useAuth } from "../../context/authContext.jsx";
 import useUsuario from "../../Hooks/useUsuario.jsx"
 import ModalFechaVisita from "./ComponentesInforme/ModalFechaVisita.jsx";
 import Firma from "../../Components/Firma/Firma.jsx";
+import InformeFinal from "./InformeFinal.jsx";
 
 const TablaRegistros = () => {
   const { user } = useAuth();
@@ -116,7 +117,7 @@ const TablaRegistros = () => {
           setIsFirmaModalOpen(false);
           setRegistroSeleccionado(null);
           setTipoFirma(null);
-      }, 2000);
+        }, 2000);
       }
     } catch (error) {
       console.error("Error al guardar la firma:", error);
@@ -725,6 +726,18 @@ const TablaRegistros = () => {
             Borrar Filtros
           </button>
         </div>
+        
+        <InformeFinal
+                        registros={registrosFiltrados}
+                        columnas={columnas}
+                        datosVisita={datosVisita}
+                        
+                        formatFechaActual={formatFechaActual()}
+                        fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)}
+                        fechaFin={formatFechaSolo(valoresFiltro.fechaFin)}
+                        fileName={fileName}
+                        nombreUsuario={nombreUsuario}
+                      />
 
 
       </div>
@@ -802,7 +815,7 @@ const TablaRegistros = () => {
                         </button>
 
 
-                       
+
 
                         <td className="px-6 py-4 text-sm whitespace-nowrap flex flex-col items-center gap-2">
                           {registro.firmaEmpresa && registro.firmaCliente ? (
@@ -857,6 +870,8 @@ const TablaRegistros = () => {
                         fileName={fileName}
                         nombreUsuario={nombreUsuario}
                       />
+
+                     
                     </td>
                   </tr>
                 ))}
