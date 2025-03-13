@@ -32,6 +32,10 @@ function Projects() {
   const [descripcion, setDescripcion] = useState("");
   const [promotor, setPromotor] = useState("");
   const [contract, setContract] = useState("");
+  const [plazo, setPlazo] = useState("");
+  const [presupuesto, setPresupuesto] = useState("");
+  const [coordinador, setCoordinador] = useState("");
+  const [director, setDirector] = useState("");
   const [logo, setLogo] = useState(null);
   const [clientLogo, setClientLogo] = useState(null);
 
@@ -56,6 +60,8 @@ function Projects() {
     setDescripcion("");
     setPromotor("")
     setContract("");
+    setCoordinador("");
+    setDirector("");
     setLogo(null);
     setClientLogo(null);
   };
@@ -70,6 +76,10 @@ function Projects() {
     setDescripcion(proj.descripcion);
     setPromotor(proj.promotor);
     setContract(proj.contrato);
+    setPlazo(proj.plazo);
+    setPresupuesto(proj.presupuesto);
+    setCoordinador(proj.director);
+    setDirector(proj.coordinador);
     setLogo(null);
     setClientLogo(null);
     setSelectedProject(proj);
@@ -86,11 +96,15 @@ function Projects() {
             obra: work,
             descripcion,
             promotor,
-            contrato: contract
+            contrato: contract,
+            plazo, plazo,
+            presupuesto: presupuesto,
+            director: director,
+            coordinador: coordinador
         };
 
         // 1️⃣ Actualizar proyecto en Firestore
-        const result = await updateProject(selectedProject.id, empresa, work, descripcion, contract, logo, clientLogo, promotor);
+        const result = await updateProject(selectedProject.id, empresa, work, descripcion, contract, logo, clientLogo, promotor, plazo, presupuesto, coordinador, director);
         
         // 2️⃣ Actualizar el proyecto en los usuarios que lo tienen asignado
         await updateUsersWithProject(selectedProject.id, updatedProjectData);
@@ -131,7 +145,7 @@ function Projects() {
     }
 
     try {
-      const result = await addProject(empresa, work, descripcion, contract, logo, clientLogo, promotor);
+      const result = await addProject(empresa, work, descripcion, contract, logo, clientLogo, promotor, plazo, presupuesto, coordinador, director);
       showModal(result, "success");
       setIsAdding(false); // Close modal after adding project
       refreshProjects(); // Refresh the project list
@@ -291,6 +305,14 @@ function Projects() {
           setPromotor={setPromotor}
           contract={contract}
           setContract={setContract}
+          plazo={plazo}
+          setPlazo={setPlazo}
+          presupuesto={presupuesto}
+          setPresupuesto={setPresupuesto}
+          coordinador={coordinador}
+          director={director}
+          setCoordinador={setCoordinador}
+          setDirector={setDirector}
           logo={logo}
           setLogo={setLogo}
           clientLogo={clientLogo}
@@ -313,6 +335,14 @@ function Projects() {
           setPromotor={setPromotor}
           contract={contract}
           setContract={setContract}
+          plazo={plazo}
+          setPlazo={setPlazo}
+          presupuesto={presupuesto}
+          setPresupuesto={setPresupuesto}
+          coordinador={coordinador}
+          director={director}
+          setCoordinador={setCoordinador}
+          setDirector={setDirector}
           logo={logo}
           setLogo={setLogo}
           clientLogo={clientLogo}

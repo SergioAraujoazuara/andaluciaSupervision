@@ -225,19 +225,20 @@ function Home() {
 
               {/* Información del Proyecto */}
               <div className="col-span-2 flex flex-col justify-center">
-                <h2 className="text-lg font-bold">{projectData.empresa}</h2>
-                <p className=" mt-2 leading-relaxed">{projectData.descripcion}</p>
+                <h2 className="text-lg font-bold">Empresa: {projectData.empresa}</h2>
+                <p className=" mt-2 leading-relaxed">Promotor: {projectData.descripcion}</p>
 
                 {/* Datos principales */}
                 <div className="mt-6 ">
                   <div className="p-4">
-                    <p className=" text-sm font-semibold">Formato</p>
-                    <p className=" text-lg">{projectData.contrato}</p>
+                  <p className="text-lg"><span className='font-bold'>Obra: </span>{projectData.obra}</p>
+                    <p className=" text-lg"><span className='font-bold'>Número de contrato: </span>{projectData.contrato}</p>
+                    <p className=" text-lg"><span className='font-bold'>Plazo: </span> {projectData.contrato}</p>
+                    <p className=" text-lg"><span className='font-bold'>Presupuesto: </span> {projectData.presupuesto}</p>
+                    <p className=" text-lg"><span className='font-bold'>Coordinador de seguridad y salud: </span> {projectData.coordinador}</p>
+                    <p className=" text-lg"><span className='font-bold'>Director: </span> {projectData.director}</p>
                   </div>
-                  <div className="p-4">
-                    <p className="text-sm font-semibold">Obra</p>
-                    <p className="text-lg">{projectData.obra}</p>
-                  </div>
+                  
                 </div>
               </div>
             </div>

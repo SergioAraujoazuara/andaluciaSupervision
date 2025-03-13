@@ -9,7 +9,7 @@ const useAddProject = () => {
   const [error, setError] = useState(null);
 
   // Función para agregar el proyecto
-  const addProject = async (empresa, work, descripcion, contract, logo, clientLogo, promotor) => {
+  const addProject = async (empresa, work, descripcion, contract, logo, clientLogo, promotor, plazo, presupuesto, coordinador, director) => {
     setLoading(true);
     setError(null);  // Limpiamos el error
 
@@ -40,6 +40,10 @@ const useAddProject = () => {
         contrato: contract,
         logo: logoURL,
         logoCliente: clientLogoURL,
+        plazo: plazo,
+        presupuesto: presupuesto,
+        coordinador: coordinador,
+        director: director,
       });
 
       setLoading(false);

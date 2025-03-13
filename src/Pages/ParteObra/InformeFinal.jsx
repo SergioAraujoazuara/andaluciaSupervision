@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     },
 });
 
-const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario, registros }) => {
+const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario, registros, selectedProjectName, selectedProjectId }) => {
 
     console.log(registros, 'registros')
 
@@ -104,7 +104,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
 
 
     // Extraer el ID del proyecto almacenado en el localStorage
-    const selectedProjectId = localStorage.getItem("selectedProjectId");
+    
     const { proyecto, loading: proyectoLoading, error: proyectoError } = useProyecto(selectedProjectId);
 
     // Obtener detalles del usuario desde Firestore
@@ -240,11 +240,13 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
         const pdfURL = URL.createObjectURL(finalBlob);
         const link = document.createElement("a");
         link.href = pdfURL;
-        link.download = "Informe_Final.pdf";
+        link.download = `Informe_Final_${selectedProjectName}_${formatFechaActual}.pdf`;
         link.click();
 
+      
+
         // **Subimos el PDF al Storage**
-        const downloadURL = await uploadPdfToStorage(finalBlob, selectedProjectId);
+        const downloadURL = await uploadPdfToStorage(finalBlob, selectedProjectName, selectedProjectId );
         if (downloadURL) {
             setShowSuccessModal(true); 
             setShowSuccessModalMessage('Informe guardado correctamente')// Mostrar el modal de éxito
@@ -275,10 +277,10 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         </div>
                     ) : (
                         <button
-                            className="px-4 py-2 text-gray-500 text-xl font-medium rounded-md hover:text-sky-700 flex gap-2 items-center"
+                             className="px-4 py-2 h-12 bg-amber-600 text-white text-md rounded-md hover:bg-amber-700 flex gap-2 items-center"
                             onClick={handlegeneratePDF}
                         >
-                            <FaFilePdf /> Informe final
+                            <FaFilePdf /> <span className="text-sm">Informe final</span>
                         </button>
                     )}
                 </div>

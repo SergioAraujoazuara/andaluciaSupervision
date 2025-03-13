@@ -25,6 +25,7 @@ import useUsuario from "../../Hooks/useUsuario.jsx"
 import ModalFechaVisita from "./ComponentesInforme/ModalFechaVisita.jsx";
 import Firma from "../../Components/Firma/Firma.jsx";
 import InformeFinal from "./InformeFinal.jsx";
+import ListaInformesModal from "./ListaInformesModal.jsx";
 
 const TablaRegistros = () => {
   const { user } = useAuth();
@@ -33,6 +34,7 @@ const TablaRegistros = () => {
   const roleUsuario = usuario?.role
   const [nombreUsuario, setNombreUsuario] = useState("");
   const selectedProjectName = localStorage.getItem("selectedProjectName");
+  const selectedProjectId = localStorage.getItem("selectedProjectId");
   const [registrosParteDeObra, setRegistrosParteDeObra] = useState([]);
   const [columnas, setColumnas] = useState([]);
   const [registrosFiltrados, setRegistrosFiltrados] = useState([]);
@@ -729,18 +731,16 @@ const TablaRegistros = () => {
       </div>
 
 
-      <div className="flex justify-start px-6 py-4 mb-2 gap-5">
+      <div className="flex justify-between px-6 py-4 mb-2 gap-5">
         {/* Botón para borrar filtros */}
-        <div className="flex justify-end col-span-3">
+        <div className="flex justify-start gap-5 col-span-3">
           <button
             onClick={resetFilters}
-            className="px-4 py-2 bg-gray-500 text-white font-semibold rounded-md hover:bg-gray-600 transition duration-200"
+            className="px-4 py-2 bg-gray-500 text-white text-sm font-semibold rounded-md hover:bg-gray-600 transition duration-200"
           >
             Borrar Filtros
           </button>
-        </div>
-
-        <InformeFinal
+          <InformeFinal
           registros={registrosFiltrados}
           columnas={columnas}
           datosVisita={datosVisita}
@@ -750,7 +750,15 @@ const TablaRegistros = () => {
           fechaFin={formatFechaSolo(valoresFiltro.fechaFin)}
           fileName={fileName}
           nombreUsuario={nombreUsuario}
+          selectedProjectName={selectedProjectName}
+          selectedProjectId={selectedProjectId}
+          
         />
+        </div>
+
+        
+
+        <ListaInformesModal />
 
 
       </div>
@@ -814,59 +822,59 @@ const TablaRegistros = () => {
                       {/* Lógica de progreso aquí */}
                     </td>
                     <td className="px-6 py-4 text-sm w-32"> {/* Fijamos el tamaño a 8rem (32px * 8) */}
-  <div className="flex gap-2 items-center">
-    
-    {/* Botón de Editar */}
-    <button
-      onClick={() => {
-        setRegistroEditando(registro);
-        setModalEdicionAbierto(true);
-        setPrevisualizaciones(registro.imagenes || []);
-        setImagenesEditadas([]);
-      }}
-      className="px-3 py-2 text-gray-500 text-xl font-medium hover:text-sky-700 transition flex items-center"
-    >
-      <FaEdit />
-    </button>
+                      <div className="flex gap-2 items-center">
 
-    {/* Estado de Firma */}
-    <div className="w-28 flex justify-center"> {/* Ancho fijo para alinear */}
-      {registro.firmaEmpresa && registro.firmaCliente ? (
-        <div className="flex items-center gap-2 text-green-600 font-semibold">
-          <FaCheck className="text-green-500" /> Firmado
-        </div>
-      ) : (
-        <button
-          onClick={() => handleAbrirModalFirma(registro)}
-          className="px-4 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex items-center"
-        >
-          <FaSignature />
-        </button>
-      )}
-    </div>
+                        {/* Botón de Editar */}
+                        <button
+                          onClick={() => {
+                            setRegistroEditando(registro);
+                            setModalEdicionAbierto(true);
+                            setPrevisualizaciones(registro.imagenes || []);
+                            setImagenesEditadas([]);
+                          }}
+                          className="px-3 py-2 text-gray-500 text-xl font-medium hover:text-sky-700 transition flex items-center"
+                        >
+                          <FaEdit />
+                        </button>
 
-    {/* Botón de Historial */}
-    <button
-      onClick={() => handleAbrirModalModificaciones(registro)}
-      className="px-3 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex items-center"
-    >
-      <MdOutlineHistory />
-    </button>
+                        {/* Estado de Firma */}
+                        <div className="w-28 flex justify-center"> {/* Ancho fijo para alinear */}
+                          {registro.firmaEmpresa && registro.firmaCliente ? (
+                            <div className="flex items-center gap-2 text-green-700 font-semibold flex flex-col gap-2 items-center">
+                              <FaCheck className="text-green-600" /> <span>Firmado</span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleAbrirModalFirma(registro)}
+                              className="px-4 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex flex-col gap-2 items-center"
+                            >
+                              <FaSignature /> <span className="text-xs">Pendiente</span>
+                            </button>
+                          )}
+                        </div>
 
-    {/* Botón de Eliminar (solo admin) */}
-    {roleUsuario === "admin" && (
-      <button
-        onClick={() => {
-          setShowConfirmModal(true);
-          setRegistroAEliminar(registro);
-        }}
-        className="px-3 py-2 text-red-700 text-2xl font-medium hover:text-red-800 transition flex items-center"
-      >
-        <FaDeleteLeft />
-      </button>
-    )}
-  </div>
-</td>
+                        {/* Botón de Historial */}
+                        <button
+                          onClick={() => handleAbrirModalModificaciones(registro)}
+                          className="px-3 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex items-center"
+                        >
+                          <MdOutlineHistory />
+                        </button>
+
+                        {/* Botón de Eliminar (solo admin) */}
+                        {roleUsuario === "admin" && (
+                          <button
+                            onClick={() => {
+                              setShowConfirmModal(true);
+                              setRegistroAEliminar(registro);
+                            }}
+                            className="px-3 py-2 text-red-700 text-2xl font-medium hover:text-red-800 transition flex items-center"
+                          >
+                            <FaDeleteLeft />
+                          </button>
+                        )}
+                      </div>
+                    </td>
 
                     <td className="px-6 py-4 text-sm whitespace-nowrap">
                       <InformeRegistros
@@ -885,6 +893,7 @@ const TablaRegistros = () => {
                         fechaFin={formatFechaSolo(valoresFiltro.fechaFin)}
                         fileName={fileName}
                         nombreUsuario={nombreUsuario}
+                        selectedProjectName={selectedProjectName}
                       />
 
 
@@ -927,7 +936,7 @@ const TablaRegistros = () => {
                       ) : columna === "observaciones" ? (
                         <button
                           onClick={() => openModal(registro[columna])}
-                          className="text-blue-500 hover:underline"
+                          className="text-sky-600 hover:underline"
                         >
                           Ver observaciones
                         </button>

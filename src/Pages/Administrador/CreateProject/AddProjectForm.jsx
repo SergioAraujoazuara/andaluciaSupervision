@@ -11,6 +11,14 @@ const AddProjectForm = ({
   setPromotor,
   contract,
   setContract,
+  plazo,
+  setPlazo,
+  presupuesto,
+  setPresupuesto,
+  coordinador,
+  setCoordinador,
+  director,
+  setDirector,
   logo,
   setLogo,
   clientLogo,
@@ -68,16 +76,16 @@ const AddProjectForm = ({
           />
         </div>
 
-         {/* Promotor */}
-         <div className="mb-4">
+        {/* Promotor */}
+        <div className="mb-4">
           <label className="block font-semibold mb-2" htmlFor="promotor">
-          Promotor
+            Promotor
           </label>
           <textarea
             id="promotor"
             value={promotor}
             onChange={(e) => setPromotor(e.target.value)}
-            placeholder="promotor"
+            placeholder="Promotor"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
@@ -85,7 +93,7 @@ const AddProjectForm = ({
         {/* Contrato */}
         <div className="mb-4">
           <label className="block font-semibold mb-2" htmlFor="contract">
-          Identificación documento
+            Número de contrato
           </label>
           <input
             type="text"
@@ -97,6 +105,65 @@ const AddProjectForm = ({
           />
         </div>
 
+        {/* Plazo contrato */}
+        <div className="mb-4">
+          <label className="block font-semibold mb-2" htmlFor="plazo">
+            Plazo contrato
+          </label>
+          <input
+            type="text"
+            id="plazo"
+            value={plazo}
+            onChange={(e) => setPlazo(e.target.value)}
+            placeholder="Plazo"
+            className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+
+        {/* Presupuesto */}
+        <div className="mb-4">
+          <label className="block font-semibold mb-2" htmlFor="presupuesto">
+            Presupuesto
+          </label>
+          <input
+            type="text"
+            id="presupuesto"
+            value={presupuesto}
+            onChange={(e) => setPresupuesto(e.target.value)}
+            placeholder="Presupuesto"
+            className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+
+        {/* Coordinador */}
+        <div className="mb-4">
+          <label className="block font-semibold mb-2" htmlFor="coordinador">
+            Coordinador
+          </label>
+          <input
+            type="text"
+            id="coordinador"
+            value={coordinador}
+            onChange={(e) => setCoordinador(e.target.value)}
+            placeholder="coordinador"
+            className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+
+        {/* Director */}
+        <div className="mb-4">
+          <label className="block font-semibold mb-2" htmlFor="director">
+            Director
+          </label>
+          <input
+            type="text"
+            id="director"
+            value={director}
+            onChange={(e) => setDirector(e.target.value)}
+            placeholder="director"
+            className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
         {/* Logo Proyecto */}
         <div className="mb-6">
           <label className="block font-semibold mb-2" htmlFor="logo">
