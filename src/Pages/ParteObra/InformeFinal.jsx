@@ -21,6 +21,8 @@ import Formulario from "../../Components/Firma/Formulario";
 import Firma from "../../Components/Firma/Firma";
 import { PDFDocument } from "pdf-lib";
 import Spinner from "./ComponentesInforme/Spinner";
+import { uploadPdfToStorage } from "../ParteObra/Helpers/uploadPdfToStorage";
+
 
 
 const styles = StyleSheet.create({
@@ -40,6 +42,9 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
     const [hora, setHora] = useState(localStorage.getItem("hora") || "");
     const [visitaNumero, setVisitaNumero] = useState(localStorage.getItem("visitaNumero") || "");
     const [firma, setFirma] = useState(null);  // Estado para la firma
+    const [isGenerating, setIsGenerating] = useState(false); // Estado para el spinner
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showSuccessModalMessage, setShowSuccessModalMessage] = useState('');
 
     const handleSave = () => {
         localStorage.setItem("firma", firma);  // Guardar la firma en localStorage
@@ -185,17 +190,16 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                 {imagesWithMetadata.length > 0 && (
                     <Page size="A4" style={styles.page}>
                         <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
+                        <PiePaginaInforme
+                            userNombre={userNombre}
+                            firmaEmpresa={registroIndividual.firmaEmpresa}
+                            firmaCliente={registroIndividual.firmaCliente}
+                            nombreUsuario={nombreUsuario}
+                        />
                     </Page>
                 )}
 
-                <Page size="A4" style={styles.page}>
-                    <PiePaginaInforme
-                        userNombre={userNombre}
-                        firmaEmpresa={registroIndividual.firmaEmpresa}
-                        firmaCliente={registroIndividual.firmaCliente}
-                        nombreUsuario={nombreUsuario}
-                    />
-                </Page>
+
             </Document>
         );
 
@@ -239,13 +243,20 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
         link.download = "Informe_Final.pdf";
         link.click();
 
+        // **Subimos el PDF al Storage**
+        const downloadURL = await uploadPdfToStorage(finalBlob, selectedProjectId);
+        if (downloadURL) {
+            setShowSuccessModal(true); 
+            setShowSuccessModalMessage('Informe guardado correctamente')// Mostrar el modal de éxito
+        }
+
         setIsGenerating(false); // Desactivar el spinner
 
         console.log("✅ Informe final generado con éxito.");
     };
 
 
-    const [isGenerating, setIsGenerating] = useState(false); // Estado para el spinner
+
 
 
 
@@ -255,24 +266,53 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
 
     return (
         <div>
-  <div>
-    <div>
-      {isGenerating ? (
-        <div className="flex justify-center items-center gap-2">
-          <Spinner /> {/* Spinner en lugar del botón */}
-          <span className="text-gray-500 text-xl font-medium">Generando...</span>
+            <div>
+                <div>
+                    {isGenerating ? (
+                        <div className="flex justify-center items-center gap-2">
+                            <Spinner /> {/* Spinner en lugar del botón */}
+                            <span className="text-gray-500 text-xl font-medium">Generando...</span>
+                        </div>
+                    ) : (
+                        <button
+                            className="px-4 py-2 text-gray-500 text-xl font-medium rounded-md hover:text-sky-700 flex gap-2 items-center"
+                            onClick={handlegeneratePDF}
+                        >
+                            <FaFilePdf /> Informe final
+                        </button>
+                    )}
+                </div>
+            </div>
+
+
+            {/* Modal de Éxito */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white p-6 rounded-lg shadow-xl w-96 text-center relative">
+                        {/* Botón de Cierre */}
+                        <button
+                            className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 transition"
+                            onClick={() => setShowSuccessModal(false)}
+                        >
+                            <AiOutlineClose size={20} />
+                        </button>
+
+                        {/* Contenido del Modal */}
+                        <p className="text-4xl">✅</p>
+                        <p className="text-gray-600 mt-4 font-medium">{showSuccessModalMessage}</p>
+
+                        <div className="mt-10">
+                            <button
+                                onClick={() => setShowSuccessModal(false)}
+                                className="px-5 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700 transition"
+                            >
+                                Aceptar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-      ) : (
-        <button
-          className="px-4 py-2 text-gray-500 text-xl font-medium rounded-md hover:text-sky-700 flex gap-2 items-center"
-          onClick={handlegeneratePDF}
-        >
-          <FaFilePdf /> Informe final
-        </button>
-      )}
-    </div>
-  </div>
-</div>
 
     );
 };

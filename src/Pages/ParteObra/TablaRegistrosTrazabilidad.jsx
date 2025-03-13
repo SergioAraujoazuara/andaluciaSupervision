@@ -112,6 +112,19 @@ const TablaRegistros = () => {
         const campoFirma = tipoFirma === "empresa" ? "firmaEmpresa" : "firmaCliente";
         await updateDoc(docRef, { [campoFirma]: firmaURL });
 
+        // 🔹 **Actualiza el estado localmente**
+        setRegistrosParteDeObra((prev) =>
+          prev.map((registro) =>
+            registro.id === registroId ? { ...registro, [campoFirma]: firmaURL } : registro
+          )
+        );
+
+        setRegistrosFiltrados((prev) =>
+          prev.map((registro) =>
+            registro.id === registroId ? { ...registro, [campoFirma]: firmaURL } : registro
+          )
+        );
+
         // Cerrar el modal después de 3 segundos
         setTimeout(() => {
           setIsFirmaModalOpen(false);
@@ -625,9 +638,9 @@ const TablaRegistros = () => {
   const [dataRegister, setDataRegister] = useState({})
 
   const handleGeneratePdfRegistro = (registro) => {
-    setDataRegister(registro)
-    console.log(registro)
-  }
+    const registroActualizado = registrosParteDeObra.find(r => r.id === registro.id);
+    setDataRegister(registroActualizado || registro);
+  };
   return (
     <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
       <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
@@ -726,18 +739,18 @@ const TablaRegistros = () => {
             Borrar Filtros
           </button>
         </div>
-        
+
         <InformeFinal
-                        registros={registrosFiltrados}
-                        columnas={columnas}
-                        datosVisita={datosVisita}
-                        
-                        formatFechaActual={formatFechaActual()}
-                        fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)}
-                        fechaFin={formatFechaSolo(valoresFiltro.fechaFin)}
-                        fileName={fileName}
-                        nombreUsuario={nombreUsuario}
-                      />
+          registros={registrosFiltrados}
+          columnas={columnas}
+          datosVisita={datosVisita}
+
+          formatFechaActual={formatFechaActual()}
+          fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)}
+          fechaFin={formatFechaSolo(valoresFiltro.fechaFin)}
+          fileName={fileName}
+          nombreUsuario={nombreUsuario}
+        />
 
 
       </div>
@@ -800,58 +813,61 @@ const TablaRegistros = () => {
                     <td className="px-6 py-4 text-sm whitespace-nowrap flex flex-col items-center gap-2">
                       {/* Lógica de progreso aquí */}
                     </td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">
-                      <div className="flex gap-4">
-                        <button
-                          onClick={() => {
-                            setRegistroEditando(registro);
-                            setModalEdicionAbierto(true);
-                            setPrevisualizaciones(registro.imagenes || []);
-                            setImagenesEditadas([]);
-                          }}
-                          className="px-4 py-2 text-gray-500 text-xl font-medium rounded-md shadow-sm hover:text-sky-700 transition duration-150 flex gap-2 items-center"
-                        >
-                          <FaEdit />
-                        </button>
+                    <td className="px-6 py-4 text-sm w-32"> {/* Fijamos el tamaño a 8rem (32px * 8) */}
+  <div className="flex gap-2 items-center">
+    
+    {/* Botón de Editar */}
+    <button
+      onClick={() => {
+        setRegistroEditando(registro);
+        setModalEdicionAbierto(true);
+        setPrevisualizaciones(registro.imagenes || []);
+        setImagenesEditadas([]);
+      }}
+      className="px-3 py-2 text-gray-500 text-xl font-medium hover:text-sky-700 transition flex items-center"
+    >
+      <FaEdit />
+    </button>
 
+    {/* Estado de Firma */}
+    <div className="w-28 flex justify-center"> {/* Ancho fijo para alinear */}
+      {registro.firmaEmpresa && registro.firmaCliente ? (
+        <div className="flex items-center gap-2 text-green-600 font-semibold">
+          <FaCheck className="text-green-500" /> Firmado
+        </div>
+      ) : (
+        <button
+          onClick={() => handleAbrirModalFirma(registro)}
+          className="px-4 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex items-center"
+        >
+          <FaSignature />
+        </button>
+      )}
+    </div>
 
+    {/* Botón de Historial */}
+    <button
+      onClick={() => handleAbrirModalModificaciones(registro)}
+      className="px-3 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex items-center"
+    >
+      <MdOutlineHistory />
+    </button>
 
+    {/* Botón de Eliminar (solo admin) */}
+    {roleUsuario === "admin" && (
+      <button
+        onClick={() => {
+          setShowConfirmModal(true);
+          setRegistroAEliminar(registro);
+        }}
+        className="px-3 py-2 text-red-700 text-2xl font-medium hover:text-red-800 transition flex items-center"
+      >
+        <FaDeleteLeft />
+      </button>
+    )}
+  </div>
+</td>
 
-                        <td className="px-6 py-4 text-sm whitespace-nowrap flex flex-col items-center gap-2">
-                          {registro.firmaEmpresa && registro.firmaCliente ? (
-                            <div className="flex items-center gap-2 text-green-600 font-semibold">
-                              <FaCheck className="text-green-500" /> Firmado
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => handleAbrirModalFirma(registro)}
-                              className="px-4 py-2 text-gray-500 text-2xl font-medium rounded-md shadow-sm hover:text-sky-700 transition duration-150 flex gap-2 items-center"
-                            >
-                              <FaSignature />
-                            </button>
-                          )}
-                        </td>
-
-
-                        <button
-                          onClick={() => handleAbrirModalModificaciones(registro)}
-                          className="px-4 py-2 text-gray-500 text-2xl font-medium rounded-md shadow-sm hover:text-sky-700 transition duration-150 flex gap-2 items-center"
-                        >
-                          <MdOutlineHistory />
-                        </button>
-                        {roleUsuario === 'admin' && (
-                          <button
-                            onClick={() => {
-                              setShowConfirmModal(true);
-                              setRegistroAEliminar(registro);
-                            }}
-                            className="px-4 py-2 text-red-700 text-2xl font-medium rounded-md shadow-sm hover:text-red-800 transition duration-150 flex gap-2 items-center"
-                          >
-                            <FaDeleteLeft />
-                          </button>
-                        )}
-                      </div>
-                    </td>
                     <td className="px-6 py-4 text-sm whitespace-nowrap">
                       <InformeRegistros
                         onClick={() => {
@@ -871,7 +887,7 @@ const TablaRegistros = () => {
                         nombreUsuario={nombreUsuario}
                       />
 
-                     
+
                     </td>
                   </tr>
                 ))}

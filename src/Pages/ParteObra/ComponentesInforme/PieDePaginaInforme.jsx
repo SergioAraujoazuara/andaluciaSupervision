@@ -1,9 +1,10 @@
 import React from "react";
 import { View, Text, Image, StyleSheet } from "@react-pdf/renderer";
+import TituloInforme from "./TituloInforme";
 
 const styles = StyleSheet.create({
   footer: {
-    marginTop: 40,
+    marginTop: 10,
     paddingTop: 10,
     fontSize: 10,
     color: "#4b5563",
@@ -13,7 +14,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 20,
     width: "100%",
-    padding:40
+    padding: 40
   },
   leftColumn: {
     width: "50%",
@@ -35,6 +36,7 @@ const styles = StyleSheet.create({
 
 const PiePaginaInforme = ({ userNombre, firmaEmpresa, firmaCliente, nombreUsuario }) => (
   <View style={styles.footer}>
+    <TituloInforme plantillaSeleccionada="6. Firmas" />
     <View style={styles.container}>
 
       {/* LADO IZQUIERDO */}

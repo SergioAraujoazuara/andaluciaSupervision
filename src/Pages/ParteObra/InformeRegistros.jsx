@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Document, Page, StyleSheet } from "@react-pdf/renderer";
 import { pdf } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
 import { useAuth } from "../../context/authContext";
@@ -15,19 +14,25 @@ import GaleriaImagenes from "./ComponentesInforme/GaleriaImagenes";
 import ObservacionesRegistro from "./ComponentesInforme/SeccionesDatosRegistros";
 import useProyecto from "../../Hooks/useProyectos";
 import { AiOutlineClose } from "react-icons/ai";
-import { FaFilePdf } from "react-icons/fa6";
+import { FaFilePdf, FaBan } from "react-icons/fa6";
 import DatosRegistroTabla from "./ComponentesInforme/DatosRegistroTabla";
 import Formulario from "../../Components/Firma/Formulario";
 import Firma from "../../Components/Firma/Firma";
 import Spinner from "./ComponentesInforme/Spinner";
 
-
+import { View, Text, Image, StyleSheet, Page, Document } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   page: {
     padding: 30,
     fontFamily: "Helvetica",
     backgroundColor: "#FFFFFF",
+  },
+  line: {
+    marginTop: 20,
+    borderBottomWidth: 2,
+    borderBottomColor: "#cccccc",
+    width: "100%",
   },
 });
 
@@ -159,10 +164,10 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       return; // Evita continuar si la firma no está disponible
     }
 
-    if (userNombre !== "NA"){
+    if (userNombre !== "NA") {
       await fetchUserDetails();
     }
-    
+
 
     // Descargar imágenes antes de renderizar el PDF
     let imagesWithMetadata = [];
@@ -208,7 +213,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
         </Page>
 
         <Page size="A4" style={styles.page}>
-         
+
           <DatosRegistroTabla
             registro={dataRegister}
             excluirClaves={[
@@ -223,16 +228,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
         </Page>
 
         <Page size="A4" style={styles.page}>
-          <EncabezadoInforme
-            empresa={proyecto?.empresa || "Mi Empresa"}
-            obra={proyecto?.obra || "Obra Desconocida"}
-            contrato={proyecto?.contrato || "Sin Contrato"}
-            description={proyecto?.descripcion || "Sin Descripción"}
-            rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin}` : ""}`}
-            titlePdf="TPF GETINSA-EUROESTUDIOS S.L."
-            subTitlePdf="Tipo de documento Inspeccion de obra"
-            logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
-          />
+
 
           {/* Insertar Galería de Imágenes solo si hay imágenes */}
           {imagesWithMetadata.length > 0 && (
@@ -240,28 +236,17 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
           )}
 
 
-        </Page>
-
-        {/* Página final con firma */}
-        <Page size="A4" style={styles.page}>
-          <EncabezadoInforme
-            empresa={proyecto?.empresa || "Mi Empresa"}
-            obra={proyecto?.obra || "Obra Desconocida"}
-            contrato={proyecto?.contrato || "Sin Contrato"}
-            description={proyecto?.descripcion || "Sin Descripción"}
-            rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin}` : ""}`}
-            titlePdf="Tipo de documento Inspeccion de obra"
-            subTitlePdf="Detalles Generales"
-            logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
-          />
           {/* Pie de página con ambas firmas */}
           <PiePaginaInforme
             userNombre={userNombre}
             firmaEmpresa={dataRegister.firmaEmpresa}  // Firma de la empresa desde Firestore
-            firmaCliente={dataRegister.firmaCliente} 
+            firmaCliente={dataRegister.firmaCliente}
             nombreUsuario={nombreUsuario} // Firma del cliente desde Firestore
           />
+
         </Page>
+
+
       </Document>
     );
 
@@ -277,7 +262,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       console.error("⚠️ No hay datos para generar el PDF");
       return;
     }
-setIsGenerating(true)
+    setIsGenerating(true)
     setModalOpen(true); // Abre el modal
 
     setTimeout(() => {
@@ -290,7 +275,7 @@ setIsGenerating(true)
       localStorage.removeItem("hora");
       localStorage.removeItem("visitaNumero");
 
-     
+
       setIsGenerating(false)
       setModalOpen(false); // Cierra el modal
     }, 2000); // Espera 2 segundos antes de limpiar y cerrar
@@ -300,28 +285,31 @@ setIsGenerating(true)
 
 
   return (
-   
-
-    
     <div>
-    {isGenerating ? (
-      <div className="flex justify-center items-center gap-2">
-        <Spinner /> {/* Spinner en lugar del botón */}
-        
-      </div>
-    ) : (
-      <button
-        className="px-4 py-2 text-gray-500 text-xl font-medium rounded-md hover:text-sky-700 flex gap-2 items-center"
-        onClick={handlegeneratePDF}
-      >
-        <FaFilePdf />
-      </button>
-    )}
+      {isGenerating ? (
+  <div className="flex justify-center items-center gap-2">
+    <Spinner /> {/* Spinner en lugar del botón */}
   </div>
-  
-    
-    
+) : (
+  <button
+    className={`w-10 h-10 flex justify-center items-center text-xl font-medium rounded-md ${
+      dataRegister.firmaEmpresa && dataRegister.firmaCliente
+        ? "text-gray-500 hover:text-sky-700"
+        : "text-gray-500 cursor-not-allowed"
+    }`}
+    onClick={dataRegister.firmaEmpresa && dataRegister.firmaCliente ? handlegeneratePDF : null}
+    disabled={!dataRegister.firmaEmpresa || !dataRegister.firmaCliente} // Si no hay firmas, deshabilitar
+  >
+    {dataRegister.firmaEmpresa && dataRegister.firmaCliente ? (
+      <FaFilePdf className="w-6 h-6" />
+    ) : (
+      <FaBan className="w-6 h-6" />
+    )}
+  </button>
+)}
+    </div>
   );
+
 };
 
 export default PdfInformeTablaRegistros;
