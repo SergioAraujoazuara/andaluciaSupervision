@@ -55,7 +55,7 @@ const EditProjectForm = ({
 
         {/* Empresa */}
         <div className="mb-4">
-          <label className="block  font-semibold mb-2" htmlFor="empresa">
+          <label className="block font-semibold mb-2" htmlFor="empresa">
             Empresa
           </label>
           <input
@@ -63,14 +63,14 @@ const EditProjectForm = ({
             id="empresa"
             value={empresa}
             onChange={(e) => setEmpresa(e.target.value)}
-            placeholder="Empresa"
+            placeholder="Nombre de la empresa"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
         {/* Obra */}
         <div className="mb-4">
-          <label className="block  font-semibold mb-2" htmlFor="work">
+          <label className="block font-semibold mb-2" htmlFor="work">
             Obra
           </label>
           <input
@@ -78,42 +78,42 @@ const EditProjectForm = ({
             id="work"
             value={work}
             onChange={(e) => setWork(e.target.value)}
-            placeholder="Obra"
+            placeholder="Nombre de la obra"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
         {/* Descripción */}
         <div className="mb-4">
-          <label className="block  font-semibold mb-2" htmlFor="descripcion">
+          <label className="block font-semibold mb-2" htmlFor="descripcion">
             Contratista
           </label>
           <textarea
             id="descripcion"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
-            placeholder="Descripción"
+            placeholder="Nombre del contratista"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
         {/* Promotor */}
         <div className="mb-4">
-          <label className="block  font-semibold mb-2" htmlFor="promotor">
+          <label className="block font-semibold mb-2" htmlFor="promotor">
             Promotor
           </label>
           <textarea
             id="promotor"
             value={promotor}
             onChange={(e) => setPromotor(e.target.value)}
-            placeholder="Promotor"
+            placeholder="Nombre del promotor"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
         {/* Contrato */}
         <div className="mb-4">
-          <label className="block  font-semibold mb-2" htmlFor="contract">
+          <label className="block font-semibold mb-2" htmlFor="contract">
             Número de contrato
           </label>
           <input
@@ -121,37 +121,37 @@ const EditProjectForm = ({
             id="contract"
             value={contract}
             onChange={(e) => setContract(e.target.value)}
-            placeholder="Contrato"
+            placeholder="Número de contrato"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
-        {/* Plazo */}
+        {/* Plazo de la obra */}
         <div className="mb-4">
-          <label className="block  font-semibold mb-2" htmlFor="plazo">
-            Plazo
+          <label className="block font-semibold mb-2" htmlFor="plazo">
+            Plazo de la obra
           </label>
           <input
             type="text"
             id="plazo"
             value={plazo}
             onChange={(e) => setPlazo(e.target.value)}
-            placeholder="Plazo"
+            placeholder="Plazo de la obra"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
         {/* Presupuesto */}
         <div className="mb-4">
-          <label className="block  font-semibold mb-2" htmlFor="presupuesto">
-          Presupuesto
+          <label className="block font-semibold mb-2" htmlFor="presupuesto">
+            Presupuesto de la obra
           </label>
           <input
             type="text"
             id="presupuesto"
             value={presupuesto}
             onChange={(e) => setPresupuesto(e.target.value)}
-            placeholder="Presupuesto"
+            placeholder="Presupuesto de la obra"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
@@ -159,29 +159,29 @@ const EditProjectForm = ({
         {/* Coordinador */}
         <div className="mb-4">
           <label className="block font-semibold mb-2" htmlFor="coordinador">
-            Coordinador
+            Coordinador de seguridad y salud
           </label>
           <input
             type="text"
             id="coordinador"
             value={coordinador}
             onChange={(e) => setCoordinador(e.target.value)}
-            placeholder="coordinador"
+            placeholder="Coordinador de seguridad y salud"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
-        {/* Director */}
+        {/* Director de la obra */}
         <div className="mb-4">
           <label className="block font-semibold mb-2" htmlFor="director">
-            Director
+            Director de la obra
           </label>
           <input
             type="text"
             id="director"
             value={director}
             onChange={(e) => setDirector(e.target.value)}
-            placeholder="director"
+            placeholder="Director de la obra"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>

@@ -32,22 +32,34 @@ const DatosRegistro = ({ dataRegister }) => {
         />
       </View>
 
-      {/* Sección 2 */}
+      {/* Sección 2 - Medios Disponibles en Obra */}
       <View style={styles.section}>
         <TituloInforme plantillaSeleccionada="2. Medios disponibles en obra: Empresas, trabajadores y maquinaria" />
-        <SeccionesDatosRegistros
-          nombreCampo={"Maquinaria"}
-          valorDelCampo={dataRegister.mediosDisponibles.maquinaria}
-        />
-        <SeccionesDatosRegistros
-          nombreCampo={"Nombre de la empresa"}
-          valorDelCampo={dataRegister.mediosDisponibles.nombreEmpresa}
-        />
-        <SeccionesDatosRegistros
-          nombreCampo={"Número de trabajadores"}
-          valorDelCampo={dataRegister.mediosDisponibles.numeroTrabajadores}
-        />
+
+        {/* Verifica si hay empresas registradas */}
+        {dataRegister.mediosDisponibles && dataRegister.mediosDisponibles.length > 0 ? (
+          dataRegister.mediosDisponibles.map((empresa, index) => (
+            <View key={index} style={{ marginBottom: 1 }}>
+              <SeccionesDatosRegistros
+                nombreCampo={`Nombre`}
+                valorDelCampo={empresa.nombreEmpresa || "No especificado"}
+              />
+              <SeccionesDatosRegistros
+                nombreCampo={`Número de trabajadores`}
+                valorDelCampo={empresa.numeroTrabajadores || "No especificado"}
+              />
+            </View>
+          ))
+        ) : (
+          <SeccionesDatosRegistros
+            nombreCampo={"Empresas en obra"}
+            valorDelCampo={"No hay empresas registradas"}
+          />
+        )}
       </View>
+
+
+
 
       {/* Sección 3 */}
       <View style={styles.section}>

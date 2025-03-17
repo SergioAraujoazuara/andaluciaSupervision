@@ -42,7 +42,7 @@ const AddProjectForm = ({
             id="empresa"
             value={empresa}
             onChange={(e) => setEmpresa(e.target.value)}
-            placeholder="Empresa"
+            placeholder="Nombre de la empresa"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
@@ -57,7 +57,7 @@ const AddProjectForm = ({
             id="work"
             value={work}
             onChange={(e) => setWork(e.target.value)}
-            placeholder="Obra"
+            placeholder="Nombre de la obra"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
@@ -71,7 +71,7 @@ const AddProjectForm = ({
             id="descripcion"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
-            placeholder="Descripción"
+            placeholder="Nombre del contratista"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
@@ -85,7 +85,7 @@ const AddProjectForm = ({
             id="promotor"
             value={promotor}
             onChange={(e) => setPromotor(e.target.value)}
-            placeholder="Promotor"
+            placeholder="Nombre del promotor"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
@@ -100,22 +100,22 @@ const AddProjectForm = ({
             id="contract"
             value={contract}
             onChange={(e) => setContract(e.target.value)}
-            placeholder="Contrato"
+            placeholder="Número de contrato"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
-        {/* Plazo contrato */}
+        {/* Plazo de la obra */}
         <div className="mb-4">
           <label className="block font-semibold mb-2" htmlFor="plazo">
-            Plazo contrato
+            Plazo de la obra
           </label>
           <input
             type="text"
             id="plazo"
             value={plazo}
             onChange={(e) => setPlazo(e.target.value)}
-            placeholder="Plazo"
+            placeholder="Plazo de la obra"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
@@ -123,14 +123,14 @@ const AddProjectForm = ({
         {/* Presupuesto */}
         <div className="mb-4">
           <label className="block font-semibold mb-2" htmlFor="presupuesto">
-            Presupuesto
+            Presupuesto de la obra
           </label>
           <input
             type="text"
             id="presupuesto"
             value={presupuesto}
             onChange={(e) => setPresupuesto(e.target.value)}
-            placeholder="Presupuesto"
+            placeholder="Presupuesto de la obra"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
@@ -138,36 +138,36 @@ const AddProjectForm = ({
         {/* Coordinador */}
         <div className="mb-4">
           <label className="block font-semibold mb-2" htmlFor="coordinador">
-            Coordinador
+            Coordinador de seguridad y salud
           </label>
           <input
             type="text"
             id="coordinador"
             value={coordinador}
             onChange={(e) => setCoordinador(e.target.value)}
-            placeholder="coordinador"
+            placeholder="Coordinador de seguridad y salud"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
-        {/* Director */}
+        {/* Director de la obra */}
         <div className="mb-4">
           <label className="block font-semibold mb-2" htmlFor="director">
-            Director
+            Director de la obra
           </label>
           <input
             type="text"
             id="director"
             value={director}
             onChange={(e) => setDirector(e.target.value)}
-            placeholder="director"
+            placeholder="Director de la obra"
             className="block w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
         {/* Logo Proyecto */}
         <div className="mb-6">
           <label className="block font-semibold mb-2" htmlFor="logo">
-            Subir Logo Proyecto:
+            Logo de empresa:
           </label>
           <input
             type="file"
@@ -191,7 +191,7 @@ const AddProjectForm = ({
         {/* Logo Cliente */}
         <div className="mb-6">
           <label className="block font-semibold mb-2" htmlFor="clientLogo">
-            Subir Logo Cliente:
+            Logo cliente:
           </label>
           <input
             type="file"

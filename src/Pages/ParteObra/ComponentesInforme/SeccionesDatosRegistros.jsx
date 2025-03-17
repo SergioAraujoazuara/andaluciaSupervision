@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   fieldRow: {
-    marginBottom: 10,
+    marginBottom: 2,
     paddingHorizontal:8
   },
   fieldLabel: {

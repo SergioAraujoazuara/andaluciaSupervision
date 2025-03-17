@@ -582,7 +582,7 @@ const TablaRegistros = () => {
     sectorNombre: "Grupo activos",
     subSectorNombre: "Activo",
     parteNombre: "Inventario vial",
-    elementoNombre: "Componente",
+    elementoNombre: "Sector",
     nombre: "Actividad",
     actividad: "Actividad", // Nuevo mapeo para la columna actividad
     observaciones: "Observaciones",
@@ -741,22 +741,22 @@ const TablaRegistros = () => {
             Borrar Filtros
           </button>
           <InformeFinal
-          registros={registrosFiltrados}
-          columnas={columnas}
-          datosVisita={datosVisita}
+            registros={registrosFiltrados}
+            columnas={columnas}
+            datosVisita={datosVisita}
 
-          formatFechaActual={formatFechaActual()}
-          fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)}
-          fechaFin={formatFechaSolo(valoresFiltro.fechaFin)}
-          fileName={fileName}
-          nombreUsuario={nombreUsuario}
-          selectedProjectName={selectedProjectName}
-          selectedProjectId={selectedProjectId}
-          
-        />
+            formatFechaActual={formatFechaActual()}
+            fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)}
+            fechaFin={formatFechaSolo(valoresFiltro.fechaFin)}
+            fileName={fileName}
+            nombreUsuario={nombreUsuario}
+            selectedProjectName={selectedProjectName}
+            selectedProjectId={selectedProjectId}
+
+          />
         </div>
 
-        
+
 
         <ListaInformesModal />
 
@@ -923,55 +923,108 @@ const TablaRegistros = () => {
             .map((registro) => (
               <div
                 key={registro.id}
-                className="bg-white shadow rounded-lg p-4 border border-gray-200"
+                className="bg-gray-200 shadow-lg rounded-lg p-4 border border-gray-200 mt-2"
               >
-                {ordenColumnas.map((columna) => (
-                  <div key={columna} className="mb-2">
-                    <span className="font-semibold text-gray-700 block">
-                      {columnasMap[columna]}:
-                    </span>
-                    <span className="text-gray-600">
-                      {columna === "fechaHora" ? (
-                        formatFecha(registro[columna]) // Aplicar formato a la fecha
-                      ) : columna === "observaciones" ? (
-                        <button
-                          onClick={() => openModal(registro[columna])}
-                          className="text-sky-600 hover:underline"
-                        >
-                          Ver observaciones
-                        </button>
-                      ) : (
-                        registro[columna] || "—"
-                      )}
-                    </span>
-                  </div>
-                ))}
-                <div className="flex gap-4 mt-4">
-                  <button
-                    onClick={() => {
-                      setRegistroEditando(registro);
-                      setModalEdicionAbierto(true);
-                      setPrevisualizaciones(registro.imagenes || []);
-                      setImagenesEditadas([]);
-                    }}
-                    className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-sky-700 transition duration-150 flex gap-2 items-center"
-                  >
-                    Editar
-                  </button>
+                {ordenColumnas
+                  .filter((filtro) => filtro !== "observaciones" && filtro !== "actividad" && filtro !== "sectorNombre" && filtro !== "subSectorNombre" && filtro !== "parteNombre")
+                  .map((columna) => (
+                    <div key={columna} className="mb-2">
+                      <span className="font-semibold text-gray-700 block">
+                        {columnasMap[columna]}:
+                      </span>
+                      <span className="text-gray-600">
+                        {columna === "fechaHora" ? (
+                          formatFecha(registro[columna]) // Aplicar formato a la fecha
+                        ) : columna === "observaciones" ? (
+                          <button
+                            onClick={() => openModal(registro[columna])}
+                            className="text-sky-600 hover:underline"
+                          >
+                            Ver observaciones
+                          </button>
+                        ) : (
+                          registro[columna] || "—"
+                        )}
+                      </span>
+                    </div>
+                  ))}
 
 
-                  {roleUsuario === 'admin' && (
+                {/* Acciones */}
+                <div className="flex flex-col mt-8">
+
+                  <div className="flex gap-10">
                     <button
                       onClick={() => {
-                        setShowConfirmModal(true);
-                        setRegistroAEliminar(registro);
+                        setRegistroEditando(registro);
+                        setModalEdicionAbierto(true);
+                        setPrevisualizaciones(registro.imagenes || []);
+                        setImagenesEditadas([]);
                       }}
-                      className="px-4 py-2 bg-red-400 text-white font-medium rounded-md shadow-sm hover:bg-red-400 transition duration-150"
+                      className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-sky-700 transition duration-150 flex gap-2 items-center"
                     >
-                      Eliminar
+                      <FaEdit/>
                     </button>
-                  )
-                  }
+
+                    {/* Botón de Historial */}
+                    <button
+                      onClick={() => handleAbrirModalModificaciones(registro)}
+                      className="px-3 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex items-center"
+                    >
+                      <MdOutlineHistory />
+                    </button>
+
+                    {roleUsuario === 'admin' && (
+                      <button
+                        onClick={() => {
+                          setShowConfirmModal(true);
+                          setRegistroAEliminar(registro);
+                        }}
+                        className="px-4 py-2 bg-red-400 text-white font-medium rounded-md shadow-sm hover:bg-red-400 transition duration-150"
+                      >
+                        <FaDeleteLeft/>
+                      </button>
+                    )
+                    }
+                  </div>
+
+                  <div className="flex gap-8 mt-8">
+                    {/* Estado de Firma */}
+                    <div className="flex justify-start"> {/* Ancho fijo para alinear */}
+                      {registro.firmaEmpresa && registro.firmaCliente ? (
+                        <div className="flex items-center gap-2 text-green-700 font-semibold flex gap-2 items-center">
+                          <FaCheck className="text-green-600" /> <span>Firmado</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleAbrirModalFirma(registro)}
+                          className="px-4 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex flex-col gap-2 items-center"
+                        >
+                          <FaSignature /> <span className="text-xs">Pendiente</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <InformeRegistros
+                      onClick={() => {
+                        handleGeneratePdfRegistro(registro);
+                        setTimeout(() => {
+                          handlegeneratePDF();
+                        }, 100);
+                      }}
+                      registros={registrosFiltrados}
+                      columnas={columnas}
+                      datosVisita={datosVisita}
+                      dataRegister={registro}
+                      formatFechaActual={formatFechaActual()}
+                      fechaInicio={formatFechaSolo(valoresFiltro.fechaInicio)}
+                      fechaFin={formatFechaSolo(valoresFiltro.fechaFin)}
+                      fileName={fileName}
+                      nombreUsuario={nombreUsuario}
+                      selectedProjectName={selectedProjectName}
+                    />
+
+                  </div>
 
 
                 </div>
@@ -1067,6 +1120,8 @@ const TablaRegistros = () => {
                   "parteNombre",
                   "elementoNombre",
                   "elementoNombre",
+                  "mediosDisponibles",
+                  "resumenPuntosControl"
                 ].includes(campo)
               )
               .sort((a, b) => a.localeCompare(b)) // Ordena alfabéticamente
@@ -1157,6 +1212,23 @@ const TablaRegistros = () => {
                 ))}
 
             </div>
+
+
+            {/* Sección de Medios Disponibles - Colocar aquí */}
+            {registroEditando.mediosDisponibles && registroEditando.mediosDisponibles.length > 0 && (
+              <div className="mb-4 text-sm">
+                <label className="p-2">Medios Disponibles</label>
+                <div className="border border-gray-300 rounded-md p-3 bg-gray-50">
+                  {registroEditando.mediosDisponibles.map((empresa, index) => (
+                    <div key={index} className="mb-2">
+                      <p className="font-medium bg-gray-200 px-2 py-1">Empresa {index + 1}</p>
+                      <p className="ps-2 text-xs"><strong>Nombre:</strong> {empresa.nombreEmpresa || "—"}</p>
+                      <p className="ps-2 text-xs"><strong>Trabajadores:</strong> {empresa.numeroTrabajadores || "—"}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
 
 

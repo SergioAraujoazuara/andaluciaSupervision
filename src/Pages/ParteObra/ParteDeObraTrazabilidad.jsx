@@ -8,7 +8,7 @@ import imageCompression from "browser-image-compression";
 import { IoMdAddCircle } from "react-icons/io";
 import { FaArrowRight } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
-import { FaCheck } from "react-icons/fa6";
+import { FaCheck, FaDeleteLeft } from "react-icons/fa6";
 import { MdOutlineError } from "react-icons/md";
 import { BsClipboardData } from "react-icons/bs";
 import { GoHomeFill } from "react-icons/go";
@@ -30,7 +30,7 @@ const ParteObra = () => {
     observacionesLocalizacion: "",
     fechaHora: "",
     imagenes: [],
-    mediosDisponibles: { nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }
+    mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "" }]
   });
 
   const fileInputsRefs = useRef([]);
@@ -86,6 +86,28 @@ const ParteObra = () => {
       ...prev,
       [actividadIndex]: value, // Guarda la observación con el índice de la actividad
     }));
+  };
+
+  //  medios disponibles
+  const handleAddEmpresa = () => {
+    setFormData((prev) => ({
+      ...prev,
+      mediosDisponibles: [...prev.mediosDisponibles, { nombreEmpresa: "", numeroTrabajadores: "" }]
+    }));
+  };
+  const handleRemoveEmpresa = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      mediosDisponibles: prev.mediosDisponibles.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleMediosChange = (index, field, value) => {
+    setFormData((prev) => {
+      const updatedMedios = [...prev.mediosDisponibles];
+      updatedMedios[index][field] = value;
+      return { ...prev, mediosDisponibles: updatedMedios };
+    });
   };
 
 
@@ -218,7 +240,7 @@ const ParteObra = () => {
     if (modalSend) {
       const timer = setTimeout(() => {
         setModalSend(false);// Cierra el modal después de 3 segundos
-      }, 5000); // 3000 ms = 3 segundos
+      }, 2000); // 3000 ms = 3 segundos
 
       return () => clearTimeout(timer); // Limpia el temporizador si el componente se desmonta
     }
@@ -288,8 +310,13 @@ const ParteObra = () => {
       observacionesLocalizacion: "",
       fechaHora: "",
       imagenes: [],
-      mediosDisponibles: { nombreEmpresa: "", numeroTrabajadores: 0, maquinaria: "" }
+      mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "" }]
     });
+
+    // 🔹 **Reset de actividades**
+    setSelectedActivities({});
+    setSelectedSubactivities({});
+    setActivityObservations({});
 
     // Limpiar referencias de archivos
     fileInputsRefs.current.forEach((input) => {
@@ -424,13 +451,22 @@ const ParteObra = () => {
       errors.push("⚠️ Debes llenar las observaciones de la localización.");
     }
 
-    // Validar que todas las actividades tengan Cumple, No Cumple o No Aplica
-    Object.keys(selectedActivities).forEach((index) => {
-      const actividad = selectedActivities[index];
-      if (!actividad.seleccionada && !actividad.noAplica) {
-        errors.push(`⚠️ La actividad "${actividad.nombre}" no tiene selección (Cumple, No Cumple o No Aplica).`);
-      }
-    });
+    // Validar que todas las actividades tengan "Aplica" o "No Aplica" seleccionadas
+    const actividadesKeys = Object.keys(selectedActivities);
+
+    if (actividadesKeys.length !== ppiDetails.actividades.length) {
+      errors.push("⚠️ Debes evaluar todas las actividades (seleccionar 'Aplica' o 'No Aplica').");
+    } else {
+      actividadesKeys.forEach((index) => {
+        const actividad = selectedActivities[index];
+
+        if (!actividad.seleccionada && !actividad.noAplica) {
+          errors.push(`⚠️ La actividad "${actividad.nombre}" no tiene selección (Aplica o No Aplica).`);
+        }
+      });
+    }
+
+
 
     // Si hay errores, mostrar en el modal
     if (errors.length > 0) {
@@ -465,7 +501,7 @@ const ParteObra = () => {
           totalSi: stats.totalSi,
           totalActividades: stats.totalActividades,
           porcentajeApto: stats.porcentajeApto
-        }
+        },
       };
 
       // Guardar en Firebase
@@ -479,8 +515,13 @@ const ParteObra = () => {
         observacionesLocalizacion: "",
         fechaHora: "",
         imagenes: [],
-        mediosDisponibles: { nombreEmpresa: "", numeroTrabajadores: 0, maquinaria: "" }
+        mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "" }]
       });
+
+      // 🔹 **Reset de actividades**
+      setSelectedActivities({});
+      setSelectedSubactivities({});
+      setActivityObservations({});
 
       // Limpiar referencias de archivos
       fileInputsRefs.current.forEach((input) => {
@@ -787,38 +828,30 @@ const ParteObra = () => {
 
         {/* Vista para dispositivos móviles: cards */}
         <div className="block lg:hidden">
-          {filteredLotes.map((lote) => (
-            <div
-              key={lote.loteId}
-              className="bg-white shadow rounded-lg p-4 mb-4 border border-gray-200"
-            >
-              <h3 className="text-lg font-bold text-gray-800">
-                {lote.sectorNombre}
-              </h3>
-              <p className="text-sm text-gray-700">
-                <span className="font-medium">Subsector:</span> {lote.subSectorNombre}
-              </p>
-              <p className="text-sm text-gray-700">
-                <span className="font-medium">Parte:</span> {lote.parteNombre}
-              </p>
-              <p className="text-sm text-gray-700">
-                <span className="font-medium">Elemento:</span> {lote.elementoNombre}
-              </p>
-              <p className="text-sm text-gray-700">
-                <span className="font-medium">Lote:</span> {lote.nombre}
-              </p>
-              <p className="text-sm text-gray-700">
-                <span className="font-medium">PPI:</span>{" "}
-                <span className="text-green-600">{lote.ppiNombre}</span>
-              </p>
-              <button
-                onClick={() => handleOpenModal(lote)}
-                className="mt-4 w-full px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-sky-700 transition duration-150 flex gap-2 justify-center items-center"
+          {filteredLotes
+            .map((lote) => (
+              <div
+                key={lote.loteId}
+                className="bg-gray-100 shadow rounded-lg p-4 mb-4 border border-gray-200"
               >
-                <IoMdAddCircle /> Nuevo Registro
-              </button>
-            </div>
-          ))}
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Sector:</span> {lote.elementoNombre}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Actividad:</span> {lote.nombre}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">PPI:</span>{" "}
+                  <span className="text-green-600">{lote.ppiNombre}</span>
+                </p>
+                <button
+                  onClick={() => handleOpenModal(lote)}
+                  className="mt-4 w-full px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-sky-700 transition duration-150 flex gap-2 justify-center items-center"
+                >
+                  <IoMdAddCircle /> Nuevo Registro
+                </button>
+              </div>
+            ))}
         </div>
       </div>
 
@@ -890,35 +923,52 @@ const ParteObra = () => {
 
             {/* Medios disponibles, empresa y trabajadores */}
 
-            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">2. Medios disponibles en obra: Empresas, trabajadores y maquinaria.</h3>
+            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
+              2. Medios disponibles en obra: Empresas, trabajadores y maquinaria.
+            </h3>
 
-            <div>
-              <input
-                type="text"
-                required
-                maxLength={150}
-                name="mediosDisponibles.nombreEmpresa"
-                value={formData.mediosDisponibles.nombreEmpresa}
-                onChange={handleInputChange}
-                placeholder="Nombre empresa"
-                className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
-              />
+            {formData.mediosDisponibles.map((empresa, index) => (
+              <div key={index} className="flex items-center gap-2 mb-2">
+                <input
+                  type="text"
+                  required
+                  maxLength={150}
+                  placeholder="Nombre empresa"
+                  value={empresa.nombreEmpresa}
+                  onChange={(e) => handleMediosChange(index, "nombreEmpresa", e.target.value)}
+                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                />
 
-              <input
-                type="text"
-                name="mediosDisponibles.numeroTrabajadores"
-                value={formData.mediosDisponibles.numeroTrabajadores}
-                onChange={handleInputChange}
-                placeholder="Número trabajadores"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400"
-              />
+                <input
+                  type="text"
+                  placeholder="Nº Trabajadores"
+                  value={empresa.numeroTrabajadores}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  onChange={(e) => handleMediosChange(index, "numeroTrabajadores", e.target.value.replace(/\D/g, ""))}
+                  className="block w-1/3 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                />
 
+                {index > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveEmpresa(index)}
+                    className="px-3 py-2 bg-red-500 text-white rounded-lg shadow-sm hover:bg-red-600"
+                  >
+                    <FaDeleteLeft />
+                  </button>
+                )}
+              </div>
+            ))}
 
+            <button
+              type="button"
+              onClick={handleAddEmpresa}
+              className="mt-2 px-4 py-2 bg-gray-400 text-white rounded-lg shadow-sm hover:bg-gray-500"
+            >
+              + Agregar Empresa
+            </button>
 
-
-            </div>
 
 
 
@@ -1352,7 +1402,7 @@ const ParteObra = () => {
 
       {modalSend && (
         <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-          <div className="bg-white p-12 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-3">
+          <div className="bg-white p-6 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-3">
             {/* Botón de cerrar */}
             <button
               onClick={handleCloseModal}

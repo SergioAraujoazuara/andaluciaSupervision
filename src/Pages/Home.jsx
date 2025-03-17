@@ -105,31 +105,31 @@ function Home() {
 
   return (
     <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
-       <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
-              {/* Navegación */}
-              <div className="flex gap-2 items-center">
-                {/* Elementos visibles solo en pantallas medianas (md) en adelante */}
-                <GoHomeFill className="hidden md:block" style={{ width: 15, height: 15, fill: "#d97706" }} />
-                <Link to="#" className="hidden md:block font-medium text-gray-600">
-                  Home
-                </Link>
-                <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
-                <h1 className="hidden md:block font-medium">Ver registros</h1>
-                <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
-      
-                {/* Nombre del proyecto (visible en todas las pantallas) */}
-                <h1 className="font-medium text-amber-600 px-2 py-1 rounded-lg">
-                  {selectedProjectName}
-                </h1>
-              </div>
-      
-              {/* Botón de volver */}
-              <div className="flex items-center">
-              
-              </div>
-            </div>
+      <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
+        {/* Navegación */}
+        <div className="flex gap-2 items-center">
+          {/* Elementos visibles solo en pantallas medianas (md) en adelante */}
+          <GoHomeFill className="hidden md:block" style={{ width: 15, height: 15, fill: "#d97706" }} />
+          <Link to="#" className="hidden md:block font-medium text-gray-600">
+            Home
+          </Link>
+          <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
+          <h1 className="hidden md:block font-medium">Ver registros</h1>
+          <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
 
-            <div className="w-full border-b-2 mb-6"></div>
+          {/* Nombre del proyecto (visible en todas las pantallas) */}
+          <h1 className="font-medium text-amber-600 px-2 py-1 rounded-lg">
+            {selectedProjectName}
+          </h1>
+        </div>
+
+        {/* Botón de volver */}
+        <div className="flex items-center">
+
+        </div>
+      </div>
+
+      <div className="w-full border-b-2 mb-6"></div>
       {/* Hero Section */}
 
       {role === 'invitado' && (
@@ -225,20 +225,24 @@ function Home() {
 
               {/* Información del Proyecto */}
               <div className="col-span-2 flex flex-col justify-center">
-                <h2 className="text-lg font-bold">Empresa: {projectData.empresa}</h2>
-                <p className=" mt-2 leading-relaxed">Promotor: {projectData.descripcion}</p>
+                <div className='text-lg'>
+                  <h2><span className='font-bold'>Empresa: </span> {projectData.empresa}</h2>
+                  <p className="mt-2 leading-relaxed "><span className='font-bold'>Promotor: </span>{projectData.descripcion}</p>
+                  <p className="mt-2 leading-relaxed"><span className='font-bold'>Contratista: </span>{projectData.descripcion}</p>
+                </div>
 
+                <div className='w-full border-b-2 mt-4'></div>
                 {/* Datos principales */}
-                <div className="mt-6 ">
-                  <div className="p-4">
-                  <p className="text-lg"><span className='font-bold'>Obra: </span>{projectData.obra}</p>
-                    <p className=" text-lg"><span className='font-bold'>Número de contrato: </span>{projectData.contrato}</p>
-                    <p className=" text-lg"><span className='font-bold'>Plazo: </span> {projectData.contrato}</p>
-                    <p className=" text-lg"><span className='font-bold'>Presupuesto: </span> {projectData.presupuesto}</p>
-                    <p className=" text-lg"><span className='font-bold'>Coordinador de seguridad y salud: </span> {projectData.coordinador}</p>
-                    <p className=" text-lg"><span className='font-bold'>Director: </span> {projectData.director}</p>
-                  </div>
-                  
+                <div className="mt-6 text-md flex flex-col gap-2">
+
+                  <p className=""><span className='font-bold'>Obra: </span>{projectData.obra}</p>
+                  <p className=""><span className='font-bold'>Número de contrato: </span>{projectData.contrato}</p>
+                  <p className=""><span className='font-bold'>Plazo de la obra: </span> {projectData.contrato}</p>
+                  <p className=""><span className='font-bold'>Presupuesto de la obra: </span> {projectData.presupuesto}</p>
+                  <p className=""><span className='font-bold'>Coordinador de seguridad y salud: </span> {projectData.coordinador}</p>
+                  <p className=""><span className='font-bold'>Director de la obra: </span> {projectData.director}</p>
+
+
                 </div>
               </div>
             </div>

@@ -14,7 +14,7 @@ const Register = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
 
-  const [signature, setSignature] = useState(null);
+  const [signature, setSignature] = useState("https://us.123rf.com/450wm/koblizeek/koblizeek2208/koblizeek220800128/190320173-sin-s%C3%ADmbolo-de-vector-de-imagen-falta-el-icono-disponible-no-hay-galer%C3%ADa-para-este-marcador-de.jpg");
 
   const handleImagenChange = async (e) => {
     const file = e.target.files[0];
