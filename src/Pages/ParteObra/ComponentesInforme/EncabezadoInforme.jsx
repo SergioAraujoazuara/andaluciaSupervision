@@ -36,7 +36,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   line: {
-    marginTop: 4,
+    marginTop: 5,
+    marginBottom: 5,
     borderBottomWidth: 2,
     borderBottomColor: "#cccccc",
     width: "100%",
@@ -46,24 +47,24 @@ const styles = StyleSheet.create({
 const EncabezadoInforme = ({
   empresa,
   obra,
-  contrato,
+  promotor,
   description,
+  coordinador,
+  director,
   rangoFechas,
-  titlePdf,
-  subTitlePdf,
   logos,
 }) => (
   <View style={styles.header}>
     <View style={styles.headerInfo}>
-      <Text style={styles.headerLabel}>{empresa}</Text>
-      <View style={styles.line} />
+      <Text style={styles.headerLabel}>Nombre empresa: {empresa}</Text>
       <Text style={styles.headerValue}>Obra: {obra}</Text>
-      <Text style={styles.headerValue}>Identificaciñon documento: {contrato}</Text>
-      <Text style={styles.headerValue}>Contratista: {description}</Text>
       <View style={styles.line} />
+      <Text style={styles.headerLabel}>Promotor: {promotor}</Text>
+      <Text style={styles.headerValue}>Contratista: {description}</Text>
+      <Text style={styles.headerValue}>Coordinador de seguridad y salud: {coordinador}</Text>
+      <Text style={styles.headerValue}>Director de la obra: {director}</Text>
       <Text style={styles.headerValue}>Fecha: {rangoFechas}</Text>
-      <Text style={styles.headerValue}>{titlePdf}</Text>
-      <Text style={styles.headerValue}>Tipo documento: {subTitlePdf}</Text>
+      
       
     </View>
     <View style={styles.headerLogos}>

@@ -7,6 +7,7 @@ import { IoFolderOpen } from "react-icons/io5";
 import { FaArrowRight } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
 import { Link } from 'react-router-dom';
+import { FaBuilding, FaUserTie, FaTools, FaMapMarkerAlt, FaFileContract, FaClock, FaMoneyBillWave, FaShieldAlt, FaUser } from "react-icons/fa";
 function Home() {
   const { user, loading } = useAuth(); // Obtén el usuario y su estado de carga
   const [userProjects, setUserProjects] = useState([]); // Proyectos del usuario
@@ -87,7 +88,7 @@ function Home() {
     return (
       <div className="flex flex-col items-center justify-start mt-40 min-h-screen">
         {/* Spinner animado */}
-        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-16 h-16 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
 
         {/* Mensaje de carga */}
         <h2 className="text-lg font-semibold text-gray-700 mt-4">
@@ -166,10 +167,11 @@ function Home() {
 
 
           {/* Sección de Proyectos */}
-          <div className=" px-6">
-            <h2 className="text-lg font-semibold text-start mb-4">Selecciona un Proyecto</h2>
+          <div>
+           
+            <h2 className="text-md font-semibold text-start mb-4 px-6"><span className='text-amber-700'>*</span>Selecciona un proyecto para para comenzar</h2>
 
-            <div className="relative w-full max-w-lg">
+            <div className="relative">
               <select
                 onChange={(e) => handleProjectChange(e.target.value)}
                 value={selectedProject || ""}
@@ -196,59 +198,54 @@ function Home() {
 
 
       {/* Detalles del Proyecto Seleccionado */}
+
+
       {selectedProject && projectData && (role === 'admin' || role === 'usuario') && userProjects.length > 0 && (
-        <div className=" px-6 py-4 text-gray-600">
-          <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-300">
+        <div className="flex justify-center text-gray-500 mt-6">
+          <div className="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 w-full grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            {/* Encabezado con fondo degradado y branding */}
-            <div className="relative bg-sky-700 text-white px-8 py-4 flex justify-between items-center">
-              <h3 className="text-xl font-semibold tracking-wide flex gap-3 items-center"><IoFolderOpen /> Proyecto Seleccionado</h3>
+            {/* 🔹 Columna Izquierda - Información del Proyecto */}
+            <div className="p-12 flex flex-col justify-center">
+              <div>
 
-            </div>
-
-            {/* Contenido del Proyecto */}
-            <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-
-              {/* Logotipos */}
-              <div className="flex flex-col ">
-                <img
-                  src={projectData.logo || 'https://via.placeholder.com/150'}
-                  alt="Logo del Proyecto"
-                  className="w-full h-24 object-contain rounded-lg mb-4"
-                />
-                <img
-                  src={projectData.logoCliente || 'https://via.placeholder.com/150'}
-                  alt="Logo del Cliente"
-                  className="w-full h-20 object-contain rounded-lg"
-                />
+                <p className='font-medium text-lg bg-gray-200 px-6 py-2 mb-4 rounded-t-lg'>Detalles del proyecto</p>
               </div>
 
-              {/* Información del Proyecto */}
-              <div className="col-span-2 flex flex-col justify-center">
-                <div className='text-lg'>
-                  <h2><span className='font-bold'>Empresa: </span> {projectData.empresa}</h2>
-                  <p className="mt-2 leading-relaxed "><span className='font-bold'>Promotor: </span>{projectData.descripcion}</p>
-                  <p className="mt-2 leading-relaxed"><span className='font-bold'>Contratista: </span>{projectData.descripcion}</p>
-                </div>
+              <div className="grid grid-cols-1 gap-3 text-md px-6">
+                <h3 className="flex gap-3 items-center">
+                  <FaBuilding className='text-sky-700' /><span className='font-medium text-xl'>Empresa: </span> {projectData.empresa}
+                </h3>
+                <p className="flex gap-3 items-center "><FaUserTie className='text-sky-700' /> <span className="font-semibold">Promotor:</span> {projectData.promotor}</p>
+                <p className="flex gap-3 items-center"><FaTools className='text-sky-700' /> <span className="font-semibold">Contratista:</span> {projectData.descripcion}</p>
+              </div>
 
-                <div className='w-full border-b-2 mt-4'></div>
-                {/* Datos principales */}
-                <div className="mt-6 text-md flex flex-col gap-2">
+              <div className='w-full border-t-4 my-2'></div>
 
-                  <p className=""><span className='font-bold'>Obra: </span>{projectData.obra}</p>
-                  <p className=""><span className='font-bold'>Número de contrato: </span>{projectData.contrato}</p>
-                  <p className=""><span className='font-bold'>Plazo de la obra: </span> {projectData.contrato}</p>
-                  <p className=""><span className='font-bold'>Presupuesto de la obra: </span> {projectData.presupuesto}</p>
-                  <p className=""><span className='font-bold'>Coordinador de seguridad y salud: </span> {projectData.coordinador}</p>
-                  <p className=""><span className='font-bold'>Director de la obra: </span> {projectData.director}</p>
-
-
-                </div>
+              {/* 📌 Datos Principales con Iconos */}
+              <div className="mt-6 grid grid-cols-1 gap-4 text-sm text-gray-700 px-6">
+                <p className="flex items-start gap-2"><FaMapMarkerAlt className="text-xl text-sky-700" /> <span className="font-semibold">Obra:</span> {projectData.obra}</p>
+                <p className="flex items-center gap-2"><FaFileContract className="text-sky-700" /> <span className="font-semibold">Contrato de la obra:</span> {projectData.contrato}</p>
+                <p className="flex items-center gap-2"><FaClock className="text-sky-700" /> <span className="font-semibold">Plazo de la obra:</span> {projectData.plazo}</p>
+                <p className="flex items-center gap-2"><FaMoneyBillWave className="text-sky-700" /> <span className="font-semibold">Presupuesto de la obra:</span> {projectData.presupuesto}</p>
+                <div className='w-full border-t-4 my-2'></div>
+                <p className="flex items-center gap-2"><FaShieldAlt className="text-sky-700" /> <span className="font-semibold">Coordinador de Seguridad y Salud:</span> {projectData.coordinador}</p>
+                <p className="flex items-center gap-2"><FaUser className="text-sky-700" /> <span className="font-semibold">Director de la obra:</span> {projectData.director}</p>
               </div>
             </div>
+
+            {/* 🔹 Columna Derecha - Imágenes en Grid */}
+            <div className="relative flex flex-col gap-4 p-8">
+              <div className="grid grid-cols-1 gap-4">
+                <img src={projectData.logo || "https://via.placeholder.com/150"} alt="Logo Empresa" className="w-full h-44 object-contain rounded-lg  bg-white p-2" />
+                <img src={projectData.logoCliente || "https://via.placeholder.com/150"} alt="Logo Cliente" className="w-full h-44 object-contain rounded-lg bg-white p-2" />
+              </div>
+            </div>
+
           </div>
         </div>
       )}
+
+
 
     </div>
   );

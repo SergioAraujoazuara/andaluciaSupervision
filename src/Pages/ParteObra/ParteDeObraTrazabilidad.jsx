@@ -964,7 +964,7 @@ const ParteObra = () => {
             <button
               type="button"
               onClick={handleAddEmpresa}
-              className="mt-2 px-4 py-2 bg-gray-400 text-white rounded-lg shadow-sm hover:bg-gray-500"
+              className="mt-2 px-4 py-2 bg-gray-500 text-white rounded-lg shadow-sm hover:bg-gray-500"
             >
               + Agregar Empresa
             </button>
@@ -1401,9 +1401,10 @@ const ParteObra = () => {
       )}
 
       {modalSend && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-3">
-            {/* Botón de cerrar */}
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-4 w-80">
+
+            {/* ❌ Botón de cerrar */}
             <button
               onClick={handleCloseModal}
               className="absolute top-4 right-4 text-gray-500 text-2xl hover:text-gray-800 transition"
@@ -1412,42 +1413,56 @@ const ParteObra = () => {
               <IoClose />
             </button>
 
-            {messageModalSend === 'Registro enviado' ? <FaCheck className="text-teal-500 text-3xl" /> : <MdOutlineError className="text-red-500 text-3xl" />}
+            {/* ✅ Ícono dinámico según el mensaje */}
+            {messageModalSend === 'Registro enviado' ? (
+              <FaCheck className="text-teal-500 text-4xl" />
+            ) : (
+              <MdOutlineError className="text-red-500 text-4xl" />
+            )}
 
-            <p className="text-lg font-medium">{messageModalSend}</p>
+            {/* 📌 Mensaje dinámico */}
+            <p className="text-lg font-medium text-gray-700">{messageModalSend}</p>
           </div>
         </div>
       )}
 
+
       {modalSend && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-3">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
+          <div className={`bg-white p-8 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-4 w-96 
+      ${errorMessages.length > 0 ? 'border-red-500' : 'border-teal-500'}`}>
+
+            {/* ❌ Botón de cerrar */}
             <button
               onClick={() => setModalSend(false)}
               className="absolute top-4 right-4 text-gray-500 text-2xl hover:text-gray-800 transition"
+              aria-label="Cerrar"
             >
               <IoClose />
             </button>
 
+            {/* 🚨 Modal de Error */}
             {errorMessages.length > 0 ? (
               <>
-                <MdOutlineError className="text-red-500 text-3xl" />
+                <MdOutlineError className="text-red-500 text-4xl" />
                 <p className="text-lg font-medium text-red-600">Error en el formulario</p>
-                <div className="text-sm text-gray-600 list-disc px-4">
+                <ul className="text-sm text-gray-600 list-disc px-6 space-y-1">
                   {errorMessages.map((msg, index) => (
-                    <p key={index}>{msg}</p>
+                    <li key={index}>{msg}</li>
                   ))}
-                </div>
+                </ul>
               </>
             ) : (
+              /* ✅ Modal de Éxito */
               <>
-                <FaCheck className="text-teal-500 text-3xl" />
-                <p className="text-lg font-medium text-green-600">{messageModalSend}</p>
+                <FaCheck className="text-teal-500 text-4xl" />
+                <p className="text-lg font-medium text-gray-700">{messageModalSend}</p>
               </>
             )}
           </div>
         </div>
       )}
+
 
     </div>
   );

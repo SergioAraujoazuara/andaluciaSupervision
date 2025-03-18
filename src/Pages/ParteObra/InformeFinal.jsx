@@ -22,6 +22,7 @@ import Firma from "../../Components/Firma/Firma";
 import { PDFDocument } from "pdf-lib";
 import Spinner from "./ComponentesInforme/Spinner";
 import { uploadPdfToStorage } from "../ParteObra/Helpers/uploadPdfToStorage";
+import { FaRegCheckCircle } from "react-icons/fa";
 
 
 
@@ -104,7 +105,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
 
 
     // Extraer el ID del proyecto almacenado en el localStorage
-    
+
     const { proyecto, loading: proyectoLoading, error: proyectoError } = useProyecto(selectedProjectId);
 
     // Obtener detalles del usuario desde Firestore
@@ -168,13 +169,13 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
             <Document>
                 <Page size="A4" style={styles.page}>
                     <EncabezadoInforme
-                        empresa={proyecto?.empresa || "Mi Empresa"}
-                        obra={proyecto?.obra || "Obra Desconocida"}
-                        contrato={proyecto?.contrato || "Sin Contrato"}
-                        description={proyecto?.descripcion || "Sin Descripción"}
+                        empresa={proyecto?.empresa || "Nombre de mpresa"}
+                        obra={proyecto?.obra || "Nombre de obra"}
+                        promotor={proyecto?.promotor || "Nombre promotor"}
+                        description={proyecto?.descripcion || "Nombre contratista"}
+                        coordinador={proyecto?.coordinador || "Nombre coordinador de seguridad y salud"}
+                        director={proyecto?.director || "Nombre director de la obra"}
                         rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin}` : ""}`}
-                        titlePdf="TPF GETINSA-EUROESTUDIOS S.L."
-                        subTitlePdf="Tipo de documento Inspeccion de obra"
                         logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
                     />
 
@@ -182,6 +183,21 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         registro={registroIndividual}
                         excluirClaves={["id", "parteId", "ppiId", "idSubSector", "idSector", "idBim", "elementoId", "imagenes"]}
                         dataRegister={registroIndividual}
+                        columnasMap={columnasMap}
+                    />
+
+                </Page>
+
+                <Page size="A4" style={styles.page}>
+
+                    <DatosRegistroTabla
+                        registro={registroIndividual}
+                        excluirClaves={[
+                            "id", "parteId", "ppiId", "idSubSector", "idSector", "idBim", "elementoId",
+                            "imagenes", "observaciones", "idProyecto", "ppiNombre", "loteid", "totalSubactividades",
+                            "nombreProyecto", "estado", "pkInicial", "pkFinal", "loteId",
+                            "sectorNombre", "subSectorNombre", "parteNombre", "elementoNombre"
+                        ]}
                         columnasMap={columnasMap}
                     />
 
@@ -243,12 +259,12 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
         link.download = `Informe_Final_${selectedProjectName}_${formatFechaActual}.pdf`;
         link.click();
 
-      
+
 
         // **Subimos el PDF al Storage**
-        const downloadURL = await uploadPdfToStorage(finalBlob, selectedProjectName, selectedProjectId );
+        const downloadURL = await uploadPdfToStorage(finalBlob, selectedProjectName, selectedProjectId);
         if (downloadURL) {
-            setShowSuccessModal(true); 
+            setShowSuccessModal(true);
             setShowSuccessModalMessage('Informe guardado correctamente')// Mostrar el modal de éxito
         }
 
@@ -277,7 +293,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         </div>
                     ) : (
                         <button
-                             className="px-4 py-2 h-12 bg-amber-600 text-white text-md rounded-md hover:bg-amber-700 flex gap-2 items-center"
+                            className="px-4 py-2 h-12 bg-amber-600 text-white text-md rounded-md hover:bg-amber-700 flex gap-2 items-center"
                             onClick={handlegeneratePDF}
                         >
                             <FaFilePdf /> <span className="text-sm">Informe final</span>
@@ -289,31 +305,38 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
 
             {/* Modal de Éxito */}
             {showSuccessModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg shadow-xl w-96 text-center relative">
-                        {/* Botón de Cierre */}
-                        <button
-                            className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 transition"
-                            onClick={() => setShowSuccessModal(false)}
-                        >
-                            <AiOutlineClose size={20} />
-                        </button>
+  <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md bg-black bg-opacity-40 transition-opacity">
+    <div className="bg-white p-8 rounded-2xl shadow-2xl w-[350px] text-center relative transform transition-transform scale-95 animate-fadeIn">
+      
+      {/* Botón de Cierre */}
+      <button
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 transition"
+        onClick={() => setShowSuccessModal(false)}
+      >
+        <AiOutlineClose size={22} />
+      </button>
 
-                        {/* Contenido del Modal */}
-                        <p className="text-4xl">✅</p>
-                        <p className="text-gray-600 mt-4 font-medium">{showSuccessModalMessage}</p>
+      {/* Icono de éxito en verde */}
+      <div className="flex justify-center items-center mb-4">
+      <FaRegCheckCircle className="text-green-500 text-6xl"/>
+      </div>
 
-                        <div className="mt-10">
-                            <button
-                                onClick={() => setShowSuccessModal(false)}
-                                className="px-5 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700 transition"
-                            >
-                                Aceptar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+      {/* Mensaje */}
+      <h2 className="text-lg font-semibold text-gray-800">{showSuccessModalMessage}</h2>
+
+      {/* Botón de acción */}
+      <div className="mt-6">
+        <button
+          onClick={() => setShowSuccessModal(false)}
+          className="px-5 py-2 bg-gradient-to-r from-green-500 to-green-700 text-white font-medium rounded-md shadow-md hover:scale-105 hover:from-green-600 hover:to-green-800 transition-all duration-300"
+        >
+          Aceptar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
         </div>
 
     );

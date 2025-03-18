@@ -736,9 +736,9 @@ const TablaRegistros = () => {
         <div className="flex justify-start gap-5 col-span-3">
           <button
             onClick={resetFilters}
-            className="px-4 py-2 bg-gray-500 text-white text-sm font-semibold rounded-md hover:bg-gray-600 transition duration-200"
+            className="px-4 py-2 h-12 bg-gray-500 text-white text-sm font-semibold rounded-md hover:bg-gray-600 transition duration-200"
           >
-            Borrar Filtros
+            Limpiar
           </button>
           <InformeFinal
             registros={registrosFiltrados}
@@ -1442,8 +1442,8 @@ const TablaRegistros = () => {
       )}
 
       {isFirmaModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-2xl w-96 text-center border-t-4 relative">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-md">
+          <div className="bg-white p-6 rounded-lg shadow-2xl text-center border-t-4 relative">
 
             {/* Botón de Cerrar */}
             <button
@@ -1486,8 +1486,8 @@ const TablaRegistros = () => {
                   <button
                     onClick={() => handleSelectFirma("empresa")}
                     className={`flex items-center gap-2 px-5 py-2 rounded-md font-semibold transition ${firmaEmpresa
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-gray-500 text-white hover:bg-sky-700"}`
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      : "bg-sky-700 text-white hover:bg-sky-800"}`
                     }
                     disabled={firmaEmpresa}
                   >
@@ -1498,8 +1498,8 @@ const TablaRegistros = () => {
                   <button
                     onClick={() => handleSelectFirma("cliente")}
                     className={`flex items-center gap-2 px-5 py-2 rounded-md font-semibold transition ${firmaCliente
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-gray-500 text-white hover:bg-sky-700"}`
+                      ? "bg-sky-700 text-gray-500 cursor-not-allowed"
+                      : "bg-sky-700 text-white hover:bg-sky-800"}`
                     }
                     disabled={firmaCliente}
                   >
@@ -1524,7 +1524,7 @@ const TablaRegistros = () => {
 
 
       {modalFirma && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-md">
           <div className="bg-white p-6 rounded-lg shadow-xl w-96 text-center border-t-4 relative">
 
             <button

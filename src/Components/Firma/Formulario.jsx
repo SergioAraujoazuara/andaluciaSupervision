@@ -14,7 +14,7 @@ const Formulario = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 ">
       <h2 className="text-lg font-semibold">Registro de Firma</h2>
       <Firma onSave={handleSaveFirma} />
       <button onClick={handleSubmit} className="mt-4 bg-green-500 text-white px-4 py-2 rounded">

@@ -6,25 +6,22 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "bold",
     textAlign: "left",
-    color: "#4b5563",
-    backgroundColor: "#0369A1",
-    color: "#FFFFFF",
+    backgroundColor: "#E5E7EB",
     paddingHorizontal: 8,
     paddingVertical:8,
     paddingLeft: 10,
-    marginBottom:15,
-    width:"536px"
+    width:"536px",
+      color: "#4B5563"
   },
   sectionTitle: {
     fontSize: 10,
     fontWeight: "bold",
-    marginBottom: 8,
     textAlign: "left",
-    color: "#FFFFFF",
-    backgroundColor: "#0369A1",
+    backgroundColor: "#E5E7EB",
     padding: 5,
     paddingLeft: 10,
-    width:"536px"
+    width:"536px",
+  
   },
 });
 
@@ -36,11 +33,11 @@ const styles = StyleSheet.create({
  * @param {string} plantillaSeleccionada - Selected template name.
  * @param {string} activo - Active name.
  */
-const TituloInforme = ({ plantillaSeleccionada, activo }) => (
+const TituloActividad = ({ plantillaSeleccionada, activo }) => (
   <View>
     <Text style={styles.sectionTitleMain}>{plantillaSeleccionada}</Text>
     
   </View>
 );
 
-export default TituloInforme;
+export default TituloActividad;

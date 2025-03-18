@@ -2,6 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "@react-pdf/renderer";
 import TituloInforme from "./TituloInforme";
 import SeccionesDatosRegistros from "./SeccionesDatosRegistros";
+import TituloActividad from "./TituloActividad";
 
 const styles = StyleSheet.create({
   fieldGroup: {
@@ -21,6 +22,8 @@ const DatosRegistro = ({ dataRegister }) => {
     <View style={styles.fieldGroup}>
       {/* Sección 1 */}
       <View style={styles.section}>
+      <TituloActividad plantillaSeleccionada={`Actividad: ${dataRegister.actividad}`} />
+
         <TituloInforme plantillaSeleccionada="1. Trabajos inspeccionados" />
         <SeccionesDatosRegistros
           nombreCampo={"Observaciones actividad"}

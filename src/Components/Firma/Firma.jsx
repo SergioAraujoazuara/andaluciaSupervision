@@ -5,9 +5,9 @@ import { FaEraser, FaFileSignature, FaCheckCircle } from "react-icons/fa";
 
 const Firma = ({ onSave, onClose }) => {
   const sigCanvas = useRef(null);
-  const [isSigned, setIsSigned] = useState(false); // Detectar si hay firma
-  const [successMessage, setSuccessMessage] = useState(""); // Mensaje de éxito
-  const [isSaving, setIsSaving] = useState(false); // Estado para desactivar el botón
+  const [isSigned, setIsSigned] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   // ✅ Guardar la firma como imagen
   const saveSignature = () => {
@@ -16,11 +16,11 @@ const Firma = ({ onSave, onClose }) => {
       return;
     }
 
-    setIsSaving(true); // 🔹 Desactivar botón
+    setIsSaving(true);
     const url = sigCanvas.current.toDataURL("image/png");
     setIsSigned(true);
     setSuccessMessage("✅ ¡Firma guardada exitosamente!");
-    onSave(url); // ✅ Enviar la firma al componente padre
+    onSave(url); // ✅ Enviar la firma sin cerrar el modal
   };
 
   // 🔄 Limpiar la firma
@@ -28,12 +28,12 @@ const Firma = ({ onSave, onClose }) => {
     sigCanvas.current.clear();
     setIsSigned(false);
     setSuccessMessage("");
-    setIsSaving(false); // 🔹 Reactivar el botón
-    onSave(null);
+    setIsSaving(false);
+    // ❌ Se quita `onSave(null)` para evitar cerrar el modal
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 p-4">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 p-4 backdrop-blur-md">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md relative">
         
         {/* 🔹 Botón de cierre */}
@@ -81,7 +81,7 @@ const Firma = ({ onSave, onClose }) => {
           </button>
           <button 
             onClick={saveSignature} 
-            disabled={isSaving} // ✅ Desactivar el botón tras guardar
+            disabled={isSaving}
             className={`px-4 py-2 font-semibold rounded-lg flex items-center gap-2 transition ${
               isSaving 
                 ? "bg-gray-400 text-gray-700 cursor-not-allowed" 

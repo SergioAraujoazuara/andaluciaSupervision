@@ -181,13 +181,13 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
         {/* Página con los datos del único registro */}
         <Page size="A4" style={styles.page}>
           <EncabezadoInforme
-            empresa={proyecto?.empresa || "Mi Empresa"}
-            obra={proyecto?.obra || "Obra Desconocida"}
-            contrato={proyecto?.contrato || "Sin Contrato"}
-            description={proyecto?.descripcion || "Sin Descripción"}
+            empresa={proyecto?.empresa || "Nombre de mpresa"}
+            obra={proyecto?.obra || "Nombre de obra"}
+            promotor={proyecto?.promotor || "Promotor"}
+            description={proyecto?.descripcion || "Contratista"}
+            coordinador={proyecto?.coordinador || "Nombre coordinador de seguridad y salud"}
+            director={proyecto?.director || "Nombre director de la obra"}
             rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin}` : ""}`}
-            titlePdf="TPF GETINSA-EUROESTUDIOS S.L."
-            subTitlePdf="Tipo de documento Inspeccion de obra"
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />
 
@@ -287,26 +287,25 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   return (
     <div>
       {isGenerating ? (
-  <div className="flex justify-center items-center gap-2">
-    <Spinner /> {/* Spinner en lugar del botón */}
-  </div>
-) : (
-  <button
-    className={`w-10 h-10 flex justify-center items-center text-xl font-medium rounded-md ${
-      dataRegister.firmaEmpresa && dataRegister.firmaCliente
-        ? "text-gray-500 hover:text-sky-700"
-        : "text-gray-500 cursor-not-allowed"
-    }`}
-    onClick={dataRegister.firmaEmpresa && dataRegister.firmaCliente ? handlegeneratePDF : null}
-    disabled={!dataRegister.firmaEmpresa || !dataRegister.firmaCliente} // Si no hay firmas, deshabilitar
-  >
-    {dataRegister.firmaEmpresa && dataRegister.firmaCliente ? (
-      <FaFilePdf className="w-6 h-6" />
-    ) : (
-      <FaBan className="w-6 h-6" />
-    )}
-  </button>
-)}
+        <div className="flex justify-center items-center gap-2">
+          <Spinner /> {/* Spinner en lugar del botón */}
+        </div>
+      ) : (
+        <button
+          className={`w-10 h-10 flex justify-center items-center text-xl font-medium rounded-md ${dataRegister.firmaEmpresa && dataRegister.firmaCliente
+              ? "text-gray-500 hover:text-sky-700"
+              : "text-gray-500 cursor-not-allowed"
+            }`}
+          onClick={dataRegister.firmaEmpresa && dataRegister.firmaCliente ? handlegeneratePDF : null}
+          disabled={!dataRegister.firmaEmpresa || !dataRegister.firmaCliente} // Si no hay firmas, deshabilitar
+        >
+          {dataRegister.firmaEmpresa && dataRegister.firmaCliente ? (
+            <FaFilePdf className="w-6 h-6" />
+          ) : (
+            <FaBan className="w-6 h-6" />
+          )}
+        </button>
+      )}
     </div>
   );
 

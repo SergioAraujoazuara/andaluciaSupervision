@@ -2,21 +2,26 @@ import React, { useState, useEffect } from "react";
 import { storage } from "../../../firebase_config";
 import { ref, listAll, getDownloadURL, deleteObject } from "firebase/storage";
 import { AiOutlineClose } from "react-icons/ai";
-import { FaFilePdf, FaTrashAlt } from "react-icons/fa";
+import { FaTrashAlt } from "react-icons/fa";
 import { IoSearchCircleOutline } from "react-icons/io5";
+import { FaCheckCircle } from "react-icons/fa";
 
 const ListaInformesModal = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [pdfList, setPdfList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
   const selectedProjectName = localStorage.getItem("selectedProjectName");
 
-  // 🔹 Función para obtener la lista de archivos PDF en Storage
+  // 🔹 Función para obtener la lista de PDFs
   const fetchPdfFiles = async () => {
     setLoading(true);
     try {
-      const folderRef = ref(storage, "informes/"); // 📂 Carpeta de informes
-      const fileList = await listAll(folderRef); // 📜 Lista de archivos
+      const folderRef = ref(storage, "informes/");
+      const fileList = await listAll(folderRef);
 
       const urls = await Promise.all(
         fileList.items.map(async (file) => {
@@ -25,29 +30,35 @@ const ListaInformesModal = () => {
         })
       );
 
-      // 🔹 Filtrar solo los que empiezan con `selectedProjectName`
       const pdfsFiltrados = urls.filter(item => item.name.startsWith(selectedProjectName));
-
-      setPdfList(pdfsFiltrados); // ⬅️ Guardamos solo los filtrados
-      console.log(pdfsFiltrados); // Ver en consola
-
+      setPdfList(pdfsFiltrados);
     } catch (error) {
-      console.error("❌ Error al obtener los PDFs:", error);
+      console.error("❌ Error al obtener los archivos:", error);
     }
     setLoading(false);
   };
 
   // 🔥 **Función para eliminar un archivo**
-  const handleDeleteFile = async (file) => {
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar "${file.name}"?`)) return;
+  const handleDeleteFile = (file) => {
+    setConfirmDelete(file);
+  };
 
+  const confirmDeleteFile = async () => {
+    if (!confirmDelete) return;
     try {
-      await deleteObject(file.ref);
-      setPdfList(prevList => prevList.filter(item => item.name !== file.name));
-      console.log(`✅ Archivo eliminado: ${file.name}`);
+      await deleteObject(confirmDelete.ref);
+      setPdfList(prevList => prevList.filter(item => item.name !== confirmDelete.name));
+
+      // Mostrar modal de éxito
+      setSuccessMessage(`✅ Informe "${confirmDelete.name}" eliminado.`);
+      setShowSuccessModal(true);
+
+      // Cerrar el modal después de 3 segundos
+      setTimeout(() => setShowSuccessModal(false), 1500);
     } catch (error) {
-      console.error(`❌ Error al eliminar el archivo ${file.name}:`, error);
+      console.error(`❌ No se pudo eliminar ${confirmDelete.name}:`, error);
     }
+    setConfirmDelete(null);
   };
 
   // 🔹 Abrir el modal y cargar los PDFs
@@ -57,36 +68,37 @@ const ListaInformesModal = () => {
   };
 
   return (
-    <div>
+    <div className="relative">
       {/* Botón para abrir el modal */}
       <button
-        className="px-4 py-2 h-12 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-600 flex gap-2 items-center"
+        className="px-4 py-2 h-12 text-sm bg-sky-700 text-white rounded-md hover:bg-sky-800 flex gap-2 items-center"
         onClick={handleOpenModal}
       >
-       
-       <span><IoSearchCircleOutline className="text-2xl"/></span>Ver Informes
+        <span><IoSearchCircleOutline className="text-2xl" /></span>Ver Informes
       </button>
 
-      {/* Modal con tabla de informes */}
+      {/* Modal principal */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-4xl">
-            {/* Encabezado con botón de cerrar */}
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 transition-opacity duration-300 p-4 text-xs">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-4xl h-[80vh] flex flex-col animate-fadeIn">
+            {/* Encabezado */}
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">📂 Informes Guardados</h2>
+              <h2 className="text-lg font-semibold text-gray-800">📂 Informes Guardados</h2>
               <button onClick={() => setModalOpen(false)} className="text-gray-500 hover:text-gray-700">
                 <AiOutlineClose size={24} />
               </button>
             </div>
 
+            {/* Línea separadora */}
             <div className="border-b-2 w-full mb-4"></div>
 
-            {loading ? (
-              <p className="text-gray-500 text-center">Cargando archivos...</p>
-            ) : pdfList.length === 0 ? (
-              <p className="text-gray-500 text-center">No hay informes disponibles.</p>
-            ) : (
-              <div className="overflow-x-auto">
+            {/* Contenido con scroll interno */}
+            <div className="overflow-y-auto flex-grow">
+              {loading ? (
+                <p className="text-gray-500 text-center">Cargando archivos...</p>
+              ) : pdfList.length === 0 ? (
+                <p className="text-gray-500 text-center">No hay informes disponibles.</p>
+              ) : (
                 <table className="min-w-full border border-gray-200 shadow-md rounded-lg">
                   <thead className="bg-sky-600 text-white">
                     <tr>
@@ -100,20 +112,20 @@ const ListaInformesModal = () => {
                       const formattedDate = pdf.name.split("_").pop().replace(".pdf", "").replace("T", " ");
                       return (
                         <tr key={index} className="border-b">
-                          <td className="px-4 py-3 text-gray-700">{pdf.name}</td>
-                          <td className="px-4 py-3 text-gray-600">{formattedDate}</td>
-                          <td className="px-4 py-3 flex justify-center gap-4">
+                          <td className="px-4 py-3">{pdf.name}</td>
+                          <td className="px-4 py-3">{formattedDate}</td>
+                          <td className="px-4 py-3 flex flex-col justify-center gap-4">
                             <a
                               href={pdf.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="px-3 py-2 text-xs bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
+                              className="px-3 py-2 text-xs bg-gray-500 text-white rounded-md hover:bg-gray-600 transition flex justify-center"
                             >
                               Ver
                             </a>
                             <button
                               onClick={() => handleDeleteFile(pdf)}
-                              className="px-3 py-2 text-xs bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+                              className="px-3 py-2 text-xs bg-red-700 text-white rounded-md hover:bg-red-800 transition flex justify-center"
                             >
                               <FaTrashAlt />
                             </button>
@@ -123,11 +135,61 @@ const ListaInformesModal = () => {
                     })}
                   </tbody>
                 </table>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
+
+      {/* Modal de confirmación de eliminación */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex justify-center items-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white p-6 rounded-2xl shadow-xl w-96 text-center border-t-4 relative">
+
+            {/* Icono de advertencia */}
+            <div className="flex justify-center">
+              <span className="text-red-600 text-5xl">⚠️</span>
+            </div>
+
+            {/* Título y mensaje */}
+            <h2 className="text-xl font-semibold text-gray-800 mt-4">¿Eliminar informe?</h2>
+            <p className="text-gray-600 mt-2">{confirmDelete.name}</p>
+
+            {/* Botones */}
+            <div className="mt-6 flex justify-center gap-4">
+              <button
+                onClick={confirmDeleteFile}
+                className="px-5 py-2 text-sm bg-red-700 text-white rounded-lg shadow-sm hover:bg-red-800 transition"
+              >
+                Eliminar
+              </button>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="px-5 py-2 text-sm bg-gray-500 text-white rounded-lg shadow-sm hover:bg-gray-600 transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de éxito después de eliminar */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-md z-[100]">
+          <div className="bg-white p-6 rounded-lg shadow-2xl w-96 text-center border-t-4 border-green-600 relative z-[110]">
+
+            {/* Ícono de éxito en color verde */}
+            <FaCheckCircle className="text-green-600 text-5xl mx-auto" />
+
+            {/* Mensaje de éxito */}
+            <p className="text-gray-600 mt-4 font-medium">Documento eliminado</p>
+
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 };
