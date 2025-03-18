@@ -97,7 +97,7 @@ function Projects() {
             descripcion,
             promotor,
             contrato: contract,
-            plazo, plazo,
+            plazo: plazo,
             presupuesto: presupuesto,
             director: director,
             coordinador: coordinador
