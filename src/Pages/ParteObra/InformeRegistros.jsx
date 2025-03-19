@@ -157,13 +157,11 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   const downloadPdf = async () => {
     console.log(dataRegister, 'valor del objeto');
 
-    // Verificar si la firma está en el estado o en localStorage
-    const firmaGuardada = firma || localStorage.getItem("firma");
-
-    if (!firmaGuardada) {
-      console.error("⚠️ No hay firma guardada.");
-      return; // Evita continuar si la firma no está disponible
+    if (!dataRegister?.firmaEmpresa || !dataRegister?.firmaCliente) {
+      console.error("⚠️ No hay firmas guardadas en Firestore.");
+      return; // Evita continuar si no hay firmas en Firestore
     }
+    
 
     if (userNombre !== "NA") {
       await fetchUserDetails();
