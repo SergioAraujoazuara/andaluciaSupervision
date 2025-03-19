@@ -249,15 +249,11 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       </Document>
     );
 
-     // Generar el PDF como Blob y descargarlo
-     const blob = await pdf(docContent).toBlob();
-     const pdfURL = URL.createObjectURL(blob);
-     const link = document.createElement("a");
-     link.href = pdfURL;
-     link.download = `Informe_Final_${selectedProjectName}_${dataRegister.actividad}_${formatFechaActual}.pdf`; // Nombre del archivo
-     document.body.appendChild(link);
-     link.click();
-     document.body.removeChild(link);
+     // Generar el PDF como Blob y abrir en una nueva pestaña
+const blob = await pdf(docContent).toBlob();
+const pdfURL = URL.createObjectURL(blob);
+window.open(pdfURL, "_blank");
+
 
   };
 
