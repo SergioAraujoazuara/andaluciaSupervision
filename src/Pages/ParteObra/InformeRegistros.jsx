@@ -103,6 +103,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
 
   // Extraer el ID del proyecto almacenado en el localStorage
   const selectedProjectId = localStorage.getItem("selectedProjectId");
+  const selectedProjectName = localStorage.getItem("selectedProjectName");
   const { proyecto, loading: proyectoLoading, error: proyectoError } = useProyecto(selectedProjectId);
 
   // Obtener detalles del usuario desde Firestore
@@ -250,10 +251,16 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       </Document>
     );
 
-    // Generar el PDF y abrirlo en una nueva pestaña
-    const blob = await pdf(docContent).toBlob();
-    const pdfURL = URL.createObjectURL(blob);
-    window.open(pdfURL, "_blank");
+     // Generar el PDF como Blob y descargarlo
+     const blob = await pdf(docContent).toBlob();
+     const pdfURL = URL.createObjectURL(blob);
+     const link = document.createElement("a");
+     link.href = pdfURL;
+     link.download = `Informe_Final_${selectedProjectName}_${dataRegister.actividad}_${formatFechaActual}.pdf`; // Nombre del archivo
+     document.body.appendChild(link);
+     link.click();
+     document.body.removeChild(link);
+
   };
 
 
