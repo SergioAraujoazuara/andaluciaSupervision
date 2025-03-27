@@ -1274,6 +1274,7 @@ const TablaRegistros = () => {
                 <input
                   type="file"
                   accept="image/*"
+                  capture="camera"  
                   onChange={(e) => handleSeleccionarImagen(e, index)}
                   className="block w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border file:border-gray-300 file:bg-gray-100 hover:file:bg-gray-200 cursor-pointer"
                 />

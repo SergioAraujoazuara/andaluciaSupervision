@@ -1184,6 +1184,7 @@ const ParteObra = () => {
                         <input
                           type="file"
                           accept="image/*"
+                          capture="camera"  
                           ref={(el) => (fileInputsRefs.current[index] = el)}
                           onChange={(e) => handleFileChange(e, index)}
                           className="hidden" // Oculta el input original
