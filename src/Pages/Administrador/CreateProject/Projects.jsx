@@ -66,7 +66,7 @@ function Projects() {
     setClientLogo(null);
   };
 
-   
+
 
   // Open the edit modal with selected project data
   const openEditModal = (proj) => {
@@ -78,8 +78,8 @@ function Projects() {
     setContract(proj.contrato);
     setPlazo(proj.plazo);
     setPresupuesto(proj.presupuesto);
-    setCoordinador(proj.director);
-    setDirector(proj.coordinador);
+    setCoordinador(proj.coordinador);
+    setDirector(proj.director);
     setLogo(null);
     setClientLogo(null);
     setSelectedProject(proj);
@@ -91,34 +91,34 @@ function Projects() {
   // Handle updating the project
   const handleUpdateProject = async () => {
     try {
-        const updatedProjectData = {
-            empresa,
-            obra: work,
-            descripcion,
-            promotor,
-            contrato: contract,
-            plazo: plazo,
-            presupuesto: presupuesto,
-            director: director,
-            coordinador: coordinador
-        };
+      const updatedProjectData = {
+        empresa,
+        obra: work,
+        descripcion,
+        promotor,
+        contrato: contract,
+        plazo: plazo,
+        presupuesto: presupuesto,
+        director: director,
+        coordinador: coordinador
+      };
 
-        // 1️⃣ Actualizar proyecto en Firestore
-        const result = await updateProject(selectedProject.id, empresa, work, descripcion, contract, logo, clientLogo, promotor, plazo, presupuesto, coordinador, director);
-        
-        // 2️⃣ Actualizar el proyecto en los usuarios que lo tienen asignado
-        await updateUsersWithProject(selectedProject.id, updatedProjectData);
+      // 1️⃣ Actualizar proyecto en Firestore
+      const result = await updateProject(selectedProject.id, empresa, work, descripcion, contract, logo, clientLogo, promotor, plazo, presupuesto, coordinador, director);
 
-        // 3️⃣ Mostrar mensaje de éxito
-        showModal(result, "success");
+      // 2️⃣ Actualizar el proyecto en los usuarios que lo tienen asignado
+      await updateUsersWithProject(selectedProject.id, updatedProjectData);
 
-        // 4️⃣ Cerrar modal de edición y refrescar la lista de proyectos
-        setIsEditing(false);
-        refreshProjects(); 
+      // 3️⃣ Mostrar mensaje de éxito
+      showModal(result, "success");
+
+      // 4️⃣ Cerrar modal de edición y refrescar la lista de proyectos
+      setIsEditing(false);
+      refreshProjects();
     } catch (error) {
-        showModal("Error actualizando el proyecto: " + error.message, "error");
+      showModal("Error actualizando el proyecto: " + error.message, "error");
     }
-};
+  };
 
 
   // Handle deleting the project
@@ -193,32 +193,50 @@ function Projects() {
 
 
   const updateUsersWithProject = async (projectId, updatedProjectData) => {
-      try {
-          const users = await fetchUsersWithProject(projectId); // Obtenemos los usuarios con el proyecto asignado
-  
-          const batch = writeBatch(db); // Creamos una batch para optimizar la actualización
-  
-          users.forEach((user) => {
-              const userRef = doc(db, "usuarios", user.id); // Referencia al documento del usuario
-  
-              // Mapeamos el array de proyectos del usuario y actualizamos solo el name (obra)
-              const updatedProjects = user.proyectos.map(proj =>
-                  proj.id === projectId ? { ...proj, name: updatedProjectData.obra } : proj
-              );
-  
-              batch.update(userRef, { proyectos: updatedProjects }); // Agregamos la actualización a la batch
-          });
-  
-          await batch.commit(); // Ejecutamos todas las actualizaciones de una vez
-  
-          console.log("Usuarios actualizados correctamente con el nuevo name.");
-      } catch (error) {
-          console.error("Error actualizando los usuarios:", error);
-      }
+    try {
+      const users = await fetchUsersWithProject(projectId); // Obtenemos los usuarios con el proyecto asignado
+
+      const batch = writeBatch(db); // Creamos una batch para optimizar la actualización
+
+      users.forEach((user) => {
+        const userRef = doc(db, "usuarios", user.id); // Referencia al documento del usuario
+
+        // Mapeamos el array de proyectos del usuario y actualizamos solo el name (obra)
+        const updatedProjects = user.proyectos.map(proj =>
+          proj.id === projectId ? { ...proj, name: updatedProjectData.obra } : proj
+        );
+
+        batch.update(userRef, { proyectos: updatedProjects }); // Agregamos la actualización a la batch
+      });
+
+      await batch.commit(); // Ejecutamos todas las actualizaciones de una vez
+
+      console.log("Usuarios actualizados correctamente con el nuevo name.");
+    } catch (error) {
+      console.error("Error actualizando los usuarios:", error);
+    }
   };
-  
-  
-  
+
+
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // Modal de confirmación
+  const [projectIdToDelete, setProjectIdToDelete] = useState(null); // ID del proyecto a eliminar
+  const openDeleteConfirmationModal = (id) => {
+    setProjectIdToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteConfirmationModal = () => {
+    setIsDeleteModalOpen(false);
+    setProjectIdToDelete(null);
+  };
+
+  const confirmDeleteProject = async () => {
+    await handleDeleteProject(projectIdToDelete); // Eliminar el proyecto
+    closeDeleteConfirmationModal(); // Cerrar el modal de confirmación
+  };
+
+
 
   return (
     <div className="container mx-auto p-8 min-h-screen text-gray-500">
@@ -279,7 +297,7 @@ function Projects() {
                       Editar
                     </button>
                     <button
-                      onClick={() => handleDeleteProject(proj.id)}
+                      onClick={() => openDeleteConfirmationModal(proj.id)}
                       className="bg-red-700 text-white px-4 py-2 rounded"
                     >
                       Eliminar
@@ -290,6 +308,39 @@ function Projects() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Modal de Confirmación */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-12 rounded-lg w-md text-center">
+          <h3 className="text-xl mb-4 flex items-center justify-center">
+            {/* Icono de advertencia */}
+            <span className="mr-2 text-red-600">⚠️</span> 
+            ¿Estás seguro de eliminar este proyecto?
+          </h3>
+          <p className="mb-4 flex items-center justify-center gap-2"> <span className="text-amber-600 text-2xl">*</span>Esta acción es irreversible.</p>
+      
+          {/* Botones para confirmar o cancelar */}
+          <div className="flex justify-center gap-5 mt-10">
+            <button
+              onClick={confirmDeleteProject}
+              className="px-4 py-2 bg-red-600 text-white rounded-md flex items-center"
+            >
+              {/* Icono de check */}
+             Confirmar
+            </button>
+            <button
+              onClick={closeDeleteConfirmationModal}
+              className="px-4 py-2 bg-gray-400 text-white rounded-md flex items-center"
+            >
+              {/* Icono de cancelar */}
+               Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+      
       )}
 
       {/* Add Project Form */}

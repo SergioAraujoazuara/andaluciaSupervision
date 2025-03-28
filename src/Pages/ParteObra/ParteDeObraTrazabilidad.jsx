@@ -1139,6 +1139,7 @@ const ParteObra = () => {
 
                         {/* Input de observaciones */}
                         <textarea
+                        maxLength={200}
                           value={activityObservations[actividadIndex] || ""} // Valor del estado
                           onChange={(e) => handleObservationChange(actividadIndex, e.target.value)}
                           placeholder="Escribe observaciones aquí..."

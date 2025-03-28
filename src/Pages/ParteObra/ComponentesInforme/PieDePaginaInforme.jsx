@@ -12,9 +12,9 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
+    marginTop: 10,
     width: "100%",
-    padding: 40
+    padding: 10
   },
   leftColumn: {
     width: "50%",

@@ -14,7 +14,7 @@ const Modal = ({ message, type, onClose }) => {
         <div className="flex justify-center">
           <button
             onClick={onClose}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
           >
             Cerrar
           </button>

@@ -4,19 +4,22 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 const styles = StyleSheet.create({
   fieldRow: {
     marginBottom: 2,
-    paddingHorizontal:8
+    paddingHorizontal: 8,
+    flexDirection: "row", // ✅ Campo y valor en línea
+    alignItems: "flex-start",
+    flexWrap: "wrap", 
+    marginBottom:8    // Permite que el texto largo se acomode
   },
   fieldLabel: {
     fontWeight: "bold",
     color: "#4b5563",
     fontSize: 9,
-    marginBottom: 2,
+    marginRight: 4,       // Espacio entre campo y valor
   },
   fieldLabelObservaciones: {
-    fontWeight: "bold",
+    fontWeight: "normal",
     color: "#4b5563",
     fontSize: 9,
-    marginBottom: 5,
     lineHeight: 1.6,
   },
 });

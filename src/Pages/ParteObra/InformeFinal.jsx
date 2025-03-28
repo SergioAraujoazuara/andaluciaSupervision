@@ -214,6 +214,8 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         />
                     </Page>
                 )}
+                {/* Pie de página con ambas firmas */}
+                
 
 
             </Document>
@@ -256,7 +258,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
         const pdfURL = URL.createObjectURL(finalBlob);
         const link = document.createElement("a");
         link.href = pdfURL;
-        link.download = `Informe_Final_${selectedProjectName}_${formatFechaActual}.pdf`;
+        link.download = `Informe_${selectedProjectName}_${formatFechaActual}.pdf`;
         link.click();
 
 
@@ -305,37 +307,37 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
 
             {/* Modal de Éxito */}
             {showSuccessModal && (
-  <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md bg-black bg-opacity-40 transition-opacity">
-    <div className="bg-white p-8 rounded-2xl shadow-2xl w-[350px] text-center relative transform transition-transform scale-95 animate-fadeIn">
-      
-      {/* Botón de Cierre */}
-      <button
-        className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 transition"
-        onClick={() => setShowSuccessModal(false)}
-      >
-        <AiOutlineClose size={22} />
-      </button>
+                <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md bg-black bg-opacity-40 transition-opacity">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-[350px] text-center relative transform transition-transform scale-95 animate-fadeIn">
 
-      {/* Icono de éxito en verde */}
-      <div className="flex justify-center items-center mb-4">
-      <FaRegCheckCircle className="text-green-500 text-6xl"/>
-      </div>
+                        {/* Botón de Cierre */}
+                        <button
+                            className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 transition"
+                            onClick={() => setShowSuccessModal(false)}
+                        >
+                            <AiOutlineClose size={22} />
+                        </button>
 
-      {/* Mensaje */}
-      <h2 className="text-lg font-semibold text-gray-800">{showSuccessModalMessage}</h2>
+                        {/* Icono de éxito en verde */}
+                        <div className="flex justify-center items-center mb-4">
+                            <FaRegCheckCircle className="text-green-500 text-6xl" />
+                        </div>
 
-      {/* Botón de acción */}
-      <div className="mt-6">
-        <button
-          onClick={() => setShowSuccessModal(false)}
-          className="px-5 py-2 bg-gradient-to-r from-green-500 to-green-700 text-white font-medium rounded-md shadow-md hover:scale-105 hover:from-green-600 hover:to-green-800 transition-all duration-300"
-        >
-          Aceptar
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+                        {/* Mensaje */}
+                        <h2 className="text-lg font-semibold text-gray-800">{showSuccessModalMessage}</h2>
+
+                        {/* Botón de acción */}
+                        <div className="mt-6">
+                            <button
+                                onClick={() => setShowSuccessModal(false)}
+                                className="px-5 py-2 bg-gray-500 text-white font-medium rounded-md shadow-md hover:scale-105 hover:from-green-600 hover:to-green-800 transition-all duration-300"
+                            >
+                                Aceptar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
 

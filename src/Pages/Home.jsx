@@ -167,7 +167,7 @@ function Home() {
 
 
           {/* Sección de Proyectos */}
-          <div>
+          <div className='px-6'>
            
             <h2 className="text-md font-semibold text-start mb-4 px-6"><span className='text-amber-700'>*</span>Selecciona un proyecto para para comenzar</h2>
 
@@ -201,14 +201,13 @@ function Home() {
 
 
       {selectedProject && projectData && (role === 'admin' || role === 'usuario') && userProjects.length > 0 && (
-        <div className="flex justify-center text-gray-500 mt-6">
-          <div className="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 w-full grid grid-cols-1 md:grid-cols-2 gap-6">
-
+        <div className="flex justify-center text-gray-500 mt-6 px-6">
+          <div className="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 w-full px-6 py-6">
             {/* 🔹 Columna Izquierda - Información del Proyecto */}
-            <div className="p-12 flex flex-col justify-center">
+            <div className="flex flex-col justify-center">
               <div>
 
-                <p className='font-medium text-lg bg-gray-200 px-6 py-2 mb-4 rounded-t-lg'>Detalles del proyecto</p>
+                <p className='font-medium text-lg border-b-2 px-6 py-2 mb-4 rounded-t-lg'>Detalles del proyecto</p>
               </div>
 
               <div className="grid grid-cols-1 gap-3 text-md px-6">
@@ -219,7 +218,7 @@ function Home() {
                 <p className="flex gap-3 items-center"><FaTools className='text-sky-700' /> <span className="font-semibold">Contratista:</span> {projectData.descripcion}</p>
               </div>
 
-              <div className='w-full border-t-4 my-2'></div>
+              <div className='w-full border-t-2 my-2'></div>
 
               {/* 📌 Datos Principales con Iconos */}
               <div className="mt-6 grid grid-cols-1 gap-4 text-sm text-gray-700 px-6">
@@ -227,23 +226,24 @@ function Home() {
                 <p className="flex items-center gap-2"><FaFileContract className="text-sky-700" /> <span className="font-semibold">Contrato de la obra:</span> {projectData.contrato}</p>
                 <p className="flex items-center gap-2"><FaClock className="text-sky-700" /> <span className="font-semibold">Plazo de la obra:</span> {projectData.plazo}</p>
                 <p className="flex items-center gap-2"><FaMoneyBillWave className="text-sky-700" /> <span className="font-semibold">Presupuesto de la obra:</span> {projectData.presupuesto}</p>
-                <div className='w-full border-t-4 my-2'></div>
+                <div className='w-full border-t-2 my-2'></div>
                 <p className="flex items-center gap-2"><FaShieldAlt className="text-sky-700" /> <span className="font-semibold">Coordinador de Seguridad y Salud:</span> {projectData.coordinador}</p>
                 <p className="flex items-center gap-2"><FaUser className="text-sky-700" /> <span className="font-semibold">Director de la obra:</span> {projectData.director}</p>
               </div>
             </div>
 
             {/* 🔹 Columna Derecha - Imágenes en Grid */}
-            <div className="relative flex flex-col gap-4 p-8">
-              <div className="grid grid-cols-1 gap-4">
-                <img src={projectData.logo || "https://via.placeholder.com/150"} alt="Logo Empresa" className="w-full h-44 object-contain rounded-lg  bg-white p-2" />
-                <img src={projectData.logoCliente || "https://via.placeholder.com/150"} alt="Logo Cliente" className="w-full h-44 object-contain rounded-lg bg-white p-2" />
-              </div>
+            <div className="relative flex gap-4">
+              
+                <img src={projectData.logo || "https://via.placeholder.com/150"} alt="Logo Empresa" className="w-44 h-46 object-contain rounded-lg  bg-white p-2" />
+                <img src={projectData.logoCliente || "https://via.placeholder.com/150"} alt="Logo Cliente" className="w-36 h-20 object-contain rounded-lg bg-white p-2" />
+             
             </div>
 
           </div>
         </div>
       )}
+
 
 
 

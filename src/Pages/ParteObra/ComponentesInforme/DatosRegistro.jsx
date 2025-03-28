@@ -22,7 +22,7 @@ const DatosRegistro = ({ dataRegister }) => {
     <View style={styles.fieldGroup}>
       {/* Sección 1 */}
       <View style={styles.section}>
-      <TituloActividad plantillaSeleccionada={`Actividad: ${dataRegister.actividad}`} />
+        <TituloActividad plantillaSeleccionada={`Actividad: ${dataRegister.actividad}`} />
 
         <TituloInforme plantillaSeleccionada="1. Trabajos inspeccionados" />
         <SeccionesDatosRegistros
@@ -36,13 +36,31 @@ const DatosRegistro = ({ dataRegister }) => {
       </View>
 
       {/* Sección 2 - Medios Disponibles en Obra */}
-      <View style={styles.section}>
-        <TituloInforme plantillaSeleccionada="2. Medios disponibles en obra: Empresas, trabajadores y maquinaria" />
+      
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+        }}
+      >
+          <TituloInforme plantillaSeleccionada="2. Medios disponibles en obra: Empresas, trabajadores y maquinaria" />
+        {dataRegister.mediosDisponibles.map((empresa, index) => {
+          // 🧮 Calcular cuántas columnas usar
+          const totalEmpresas = dataRegister.mediosDisponibles.length;
+          let width = "100%"; // default 1 columna
 
-        {/* Verifica si hay empresas registradas */}
-        {dataRegister.mediosDisponibles && dataRegister.mediosDisponibles.length > 0 ? (
-          dataRegister.mediosDisponibles.map((empresa, index) => (
-            <View key={index} style={{ marginBottom: 1 }}>
+          if (totalEmpresas > 1) width = "33.33%"; // 3 columnas
+         
+
+          return (
+            <View
+              key={index}
+              style={{
+                width,
+                paddingRight: 4,
+                marginBottom: 4,
+              }}
+            >
               <SeccionesDatosRegistros
                 nombreCampo={`Nombre`}
                 valorDelCampo={empresa.nombreEmpresa || "No especificado"}
@@ -52,14 +70,10 @@ const DatosRegistro = ({ dataRegister }) => {
                 valorDelCampo={empresa.numeroTrabajadores || "No especificado"}
               />
             </View>
-          ))
-        ) : (
-          <SeccionesDatosRegistros
-            nombreCampo={"Empresas en obra"}
-            valorDelCampo={"No hay empresas registradas"}
-          />
-        )}
+          );
+        })}
       </View>
+
 
 
 

@@ -31,8 +31,8 @@ const styles = StyleSheet.create({
     width: "45%",
   },
   logo: {
-    width: 170,
-    height: 60,
+    width: 120,
+    height: 45,
     marginBottom: 10,
   },
   line: {
