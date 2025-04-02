@@ -27,6 +27,7 @@
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.22.0",
     "react-signature-canvas": "^1.1.0-alpha.1",
+    "react-speech-recognition": "^4.0.0",
     "three": "^0.152.2",
     "uuid": "^11.0.3",
     "web-ifc": "^0.0.53"

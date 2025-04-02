@@ -8,6 +8,8 @@ import { FaArrowRight } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
 import { Link } from 'react-router-dom';
 import { FaBuilding, FaUserTie, FaTools, FaMapMarkerAlt, FaFileContract, FaClock, FaMoneyBillWave, FaShieldAlt, FaUser } from "react-icons/fa";
+import SpeechToTextInput from './ParteObra/AudioTexto/VoiceRecorderInput';
+import FormularioConVoz from './ParteObra/AudioTexto/FormularioConVoz';
 function Home() {
   const { user, loading } = useAuth(); // Obtén el usuario y su estado de carga
   const [userProjects, setUserProjects] = useState([]); // Proyectos del usuario
@@ -123,6 +125,8 @@ function Home() {
             {selectedProjectName}
           </h1>
         </div>
+
+     
 
         {/* Botón de volver */}
         <div className="flex items-center">
@@ -245,6 +249,7 @@ function Home() {
       )}
 
 
+<FormularioConVoz/>
 
 
     </div>

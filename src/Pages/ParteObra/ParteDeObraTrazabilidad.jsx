@@ -14,6 +14,7 @@ import { BsClipboardData } from "react-icons/bs";
 import { GoHomeFill } from "react-icons/go";
 import { Link, useNavigate } from "react-router-dom";
 import Firma from "../../Components/Firma/Firma";
+import VoiceRecorderInput from "./AudioTexto/VoiceRecorderInput";
 
 
 const ParteObra = () => {
@@ -888,36 +889,32 @@ const ParteObra = () => {
                 {selectedLote && (
                   <p className="bg-gray-200 p-2 rounded-b-lg px-4 py-2 font-medium">{selectedLote.nombre}</p>
                 )}
+              </div>
 
-
+              <div>
+                {/* Observaciones de Actividad */}
                 <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">1. Trabajos inspeccionados</h3>
-
-                <label className="block text-sm font-medium px-4">
-                  ¿Qué se inspecciona?</label>
-                <textarea
-                  required
-                  maxLength={150}
+                <label className="block text-sm font-medium px-4">¿Qué se inspecciona?</label>
+                <VoiceRecorderInput
+                  maxLength={200}
                   name="observacionesActividad"
-                  value={formData.observacionesActividad}
-                  onChange={handleInputChange}
+                  value={formData.observacionesActividad}  // Usamos la variable de estado existente
+                  onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
                   placeholder="Escribe tus observaciones aquí..."
-                  className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
-                ></textarea>
+                />
               </div>
 
               <div className="mt-4">
                 <label className="block text-sm font-medium px-4">
                   ¿Dónde se ubica?
                 </label>
-                <textarea
-                  required
+                <VoiceRecorderInput
                   maxLength={100}
                   name="observacionesLocalizacion"
                   value={formData.observacionesLocalizacion}
-                  onChange={handleInputChange}
+                  onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
                   placeholder="Escribe tus observaciones aquí..."
-                  className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
-                ></textarea>
+                />
               </div>
             </div>
 
@@ -995,14 +992,13 @@ const ParteObra = () => {
               <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
                 Observaciones generales
               </label>
-              <textarea
+              <VoiceRecorderInput
                 maxLength={300}
                 name="observaciones"
                 value={formData.observaciones}
-                onChange={handleInputChange}
+                onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
                 placeholder="Escribe tus observaciones aquí..."
-                className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 placeholder-gray-400 resize-none"
-              ></textarea>
+              />
             </div>
 
             <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">4. Previsión de actividades de próximo inicio. Medias preventivas y pasos.</h3>
@@ -1017,14 +1013,13 @@ const ParteObra = () => {
                 <label className="mt-2 block px-4 py-2 rounded-md text-sm font-medium">
                   Actividades de Próximo Inicio
                 </label>
-                <textarea
+                <VoiceRecorderInput
                   maxLength={200}
                   name="actividadesProximoInicio"
                   value={formData.actividadesProximoInicio || ""}
-                  onChange={handleInputChange}
-                  placeholder="Escribe las actividades previstas..."
-                  className=" block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
-                ></textarea>
+                  onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
+                  placeholder="Escribe tus observaciones aquí..."
+                />
               </div>
 
               {/* Medidas Preventivas a Implantar */}
@@ -1032,14 +1027,13 @@ const ParteObra = () => {
                 <label className="block px-4 py-2 rounded-md text-sm font-medium">
                   Medidas Preventivas a Implantar en Obra
                 </label>
-                <textarea
+                <VoiceRecorderInput
                   maxLength={200}
                   name="medidasPreventivas"
                   value={formData.medidasPreventivas || ""}
-                  onChange={handleInputChange}
-                  placeholder="Escribe las medidas preventivas..."
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
-                ></textarea>
+                  onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
+                  placeholder="Escribe tus observaciones aquí..."
+                />
               </div>
             </div>
 
@@ -1137,17 +1131,16 @@ const ParteObra = () => {
                         {/* Observaciones de la actividad */}
 
 
-                        {/* Input de observaciones */}
-                        <textarea
-                        maxLength={200}
-                          value={activityObservations[actividadIndex] || ""} // Valor del estado
-                          onChange={(e) => handleObservationChange(actividadIndex, e.target.value)}
-                          placeholder="Escribe observaciones aquí..."
-                          disabled={selectedActivities[actividadIndex]?.noAplica} // 🔴 Se desactiva si "No Aplica" está activado
-                          className={`mt-2 block w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none 
-    border-gray-300 focus:ring-sky-500 focus:border-sky-500 
-    ${selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""}`} // 🔴 Agrega un fondo gris y bloquea el cursor
-                        />
+                       {/* Observaciones de la actividad */}
+<VoiceRecorderInput
+  name={`observacionesActividad-${actividadIndex}`}
+  value={activityObservations[actividadIndex] || ""} // Valor del estado
+  onChange={(name, value) => handleObservationChange(actividadIndex, value)} // Llama al mismo manejador
+  placeholder="Escribe observaciones aquí..."
+  maxLength={200}
+  disabled={selectedActivities[actividadIndex]?.noAplica} // Deshabilitar cuando sea "No Aplica"
+  className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} // Estilo cuando es "No Aplica"
+/>
 
 
                       </div>
@@ -1185,7 +1178,7 @@ const ParteObra = () => {
                         <input
                           type="file"
                           accept="image/*"
-                          capture="camera"  
+                          capture="camera"
                           ref={(el) => (fileInputsRefs.current[index] = el)}
                           onChange={(e) => handleFileChange(e, index)}
                           className="hidden" // Oculta el input original
