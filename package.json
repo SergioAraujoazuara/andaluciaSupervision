@@ -29,7 +29,7 @@
     "react-signature-canvas": "^1.1.0-alpha.1",
     "react-speech-recognition": "^4.0.0",
     "three": "^0.152.2",
-    "uuid": "^11.0.3",
+    "uuid": "^11.1.0",
     "web-ifc": "^0.0.53"
   },
   "devDependencies": {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../../firebase_config';
-import { getDoc, doc, addDoc, collection } from 'firebase/firestore';
+import { getDoc, doc, addDoc, collection,  query, where, updateDoc, getDocs } from 'firebase/firestore';
 import { GoHomeFill } from "react-icons/go";
 import { Link } from 'react-router-dom';
 import { FaArrowRight } from "react-icons/fa";
@@ -98,6 +98,8 @@ function EditarPpi() {
         * - Increments the version.
         * - Adds a new document to the 'ppis' collection in Firestore.
         */
+    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -108,16 +110,32 @@ function EditarPpi() {
                 version: (editPpi.version || 0) + 1
             };
             console.log('Datos PPI actualizados antes de guardar:', updatedData);
-
-            // Add the updated PPI as a new document (new version)
-            await addDoc(collection(db, 'ppis'), updatedData);
-
-            console.log('Nueva versión del PPI creada exitosamente.');
-            setShowSuccessModal(true); // Show success modal
+    
+            // Crear nueva versión del PPI
+            const newPpiRef = await addDoc(collection(db, 'ppis'), updatedData);
+    
+            // Buscar todos los lotes con el ppiId anterior
+            const lotesRef = collection(db, 'lotes');
+            const q = query(lotesRef, where('ppiId', '==', id));
+            const querySnapshot = await getDocs(q);
+    
+            // Actualizar el campo ppiId con el nuevo ID
+            const updatePromises = querySnapshot.docs.map(async (docSnap) => {
+                const loteRef = doc(db, 'lotes', docSnap.id);
+                await updateDoc(loteRef, {
+                    ppiId: newPpiRef.id
+                });
+            });
+    
+            await Promise.all(updatePromises);
+    
+            console.log('Nueva versión del PPI creada y lotes actualizados exitosamente.');
+            setShowSuccessModal(true); // Mostrar modal de éxito
         } catch (error) {
-            console.error('Error al crear la nueva versión del PPI:', error);
+            console.error('Error al crear la nueva versión del PPI o al actualizar lotes:', error);
         }
     };
+    
     /**
          * addActividad
          * Adds a new activity to the editable PPI state.

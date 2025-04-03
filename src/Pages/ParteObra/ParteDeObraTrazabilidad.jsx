@@ -15,9 +15,12 @@ import { GoHomeFill } from "react-icons/go";
 import { Link, useNavigate } from "react-router-dom";
 import Firma from "../../Components/Firma/Firma";
 import VoiceRecorderInput from "./AudioTexto/VoiceRecorderInput";
+import { v4 as uuidv4 } from 'uuid';
+
 
 
 const ParteObra = () => {
+  const uniqueId = uuidv4();
   const navigate = useNavigate();
   const selectedProjectName = localStorage.getItem("selectedProjectName");
   const selectedProjectId = localStorage.getItem("selectedProjectId");
@@ -409,8 +412,8 @@ const ParteObra = () => {
     const fechaActual = new Date().toISOString().split("T")[0]; // Formato: YYYY-MM-DD
 
     // Crear un nombre descriptivo para el archivo
-    const fileName = `${selectedProjectName}_${loteNombre}_${fechaActual}_${index}.jpg`
-      .replace(/[/\\?%*:|"<>]/g, ""); // Eliminar caracteres no permitidos en nombres de archivo
+    const fileName = `${selectedProjectName}_${loteNombre}_${fechaActual}_${uniqueId}_${index}.jpg`
+  .replace(/[/\\?%*:|"<>]/g, "");
 
     // Crear la referencia de almacenamiento
     const storagePath = `imagenes/${selectedProjectName}/${loteNombre}/${fileName}`;
@@ -523,6 +526,8 @@ const ParteObra = () => {
       setSelectedActivities({});
       setSelectedSubactivities({});
       setActivityObservations({});
+      
+
 
       // Limpiar referencias de archivos
       fileInputsRefs.current.forEach((input) => {
@@ -1131,16 +1136,16 @@ const ParteObra = () => {
                         {/* Observaciones de la actividad */}
 
 
-                       {/* Observaciones de la actividad */}
-<VoiceRecorderInput
-  name={`observacionesActividad-${actividadIndex}`}
-  value={activityObservations[actividadIndex] || ""} // Valor del estado
-  onChange={(name, value) => handleObservationChange(actividadIndex, value)} // Llama al mismo manejador
-  placeholder="Escribe observaciones aquí..."
-  maxLength={200}
-  disabled={selectedActivities[actividadIndex]?.noAplica} // Deshabilitar cuando sea "No Aplica"
-  className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} // Estilo cuando es "No Aplica"
-/>
+                        {/* Observaciones de la actividad */}
+                        <VoiceRecorderInput
+                          name={`observacionesActividad-${actividadIndex}`}
+                          value={activityObservations[actividadIndex] || ""} // Valor del estado
+                          onChange={(name, value) => handleObservationChange(actividadIndex, value)} // Llama al mismo manejador
+                          placeholder="Escribe observaciones aquí..."
+                          maxLength={200}
+                          disabled={selectedActivities[actividadIndex]?.noAplica} // Deshabilitar cuando sea "No Aplica"
+                          className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} // Estilo cuando es "No Aplica"
+                        />
 
 
                       </div>

@@ -17,6 +17,7 @@ import { MdOutlineError } from "react-icons/md";
 import { FaFilePdf } from "react-icons/fa6";
 import { FaSignature } from "react-icons/fa";
 import { MdOutlineHistory } from "react-icons/md";
+import { v4 as uuidv4 } from 'uuid';
 
 import { GoHomeFill } from "react-icons/go";
 import { Link } from "react-router-dom";
@@ -28,6 +29,7 @@ import InformeFinal from "./InformeFinal.jsx";
 import ListaInformesModal from "./ListaInformesModal.jsx";
 
 const TablaRegistros = () => {
+  const uniqueId = uuidv4();
   const { user } = useAuth();
   const userId = user?.uid; // Asegúrate de que 'uid' existe
   const { usuario } = useUsuario(userId)
@@ -421,58 +423,79 @@ const TablaRegistros = () => {
   const handleGuardarEdicion = async () => {
     try {
       if (!registroEditando) return;
-
+  
       const docRef = doc(db, "registrosParteDeObra", registroEditando.id);
       const docSnapshot = await getDoc(docRef);
-
+  
       if (!docSnapshot.exists()) {
         console.error("El documento no existe en Firestore.");
         return;
       }
-
+  
       const registroOriginal = docSnapshot.data(); // Datos actuales antes de la edición
-
-      // Crear objeto actualizado con las actividades modificadas
+  
+      // 🔍 LOG 1: Mostrar imágenes anteriores
+      console.log("🖼️ Imágenes ANTERIORES del registro:", registroOriginal.imagenes);
+  
+      // Procesar las imágenes nuevas o mantener las anteriores
+      let nuevasUrls = [];
+  
+      for (let i = 0; i < 4; i++) {
+        const nuevaImg = imagenesEditadas[i];
+        if (nuevaImg) {
+          const url = await subirImagenConMetadatos(nuevaImg, i);
+          nuevasUrls[i] = url;
+        } else {
+          nuevasUrls[i] = registroOriginal.imagenes?.[i] || null;
+        }
+      }
+  
+      // 🔍 LOG 2: Mostrar las imágenes actualizadas
+      console.log("✅ Imágenes ACTUALIZADAS que se guardarán:", nuevasUrls);
+  
+      // Crear objeto actualizado
       const registroActualizado = {
         ...registroEditando,
-        actividades: registroEditando.actividades, // Mantener "Sí", "No" y "No Aplica"
+        actividades: registroEditando.actividades,
+        imagenes: nuevasUrls,
       };
-
-      // Actualizar el registro en Firestore
+  
+      // Guardar cambios
       await updateDoc(docRef, registroActualizado);
-
-      // Guardar en el historial de modificaciones
+  
+      // Guardar historial
       const historialRef = collection(db, "historialRegistrosParteDeObra");
       await addDoc(historialRef, {
         registroId: registroEditando.id,
         fechaHora: new Date().toISOString(),
-        responsable: nombreUsuario, // Usuario que hizo la modificación
-        motivoCambio: motivoCambio || "Sin motivo", // Guarda el motivo de la edición
+        responsable: nombreUsuario,
+        motivoCambio: motivoCambio || "Sin motivo",
         registroOriginal,
         registroEditado: registroActualizado,
       });
-
-      // Actualizar la tabla en tiempo real
+  
+      // Actualizar estados en frontend
       setRegistrosParteDeObra((prev) =>
         prev.map((registro) =>
           registro.id === registroEditando.id ? registroActualizado : registro
         )
       );
-
+  
       setRegistrosFiltrados((prev) =>
         prev.map((registro) =>
           registro.id === registroEditando.id ? registroActualizado : registro
         )
       );
-
+  
       // Cerrar modal
       setModalEdicionAbierto(false);
       setRegistroEditando(null);
-      setMotivoCambio(""); // Limpiar motivo de cambio después de guardar
+      setMotivoCambio("");
     } catch (error) {
-      console.error("Error al guardar los cambios:", error);
+      console.error("❌ Error al guardar los cambios:", error);
     }
   };
+  
 
 
 
@@ -498,18 +521,28 @@ const TablaRegistros = () => {
 
   const subirImagenConMetadatos = async (file, index) => {
     try {
-      // Crear referencia en Storage con un nombre único
-      const storageRef = ref(storage, `imagenes/${Date.now()}_${index}`);
-
-      // Metadatos de la imagen (aquí puedes agregar coordenadas si es necesario)
+      const loteNombre = registroEditando?.parteNombre || "SinNombreLote";
+      const fechaActual = new Date().toISOString().split("T")[0];
+      const uniqueId = uuidv4();
+  
+      const fileName = `${selectedProjectName}_${loteNombre}_${fechaActual}_${uniqueId}_${index}.jpg`
+        .replace(/[/\\?%*:|"<>]/g, "");
+  
+      const storagePath = `imagenes/${selectedProjectName}/${loteNombre}/${fileName}`;
+      const storageRef = ref(storage, storagePath);
+  
       const metadata = {
         contentType: file.type,
+        customMetadata: {
+          latitude: "", // puedes agregar coords si las capturas al editar
+          longitude: "",
+          proyecto: selectedProjectName,
+          lote: loteNombre,
+          fecha: fechaActual,
+        },
       };
-
-      // Subir la imagen a Firebase Storage
+  
       await uploadBytes(storageRef, file, metadata);
-
-      // Obtener la URL de descarga
       const url = await getDownloadURL(storageRef);
       return url;
     } catch (error) {
@@ -517,6 +550,7 @@ const TablaRegistros = () => {
       return null;
     }
   };
+  
 
 
   const handleGoBack = () => {
@@ -963,7 +997,7 @@ const TablaRegistros = () => {
                       }}
                       className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-sky-700 transition duration-150 flex gap-2 items-center"
                     >
-                      <FaEdit/>
+                      <FaEdit />
                     </button>
 
                     {/* Botón de Historial */}
@@ -982,7 +1016,7 @@ const TablaRegistros = () => {
                         }}
                         className="px-4 py-2 bg-red-400 text-white font-medium rounded-md shadow-sm hover:bg-red-400 transition duration-150"
                       >
-                        <FaDeleteLeft/>
+                        <FaDeleteLeft />
                       </button>
                     )
                     }
@@ -1274,7 +1308,7 @@ const TablaRegistros = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  capture="camera"  
+                  capture="camera"
                   onChange={(e) => handleSeleccionarImagen(e, index)}
                   className="block w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border file:border-gray-300 file:bg-gray-100 hover:file:bg-gray-200 cursor-pointer"
                 />

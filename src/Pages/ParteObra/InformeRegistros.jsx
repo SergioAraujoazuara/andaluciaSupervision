@@ -129,28 +129,31 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   // Descargar imágenes y metadatos
   const fetchImagesWithMetadata = async (imagePaths) => {
     return await Promise.all(
-      imagePaths.map(async (path) => {
-        try {
-          const storageRef = ref(storage, path);
-          const url = await getDownloadURL(storageRef);
-          const metadata = await getMetadata(storageRef);
-          const latitude = metadata.customMetadata?.latitude || null;
-          const longitude = metadata.customMetadata?.longitude || null;
-          const observacion = metadata.customMetadata?.observacion || null;
-
-          const googleMapsLink =
-            latitude && longitude
-              ? `https://www.google.com/maps?q=${latitude},${longitude}`
-              : null;
-
-          return { imageBase64: url, googleMapsLink, observacion };
-        } catch (error) {
-          console.error(`Error al descargar la imagen ${path}:`, error);
-          return null;
-        }
-      })
+      imagePaths
+        .filter((path) => path) // 🔥 Solo paths válidos (no null, no undefined)
+        .map(async (path) => {
+          try {
+            const storageRef = ref(storage, path);
+            const url = await getDownloadURL(storageRef);
+            const metadata = await getMetadata(storageRef);
+            const latitude = metadata.customMetadata?.latitude || null;
+            const longitude = metadata.customMetadata?.longitude || null;
+            const observacion = metadata.customMetadata?.observacion || null;
+  
+            const googleMapsLink =
+              latitude && longitude
+                ? `https://www.google.com/maps?q=${latitude},${longitude}`
+                : null;
+  
+            return { imageBase64: url, googleMapsLink, observacion };
+          } catch (error) {
+            console.error(`Error al descargar la imagen ${path}:`, error);
+            return null;
+          }
+        })
     );
   };
+  
 
 
 

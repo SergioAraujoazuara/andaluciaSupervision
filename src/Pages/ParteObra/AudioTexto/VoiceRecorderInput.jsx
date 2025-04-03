@@ -43,22 +43,27 @@ const VoiceRecorderInput = ({ name, value, onChange, placeholder, maxLength, dis
 
       {/* Contenedor para los botones dentro del textarea */}
       <div className="absolute top-2 right-2 flex gap-3">
-        <button
-          type="button"
-          onClick={handleStartListening}
-          className="px-2 py-2 border-gray-400 border-2 rounded-md"
-          disabled={disabled} // Se desactiva si está en modo "No Aplica"
-        >
-          <FaMicrophoneLines />
-        </button>
-        <button
-          type="button"
-          onClick={handleStopListening}
-          className="px-2 py-2 border-gray-400 border-2 rounded-md"
-          disabled={disabled} // Se desactiva si está en modo "No Aplica"
-        >
-          <FaStopCircle />
-        </button>
+        {!isRecording && (
+          <button
+            type="button"
+            onClick={handleStartListening}
+            className="px-2 py-2 bg-gray-200 border-2 rounded-md transition-colors duration-200 text-gray-600 border-gray-400"
+            disabled={disabled}
+          >
+            <FaMicrophoneLines className="text-xs"/>
+          </button>
+        )}
+
+        {isRecording && (
+          <button
+            type="button"
+            onClick={handleStopListening}
+            className="px-2 py-2 border-2 rounded-md transition-colors duration-200 bg-red-500 text-white border-red-600 active:bg-red-700"
+            disabled={disabled}
+          >
+            <FaStopCircle className="text-xs"/>
+          </button>
+        )}
       </div>
     </div>
   );
