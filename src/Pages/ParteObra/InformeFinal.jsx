@@ -23,6 +23,7 @@ import { PDFDocument } from "pdf-lib";
 import Spinner from "./ComponentesInforme/Spinner";
 import { uploadPdfToStorage } from "../ParteObra/Helpers/uploadPdfToStorage";
 import { FaRegCheckCircle } from "react-icons/fa";
+import MedidasPreventivas from "./ComponentesInforme/MedidasPreventivas";
 
 
 
@@ -155,7 +156,12 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
     };
 
 
-
+    const obtenerHoraActual = () => {
+        const ahora = new Date();
+        const horas = ahora.getHours().toString().padStart(2, "0");
+        const minutos = ahora.getMinutes().toString().padStart(2, "0");
+        return `${horas}:${minutos}`;  // Devuelve la hora en formato HH:mm
+      };
 
     const downloadPdf = async (registroIndividual) => {
         if (!registroIndividual) return null;
@@ -164,6 +170,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
         if (registroIndividual.imagenes && registroIndividual.imagenes.length > 0) {
             imagesWithMetadata = await fetchImagesWithMetadata(registroIndividual.imagenes);
         }
+        
 
         const docContent = (
             <Document>
@@ -175,7 +182,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         description={proyecto?.descripcion || "Nombre contratista"}
                         coordinador={proyecto?.coordinador || "Nombre coordinador de seguridad y salud"}
                         director={proyecto?.director || "Nombre director de la obra"}
-                        rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin}` : ""}`}
+                        rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin} - ${obtenerHoraActual()} hrs` : ""}`}
                         logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
                     />
 
@@ -206,6 +213,11 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                 {imagesWithMetadata.length > 0 && (
                     <Page size="A4" style={styles.page}>
                         <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
+                        <MedidasPreventivas
+                        registro={registroIndividual}
+                        excluirClaves={["id", "parteId", "ppiId", "idSubSector", "idSector", "idBim", "elementoId", "imagenes"]}
+                        dataRegister={registroIndividual}
+                        columnasMap={columnasMap}/>
                         <PiePaginaInforme
                             userNombre={userNombre}
                             firmaEmpresa={registroIndividual.firmaEmpresa}

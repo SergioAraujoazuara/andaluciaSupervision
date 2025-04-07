@@ -87,18 +87,7 @@ const DatosRegistro = ({ dataRegister }) => {
         />
       </View>
 
-      {/* Sección 4 */}
-      <View style={styles.section}>
-        <TituloInforme plantillaSeleccionada="4. Previsión de actividades de próximo inicio. Medias preventivas y pasos." />
-        <SeccionesDatosRegistros
-          nombreCampo={"Actividades próximo inicio"}
-          valorDelCampo={dataRegister.actividadesProximoInicio}
-        />
-        <SeccionesDatosRegistros
-          nombreCampo={"Medidas preventivas"}
-          valorDelCampo={dataRegister.medidasPreventivas}
-        />
-      </View>
+      
     </View>
   );
 };

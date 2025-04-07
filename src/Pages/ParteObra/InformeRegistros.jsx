@@ -21,6 +21,7 @@ import Firma from "../../Components/Firma/Firma";
 import Spinner from "./ComponentesInforme/Spinner";
 
 import { View, Text, Image, StyleSheet, Page, Document } from "@react-pdf/renderer";
+import MedidasPreventivas from "./ComponentesInforme/MedidasPreventivas";
 
 const styles = StyleSheet.create({
   page: {
@@ -64,15 +65,13 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
 
 
 
-  const formatFechaSolo = (fecha) => {
-    if (!fecha) return "";
-    const fechaObj = new Date(fecha);
-    const dia = fechaObj.getDate().toString().padStart(2, "0");
-    const mes = (fechaObj.getMonth() + 1).toString().padStart(2, "0");
-    const anio = fechaObj.getFullYear();
-
-    return `${dia}/${mes}/${anio}`; // Devuelve solo DD/MM/YYYY
+  const obtenerHoraActual = () => {
+    const ahora = new Date();
+    const horas = ahora.getHours().toString().padStart(2, "0");
+    const minutos = ahora.getMinutes().toString().padStart(2, "0");
+    return `${horas}:${minutos}`;  // Devuelve la hora en formato HH:mm
   };
+  
 
   const [userNombre, setUserNombre] = useState("");
   const [userSignature, setUserSignature] = useState(null);
@@ -189,7 +188,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             description={proyecto?.descripcion || "Contratista"}
             coordinador={proyecto?.coordinador || "Nombre coordinador de seguridad y salud"}
             director={proyecto?.director || "Nombre director de la obra"}
-            rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin}` : ""}`}
+            rangoFechas={`${fechaInicio || `${formatFechaActual} - ${obtenerHoraActual()} hrs` } ${fechaFin ? ` al ${fechaFin} - ${obtenerHoraActual()} hrs` : ""}`}
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />
 
@@ -236,6 +235,17 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
           {imagesWithMetadata.length > 0 && (
             <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
           )}
+
+          <MedidasPreventivas 
+           registro={dataRegister}
+           excluirClaves={[
+             "id", "parteId", "ppiId", "idSubSector", "idSector", "idBim", "elementoId",
+             "imagenes", "idProyecto", "ppiNombre", "loteid", "totalSubactividades",
+             "nombreProyecto", "estado", "pkInicial", "pkFinal", "loteId",
+             "sectorNombre", "subSectorNombre", "parteNombre", "elementoNombre"
+           ]}
+           dataRegister={dataRegister}
+           columnasMap={columnasMap}/>
 
 
           {/* Pie de página con ambas firmas */}

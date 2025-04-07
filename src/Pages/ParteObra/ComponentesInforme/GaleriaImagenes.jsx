@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
 const GaleriaImagenes = ({ imagesWithMetadata }) => (
   <>
 
-    <TituloInforme plantillaSeleccionada="6. Registro fotográfico" />
+    <TituloInforme plantillaSeleccionada="5. Registro fotográfico" />
     <View style={styles.imageGrid}>
       {imagesWithMetadata.map((imageData, imgIndex) => (
         <View key={imgIndex} style={styles.imageContainer}>

@@ -31,11 +31,13 @@ const ParteObra = () => {
   const [formData, setFormData] = useState({
     observaciones: "",
     observacionesActividad: "",
+    observacionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
     observacionesLocalizacion: "",
     fechaHora: "",
     imagenes: [],
     mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "" }]
   });
+  const [activityVisibility, setActivityVisibility] = useState(true); // Estado para controlar la visibilidad de las observaciones
 
   const fileInputsRefs = useRef([]);
   const [geolocalizacion, setGeolocalizacion] = useState(null);
@@ -413,7 +415,7 @@ const ParteObra = () => {
 
     // Crear un nombre descriptivo para el archivo
     const fileName = `${selectedProjectName}_${loteNombre}_${fechaActual}_${uniqueId}_${index}.jpg`
-  .replace(/[/\\?%*:|"<>]/g, "");
+      .replace(/[/\\?%*:|"<>]/g, "");
 
     // Crear la referencia de almacenamiento
     const storagePath = `imagenes/${selectedProjectName}/${loteNombre}/${fileName}`;
@@ -470,6 +472,16 @@ const ParteObra = () => {
       });
     }
 
+    // Validar que al menos una observación esté presente
+    const actividadesObservadas = Object.values(formData.observacionesActividades).every(
+      (actividad) => actividad.trim() === ""
+    );
+    
+
+    if (actividadesObservadas) {
+      errors.push("⚠️ Debes ingresar al menos una observación en las actividades.");
+    }
+
 
 
     // Si hay errores, mostrar en el modal
@@ -498,6 +510,7 @@ const ParteObra = () => {
         ...selectedLote,
         ...formData,
         actividades: actividadesConObservaciones,
+       
         imagenes: imageUrls,
         fechaHora: new Date(formData.fechaHora).toISOString(),
         actividad: selectedLote.nombre,
@@ -526,7 +539,7 @@ const ParteObra = () => {
       setSelectedActivities({});
       setSelectedSubactivities({});
       setActivityObservations({});
-      
+
 
 
       // Limpiar referencias de archivos
@@ -727,6 +740,22 @@ const ParteObra = () => {
     return "bg-red-200 text-gray-500";
   };
 
+
+  const handleActivityObservationChange = (actividad, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      observacionesActividades: {
+        ...prev.observacionesActividades,
+        [actividad]: value, // Accede directamente a la actividad usando su nombre
+      }
+    }));
+  };
+
+  // Función para alternar la visibilidad de las observaciones
+  const toggleActivityVisibility = () => {
+    setActivityVisibility((prev) => !prev);
+  };
+
   return (
     <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
       <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
@@ -896,17 +925,43 @@ const ParteObra = () => {
                 )}
               </div>
 
+
               <div>
                 {/* Observaciones de Actividad */}
                 <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">1. Trabajos inspeccionados</h3>
-                <label className="block text-sm font-medium px-4">¿Qué se inspecciona?</label>
-                <VoiceRecorderInput
-                  maxLength={200}
-                  name="observacionesActividad"
-                  value={formData.observacionesActividad}  // Usamos la variable de estado existente
-                  onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
-                  placeholder="Escribe tus observaciones aquí..."
-                />
+                <div className="flex justify-between items-center">
+                  <label className="block text-sm font-medium px-4">¿Qué actividades se inspeccionan?</label>
+
+                  <button
+                    onClick={toggleActivityVisibility}
+                    className="px-4 py-2 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 transition"
+                  >
+                    {activityVisibility ? "Ocultar actividades" : "Agregar actividades"}
+                  </button>
+                </div>
+              </div>
+              {/* Observaciones de Actividades */}
+              <div className="mt-4">
+                {/* Botón para mostrar u ocultar las observaciones */}
+
+
+                {/* Sección de observaciones de actividades */}
+                <div className={`${activityVisibility ? "" : "hidden"} mt-4`}>
+                  {Object.keys(formData.observacionesActividades).map((key, index) => (
+                    <div key={index}>
+                      
+                      <VoiceRecorderInput
+                        maxLength={100}
+                        name={`observacionesActividad-${key}`}
+                        value={formData.observacionesActividades[key]}
+                        onChange={(name, value) => handleActivityObservationChange(key, value)}
+                        placeholder={`Actividad ${index + 1}`} // Usa la clave como parte del placeholder
+                      
+                      />
+                    </div>
+                  ))}
+                </div>
+
               </div>
 
               <div className="mt-4">

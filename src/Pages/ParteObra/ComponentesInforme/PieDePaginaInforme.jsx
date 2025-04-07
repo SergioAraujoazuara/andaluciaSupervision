@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
 
 const PiePaginaInforme = ({ userNombre, firmaEmpresa, firmaCliente, nombreUsuario }) => (
   <View style={styles.footer}>
-    <TituloInforme plantillaSeleccionada="6. Firmas" />
+    <TituloInforme plantillaSeleccionada="7. Firmas" />
     <View style={styles.container}>
 
       {/* LADO IZQUIERDO */}

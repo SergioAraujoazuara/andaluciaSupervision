@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
 const DatosRegistroTabla = ({ registro }) => {
   return (
     <View style={styles.fieldGroup}>
-      <TituloInforme plantillaSeleccionada="5. Detalles de la inspección" />
+      <TituloInforme plantillaSeleccionada="4. Detalles de la inspección" />
 
       {/* 🔹 Tabla de Actividades y Subactividades */}
       {registro.actividades && (
