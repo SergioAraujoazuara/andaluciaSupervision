@@ -161,21 +161,7 @@ const DatosRegistroTabla = ({ registro }) => {
         </View>
       )}
 
-      {/* 🔹 Resultado de la Visita */}
-      {/* <View style={styles.resultadoVisita}>
-        <Text style={styles.resultadoTexto}>
-          Resultado de la Visita:{" "}
-          <Text
-            style={{
-              color: registro.apto === "apto" ? "green" : "red",
-              fontWeight: "bold",
-              fontSize: 10,
-            }}
-          >
-            {registro.apto === "apto" ? "APTO ✅" : "NO APTO ❌"}
-          </Text>
-        </Text>
-      </View> */}
+      
       
     </View>
   );

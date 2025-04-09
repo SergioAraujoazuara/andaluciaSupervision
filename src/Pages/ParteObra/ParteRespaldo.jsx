@@ -88,10 +88,18 @@ const ParteObra = () => {
 
   const [firma, setFirma] = useState(null);  // Estado para la firma
 
-  const handleSave = () => {
-    localStorage.setItem("firma", firma);  // Guardar la firma en localStorage
-    setModalOpen(false);
+  // Tipos de formulario
+  const [formType, setFormType] = useState('prevencion'); // 'prevencion' o 'acta'
+
+  const handlePrevencionClick = () => {
+    setFormType('prevencion');
   };
+
+  const handleActaReunionClick = () => {
+    setFormType('acta');
+  };
+
+
 
   const handleObservationChange = (actividadIndex, value) => {
     setActivityObservations((prev) => ({
@@ -457,7 +465,7 @@ const ParteObra = () => {
     }
 
     // Validar observaciones de actividad y localización
-    if (!formData.observacionesLocalizacion.trim()) {
+    if (formType === 'prevencion' && !formData.observacionesLocalizacion.trim()) {
       errors.push("⚠️ Debes llenar las observaciones de la localización.");
     }
 
@@ -477,15 +485,14 @@ const ParteObra = () => {
     }
 
     // Validar que al menos una observación esté presente
-    const actividadesObservadas = Object.values(formData.observacionesActividades).every(
+    const actividadesObservadas = formType === 'prevencion' && Object.values(formData.observacionesActividades).every(
       (actividad) => actividad.trim() === ""
     );
-
-
+    
     if (actividadesObservadas) {
       errors.push("⚠️ Debes ingresar al menos una observación en las actividades.");
     }
-
+    
 
 
     // Si hay errores, mostrar en el modal
@@ -918,399 +925,606 @@ const ParteObra = () => {
 
             <div className="w-full border-b-2 mt-2 mb-6"></div>
 
-            <div>
 
-              <div>
-                <p className="font-semibold bg-sky-600 text-white rounded-t-lg px-4 py-2">
-                  Trabajo seleccionado
-                </p>
-                {selectedLote && (
-                  <p className="bg-gray-200 p-2 rounded-b-lg px-4 py-2 font-medium">{selectedLote.nombre}</p>
-                )}
-              </div>
-
-              {/* Fecha y Hora */}
-              <div>
-                <label className="mt-4 block bg-sky-600 text-white px-4 py-2 rounded-md text-sm font-medium">
-                  Fecha y Hora
-                </label>
-                <input
-                  required
-                  type="datetime-local"
-                  name="fechaHora"
-                  value={formData.fechaHora}
-                  onChange={handleInputChange}
-                  className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                />
-              </div>
-
-
-
-              <div>
-                {/* Observaciones de Actividad */}
-                <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">1. Trabajos inspeccionados</h3>
-                <div className="flex justify-between items-center">
-                  <label className="block text-sm font-medium px-4">¿Qué actividades se inspeccionan?</label>
-
-                  {visibleActivities < Object.keys(formData.observacionesActividades).length && (
-                    <button
-                      onClick={handleShowMoreActivities}
-                      className="px-4 py-2 text-xs bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                    >
-                      Agregar actividad
-                    </button>
-                  )}
-                </div>
-              </div>
-              {/* Observaciones de Actividades */}
-              <div className="mt-4">
-                {/* Botón para mostrar u ocultar las observaciones */}
-
-
-                {/* Sección de observaciones de actividades */}
-                <div className={`${activityVisibility ? "" : "hidden"} mt-4`}>
-                  {Object.keys(formData.observacionesActividades)
-                    .slice(0, visibleActivities) // Limita las actividades visibles según el estado
-                    .map((key, index) => (
-                      <div key={index}>
-                        <VoiceRecorderInput
-                          maxLength={100}
-                          name={`observacionesActividad-${key}`}
-                          value={formData.observacionesActividades[key]}
-                          onChange={(name, value) => handleActivityObservationChange(key, value)}
-                          placeholder={`Actividad ${index + 1}`}
-                        />
-                      </div>
-                    ))}
-                </div>
-
-
-
-
-              </div>
-
-              <div className="mt-4">
-                <label className="block text-sm font-medium px-4">
-                  ¿Dónde se ubica?
-                </label>
-                <VoiceRecorderInput
-                  maxLength={100}
-                  name="observacionesLocalizacion"
-                  value={formData.observacionesLocalizacion}
-                  onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
-                  placeholder="Escribe tus observaciones aquí..."
-                />
-              </div>
+            {/* Botones de tipos de formulario */}
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={handlePrevencionClick}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Formulario Informe Prevención
+              </button>
+              <button
+                type="button"
+                onClick={handleActaReunionClick}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              >
+                Acta de Reunión
+              </button>
             </div>
 
-            {/* Medios disponibles, empresa y trabajadores */}
+            {/* ------------------------------------------------------- Formulario --------------------------------------------------*/}
 
-            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
-              2. Medios disponibles en obra: Empresas, trabajadores y maquinaria.
-            </h3>
+            {/* Formulario prevencion*/}
 
-            {formData.mediosDisponibles.map((empresa, index) => (
-              <div key={index} className="flex items-center gap-2 mb-2">
-                <input
-                  type="text"
-                  required
-                  maxLength={150}
-                  placeholder="Nombre empresa"
-                  value={empresa.nombreEmpresa}
-                  onChange={(e) => handleMediosChange(index, "nombreEmpresa", e.target.value)}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                />
-
-                <input
-                  type="text"
-                  placeholder="Nº Trab."
-                  value={empresa.numeroTrabajadores}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  onChange={(e) => handleMediosChange(index, "numeroTrabajadores", e.target.value.replace(/\D/g, ""))}
-                  className="block w-1/3 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                />
-
-                <input
-                  type="text"
-                  required
-                  maxLength={100}
-                  placeholder="Maquinaria"
-                  value={empresa.maquinaria}
-                  onChange={(e) => handleMediosChange(index, "maquinaria", e.target.value)}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                />
-
-
-                {index > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveEmpresa(index)}
-                    className="px-3 py-2 bg-red-500 text-white rounded-lg shadow-sm hover:bg-red-600"
-                  >
-                    <FaDeleteLeft />
-                  </button>
-                )}
-              </div>
-            ))}
-
-            <button
-              type="button"
-              onClick={handleAddEmpresa}
-              className="mt-2 px-4 py-2 bg-gray-500 text-white rounded-lg shadow-sm hover:bg-gray-500"
-            >
-              + Agregar Empresa
-            </button>
-
-            {/* Observaciones en materia seguridad y salud */}
-            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">3. Observaciones en materia de seguridad y salud</h3>
-
-            <div>
-              <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
-                Observaciones generales
-              </label>
-              <VoiceRecorderInput
-                maxLength={300}
-                name="observaciones"
-                value={formData.observaciones}
-                onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
-                placeholder="Escribe tus observaciones aquí..."
-              />
-            </div>
-
-
-            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">4. Detalles de la inspección</h3>
-
-            {ppiDetails && (
+            {formType === "prevencion" && (
               <div>
+                <div>
+                  <div>
+                    <p className="font-semibold bg-sky-600 text-white rounded-t-lg px-4 py-2">
+                      Trabajo seleccionado
+                    </p>
+                    {selectedLote && (
+                      <p className="bg-gray-200 p-2 rounded-b-lg px-4 py-2 font-medium">{selectedLote.nombre}</p>
+                    )}
+                  </div>
+
+                  {/* Fecha y Hora */}
+                  <div>
+                    <label className="mt-4 block bg-sky-600 text-white px-4 py-2 rounded-md text-sm font-medium">
+                      Fecha y Hora
+                    </label>
+                    <input
+                      required
+                      type="datetime-local"
+                      name="fechaHora"
+                      value={formData.fechaHora}
+                      onChange={handleInputChange}
+                      className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                    />
+                  </div>
 
 
-                {/* Contenedor con scroll vertical */}
-                <div className="mt-4 ps-4">
-                  {ppiDetails.actividades.map((actividad, actividadIndex) => {
-                    // Filtramos las subactividades que tienen nombre válido
-                    const subactividadesValidas = Array.isArray(actividad.subactividades)
-                      ? actividad.subactividades.filter((sub) => sub.nombre.trim() !== "")
-                      : [];
 
-                    return (
-                      <div key={actividadIndex} className="mb-4 border-b pb-3">
-                        {/* Checkbox y título de la actividad */}
-                        <div className="">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex gap-2">
-                              <p className="font-semibold text-sky-700">{actividad.numero}-</p>
-                              <p className="font-semibold text-sky-700">{actividad.actividad}</p>
-                            </div>
+                  <div>
+                    {/* Observaciones de Actividad */}
+                    <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">1. Trabajos inspeccionados</h3>
+                    <div className="flex justify-between items-center">
+                      <label className="block text-sm font-medium px-4">¿Qué actividades se inspeccionan?</label>
+
+                      {visibleActivities < Object.keys(formData.observacionesActividades).length && (
+                        <button
+                          onClick={handleShowMoreActivities}
+                          className="px-4 py-2 text-xs bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                        >
+                          Agregar actividad
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {/* Observaciones de Actividades */}
+                  <div className="mt-4">
+                    {/* Botón para mostrar u ocultar las observaciones */}
 
 
-                            {/* Estado de la actividad (Cumple, No cumple, No aplica) */}
-                            <div className="flex gap-3 text-xs text-gray-700 font-medium">
+                    {/* Sección de observaciones de actividades */}
+                    <div className={`${activityVisibility ? "" : "hidden"} mt-4`}>
+                      {Object.keys(formData.observacionesActividades)
+                        .slice(0, visibleActivities) // Limita las actividades visibles según el estado
+                        .map((key, index) => (
+                          <div key={index}>
+                            <VoiceRecorderInput
+                              maxLength={100}
+                              name={`observacionesActividad-${key}`}
+                              value={formData.observacionesActividades[key]}
+                              onChange={(name, value) => handleActivityObservationChange(key, value)}
+                              placeholder={`Actividad ${index + 1}`}
+                            />
+                          </div>
+                        ))}
+                    </div>
 
-                              {/* ✅ Checkbox para marcar Sí (Cumple) */}
-                              <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
+
+
+
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium px-4">
+                      ¿Dónde se ubica?
+                    </label>
+                    <VoiceRecorderInput
+                      maxLength={100}
+                      name="observacionesLocalizacion"
+                      value={formData.observacionesLocalizacion}
+                      onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
+                      placeholder="Escribe tus observaciones aquí..."
+                    />
+                  </div>
+                </div>
+
+                {/* Medios disponibles, empresa y trabajadores */}
+
+                <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
+                  2. Medios disponibles en obra: Empresas, trabajadores y maquinaria.
+                </h3>
+
+                {formData.mediosDisponibles.map((empresa, index) => (
+                  <div key={index} className="flex items-center gap-2 mb-2">
+                    <input
+                      type="text"
+                      required
+                      maxLength={150}
+                      placeholder="Nombre empresa"
+                      value={empresa.nombreEmpresa}
+                      onChange={(e) => handleMediosChange(index, "nombreEmpresa", e.target.value)}
+                      className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                    />
+
+                    <input
+                      type="text"
+                      placeholder="Nº Trab."
+                      value={empresa.numeroTrabajadores}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      onChange={(e) => handleMediosChange(index, "numeroTrabajadores", e.target.value.replace(/\D/g, ""))}
+                      className="block w-1/3 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                    />
+
+                    <input
+                      type="text"
+                      required
+                      maxLength={100}
+                      placeholder="Maquinaria"
+                      value={empresa.maquinaria}
+                      onChange={(e) => handleMediosChange(index, "maquinaria", e.target.value)}
+                      className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                    />
+
+
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveEmpresa(index)}
+                        className="px-3 py-2 bg-red-500 text-white rounded-lg shadow-sm hover:bg-red-600"
+                      >
+                        <FaDeleteLeft />
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={handleAddEmpresa}
+                  className="mt-2 px-4 py-2 bg-gray-500 text-white rounded-lg shadow-sm hover:bg-gray-500"
+                >
+                  + Agregar Empresa
+                </button>
+
+                {/* Observaciones en materia seguridad y salud */}
+                <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">3. Observaciones en materia de seguridad y salud</h3>
+
+                <div>
+                  <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
+                    Observaciones generales
+                  </label>
+                  <VoiceRecorderInput
+                    maxLength={300}
+                    name="observaciones"
+                    value={formData.observaciones}
+                    onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
+                    placeholder="Escribe tus observaciones aquí..."
+                  />
+                </div>
+
+
+                <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">4. Detalles de la inspección</h3>
+
+                {ppiDetails && (
+                  <div>
+
+
+                    {/* Contenedor con scroll vertical */}
+                    <div className="mt-4 ps-4">
+                      {ppiDetails.actividades.map((actividad, actividadIndex) => {
+                        // Filtramos las subactividades que tienen nombre válido
+                        const subactividadesValidas = Array.isArray(actividad.subactividades)
+                          ? actividad.subactividades.filter((sub) => sub.nombre.trim() !== "")
+                          : [];
+
+                        return (
+                          <div key={actividadIndex} className="mb-4 border-b pb-3">
+                            {/* Checkbox y título de la actividad */}
+                            <div className="">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex gap-2">
+                                  <p className="font-semibold text-sky-700">{actividad.numero}-</p>
+                                  <p className="font-semibold text-sky-700">{actividad.actividad}</p>
+                                </div>
+
+
+                                {/* Estado de la actividad (Cumple, No cumple, No aplica) */}
+                                <div className="flex gap-3 text-xs text-gray-700 font-medium">
+
+                                  {/* ✅ Checkbox para marcar Sí (Cumple) */}
+                                  <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
     ${selectedActivities[actividadIndex]?.noAplica ? "text-gray-400 bg-gray-100 border-gray-300 cursor-not-allowed" :
-                                  selectedActivities[actividadIndex]?.seleccionada === true ? "text-gray-800 font-bold bg-gray-300 border-gray-500" : "text-gray-500 border-gray-300"}`}
-                              >
-                                <input
-                                  maxLength={300}
-                                  type="radio"
-                                  name={`actividad-${actividadIndex}`}
-                                  value="si"
-                                  checked={selectedActivities[actividadIndex]?.seleccionada === true}
-                                  onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas, "si")}
-                                  disabled={selectedActivities[actividadIndex]?.noAplica}
-                                  className="hidden"
-                                />
-                                ✅ Aplica
-                              </label>
+                                      selectedActivities[actividadIndex]?.seleccionada === true ? "text-gray-800 font-bold bg-gray-300 border-gray-500" : "text-gray-500 border-gray-300"}`}
+                                  >
+                                    <input
+                                      maxLength={300}
+                                      type="radio"
+                                      name={`actividad-${actividadIndex}`}
+                                      value="si"
+                                      checked={selectedActivities[actividadIndex]?.seleccionada === true}
+                                      onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas, "si")}
+                                      disabled={selectedActivities[actividadIndex]?.noAplica}
+                                      className="hidden"
+                                    />
+                                    ✅ Aplica
+                                  </label>
 
 
 
-                              {/* ⚪ Checkbox "No Aplica" */}
-                              <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
+                                  {/* ⚪ Checkbox "No Aplica" */}
+                                  <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
     ${selectedActivities[actividadIndex]?.noAplica ? "text-gray-800 font-bold bg-gray-200 border-gray-500" : "text-gray-500 border-gray-300"}`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={selectedActivities[actividadIndex]?.noAplica || false}
-                                  onChange={() => handleNoAplicaChange(actividadIndex)}
-                                  className="hidden"
-                                />
-                                ⚪ No Aplica
-                              </label>
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedActivities[actividadIndex]?.noAplica || false}
+                                      onChange={() => handleNoAplicaChange(actividadIndex)}
+                                      className="hidden"
+                                    />
+                                    ⚪ No Aplica
+                                  </label>
+
+                                </div>
+
+
+                              </div>
+
+
+
+
+
 
                             </div>
+
+                            {/* Mostrar subactividades solo si existen y tienen nombre válido */}
+                            {subactividadesValidas.length > 0 &&
+                              subactividadesValidas.map((sub, subIndex) => (
+                                <div key={subIndex} className="ml-4 flex items-center gap-2 text-xs border-l-4 border-gray-500 pl-2 mt-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedActivities[actividadIndex]?.subactividades[subIndex]?.seleccionada || false}
+                                    onChange={() => handleSubactivityChange(actividadIndex, subIndex)}
+                                    disabled={selectedActivities[actividadIndex]?.noAplica}
+                                    className="form-checkbox h-3 w-3 text-sky-600"
+                                  />
+                                  <div>
+                                    <p className="text-gray-700 font-medium">{sub.numero} - {sub.nombre}</p>
+                                    <p className="text-gray-600 italic text-xs">Tipo: {sub.tipo_inspeccion}</p>
+                                  </div>
+                                </div>
+                              ))}
+
+                            {/* Observaciones de la actividad */}
+
+
+                            {/* Observaciones de la actividad */}
+                            <VoiceRecorderInput
+                              name={`observacionesActividad-${actividadIndex}`}
+                              value={activityObservations[actividadIndex] || ""} // Valor del estado
+                              onChange={(name, value) => handleObservationChange(actividadIndex, value)} // Llama al mismo manejador
+                              placeholder="Escribe observaciones aquí..."
+                              maxLength={150}
+                              disabled={selectedActivities[actividadIndex]?.noAplica} // Deshabilitar cuando sea "No Aplica"
+                              className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} // Estilo cuando es "No Aplica"
+                            />
 
 
                           </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
 
-
-
-
-
-                        </div>
-
-                        {/* Mostrar subactividades solo si existen y tienen nombre válido */}
-                        {subactividadesValidas.length > 0 &&
-                          subactividadesValidas.map((sub, subIndex) => (
-                            <div key={subIndex} className="ml-4 flex items-center gap-2 text-xs border-l-4 border-gray-500 pl-2 mt-2">
-                              <input
-                                type="checkbox"
-                                checked={selectedActivities[actividadIndex]?.subactividades[subIndex]?.seleccionada || false}
-                                onChange={() => handleSubactivityChange(actividadIndex, subIndex)}
-                                disabled={selectedActivities[actividadIndex]?.noAplica}
-                                className="form-checkbox h-3 w-3 text-sky-600"
-                              />
-                              <div>
-                                <p className="text-gray-700 font-medium">{sub.numero} - {sub.nombre}</p>
-                                <p className="text-gray-600 italic text-xs">Tipo: {sub.tipo_inspeccion}</p>
-                              </div>
-                            </div>
-                          ))}
-
-                        {/* Observaciones de la actividad */}
-
-
-                        {/* Observaciones de la actividad */}
-                        <VoiceRecorderInput
-                          name={`observacionesActividad-${actividadIndex}`}
-                          value={activityObservations[actividadIndex] || ""} // Valor del estado
-                          onChange={(name, value) => handleObservationChange(actividadIndex, value)} // Llama al mismo manejador
-                          placeholder="Escribe observaciones aquí..."
-                          maxLength={150}
-                          disabled={selectedActivities[actividadIndex]?.noAplica} // Deshabilitar cuando sea "No Aplica"
-                          className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} // Estilo cuando es "No Aplica"
-                        />
-
-
-                      </div>
-                    );
-                  })}
+                {/* Estadísticas de apto debajo de los checkboxes */}
+                <div className={` font-medium py-2 px-4 rounded-lg flex gap-5 justify-between ${getBackgroundColor()}`}>
+                  <span>Resumen total</span><p>{stats.totalSi} puntos de {stats.totalActividades}  ({stats.porcentajeApto}%)</p>
                 </div>
+
+
+                {/* 5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.*/}
+
+                <div>
+                  <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.</h3>
+                  {/* Previsión de Actividades de Próximo Inicio */}
+                  <div className="mt-4">
+
+
+                    {/* Actividades de Próximo Inicio */}
+                    <div className="">
+                      <label className="mt-2 block px-4 rounded-md text-sm font-medium">
+                        Actividades de Próximo Inicio
+                      </label>
+                      <VoiceRecorderInput
+                        maxLength={120}
+                        name="actividadesProximoInicio"
+                        value={formData.actividadesProximoInicio || ""}
+                        onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
+                        placeholder="Escribe tus observaciones aquí..."
+                      />
+                    </div>
+
+                    {/* 4 Medidas Preventivas a Implantar */}
+                    <div>
+                      <label className="block px-4 py-2 rounded-md text-sm font-medium">
+                        Medidas Preventivas a Implantar en Obra
+                      </label>
+                      <VoiceRecorderInput
+                        maxLength={120}
+                        name="medidasPreventivas"
+                        value={formData.medidasPreventivas || ""}
+                        onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
+                        placeholder="Escribe tus observaciones aquí..."
+                      />
+                    </div>
+                  </div>
+
+
+                </div>
+
+
+
+                {/* Formulario */}
+                <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+                  <div className="mt-6">
+                    <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">6. Reportaje fotográfico de la visita.</h3>
+                    {/* Imágenes */}
+                    <div className="mb-4 ps-4">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Registro fotográfico
+                        <p className="text-amber-600 text-xs">* Mínimo 1 imagen</p>
+                      </label>
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        {[0, 1, 2, 3, 4, 5].map((index) => (
+                          <div key={index} className="relative">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              capture="camera"
+                              ref={(el) => (fileInputsRefs.current[index] = el)}
+                              onChange={(e) => handleFileChange(e, index)}
+                              className="hidden" // Oculta el input original
+                              id={`file-upload-${index}`}
+                            />
+                            <label
+                              htmlFor={`file-upload-${index}`}
+                              className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg shadow-sm py-2 px-4 text-center bg-indigo-100 text-indigo-600 font-semibold cursor-pointer hover:bg-indigo-200"
+                            >
+                              Seleccionar archivo
+                            </label>
+                            <p className="mt-2 text-sm text-gray-500 text-center">
+                              {fileInputsRefs.current[index]?.files[0]?.name || "Ningún archivo seleccionado"}
+                            </p>
+
+                            {/* 🔹 Campo para observaciones */}
+                            <textarea
+                              maxLength={80}
+                              placeholder="Observaciones de la imagen..."
+                              value={observacionesImagenes[index] || ""}
+                              onChange={(e) => setObservacionesImagenes((prev) => ({
+                                ...prev,
+                                [index]: e.target.value
+                              }))}
+                              className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
+                            ></textarea>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <div className="w-full p-2 border-b-4"></div>
+                  {/* Botones */}
+                  <div className="flex justify-between items-center gap-4 mt-12">
+                    <button
+                      type="submit"
+                      className="w-2/3 py-2 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-700 transition mt-4"
+                      onClick={handleSubmit}
+                    >
+                      Enviar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="w-1/3 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition mt-4"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {formType === "acta" && (
+              <div>
+                <div>
+                  <div>
+                    <p className="font-semibold bg-sky-600 text-white rounded-t-lg px-4 py-2">
+                      Trabajo seleccionado
+                    </p>
+                    {selectedLote && (
+                      <p className="bg-gray-200 p-2 rounded-b-lg px-4 py-2 font-medium">{selectedLote.nombre}</p>
+                    )}
+                  </div>
+
+                  {/* Fecha y Hora */}
+                  <div>
+                    <label className="mt-4 block bg-sky-600 text-white px-4 py-2 rounded-md text-sm font-medium">
+                      Fecha y Hora
+                    </label>
+                    <input
+                      required
+                      type="datetime-local"
+                      name="fechaHora"
+                      value={formData.fechaHora}
+                      onChange={handleInputChange}
+                      className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+
+                <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">4. Detalles de la inspección</h3>
+
+                {ppiDetails && (
+                  <div>
+
+
+                    {/* Contenedor con scroll vertical */}
+                    <div className="mt-4 ps-4">
+                      {ppiDetails.actividades.map((actividad, actividadIndex) => {
+                        // Filtramos las subactividades que tienen nombre válido
+                        const subactividadesValidas = Array.isArray(actividad.subactividades)
+                          ? actividad.subactividades.filter((sub) => sub.nombre.trim() !== "")
+                          : [];
+
+                        return (
+                          <div key={actividadIndex} className="mb-4 border-b pb-3">
+                            {/* Checkbox y título de la actividad */}
+                            <div className="">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex gap-2">
+                                  <p className="font-semibold text-sky-700">{actividad.numero}-</p>
+                                  <p className="font-semibold text-sky-700">{actividad.actividad}</p>
+                                </div>
+
+
+                                {/* Estado de la actividad (Cumple, No cumple, No aplica) */}
+                                <div className="flex gap-3 text-xs text-gray-700 font-medium">
+
+                                  {/* ✅ Checkbox para marcar Sí (Cumple) */}
+                                  <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
+    ${selectedActivities[actividadIndex]?.noAplica ? "text-gray-400 bg-gray-100 border-gray-300 cursor-not-allowed" :
+                                      selectedActivities[actividadIndex]?.seleccionada === true ? "text-gray-800 font-bold bg-gray-300 border-gray-500" : "text-gray-500 border-gray-300"}`}
+                                  >
+                                    <input
+                                      maxLength={300}
+                                      type="radio"
+                                      name={`actividad-${actividadIndex}`}
+                                      value="si"
+                                      checked={selectedActivities[actividadIndex]?.seleccionada === true}
+                                      onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas, "si")}
+                                      disabled={selectedActivities[actividadIndex]?.noAplica}
+                                      className="hidden"
+                                    />
+                                    ✅ Aplica
+                                  </label>
+
+
+
+                                  {/* ⚪ Checkbox "No Aplica" */}
+                                  <label className={`flex items-center gap-1 px-3 py-1 border rounded-md cursor-pointer
+    ${selectedActivities[actividadIndex]?.noAplica ? "text-gray-800 font-bold bg-gray-200 border-gray-500" : "text-gray-500 border-gray-300"}`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedActivities[actividadIndex]?.noAplica || false}
+                                      onChange={() => handleNoAplicaChange(actividadIndex)}
+                                      className="hidden"
+                                    />
+                                    ⚪ No Aplica
+                                  </label>
+
+                                </div>
+
+
+                              </div>
+
+
+
+
+
+
+                            </div>
+
+                            {/* Mostrar subactividades solo si existen y tienen nombre válido */}
+                            {subactividadesValidas.length > 0 &&
+                              subactividadesValidas.map((sub, subIndex) => (
+                                <div key={subIndex} className="ml-4 flex items-center gap-2 text-xs border-l-4 border-gray-500 pl-2 mt-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedActivities[actividadIndex]?.subactividades[subIndex]?.seleccionada || false}
+                                    onChange={() => handleSubactivityChange(actividadIndex, subIndex)}
+                                    disabled={selectedActivities[actividadIndex]?.noAplica}
+                                    className="form-checkbox h-3 w-3 text-sky-600"
+                                  />
+                                  <div>
+                                    <p className="text-gray-700 font-medium">{sub.numero} - {sub.nombre}</p>
+                                    <p className="text-gray-600 italic text-xs">Tipo: {sub.tipo_inspeccion}</p>
+                                  </div>
+                                </div>
+                              ))}
+
+                            {/* Observaciones de la actividad */}
+
+
+                            {/* Observaciones de la actividad */}
+                            <VoiceRecorderInput
+                              name={`observacionesActividad-${actividadIndex}`}
+                              value={activityObservations[actividadIndex] || ""} // Valor del estado
+                              onChange={(name, value) => handleObservationChange(actividadIndex, value)} // Llama al mismo manejador
+                              placeholder="Escribe observaciones aquí..."
+                              maxLength={150}
+                              disabled={selectedActivities[actividadIndex]?.noAplica} // Deshabilitar cuando sea "No Aplica"
+                              className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} // Estilo cuando es "No Aplica"
+                            />
+
+
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+
+                {/* Estadísticas de apto debajo de los checkboxes */}
+                <div className={` font-medium py-2 px-4 rounded-lg flex gap-5 justify-between ${getBackgroundColor()}`}>
+                  <span>Resumen total</span><p>{stats.totalSi} puntos de {stats.totalActividades}  ({stats.porcentajeApto}%)</p>
+                </div>
+
+
+                
+
+
+
+                {/* Formulario */}
+                <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+                  
+
+                  <div className="w-full p-2 border-b-4"></div>
+                  {/* Botones */}
+                  <div className="flex justify-between items-center gap-4 mt-12">
+                    <button
+                      type="submit"
+                      className="w-2/3 py-2 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-700 transition mt-4"
+                      onClick={handleSubmit}
+                    >
+                      Enviar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="w-1/3 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition mt-4"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
 
 
-            {/* Estadísticas de apto debajo de los checkboxes */}
-            <div className={` font-medium py-2 px-4 rounded-lg flex gap-5 justify-between ${getBackgroundColor()}`}>
-              <span>Resumen total</span><p>{stats.totalSi} puntos de {stats.totalActividades}  ({stats.porcentajeApto}%)</p>
-            </div>
 
 
-            {/* Registro fotografico */}
-            <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-              <div className="mt-6">
-                <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">5. Reportaje fotográfico de la visita.</h3>
-                {/* Imágenes */}
-                <div className="mb-4 ps-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Registro fotográfico
-                    <p className="text-amber-600 text-xs">* Mínimo 1 imagen</p>
-                  </label>
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    {[0, 1, 2, 3, 4, 5].map((index) => (
-                      <div key={index} className="relative">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          capture="camera"
-                          ref={(el) => (fileInputsRefs.current[index] = el)}
-                          onChange={(e) => handleFileChange(e, index)}
-                          className="hidden" // Oculta el input original
-                          id={`file-upload-${index}`}
-                        />
-                        <label
-                          htmlFor={`file-upload-${index}`}
-                          className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg shadow-sm py-2 px-4 text-center bg-indigo-100 text-indigo-600 font-semibold cursor-pointer hover:bg-indigo-200"
-                        >
-                          Seleccionar archivo
-                        </label>
-                        <p className="mt-2 text-sm text-gray-500 text-center">
-                          {fileInputsRefs.current[index]?.files[0]?.name || "Ningún archivo seleccionado"}
-                        </p>
-
-                        {/* 🔹 Campo para observaciones */}
-                        <textarea
-                          maxLength={80}
-                          placeholder="Observaciones de la imagen..."
-                          value={observacionesImagenes[index] || ""}
-                          onChange={(e) => setObservacionesImagenes((prev) => ({
-                            ...prev,
-                            [index]: e.target.value
-                          }))}
-                          className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 resize-none"
-                        ></textarea>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-
-
-              {/* 5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.*/}
-
-              <div>
-                <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">6. Previsión de actividades de próximo inicio. Medias preventivas y pasos.</h3>
-                {/* Previsión de Actividades de Próximo Inicio */}
-                <div className="mt-4">
-
-
-                  {/* Actividades de Próximo Inicio */}
-                  <div className="">
-                    <label className="mt-2 block px-4 rounded-md text-sm font-medium">
-                      Actividades de Próximo Inicio
-                    </label>
-                    <VoiceRecorderInput
-                      maxLength={120}
-                      name="actividadesProximoInicio"
-                      value={formData.actividadesProximoInicio || ""}
-                      onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
-                      placeholder="Escribe tus observaciones aquí..."
-                    />
-                  </div>
-
-                  {/* 4 Medidas Preventivas a Implantar */}
-                  <div>
-                    <label className="block px-4 py-2 rounded-md text-sm font-medium">
-                      Medidas Preventivas a Implantar en Obra
-                    </label>
-                    <VoiceRecorderInput
-                      maxLength={120}
-                      name="medidasPreventivas"
-                      value={formData.medidasPreventivas || ""}
-                      onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
-                      placeholder="Escribe tus observaciones aquí..."
-                    />
-                  </div>
-                </div>
-
-
-              </div>
-
-
-
-              <div className="w-full p-2 border-b-4"></div>
-              {/* Botones */}
-              <div className="flex justify-between items-center gap-4 mt-12">
-                <button
-                  type="submit"
-                  className="w-2/3 py-2 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-700 transition mt-4"
-                  onClick={handleSubmit}
-                >
-                  Enviar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="w-1/3 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition mt-4"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )

@@ -213,11 +213,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                 {imagesWithMetadata.length > 0 && (
                     <Page size="A4" style={styles.page}>
                         <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
-                        <MedidasPreventivas
-                        registro={registroIndividual}
-                        excluirClaves={["id", "parteId", "ppiId", "idSubSector", "idSector", "idBim", "elementoId", "imagenes"]}
-                        dataRegister={registroIndividual}
-                        columnasMap={columnasMap}/>
+                        
                         <PiePaginaInforme
                             userNombre={userNombre}
                             firmaEmpresa={registroIndividual.firmaEmpresa}
