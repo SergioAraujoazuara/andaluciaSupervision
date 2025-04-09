@@ -10,7 +10,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "stretch",
     width: "100%", // ⬅️ Usa todo el ancho disponible
-    marginBottom: 2,
   },
   section: {
     width: "100%", // ⬅️ Cada sección ocupa todo el ancho disponible

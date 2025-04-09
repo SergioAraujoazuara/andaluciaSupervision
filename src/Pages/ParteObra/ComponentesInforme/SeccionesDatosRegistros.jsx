@@ -37,7 +37,7 @@ const SeccionesDatosRegistros = ({ nombreCampo, valorDelCampo }) => {
 
   return (
     <View style={styles.fieldRow}>
-      <Text style={styles.fieldLabel}>{nombreCampo}:</Text>
+      <Text style={styles.fieldLabel}>{nombreCampo}</Text>
       <Text style={styles.fieldLabelObservaciones}>{valorDelCampo}</Text>
     </View>
   );

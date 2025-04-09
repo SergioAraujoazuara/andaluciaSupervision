@@ -4,17 +4,17 @@ import TituloInforme from "./TituloInforme";
 
 const styles = StyleSheet.create({
   footer: {
-    marginTop: 10,
+
     paddingTop: 10,
-    fontSize: 10,
+    fontSize: 9,
     color: "#4b5563",
   },
   container: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10,
+   
     width: "100%",
-    padding: 10
+ 
   },
   leftColumn: {
     width: "50%",
@@ -52,8 +52,8 @@ const PiePaginaInforme = ({ userNombre, firmaEmpresa, firmaCliente, nombreUsuari
 
       {/* LADO DERECHO */}
       <View style={styles.rightColumn}>
-        <Text style={styles.text}>{nombreUsuario || "N/A"}</Text>
-        <Text style={styles.text}>Coordinador de Seguridad y Salud</Text>
+        <Text style={styles.text}>{nombreUsuario || "N/A"} - Coordinador de Seguridad y Salud</Text>
+        <Text style={styles.text}></Text>
         <Text style={styles.text}>TPF Getinsa Euroestudios S.L.</Text>
         {firmaEmpresa ? (
           <Image src={firmaEmpresa} style={styles.signature} />

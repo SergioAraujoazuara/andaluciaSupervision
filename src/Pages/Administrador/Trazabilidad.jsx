@@ -1803,7 +1803,7 @@ function Trazabilidad() {
 
                         <div className='flex flex-col col-span-24 xl:col-span-12 gap-3 mt-5 xl:mt-0 '>
                             <div className='text-start'>
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>5. Actividades</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>5. Trabajos</p>
                             </div>
 
                             
@@ -1813,7 +1813,7 @@ function Trazabilidad() {
                                 <div className='flex flex-col gap-3 col-span-8'>
 
                                     <input
-                                        placeholder='Nuevo actividades mantenimiento, conservación, rehabilitación'
+                                        placeholder='Trabajos'
                                         type="text"
                                         id="lote"
                                         className='border px-3 py-1 rounded-lg w-full'
@@ -1893,7 +1893,7 @@ function Trazabilidad() {
                         <p className="px-4 py-2 w-1/5">No aplica</p>
                         <p className="px-4 py-2 w-1/5">No aplica</p>
                         <p className=" py-2 w-1/5">Sector</p>
-                        <p className="mr-5 py-2 w-1/5">Actividades</p>
+                        <p className="mr-5 py-2 w-1/5">Trabajos</p>
                     </div>
 
                     <div className="divide-y divide-gray-200">

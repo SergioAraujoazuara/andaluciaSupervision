@@ -35,9 +35,15 @@ const ParteObra = () => {
     observacionesLocalizacion: "",
     fechaHora: "",
     imagenes: [],
-    mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "" }]
+    mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }]
   });
-  const [activityVisibility, setActivityVisibility] = useState(true); // Estado para controlar la visibilidad de las observaciones
+  const [activityVisibility, setActivityVisibility] = useState(true);
+  const [visibleActivities, setVisibleActivities] = useState(1); // Inicialmente mostrar 2 actividades
+
+  // Función que se llama cuando se hace clic en el botón para mostrar más actividades
+  const handleShowMoreActivities = () => {
+    setVisibleActivities(prev => prev + 1); // Aumenta en 1 el número de actividades visibles
+  }; // Estado para controlar la visibilidad de las observaciones
 
   const fileInputsRefs = useRef([]);
   const [geolocalizacion, setGeolocalizacion] = useState(null);
@@ -98,7 +104,7 @@ const ParteObra = () => {
   const handleAddEmpresa = () => {
     setFormData((prev) => ({
       ...prev,
-      mediosDisponibles: [...prev.mediosDisponibles, { nombreEmpresa: "", numeroTrabajadores: "" }]
+      mediosDisponibles: [...prev.mediosDisponibles, { nombreEmpresa: "", numeroTrabajadores: "", maquinaria:"" }]
     }));
   };
   const handleRemoveEmpresa = (index) => {
@@ -316,7 +322,8 @@ const ParteObra = () => {
       observacionesLocalizacion: "",
       fechaHora: "",
       imagenes: [],
-      mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "" }]
+      mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria:"" }],
+      observacionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
     });
 
     // 🔹 **Reset de actividades**
@@ -450,9 +457,6 @@ const ParteObra = () => {
     }
 
     // Validar observaciones de actividad y localización
-    if (!formData.observacionesActividad.trim()) {
-      errors.push("⚠️ Debes llenar las observaciones de la actividad.");
-    }
     if (!formData.observacionesLocalizacion.trim()) {
       errors.push("⚠️ Debes llenar las observaciones de la localización.");
     }
@@ -476,7 +480,7 @@ const ParteObra = () => {
     const actividadesObservadas = Object.values(formData.observacionesActividades).every(
       (actividad) => actividad.trim() === ""
     );
-    
+
 
     if (actividadesObservadas) {
       errors.push("⚠️ Debes ingresar al menos una observación en las actividades.");
@@ -510,7 +514,7 @@ const ParteObra = () => {
         ...selectedLote,
         ...formData,
         actividades: actividadesConObservaciones,
-       
+
         imagenes: imageUrls,
         fechaHora: new Date(formData.fechaHora).toISOString(),
         actividad: selectedLote.nombre,
@@ -532,7 +536,7 @@ const ParteObra = () => {
         observacionesLocalizacion: "",
         fechaHora: "",
         imagenes: [],
-        mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "" }]
+        mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria:"" }]
       });
 
       // 🔹 **Reset de actividades**
@@ -821,7 +825,7 @@ const ParteObra = () => {
             <thead className="border-gray-200 bg-sky-600 text-white">
               <tr>
                 <th className="text-left px-6 py-3 text-sm font-semibold w-3/4">
-                  Actividades mantenimiento, conservación, rehabilitación
+                  Trabajos del coordinador
                 </th>
                 <th className="text-left px-6 py-3 text-sm font-semibold w-1/4">
                   Acción
@@ -917,13 +921,29 @@ const ParteObra = () => {
             <div>
 
               <div>
-                <p className="font-semibold bg-gray-300 rounded-t-lg px-4 py-2">
-                  Actividad seleccionada
+                <p className="font-semibold bg-sky-600 text-white rounded-t-lg px-4 py-2">
+                  Trabajo seleccionado
                 </p>
                 {selectedLote && (
                   <p className="bg-gray-200 p-2 rounded-b-lg px-4 py-2 font-medium">{selectedLote.nombre}</p>
                 )}
               </div>
+
+              {/* Fecha y Hora */}
+              <div>
+                <label className="mt-4 block bg-sky-600 text-white px-4 py-2 rounded-md text-sm font-medium">
+                  Fecha y Hora
+                </label>
+                <input
+                  required
+                  type="datetime-local"
+                  name="fechaHora"
+                  value={formData.fechaHora}
+                  onChange={handleInputChange}
+                  className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                />
+              </div>
+
 
 
               <div>
@@ -932,12 +952,14 @@ const ParteObra = () => {
                 <div className="flex justify-between items-center">
                   <label className="block text-sm font-medium px-4">¿Qué actividades se inspeccionan?</label>
 
-                  <button
-                    onClick={toggleActivityVisibility}
-                    className="px-4 py-2 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 transition"
-                  >
-                    {activityVisibility ? "Ocultar actividades" : "Agregar actividades"}
-                  </button>
+                  {visibleActivities < Object.keys(formData.observacionesActividades).length && (
+                    <button
+                      onClick={handleShowMoreActivities}
+                      className="px-4 py-2 text-xs bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                    >
+                      Agregar actividad
+                    </button>
+                  )}
                 </div>
               </div>
               {/* Observaciones de Actividades */}
@@ -947,20 +969,23 @@ const ParteObra = () => {
 
                 {/* Sección de observaciones de actividades */}
                 <div className={`${activityVisibility ? "" : "hidden"} mt-4`}>
-                  {Object.keys(formData.observacionesActividades).map((key, index) => (
-                    <div key={index}>
-                      
-                      <VoiceRecorderInput
-                        maxLength={100}
-                        name={`observacionesActividad-${key}`}
-                        value={formData.observacionesActividades[key]}
-                        onChange={(name, value) => handleActivityObservationChange(key, value)}
-                        placeholder={`Actividad ${index + 1}`} // Usa la clave como parte del placeholder
-                      
-                      />
-                    </div>
-                  ))}
+                  {Object.keys(formData.observacionesActividades)
+                    .slice(0, visibleActivities) // Limita las actividades visibles según el estado
+                    .map((key, index) => (
+                      <div key={index}>
+                        <VoiceRecorderInput
+                          maxLength={100}
+                          name={`observacionesActividad-${key}`}
+                          value={formData.observacionesActividades[key]}
+                          onChange={(name, value) => handleActivityObservationChange(key, value)}
+                          placeholder={`Actividad ${index + 1}`}
+                        />
+                      </div>
+                    ))}
                 </div>
+
+
+
 
               </div>
 
@@ -998,13 +1023,24 @@ const ParteObra = () => {
 
                 <input
                   type="text"
-                  placeholder="Nº Trabajadores"
+                  placeholder="Nº Trab."
                   value={empresa.numeroTrabajadores}
                   inputMode="numeric"
                   pattern="[0-9]*"
                   onChange={(e) => handleMediosChange(index, "numeroTrabajadores", e.target.value.replace(/\D/g, ""))}
                   className="block w-1/3 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
                 />
+
+                <input
+                  type="text"
+                  required
+                  maxLength={100}
+                  placeholder="Maquinaria"
+                  value={empresa.maquinaria}
+                  onChange={(e) => handleMediosChange(index, "maquinaria", e.target.value)}
+                  className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                />
+
 
                 {index > 0 && (
                   <button
@@ -1026,25 +1062,6 @@ const ParteObra = () => {
               + Agregar Empresa
             </button>
 
-
-
-
-            {/* Fecha y Hora */}
-            <div>
-              <label className="mt-4 block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
-                Fecha y Hora
-              </label>
-              <input
-                required
-                type="datetime-local"
-                name="fechaHora"
-                value={formData.fechaHora}
-                onChange={handleInputChange}
-                className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
-              />
-            </div>
-
-
             {/* Observaciones en materia seguridad y salud */}
             <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">3. Observaciones en materia de seguridad y salud</h3>
 
@@ -1061,43 +1078,8 @@ const ParteObra = () => {
               />
             </div>
 
-            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">4. Previsión de actividades de próximo inicio. Medias preventivas y pasos.</h3>
-            {/* Previsión de Actividades de Próximo Inicio */}
-            <div className="mt-6">
-              <label className="block bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
-                Previsión de Actividades de Próximo Inicio
-              </label>
 
-              {/* Actividades de Próximo Inicio */}
-              <div className="">
-                <label className="mt-2 block px-4 py-2 rounded-md text-sm font-medium">
-                  Actividades de Próximo Inicio
-                </label>
-                <VoiceRecorderInput
-                  maxLength={200}
-                  name="actividadesProximoInicio"
-                  value={formData.actividadesProximoInicio || ""}
-                  onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
-                  placeholder="Escribe tus observaciones aquí..."
-                />
-              </div>
-
-              {/* Medidas Preventivas a Implantar */}
-              <div>
-                <label className="block px-4 py-2 rounded-md text-sm font-medium">
-                  Medidas Preventivas a Implantar en Obra
-                </label>
-                <VoiceRecorderInput
-                  maxLength={200}
-                  name="medidasPreventivas"
-                  value={formData.medidasPreventivas || ""}
-                  onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
-                  placeholder="Escribe tus observaciones aquí..."
-                />
-              </div>
-            </div>
-
-            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">5. Detalles de la inspección</h3>
+            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">4. Detalles de la inspección</h3>
 
             {ppiDetails && (
               <div>
@@ -1197,7 +1179,7 @@ const ParteObra = () => {
                           value={activityObservations[actividadIndex] || ""} // Valor del estado
                           onChange={(name, value) => handleObservationChange(actividadIndex, value)} // Llama al mismo manejador
                           placeholder="Escribe observaciones aquí..."
-                          maxLength={200}
+                          maxLength={150}
                           disabled={selectedActivities[actividadIndex]?.noAplica} // Deshabilitar cuando sea "No Aplica"
                           className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} // Estilo cuando es "No Aplica"
                         />
@@ -1217,13 +1199,50 @@ const ParteObra = () => {
             </div>
 
 
+            {/* 5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.*/}
+
+            <div>
+              <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.</h3>
+              {/* Previsión de Actividades de Próximo Inicio */}
+              <div className="mt-4">
+
+
+                {/* Actividades de Próximo Inicio */}
+                <div className="">
+                  <label className="mt-2 block px-4 rounded-md text-sm font-medium">
+                    Actividades de Próximo Inicio
+                  </label>
+                  <VoiceRecorderInput
+                    maxLength={120}
+                    name="actividadesProximoInicio"
+                    value={formData.actividadesProximoInicio || ""}
+                    onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
+                    placeholder="Escribe tus observaciones aquí..."
+                  />
+                </div>
+
+                {/* 4 Medidas Preventivas a Implantar */}
+                <div>
+                  <label className="block px-4 py-2 rounded-md text-sm font-medium">
+                    Medidas Preventivas a Implantar en Obra
+                  </label>
+                  <VoiceRecorderInput
+                    maxLength={120}
+                    name="medidasPreventivas"
+                    value={formData.medidasPreventivas || ""}
+                    onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
+                    placeholder="Escribe tus observaciones aquí..."
+                  />
+                </div>
+              </div>
+
+
+            </div>
+
 
 
             {/* Formulario */}
             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-
-
-
               <div className="mt-6">
                 <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">6. Reportaje fotográfico de la visita.</h3>
                 {/* Imágenes */}
@@ -1256,6 +1275,7 @@ const ParteObra = () => {
 
                         {/* 🔹 Campo para observaciones */}
                         <textarea
+                          maxLength={80}
                           placeholder="Observaciones de la imagen..."
                           value={observacionesImagenes[index] || ""}
                           onChange={(e) => setObservacionesImagenes((prev) => ({
@@ -1453,73 +1473,78 @@ const ParteObra = () => {
             </form>
           </div>
         </div>
-      )}
+      )
+      }
 
-      {modalSend && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-4 w-80">
+      {
+        modalSend && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-4 w-80">
 
-            {/* ❌ Botón de cerrar */}
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 text-gray-500 text-2xl hover:text-gray-800 transition"
-              aria-label="Cerrar"
-            >
-              <IoClose />
-            </button>
+              {/* ❌ Botón de cerrar */}
+              <button
+                onClick={handleCloseModal}
+                className="absolute top-4 right-4 text-gray-500 text-2xl hover:text-gray-800 transition"
+                aria-label="Cerrar"
+              >
+                <IoClose />
+              </button>
 
-            {/* ✅ Ícono dinámico según el mensaje */}
-            {messageModalSend === 'Registro enviado' ? (
-              <FaCheck className="text-teal-500 text-4xl" />
-            ) : (
-              <MdOutlineError className="text-red-500 text-4xl" />
-            )}
+              {/* ✅ Ícono dinámico según el mensaje */}
+              {messageModalSend === 'Registro enviado' ? (
+                <FaCheck className="text-teal-500 text-4xl" />
+              ) : (
+                <MdOutlineError className="text-red-500 text-4xl" />
+              )}
 
-            {/* 📌 Mensaje dinámico */}
-            <p className="text-lg font-medium text-gray-700">{messageModalSend}</p>
+              {/* 📌 Mensaje dinámico */}
+              <p className="text-lg font-medium text-gray-700">{messageModalSend}</p>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
 
-      {modalSend && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
-          <div className={`bg-white p-8 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-4 w-96 
+      {
+        modalSend && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
+            <div className={`bg-white p-8 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-4 w-96 
       ${errorMessages.length > 0 ? 'border-red-500' : 'border-teal-500'}`}>
 
-            {/* ❌ Botón de cerrar */}
-            <button
-              onClick={() => setModalSend(false)}
-              className="absolute top-4 right-4 text-gray-500 text-2xl hover:text-gray-800 transition"
-              aria-label="Cerrar"
-            >
-              <IoClose />
-            </button>
+              {/* ❌ Botón de cerrar */}
+              <button
+                onClick={() => setModalSend(false)}
+                className="absolute top-4 right-4 text-gray-500 text-2xl hover:text-gray-800 transition"
+                aria-label="Cerrar"
+              >
+                <IoClose />
+              </button>
 
-            {/* 🚨 Modal de Error */}
-            {errorMessages.length > 0 ? (
-              <>
-                <MdOutlineError className="text-red-500 text-4xl" />
-                <p className="text-lg font-medium text-red-600">Error en el formulario</p>
-                <ul className="text-sm text-gray-600 list-disc px-6 space-y-1">
-                  {errorMessages.map((msg, index) => (
-                    <li key={index}>{msg}</li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              /* ✅ Modal de Éxito */
-              <>
-                <FaCheck className="text-teal-500 text-4xl" />
-                <p className="text-lg font-medium text-gray-700">{messageModalSend}</p>
-              </>
-            )}
+              {/* 🚨 Modal de Error */}
+              {errorMessages.length > 0 ? (
+                <>
+                  <MdOutlineError className="text-red-500 text-4xl" />
+                  <p className="text-lg font-medium text-red-600">Error en el formulario</p>
+                  <ul className="text-sm text-gray-600 list-disc px-6 space-y-1">
+                    {errorMessages.map((msg, index) => (
+                      <li key={index}>{msg}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                /* ✅ Modal de Éxito */
+                <>
+                  <FaCheck className="text-teal-500 text-4xl" />
+                  <p className="text-lg font-medium text-gray-700">{messageModalSend}</p>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
 
-    </div>
+    </div >
   );
 };
 

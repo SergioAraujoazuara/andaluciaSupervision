@@ -383,8 +383,9 @@ const TablaRegistros = () => {
 
 
   // Estado para almacenar las imágenes seleccionadas y sus previsualizaciones
-  const [imagenesEditadas, setImagenesEditadas] = useState([]);
-  const [previsualizaciones, setPrevisualizaciones] = useState([]);
+  const [imagenesEditadas, setImagenesEditadas] = useState(new Array(6).fill(null));
+  const [previsualizaciones, setPrevisualizaciones] = useState(new Array(6).fill(null));
+
 
   // Estado para el registro que se está editando
   const [registroEditando, setRegistroEditando] = useState(null);
@@ -423,24 +424,24 @@ const TablaRegistros = () => {
   const handleGuardarEdicion = async () => {
     try {
       if (!registroEditando) return;
-  
+
       const docRef = doc(db, "registrosParteDeObra", registroEditando.id);
       const docSnapshot = await getDoc(docRef);
-  
+
       if (!docSnapshot.exists()) {
         console.error("El documento no existe en Firestore.");
         return;
       }
-  
+
       const registroOriginal = docSnapshot.data(); // Datos actuales antes de la edición
-  
+
       // 🔍 LOG 1: Mostrar imágenes anteriores
       console.log("🖼️ Imágenes ANTERIORES del registro:", registroOriginal.imagenes);
-  
+
       // Procesar las imágenes nuevas o mantener las anteriores
       let nuevasUrls = [];
-  
-      for (let i = 0; i < 4; i++) {
+
+      for (let i = 0; i < 6; i++) {
         const nuevaImg = imagenesEditadas[i];
         if (nuevaImg) {
           const url = await subirImagenConMetadatos(nuevaImg, i);
@@ -449,20 +450,20 @@ const TablaRegistros = () => {
           nuevasUrls[i] = registroOriginal.imagenes?.[i] || null;
         }
       }
-  
+
       // 🔍 LOG 2: Mostrar las imágenes actualizadas
       console.log("✅ Imágenes ACTUALIZADAS que se guardarán:", nuevasUrls);
-  
+
       // Crear objeto actualizado
       const registroActualizado = {
         ...registroEditando,
         actividades: registroEditando.actividades,
         imagenes: nuevasUrls,
       };
-  
+
       // Guardar cambios
       await updateDoc(docRef, registroActualizado);
-  
+
       // Guardar historial
       const historialRef = collection(db, "historialRegistrosParteDeObra");
       await addDoc(historialRef, {
@@ -473,20 +474,20 @@ const TablaRegistros = () => {
         registroOriginal,
         registroEditado: registroActualizado,
       });
-  
+
       // Actualizar estados en frontend
       setRegistrosParteDeObra((prev) =>
         prev.map((registro) =>
           registro.id === registroEditando.id ? registroActualizado : registro
         )
       );
-  
+
       setRegistrosFiltrados((prev) =>
         prev.map((registro) =>
           registro.id === registroEditando.id ? registroActualizado : registro
         )
       );
-  
+
       // Cerrar modal
       setModalEdicionAbierto(false);
       setRegistroEditando(null);
@@ -495,7 +496,7 @@ const TablaRegistros = () => {
       console.error("❌ Error al guardar los cambios:", error);
     }
   };
-  
+
 
 
 
@@ -524,13 +525,13 @@ const TablaRegistros = () => {
       const loteNombre = registroEditando?.parteNombre || "SinNombreLote";
       const fechaActual = new Date().toISOString().split("T")[0];
       const uniqueId = uuidv4();
-  
+
       const fileName = `${selectedProjectName}_${loteNombre}_${fechaActual}_${uniqueId}_${index}.jpg`
         .replace(/[/\\?%*:|"<>]/g, "");
-  
+
       const storagePath = `imagenes/${selectedProjectName}/${loteNombre}/${fileName}`;
       const storageRef = ref(storage, storagePath);
-  
+
       const metadata = {
         contentType: file.type,
         customMetadata: {
@@ -541,7 +542,7 @@ const TablaRegistros = () => {
           fecha: fechaActual,
         },
       };
-  
+
       await uploadBytes(storageRef, file, metadata);
       const url = await getDownloadURL(storageRef);
       return url;
@@ -550,7 +551,7 @@ const TablaRegistros = () => {
       return null;
     }
   };
-  
+
 
 
   const handleGoBack = () => {
@@ -816,8 +817,8 @@ const TablaRegistros = () => {
                       {columnasMap[columna]}
                     </th>
                   ))}
-                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">Progreso</th>
-                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">Avance</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide"></th>
+                <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide"></th>
                 <th className="text-left px-6 py-3 text-sm font-semibold tracking-wide">Informe</th>
               </tr>
             </thead>
@@ -1130,72 +1131,105 @@ const TablaRegistros = () => {
             <div className="border-b-2 w-full mb-4"></div>
 
             {Object.keys(registroEditando)
-              .filter((campo) =>
-                ![
-                  "imagenes",
-                  "id",
-                  "idBim",
-                  "nombreProyecto",
-                  "elementoId",
-                  "idSector",
-                  "idSubSector",
-                  "parteId",
-                  "ppiId",
-                  "loteId",
-                  "totalSubactividades",
-                  "pkFinal",
-                  "pkInicial",
-                  "idProyecto",
-                  "estado",
-                  "ppiNombre",
-                  "actividades",
-                  "sectorNombre",
-                  "subSectorNombre",
-                  "parteNombre",
-                  "elementoNombre",
-                  "elementoNombre",
-                  "mediosDisponibles",
-                  "resumenPuntosControl"
-                ].includes(campo)
-              )
-              .sort((a, b) => a.localeCompare(b)) // Ordena alfabéticamente
-              .map((campo, index) => (
-                <div key={index} className="mb-4 tex-xs">
-                  <label className="block text-sm font-semibold bg-gray-200 p-2 text-gray-700 mb-1 flex items-center">
-                    {formatCamelCase(campo)}
-                    <AiFillLock className="ml-2 text-gray-500" size={16} />
-                  </label>
+  .filter((campo) =>
+    ![
+      "imagenes",
+      "id",
+      "idBim",
+      "nombreProyecto",
+      "elementoId",
+      "idSector",
+      "idSubSector",
+      "parteId",
+      "ppiId",
+      "loteId",
+      "totalSubactividades",
+      "pkFinal",
+      "pkInicial",
+      "idProyecto",
+      "estado",
+      "ppiNombre",
+      "actividades",
+      "sectorNombre",
+      "subSectorNombre",
+      "parteNombre",
+      "elementoNombre",
+      "elementoNombre",
+      "mediosDisponibles",
+      "resumenPuntosControl",
+      "firmaCliente",
+      "firmaEmpresa",
+      "actividad"
+    ].includes(campo)
+  )
+  .sort((a, b) => a.localeCompare(b)) // Ordena alfabéticamente
+  .map((campo, index) => (
+    <div key={index} className="mb-4 tex-xs">
+      {/* Si el campo es "observaciones", agrega un título adicional */}
+      {campo === "observaciones" && (
+        <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
+          Observaciones en materia de seguridad y salud
+        </h3>
+      )}
 
-                  {/* Si es un objeto, mostrar cada propiedad dentro de él */}
-                  {typeof registroEditando[campo] === "object" && registroEditando[campo] !== null ? (
-                    Object.entries(registroEditando[campo])
-                      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) // Ordena alfabéticamente las subpropiedades
-                      .map(([subCampo, valor]) => (
-                        <div key={subCampo} className="mb-2">
-                          <label className="ps-2 block text-sm font-medium text-gray-700">
-                            {formatCamelCase(subCampo)}
-                          </label>
-                          <input
-                            type="text"
-                            value={valor || ""}
-                            readOnly
-                            className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
-                          />
-                        </div>
-                      ))
-                  ) : (
-                    <input
-                      type="text"
-                      value={registroEditando[campo] || ""}
-                      readOnly
-                      className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
-                    />
-                  )}
-                </div>
-              ))}
+      {/* Si el campo es "observaciones", agrega un título adicional */}
+      {campo === "observacionesActividades" && (
+        <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
+          Trabajos inspeccionados
+        </h3>
+      )}
+
+      {/* Si el campo es "actividadesProximoInicio", agrega un título adicional */}
+      {campo === "actividadesProximoInicio" && (
+        <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
+          Previsión de actividades de próximo inicio
+        </h3>
+      )}
+
+      {/* Si el campo es "medidasPreventivas", agrega un título adicional */}
+      {campo === "medidasPreventivas" && (
+        <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
+          Medidas preventivas
+        </h3>
+      )}
+
+      {/* Título general */}
+      <label className="block text-sm font-semibold bg-gray-200 p-2 text-gray-700 mb-1 flex items-center">
+        {formatCamelCase(campo)}
+        <AiFillLock className="ml-2 text-gray-500" size={16} />
+      </label>
+
+      {/* Si es un objeto, mostrar cada propiedad dentro de él */}
+      {typeof registroEditando[campo] === "object" && registroEditando[campo] !== null ? (
+        Object.entries(registroEditando[campo])
+          .sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) // Ordena alfabéticamente las subpropiedades
+          .map(([subCampo, valor]) => (
+            <div key={subCampo} className="mb-2">
+              <label className="ps-2 block text-sm font-medium text-gray-700">
+                {formatCamelCase(subCampo)}
+              </label>
+              <input
+                type="text"
+                value={valor || ""}
+                readOnly
+                className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
+              />
+            </div>
+          ))
+      ) : (
+        <input
+          type="text"
+          value={registroEditando[campo] || ""}
+          readOnly
+          className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
+        />
+      )}
+    </div>
+  ))}
 
 
 
+            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">Detalles de la inspección</h3>
             {/* Editar actividades */}
             <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-700 mb-1 bg-gray-200 p-2 flex gap-2">Actividades<span><AiFillLock className="ml-2 text-gray-500" size={16} /></span></label>
@@ -1248,16 +1282,19 @@ const TablaRegistros = () => {
             </div>
 
 
+            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">Medios Disponibles</h3>
+
             {/* Sección de Medios Disponibles - Colocar aquí */}
             {registroEditando.mediosDisponibles && registroEditando.mediosDisponibles.length > 0 && (
               <div className="mb-4 text-sm">
-                <label className="p-2">Medios Disponibles</label>
+                
                 <div className="border border-gray-300 rounded-md p-3 bg-gray-50">
                   {registroEditando.mediosDisponibles.map((empresa, index) => (
                     <div key={index} className="mb-2">
                       <p className="font-medium bg-gray-200 px-2 py-1">Empresa {index + 1}</p>
                       <p className="ps-2 text-xs"><strong>Nombre:</strong> {empresa.nombreEmpresa || "—"}</p>
                       <p className="ps-2 text-xs"><strong>Trabajadores:</strong> {empresa.numeroTrabajadores || "—"}</p>
+                      <p className="ps-2 text-xs"><strong>Maquinaria:</strong> {empresa.maquinaria || "—"}</p>
                     </div>
                   ))}
                 </div>
@@ -1283,9 +1320,11 @@ const TablaRegistros = () => {
               />
             </div>
 
+            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">6. Reportaje fotográfico de la visita.</h3>
+
             {/* Sección de imágenes */}
             <h3 className="text-sm font-semibold mb-3 text-gray-700 bg-gray-200 p-2">Registro fotográfico</h3>
-            {Array.from({ length: 4 }).map((_, index) => (
+            {Array.from({ length: 6 }).map((_, index) => (
               <div key={index} className="flex flex-col items-start mb-4">
                 <label className="block text-sm font-semibold text-gray-600 mb-2">
                   Imagen {index + 1}

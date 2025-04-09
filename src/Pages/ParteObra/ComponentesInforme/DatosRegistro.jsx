@@ -3,6 +3,7 @@ import { View, StyleSheet } from "@react-pdf/renderer";
 import TituloInforme from "./TituloInforme";
 import SeccionesDatosRegistros from "./SeccionesDatosRegistros";
 import TituloActividad from "./TituloActividad";
+import ObservacionesActividades from "./ObservacionesActividades ";
 
 const styles = StyleSheet.create({
   fieldGroup: {
@@ -22,35 +23,38 @@ const DatosRegistro = ({ dataRegister }) => {
     <View style={styles.fieldGroup}>
       {/* Sección 1 */}
       <View style={styles.section}>
-        <TituloActividad plantillaSeleccionada={`Actividad: ${dataRegister.actividad}`} />
+        <TituloActividad plantillaSeleccionada={`Trabajos del coordinador: ${dataRegister.actividad}`} />
 
         <TituloInforme plantillaSeleccionada="1. Trabajos inspeccionados" />
+
+        {/* Observaciones de actividades */}
+        <ObservacionesActividades dataRegister={dataRegister} />
+
+
+
+
         <SeccionesDatosRegistros
-          nombreCampo={"Observaciones actividad"}
-          valorDelCampo={dataRegister.observacionesActividad}
-        />
-        <SeccionesDatosRegistros
-          nombreCampo={"Observaciones localización"}
+          nombreCampo={"Localización"}
           valorDelCampo={dataRegister.observacionesLocalizacion}
         />
       </View>
 
       {/* Sección 2 - Medios Disponibles en Obra */}
-      
+
       <View
         style={{
           flexDirection: "row",
           flexWrap: "wrap",
         }}
       >
-          <TituloInforme plantillaSeleccionada="2. Medios disponibles en obra: Empresas, trabajadores y maquinaria" />
+        <TituloInforme plantillaSeleccionada="2. Medios disponibles en obra: Empresas, trabajadores y maquinaria" />
         {dataRegister.mediosDisponibles.map((empresa, index) => {
           // 🧮 Calcular cuántas columnas usar
           const totalEmpresas = dataRegister.mediosDisponibles.length;
           let width = "100%"; // default 1 columna
 
           if (totalEmpresas > 1) width = "33.33%"; // 3 columnas
-         
+
 
           return (
             <View
@@ -66,7 +70,7 @@ const DatosRegistro = ({ dataRegister }) => {
                 valorDelCampo={empresa.nombreEmpresa || "No especificado"}
               />
               <SeccionesDatosRegistros
-                nombreCampo={`Número de trabajadores`}
+                nombreCampo={`Trabajadores`}
                 valorDelCampo={empresa.numeroTrabajadores || "No especificado"}
               />
             </View>
@@ -82,12 +86,12 @@ const DatosRegistro = ({ dataRegister }) => {
       <View style={styles.section}>
         <TituloInforme plantillaSeleccionada="3. Observaciones en materia de seguridad y salud" />
         <SeccionesDatosRegistros
-          nombreCampo={"Observaciones"}
+      
           valorDelCampo={dataRegister.observaciones}
         />
       </View>
 
-      
+
     </View>
   );
 };
