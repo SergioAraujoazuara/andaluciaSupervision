@@ -31,6 +31,7 @@ import Glorias from './Pages/Auscultacion/Glorias.jsx';
 import Llacuna from './Pages/Auscultacion/Llacuna.jsx';
 import Projects from './Pages/Administrador/CreateProject/Projects.jsx';
 import ParteObraTrazabilidad from './Pages/ParteObra/ParteDeObraTrazabilidad.jsx';
+import TablaRegistrosActaReunion from './Pages/ParteObra/tablaRegistrosActasReunion.jsx';
 
 // App.js
 // This is the main entry point for the application. It defines the routing structure
@@ -76,6 +77,7 @@ function App() {
     { path: '/parteObra', element: <GridParteDeObra />, roles: ['admin', 'usuario'] },
     { path: '/formularios', element: <ParteObraTrazabilidad />, roles: ['admin', 'usuario'] },
     { path: '/verRegistros', element: <TablaRegistrosTrazabilidad />, roles: ['admin', 'usuario'] },
+    { path: '/verRegistrosActasReunion', element: <TablaRegistrosActaReunion />, roles: ['admin', 'usuario'] },
 
     // Auscultación
     { path: '/auscultacion', element: <GridParteDeObra />, roles: ['admin', 'usuario'] },

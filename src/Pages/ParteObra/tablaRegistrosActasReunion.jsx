@@ -27,8 +27,9 @@ import ModalFechaVisita from "./ComponentesInforme/ModalFechaVisita.jsx";
 import Firma from "../../Components/Firma/Firma.jsx";
 import InformeFinal from "./InformeFinal.jsx";
 import ListaInformesModal from "./ListaInformesModal.jsx";
+import InformeRegistrosActas from "./InformeRegistrosActas.jsx";
 
-const TablaRegistros = () => {
+const TablaRegistrosActaReunion = () => {
   const uniqueId = uuidv4();
   const { user } = useAuth();
   const userId = user?.uid; // Asegúrate de que 'uid' existe
@@ -73,7 +74,7 @@ const TablaRegistros = () => {
 
   const handleAbrirModalFirma = async (registro) => {
     try {
-      const docRef = doc(db, "registrosParteDeObra", registro.id);
+      const docRef = doc(db, "registrosActasDeReunion", registro.id);
       const docSnap = await getDoc(docRef);
 
 
@@ -106,7 +107,7 @@ const TablaRegistros = () => {
     if (!registroId) return;
 
     try {
-      const docRef = doc(db, "registrosParteDeObra", registroId);
+      const docRef = doc(db, "registrosActasDeReunion", registroId);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
@@ -276,7 +277,7 @@ const TablaRegistros = () => {
         }
 
         // Realiza la consulta a Firestore
-        const registrosSnapshot = await getDocs(collection(db, "registrosParteDeObra"));
+        const registrosSnapshot = await getDocs(collection(db, "registrosActasDeReunion"));
         const registros = registrosSnapshot.docs
           .map((docSnapshot) => ({
             id: docSnapshot.id, // ID del documento
@@ -362,7 +363,7 @@ const TablaRegistros = () => {
     try {
       if (registroAEliminar) {
         // Eliminar el documento usando su ID en Firestore
-        await deleteDoc(doc(db, "registrosParteDeObra", registroAEliminar.id));
+        await deleteDoc(doc(db, "registrosActasDeReunion", registroAEliminar.id));
 
         // Actualizar el estado local para eliminar el registro eliminado
         setRegistrosParteDeObra((prev) =>
@@ -425,7 +426,7 @@ const TablaRegistros = () => {
     try {
       if (!registroEditando) return;
 
-      const docRef = doc(db, "registrosParteDeObra", registroEditando.id);
+      const docRef = doc(db, "registrosActasDeReunion", registroEditando.id);
       const docSnapshot = await getDoc(docRef);
 
       if (!docSnapshot.exists()) {
@@ -465,7 +466,7 @@ const TablaRegistros = () => {
       await updateDoc(docRef, registroActualizado);
 
       // Guardar historial
-      const historialRef = collection(db, "historialRegistrosParteDeObra");
+      const historialRef = collection(db, "historialRegistrosActasDeReunion");
       await addDoc(historialRef, {
         registroId: registroEditando.id,
         fechaHora: new Date().toISOString(),
@@ -595,7 +596,7 @@ const TablaRegistros = () => {
     try {
       // Consulta a la colección de historial
       const historialSnapshot = await getDocs(
-        collection(db, "historialRegistrosParteDeObra")
+        collection(db, "historialRegistrosActasDeReunion")
       );
 
       // Filtrar los cambios asociados al registro seleccionado
@@ -686,10 +687,10 @@ const TablaRegistros = () => {
           {/* Elementos visibles solo en pantallas medianas (md) en adelante */}
           <GoHomeFill className="hidden md:block" style={{ width: 15, height: 15, fill: "#d97706" }} />
           <Link to="#" className="hidden md:block font-medium text-gray-600">
-            Home
+            Homesss
           </Link>
           <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
-          <h1 className="hidden md:block font-medium">Informes de visita</h1>
+          <h1 className="hidden md:block font-medium">Ver actas de reunión</h1>
           <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
 
           {/* Nombre del proyecto (visible en todas las pantallas) */}
@@ -912,7 +913,7 @@ const TablaRegistros = () => {
                     </td>
 
                     <td className="px-6 py-4 text-sm whitespace-nowrap">
-                      <InformeRegistros
+                      <InformeRegistrosActas
                         onClick={() => {
                           handleGeneratePdfRegistro(registro);
                           setTimeout(() => {
@@ -1159,71 +1160,17 @@ const TablaRegistros = () => {
       "resumenPuntosControl",
       "firmaCliente",
       "firmaEmpresa",
-      "actividad"
+      "actividad",
+      "formType",
+      "observaciones",
+      "observacionesActividad",
+      "observacionesLocalizacion",
+      "observacionesActividades",
     ].includes(campo)
   )
   .sort((a, b) => a.localeCompare(b)) // Ordena alfabéticamente
   .map((campo, index) => (
-    <div key={index} className="mb-4 tex-xs">
-      {/* Si el campo es "observaciones", agrega un título adicional */}
-      {campo === "observaciones" && (
-        <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
-          Observaciones en materia de seguridad y salud
-        </h3>
-      )}
-
-      {/* Si el campo es "observaciones", agrega un título adicional */}
-      {campo === "observacionesActividades" && (
-        <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
-          Trabajos inspeccionados
-        </h3>
-      )}
-
-      {/* Si el campo es "actividadesProximoInicio", agrega un título adicional */}
-      {campo === "actividadesProximoInicio" && (
-        <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
-          Previsión de actividades de próximo inicio
-        </h3>
-      )}
-
-      {/* Si el campo es "medidasPreventivas", agrega un título adicional */}
-      {campo === "medidasPreventivas" && (
-        <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
-          Medidas preventivas
-        </h3>
-      )}
-
-      {/* Título general */}
-      <label className="block text-sm font-semibold bg-gray-200 p-2 text-gray-700 mb-1 flex items-center">
-        {formatCamelCase(campo)}
-        <AiFillLock className="ml-2 text-gray-500" size={16} />
-      </label>
-
-      {/* Si es un objeto, mostrar cada propiedad dentro de él */}
-      {typeof registroEditando[campo] === "object" && registroEditando[campo] !== null ? (
-        Object.entries(registroEditando[campo])
-          .sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) // Ordena alfabéticamente las subpropiedades
-          .map(([subCampo, valor]) => (
-            <div key={subCampo} className="mb-2">
-              <label className="ps-2 block text-sm font-medium text-gray-700">
-                {formatCamelCase(subCampo)}
-              </label>
-              <input
-                type="text"
-                value={valor || ""}
-                readOnly
-                className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
-              />
-            </div>
-          ))
-      ) : (
-        <input
-          type="text"
-          value={registroEditando[campo] || ""}
-          readOnly
-          className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200"
-        />
-      )}
+    <div key={index} className="mb-4 tex-xs">  
     </div>
   ))}
 
@@ -1266,95 +1213,20 @@ const TablaRegistros = () => {
                     </div>
 
 
-                    {/* Observaciones (solo lectura) */}
-                    <div className="mt-2">
-                      <label className="block text-sm font-medium text-gray-700">Observaciones</label>
-                      <textarea
-                        value={actividad.observacion || "Sin observaciones"}
-                        readOnly
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-200 text-gray-700 cursor-not-allowed"
-                        rows={2}
-                      />
-                    </div>
+                   
                   </div>
                 ))}
 
             </div>
 
 
-            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">Medios Disponibles</h3>
-
-            {/* Sección de Medios Disponibles - Colocar aquí */}
-            {registroEditando.mediosDisponibles && registroEditando.mediosDisponibles.length > 0 && (
-              <div className="mb-4 text-sm">
-                
-                <div className="border border-gray-300 rounded-md p-3 bg-gray-50">
-                  {registroEditando.mediosDisponibles.map((empresa, index) => (
-                    <div key={index} className="mb-2">
-                      <p className="font-medium bg-gray-200 px-2 py-1">Empresa {index + 1}</p>
-                      <p className="ps-2 text-xs"><strong>Nombre:</strong> {empresa.nombreEmpresa || "—"}</p>
-                      <p className="ps-2 text-xs"><strong>Trabajadores:</strong> {empresa.numeroTrabajadores || "—"}</p>
-                      <p className="ps-2 text-xs"><strong>Maquinaria:</strong> {empresa.maquinaria || "—"}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            
 
 
 
-            {/* Observaciones - Editable y al final */}
-            <div className="mb-4">
-
-              <label className="block text-sm font-semibold text-gray-700 mb-1 bg-gray-200 p-2">Observaciones</label>
-              <textarea
-                value={registroEditando.observaciones || ""}
-                onChange={(e) =>
-                  setRegistroEditando((prev) => ({
-                    ...prev,
-                    observaciones: e.target.value,
-                  }))
-                }
-                className="w-full px-4 py-2 border rounded-md border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                rows={3}
-              />
-            </div>
-
-            <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">6. Reportaje fotográfico de la visita.</h3>
-
-            {/* Sección de imágenes */}
-            <h3 className="text-sm font-semibold mb-3 text-gray-700 bg-gray-200 p-2">Registro fotográfico</h3>
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="flex flex-col items-start mb-4">
-                <label className="block text-sm font-semibold text-gray-600 mb-2">
-                  Imagen {index + 1}
-                </label>
-
-                {/* Mostrar imagen actual o previsualización */}
-                {previsualizaciones[index] || registroEditando?.imagenes?.[index] ? (
-                  <img
-                    src={previsualizaciones[index] || registroEditando?.imagenes?.[index]}
-                    alt={`Imagen ${index + 1}`}
-                    className="w-28 h-28 object-cover mb-2 border border-gray-300 rounded-lg shadow-sm"
-                  />
-                ) : (
-                  <div className="w-28 h-28 bg-gray-100 border border-gray-300 rounded-lg flex items-center justify-center text-gray-400 mb-2">
-                    <FiCamera size={24} />
-                  </div>
-                )}
-
-                {/* Input de carga de imagen */}
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="camera"
-                  onChange={(e) => handleSeleccionarImagen(e, index)}
-                  className="block w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border file:border-gray-300 file:bg-gray-100 hover:file:bg-gray-200 cursor-pointer"
-                />
-              </div>
-            ))}
-
-            {/* Motivo del cambio */}
+            
+          
+            {/* Motivo del cambio
             <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-700 mb-1 bg-gray-200 p-2">Motivo del cambio</label>
               <textarea
@@ -1365,7 +1237,7 @@ const TablaRegistros = () => {
                 rows={3}
                 required
               />
-            </div>
+            </div> */}
 
             {/* Botones de acción */}
             <div className="flex justify-end gap-4 mt-6">
@@ -1641,4 +1513,4 @@ const TablaRegistros = () => {
   );
 };
 
-export default TablaRegistros;
+export default TablaRegistrosActaReunion;

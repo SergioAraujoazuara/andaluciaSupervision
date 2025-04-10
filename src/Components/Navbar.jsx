@@ -288,14 +288,21 @@ const Navbar = () => {
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                           onClick={handleLinkClick}
                         >
-                          Formulario
+                          Formularios
                         </Link>
                         <Link
                           to="/verRegistros"
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                           onClick={handleLinkClick}
                         >
-                          Informes
+                          Informes de visita 
+                        </Link>
+                        <Link
+                          to="/verRegistrosActasReunion"
+                          className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                          onClick={handleLinkClick}
+                        >
+                          Actas de reunión
                         </Link>
                       </div>
                     )}

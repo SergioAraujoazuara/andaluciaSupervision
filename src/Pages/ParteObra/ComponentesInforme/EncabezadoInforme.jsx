@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     width: "65%",
-    fontSize: 11,
+    fontSize: 10,
     color: "#4b5563",
   },
   headerLabel: {
@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
   },
   headerValue: {
     color: "#4b5563",
-    fontSize: 11,
+    fontSize: 10,
     marginTop: 5,
   },
   headerLogos: {
