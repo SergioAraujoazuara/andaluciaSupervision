@@ -690,7 +690,7 @@ const TablaRegistrosActaReunion = () => {
             Homesss
           </Link>
           <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
-          <h1 className="hidden md:block font-medium">Ver actas de reunión</h1>
+          <h1 className="hidden md:block font-medium">Actas de reunión</h1>
           <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
 
           {/* Nombre del proyecto (visible en todas las pantallas) */}
