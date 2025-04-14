@@ -213,6 +213,33 @@ function EditarPpi() {
         navigate('/admin'); // Esto navega hacia atrás en la historia
     };
 
+    const eliminarActividad = (actividadIndex) => {
+        const actividadesActualizadas = [...editPpi.actividades];
+        const subactividadesEliminadas = actividadesActualizadas[actividadIndex].subactividades.length;
+    
+        actividadesActualizadas.splice(actividadIndex, 1);
+    
+        setEditPpi(prev => ({
+            ...prev,
+            actividades: actividadesActualizadas
+        }));
+    
+        setTotalSubactividades(prev => prev - subactividadesEliminadas);
+    };
+    
+    const eliminarSubactividad = (actividadIndex, subactividadIndex) => {
+        const actividadesActualizadas = [...editPpi.actividades];
+    
+        actividadesActualizadas[actividadIndex].subactividades.splice(subactividadIndex, 1);
+    
+        setEditPpi(prev => ({
+            ...prev,
+            actividades: actividadesActualizadas
+        }));
+    
+        setTotalSubactividades(prev => prev - 1);
+    };
+    
     return (
         <div className='container mx-auto min-h-screen xl:px-14 py-2 text-gray-500 text-sm'>
             {/* Navigation section */}
@@ -263,93 +290,118 @@ function EditarPpi() {
                     </div>
                     {/* Iterar sobre actividades para generar inputs */}
                     {editPpi.actividades.map((actividad, actividadIndex) => (
-                        <div key={`actividad-${actividadIndex}`}>
-                            <div className='w-full grid grid-cols-12 font-medium'>
-                                <div className='col-span-1'>
-                                    <input
-                                        className='w-full p-2 border border-gray-300 bg-gray-200'
-                                        type="text"
-                                        value={actividad.numero || ''}
-                                        onChange={(e) => handleChange(e, actividadIndex, null, 'numero')}
-                                    />
-                                </div>
-                                <div className='col-span-11'>
-                                    <input
-                                        className='w-full p-2 border border-gray-300 bg-gray-200 font-medium'
-                                        type="text"
-                                        value={actividad.actividad || ''}
-                                        onChange={(e) => handleChange(e, actividadIndex, null, 'actividad')}
-                                    />
-                                </div>
-                            </div>
-                            {/* Iterar sobre subactividades para generar inputs */}
-                            {actividad.subactividades && actividad.subactividades.map((subactividad, subactividadIndex) => (
-                                <div key={`subactividad-${subactividadIndex}`}>
-                                    <div className='w-full grid grid-cols-12 text-sm'>
-                                        <div className='col-span-1'>
-                                            <input
-                                                className='w-full px-1 border bg-gray-50 h-full text-xs'
-                                                type="text"
-                                                value={subactividad.numero || ''}
-                                                onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'numero')}
-                                            />
-                                        </div>
-                                        <div className='col-span-3'>
-                                            <input
-                                                className='w-full p-2 border'
-                                                type="text"
-                                                value={subactividad.nombre || ''}
-                                                onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'nombre')}
-                                            />
-                                        </div>
-                                        <div className='xl:col-span-3 col-span-8'>
-                                            <input
-                                                className='w-full p-2 border'
-                                                type="text"
-                                                value={subactividad.criterio_aceptacion || ''}
-                                                onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'criterio_aceptacion')}
-                                            />
-                                        </div>
-                                        <div className='col-span-1 xl:block hidden'>
-                                            <input
-                                                className='w-full p-2 border'
-                                                type="text"
-                                                value={subactividad.documentacion_referencia || ''}
-                                                onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'documentacion_referencia')}
-                                            />
-                                        </div>
-                                        <div className='col-span-2 xl:block hidden'>
-                                            <input
-                                                className='w-full p-2 border'
-                                                type="text"
-                                                value={subactividad.tipo_inspeccion || ''}
-                                                onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'tipo_inspeccion')}
-                                            />
-                                        </div>
-                                        <div className='col-span-1 xl:block hidden'>
-                                            <input
-                                                className='w-full p-2 border'
-                                                type="text"
-                                                value={subactividad.punto || ''}
-                                                onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'punto')}
-                                            />
-                                        </div>
-                                        <div className='col-span-1 xl:block hidden'>
-                                            <input
-                                                className='w-full p-2 border'
-                                                type="text"
-                                                value={subactividad.responsable || ''}
-                                                onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'responsable')}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                            <button type="button" onClick={() => addSubactividad(actividadIndex)} className="mt-2 mb-5 mbinline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Añadir Subactividad
-                            </button>
-                        </div>
-                    ))}
+  <div key={`actividad-${actividadIndex}`} className="mb-6 border border-gray-300 rounded-lg overflow-hidden shadow-sm">
+
+    {/* Actividad */}
+    <div className="grid grid-cols-12 bg-gray-100 border-b border-gray-300 p-2 items-center">
+      <div className="col-span-1">
+        <input
+          className="w-full p-2 border border-gray-300 text-sm rounded"
+          type="text"
+          value={actividad.numero || ''}
+          onChange={(e) => handleChange(e, actividadIndex, null, 'numero')}
+          placeholder="Nº"
+        />
+      </div>
+      <div className="col-span-10">
+        <input
+          className="w-full p-2 border border-gray-300 text-sm rounded"
+          type="text"
+          value={actividad.actividad || ''}
+          onChange={(e) => handleChange(e, actividadIndex, null, 'actividad')}
+          placeholder="Nombre de la actividad"
+        />
+      </div>
+      <div className="col-span-1 text-end">
+        <button
+          type="button"
+          onClick={() => eliminarActividad(actividadIndex)}
+          className="text-red-600 text-xs underline hover:text-red-800"
+        >
+          ✖
+        </button>
+      </div>
+    </div>
+
+    {/* Subactividades */}
+    {actividad.subactividades && actividad.subactividades.map((subactividad, subactividadIndex) => (
+      <div key={`subactividad-${subactividadIndex}`} className="grid grid-cols-12 gap-2 p-2 items-center text-sm border-b border-gray-200">
+        <input
+          className="col-span-1 p-2 border border-gray-300 rounded"
+          type="text"
+          value={subactividad.numero || ''}
+          onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'numero')}
+          placeholder="Nº"
+        />
+        <input
+          className="col-span-3 p-2 border border-gray-300 rounded"
+          type="text"
+          value={subactividad.nombre || ''}
+          onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'nombre')}
+          placeholder="Descripción"
+        />
+        <input
+          className="col-span-3 p-2 border border-gray-300 rounded"
+          type="text"
+          value={subactividad.criterio_aceptacion || ''}
+          onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'criterio_aceptacion')}
+          placeholder="Criterio de aceptación"
+        />
+        <input
+          className="col-span-1 p-2 border border-gray-300 rounded hidden xl:block"
+          type="text"
+          value={subactividad.documentacion_referencia || ''}
+          onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'documentacion_referencia')}
+          placeholder="Doc. referencia"
+        />
+        <input
+          className="col-span-2 p-2 border border-gray-300 rounded hidden xl:block"
+          type="text"
+          value={subactividad.tipo_inspeccion || ''}
+          onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'tipo_inspeccion')}
+          placeholder="Tipo inspección"
+        />
+        <input
+          className="col-span-1 p-2 border border-gray-300 rounded hidden xl:block"
+          type="text"
+          value={subactividad.punto || ''}
+          onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'punto')}
+          placeholder="Punto"
+        />
+        <input
+          className="col-span-1 p-2 border border-gray-300 rounded hidden xl:block"
+          type="text"
+          value={subactividad.responsable || ''}
+          onChange={(e) => handleChange(e, actividadIndex, subactividadIndex, 'responsable')}
+          placeholder="Responsable"
+        />
+
+        {/* Botón eliminar subactividad */}
+        <div className="col-span-12 text-end pr-2">
+          <button
+            type="button"
+            onClick={() => eliminarSubactividad(actividadIndex, subactividadIndex)}
+            className="text-xs text-red-500 hover:underline"
+          >
+            Eliminar subactividad ✖
+          </button>
+        </div>
+      </div>
+    ))}
+
+    {/* Botón añadir subactividad */}
+    <div className="text-start p-3">
+      <button
+        type="button"
+        onClick={() => addSubactividad(actividadIndex)}
+        className="text-white bg-sky-600 hover:bg-sky-700 px-4 py-2 rounded-md text-sm font-medium"
+      >
+        Añadir Subactividad
+      </button>
+    </div>
+  </div>
+))}
+
 
                     <div className='mt-5'>
                         <button type="submit" className='bg-sky-600 hover:bg-sky-700 text-white font-medium px-4 py-2 rounded-lg '>Guardar cambios</button>

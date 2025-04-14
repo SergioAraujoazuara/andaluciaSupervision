@@ -234,6 +234,21 @@ function PlantillaPpi() {
         setActividades([...actividades, newActividad]);
     };
 
+
+    const eliminarActividad = (index) => {
+        const nuevasActividades = [...actividades];
+        nuevasActividades.splice(index, 1);
+        setActividades(nuevasActividades);
+      };
+      
+      const eliminarSubactividad = (actividadIndex, subactividadIndex) => {
+        const nuevasActividades = [...actividades];
+        if (nuevasActividades[actividadIndex].subactividades.length > 1) {
+          nuevasActividades[actividadIndex].subactividades.splice(subactividadIndex, 1);
+          setActividades(nuevasActividades);
+        }
+      };
+      
     return (
         <>
             <div className='container mx-auto min-h-screen xl:px-14 py-2 text-gray-500 text-sm'>
@@ -288,94 +303,111 @@ function PlantillaPpi() {
                         </div>
 
                         <div>
-                            {actividades.map((actividad, i) => (
-                                <>
-                                    <div key={i} className="border rounded-md">
-                                        <div className='bg-gray-100 grid grid-cols-7'>
-                                            <input
-                                                name="numero"
-                                                placeholder="Número"
-                                                value={actividad.numero}
-                                                onChange={e => handleActividadChange(i, e)}
-                                                
-                                                className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100"
-                                            />
-                                            <input
-                                                name="actividad"
-                                                placeholder="Nombre"
-                                                value={actividad.actividad}
-                                                onChange={e => handleActividadChange(i, e)}
-                                                
-                                                className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100"
-                                            />
-                                        </div>
+                        <div>
+  {actividades.map((actividad, i) => (
+    <div key={i} className="border rounded-md mb-4">
+      <div className='bg-gray-100 grid grid-cols-7'>
+        <input
+          name="numero"
+          placeholder="Número"
+          value={actividad.numero}
+          onChange={e => handleActividadChange(i, e)}
+          className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100"
+        />
+        <input
+          name="actividad"
+          placeholder="Nombre"
+          value={actividad.actividad}
+          onChange={e => handleActividadChange(i, e)}
+          className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100 col-span-6"
+        />
+      </div>
 
-                                        {actividad.subactividades && actividad.subactividades.map((sub, j) => (
-                                            <div key={j} className="w-full grid grid-cols-7">
-                                                <input
-                                                    name="numero"
-                                                    placeholder="Número de subactividad"
-                                                    value={sub.numero}
-                                                    onChange={e => handleSubactividadChange(i, j, e)}
-                                                    
-                                                    className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                />
-                                                <input
-                                                    name="nombre"
-                                                    placeholder="Descripción"
-                                                    value={sub.nombre}
-                                                    onChange={e => handleSubactividadChange(i, j, e)}
-                                                    
-                                                    className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                />
-                                                <input
-                                                    name="criterio_aceptacion"
-                                                    placeholder="Criterio de aceptación"
-                                                    value={sub.criterio_aceptacion}
-                                                    onChange={e => handleSubactividadChange(i, j, e)}
-                                                    
-                                                    className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                />
-                                                <input
-                                                    name="documentacion_referencia"
-                                                    placeholder="Documentación de referencia"
-                                                    value={sub.documentacion_referencia}
-                                                    onChange={e => handleSubactividadChange(i, j, e)}
-                                                    
-                                                    className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                />
-                                                <input
-                                                    name="tipo_inspeccion"
-                                                    placeholder="Tipo de inspección"
-                                                    value={sub.tipo_inspeccion}
-                                                    onChange={e => handleSubactividadChange(i, j, e)}
-                                                    
-                                                    className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                />
-                                                <input
-                                                    name="punto"
-                                                    placeholder="Área"
-                                                    value={sub.punto}
-                                                    onChange={e => handleSubactividadChange(i, j, e)}
-                                                    
-                                                    className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                />
-                                                <input
-                                                    name="responsable"
-                                                    placeholder="Responsable"
-                                                    value={sub.responsable}
-                                                    onChange={e => handleSubactividadChange(i, j, e)}
-                                                    
-                                                    className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                />
-                                            </div>
-                                        ))}
-                                        <button type="button" onClick={() => addSubactividad(i)} className="inline-flex items-center mt-2 mb-6 px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                            Añadir Subactividad
-                                        </button>
-                                    </div>
-                                </>
-                            ))}
+      {actividad.subactividades.map((sub, j) => (
+        <div key={j} className="w-full grid grid-cols-7 gap-[1px]">
+          <input
+            name="numero"
+            placeholder="Número de subactividad"
+            value={sub.numero}
+            onChange={e => handleSubactividadChange(i, j, e)}
+            className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+          <input
+            name="nombre"
+            placeholder="Descripción"
+            value={sub.nombre}
+            onChange={e => handleSubactividadChange(i, j, e)}
+            className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+          <input
+            name="criterio_aceptacion"
+            placeholder="Criterio de aceptación"
+            value={sub.criterio_aceptacion}
+            onChange={e => handleSubactividadChange(i, j, e)}
+            className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+          <input
+            name="documentacion_referencia"
+            placeholder="Documentación de referencia"
+            value={sub.documentacion_referencia}
+            onChange={e => handleSubactividadChange(i, j, e)}
+            className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+          <input
+            name="tipo_inspeccion"
+            placeholder="Tipo de inspección"
+            value={sub.tipo_inspeccion}
+            onChange={e => handleSubactividadChange(i, j, e)}
+            className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+          <input
+            name="punto"
+            placeholder="Área"
+            value={sub.punto}
+            onChange={e => handleSubactividadChange(i, j, e)}
+            className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+          <div className="flex items-center gap-1">
+            <input
+              name="responsable"
+              placeholder="Responsable"
+              value={sub.responsable}
+              onChange={e => handleSubactividadChange(i, j, e)}
+              className="p-2 block w-full border focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+            {actividad.subactividades.length > 1 && (
+              <button
+                type="button"
+                onClick={() => eliminarSubactividad(i, j)}
+                className="text-xs text-red-600 hover:text-red-800"
+              >
+                ✖
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+
+      <div className="flex items-center justify-between px-2 py-2">
+        <button
+          type="button"
+          onClick={() => addSubactividad(i)}
+          className="text-sm text-gray-700 hover:text-gray-900"
+        >
+          ➕ Añadir Subactividad
+        </button>
+        <button
+          type="button"
+          onClick={() => eliminarActividad(i)}
+          className="text-sm text-red-600 hover:text-red-800"
+        >
+          🗑️ Eliminar Actividad
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
+
                         </div>
 
                         <div className='flex gap-5 mt-5'>

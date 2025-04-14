@@ -64,24 +64,23 @@ function VerPpis() {
     const [errorMessage, setErrorMessage] = useState(""); // Nuevo estado para el mensaje de error
     const [showModalEliminar, setShowModalEliminar] = useState(false);
 
+    const [ppisEditables, setPpisEditables] = useState(new Set());
 
 
-    // Function: Fetch PPIs from Firestore on component mount
     const cargarPpis = async () => {
         try {
             const querySnapshot = await getDocs(collection(db, "ppis"));
-            // Get firebase
             const ppisList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
             setPpis(ppisList);
+            setPpisEditables(obtenerPpisEditables(ppisList)); // <--- nuevo estado
         } catch (error) {
             console.error("Error al cargar los PPIs:", error);
         }
     };
 
-    // Trigger data load when component is mounted
-    useEffect(() => {
-        cargarPpis();
-    }, []);
+
+
 
     // Function: Delete a PPI from Firestore
     const eliminarPpiConfirmado = async () => {
@@ -117,6 +116,26 @@ function VerPpis() {
     };
 
 
+    const obtenerPpisEditables = (lista) => {
+        const latestVersionsMap = new Map();
+
+        lista.forEach(ppi => {
+            const nombre = ppi.nombre.toLowerCase().trim();
+            if (!latestVersionsMap.has(nombre) || ppi.version > latestVersionsMap.get(nombre).version) {
+                latestVersionsMap.set(nombre, ppi);
+            }
+        });
+
+        // Devuelve un Set con los IDs editables
+        return new Set([...latestVersionsMap.values()].map(p => p.id));
+    };
+
+    useEffect(() => {
+        const fetchData = async () => {
+            await cargarPpis();
+        };
+        fetchData();
+    }, []);
 
     return (
         <div className='container mx-auto min-h-screen xl:px-14 py-2 text-gray-500'>
@@ -152,9 +171,9 @@ function VerPpis() {
 
                     <div class="w-full rounded rounded-t-xl">
                         <div className="overflow-x-auto relative">
-                            <div className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            <div className="w-full text-sm text-left">
                                 {/* Header */}
-                                <div className="hidden sm:block bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-400 rounded-t-lg">
+                                <div className="hidden sm:block rounded-t-lg bg-gray-200">
                                     <div className="grid grid-cols-12 py-3 px-4 font-medium">
                                         <div className="col-span-1">Versión</div>
                                         <div className="col-span-10">Nombre PPI</div>
@@ -166,42 +185,41 @@ function VerPpis() {
                                 <div>
                                     {ppis
                                         .sort((a, b) => {
-                                            // Comparar nombres alfabéticamente
+                                            // Ordenar por nombre y versión
                                             if (a.nombre.toLowerCase() < b.nombre.toLowerCase()) return -1;
                                             if (a.nombre.toLowerCase() > b.nombre.toLowerCase()) return 1;
-
-                                            // Si los nombres son iguales, comparar las versiones (de menor a mayor)
                                             return a.version - b.version;
-                                        })
-                                        .map((p, index) => (
-                                            <div key={index} className="border-b dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 sm:bg-white sm:dark:bg-gray-800">
-                                                <div className="sm:hidden bg-white dark:bg-gray-800 p-4 mb-4">
-                                                    <div className="flex justify-between items-center mb-2">
-                                                        <p className="text-lg font-bold text-gray-900 dark:text-white">V-{p.version}</p>
-                                                        <button className='text-xl text-amber-700' onClick={() => mostrarModalEliminar(p.id)}>
-                                                            <MdDeleteOutline />
-                                                        </button>
-                                                    </div>
-                                                    <Link to={`/editarPpi/${p.id}`} className="text-sm text-gray-700 dark:text-gray-400">
-                                                        {p.nombre}
-                                                    </Link>
-                                                </div>
 
-                                                <div className="hidden sm:grid grid-cols-12 px-4 py-3">
-                                                    <div className="col-span-1">V-{p.version}</div>
-                                                    <Link to={`/editarPpi/${p.id}`} className='col-span-10'>
-                                                        <div className='flex gap-4'>
-                                                            <p>{p.nombre}</p>
+                                        })
+                                        .map((p, index) => {
+                                            const esEditable = ppisEditables.has(p.id);
+                                            return (
+                                                <div key={index} className="border-b">
+                                                    <div className="hidden sm:grid grid-cols-12 px-4 py-3 items-center">
+                                                        <div className="col-span-1">V-{p.version}</div>
+
+                                                        {/* SOLO LINK SI ES EDITABLE */}
+                                                        {esEditable ? (
+                                                            <Link to={`/editarPpi/${p.id}`} className="col-span-10 text-gray-800 hover:underline">
+                                                                {p.nombre}
+                                                            </Link>
+                                                        ) : (
+                                                            <div className="col-span-10 text-gray-400 italic cursor-not-allowed">{p.nombre}</div>
+                                                        )}
+
+                                                        <div className="col-span-1 text-center">
+                                                            <button
+                                                                className="text-xl text-amber-700"
+                                                                onClick={() => mostrarModalEliminar(p.id)}
+                                                            >
+                                                                <MdDeleteOutline />
+                                                            </button>
                                                         </div>
-                                                    </Link>
-                                                    <div className="col-span-1 text-center">
-                                                        <button className='text-xl text-amber-700' onClick={() => mostrarModalEliminar(p.id)}>
-                                                            <MdDeleteOutline />
-                                                        </button>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
+
                                 </div>
 
                             </div>
