@@ -137,8 +137,6 @@ function Home() {
       <div className="w-full border-b-2 mb-6"></div>
       {/* Hero Section */}
 
-      <ListaProyectos/>
-
       {role === 'invitado' && (
         <div className="flex flex-col items-center justify-center bg-white shadow-lg border border-amber-600 rounded-lg p-6 max-w-md mx-auto mt-20 text-center">
           <MdErrorOutline className="text-amber-600 text-5xl mb-4" />

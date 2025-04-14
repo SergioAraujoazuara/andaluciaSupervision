@@ -12,6 +12,7 @@ import { FaRegUserCircle } from "react-icons/fa";
 import { useAuth } from '../../context/authContext';
 import { BsClipboardDataFill } from "react-icons/bs";
 import { FaInfoCircle } from "react-icons/fa";
+import { CiShare2 } from "react-icons/ci";
 
 /**
  * AdminHome Component
@@ -158,6 +159,29 @@ function AdminHome() {
                                                 - Versión web
                                                 <br />
                                                 - Versión BIM
+                                            </p>
+
+                                        </div>
+                                    </div>
+
+                                </Link>
+                            )}
+
+                            {/* Traceability Copy */}
+                            {(userRole === 'admin' || userRole === 'usuario') && (
+                                <Link className='w-full' to={`/copiarTrazabilidad`}>
+                                    <div className='flex flex-col justify-center items-center xl:flex-row gap-4  transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
+                                        <div className=' flex items-center text-gray-600'>
+                                            <span ><CiShare2 className='xl:w-[90px] xl:h-[90px] w-[70px] h-[70px]' /></span>
+                                        </div>
+                                        <div className='sm:col-span-9 text-center  xl:text-start flex flex-col justify-center items-center xl:items-start sm:justify-center text-base font-medium'>
+                                            <p className='flex items-center gap-2'>
+                                                <span className='text-amber-500  transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight />
+                                                </span>Compartir de trazabilidad
+                                            </p>
+                                            <p className='mt-4 font-normal text-sm xl:'>Transferencia de informacion entre protectos recien dados de alta,
+                                                agregar la trazabilidad completa del proyecto, establecer parámetros como el sector, sub sector, parte, elemento, lote y asignar PPI
+                                               
                                             </p>
 
                                         </div>
