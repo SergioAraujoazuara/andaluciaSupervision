@@ -50,6 +50,7 @@ import { IoArrowBackCircle } from "react-icons/io5";
 import { IoAlertCircleSharp } from "react-icons/io5";
 
 import { IoMdAddCircleOutline } from "react-icons/io";
+import CopiarPpi from './CopiarPpi';
 
 function VerPpis() {
     const navigate = useNavigate();
@@ -138,35 +139,32 @@ function VerPpis() {
     }, []);
 
     return (
-        <div className='container mx-auto min-h-screen xl:px-14 py-2 text-gray-500'>
-            <div className='flex gap-2 items-center justify-between px-4 py-3 text-base'>
-                {/* Header Navigation */}
-                <div className='flex gap-2 items-center'>
-                    <GoHomeFill style={{ width: 15, height: 15, fill: '#d97706' }} />
-                    <Link to={'/admin'}>
-                        <h1 className='text-gray-500 text-gray-500'>Administración</h1>
-                    </Link>
-                    <FaArrowRight style={{ width: 12, height: 12, fill: '#d97706' }} />
-                    <Link to={'/verPpis'}>
-                        <h1 className='text-amber-500 font-medium'>Plantillas PPI</h1>
-                    </Link>
-                </div>
-                <div className='flex items-center'>
-                    <button className='text-amber-600 text-3xl' onClick={handleGoBack}><IoArrowBackCircle /></button>
+        <div className=' py-2 text-gray-500'>
 
-                </div>
-            </div>
 
-            <div className='w-full border-b-2 border-gray-200'></div>
+
+
             <div>
                 <div className='flex gap-3 flex-col items-start justify-center mt-5 bg-white px-5 '>
-                    <div>
-                        <p className='flex xl:flex-row flex-col text-sm gap-2 underline'>
-                            <span className='flex items-center gap-2'><IoAlertCircleSharp className='text-yellow-500 text-xl' />Atencion! </span>
-                            Al editar el PPI, los cambios no se actualizarán en las inspecciones ya realizadas. Si se modifica un PPI con una inspección en curso,
-                            deberás realizar la inspección completa nuevamente.
-                        </p>
-                    </div>
+                <div className='grid grid-cols-6 gap-4'>
+    <p className='flex xl:flex-row flex-col text-sm gap-2 underline col-span-5'>
+        <span className='flex items-center gap-2'>
+            <IoAlertCircleSharp className='text-yellow-500 text-xl' />
+            Atencion! Al editar el PPI, los cambios no se actualizarán en las inspecciones ya realizadas. Si se modifica un PPI con una inspección en curso,
+            deberás realizar la inspección completa nuevamente.
+        </span>
+    </p>
+
+    {/* Botón alineado a la derecha */}
+    <div className='flex gap-2 mt-2 col-span-1 xl:justify-end hidden md:block'>
+        <Link to={'/agregarPpi'}>
+            <button className='bg-sky-600 flex gap-1 items-center text-white px-4 py-2 rounded-lg'>
+                <IoMdAddCircleOutline /> Nuevo ppi
+            </button>
+        </Link>
+    </div>
+</div>
+
 
 
                     <div class="w-full rounded rounded-t-xl">
@@ -225,14 +223,12 @@ function VerPpis() {
                             </div>
                         </div>
                     </div>
-                    <div className='flex gap-2 mt-2 xl:block hidden'>
-                        <p className=' px-4 py-2 rounded-lg'> Crear nuevo ppi: </p>
-                        <Link to={'/agregarPpi'}>
 
-                            <button className='bg-sky-600 flex gap-1 items-center text-white px-4 py-2 rounded-lg'> <IoMdAddCircleOutline /> Agregar</button>
-                        </Link>
-                    </div>
                 </div>
+            </div>
+
+            <div>
+
             </div>
             {/* Warning Message */}
             {showModal && (

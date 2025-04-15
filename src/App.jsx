@@ -33,6 +33,7 @@ import Projects from './Pages/Administrador/CreateProject/Projects.jsx';
 import ParteObraTrazabilidad from './Pages/ParteObra/ParteDeObraTrazabilidad.jsx';
 import TablaRegistrosActaReunion from './Pages/ParteObra/tablaRegistrosActasReunion.jsx';
 import ListaProyectos from './Pages/Administrador/ShareTrazabilidadProyectos/ListaProyectos .jsx';
+import TabsPpi from './Pages/Administrador/TabsPpi.jsx';
 
 // App.js
 // This is the main entry point for the application. It defines the routing structure
@@ -56,7 +57,7 @@ function App() {
     { path: '/trazabilidad/:id', element: <Trazabilidad />, roles: ['admin', 'usuario'] },
     { path: '/formularios/:id', element: <SistemaDePestanas />, roles: ['admin', 'usuario'] },
     { path: '/visorAdmin', element: <Viewer_admin />, roles: ['admin', 'usuario'] },
-    { path: '/verPPis', element: <VerPpis />, roles: ['admin'] },
+    { path: '/verPPis', element: <TabsPpi />, roles: ['admin'] },
     { path: '/agregarPpi', element: <AgregarPPi />, roles: ['admin'] },
     { path: '/roles', element: <Roles />, roles: ['admin'] },
     { path: '/project', element: <Projects />, roles: ['admin'] },
