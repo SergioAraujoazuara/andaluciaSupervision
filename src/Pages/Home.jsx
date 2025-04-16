@@ -108,33 +108,7 @@ function Home() {
 
   return (
     <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
-      <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
-        {/* Navegación */}
-        <div className="flex gap-2 items-center">
-          {/* Elementos visibles solo en pantallas medianas (md) en adelante */}
-          <GoHomeFill className="hidden md:block" style={{ width: 15, height: 15, fill: "#d97706" }} />
-          <Link to="#" className="hidden md:block font-medium text-gray-600">
-            Home
-          </Link>
-          <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
-          <h1 className="hidden md:block font-medium">Ver registros</h1>
-          <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
 
-          {/* Nombre del proyecto (visible en todas las pantallas) */}
-          <h1 className="font-medium text-amber-600 px-2 py-1 rounded-lg">
-            {selectedProjectName}
-          </h1>
-        </div>
-
-
-
-        {/* Botón de volver */}
-        <div className="flex items-center">
-
-        </div>
-      </div>
-
-      <div className="w-full border-b-2 mb-6"></div>
       {/* Hero Section */}
 
       {role === 'invitado' && (
@@ -171,21 +145,23 @@ function Home() {
 
 
           {/* Sección de Proyectos */}
-          <div className='px-6'>
-           
-            <h2 className="text-md font-semibold text-start mb-4 px-6"><span className='text-amber-700'>*</span>Selecciona un proyecto para para comenzar</h2>
+          <div className='px-6 mt-6'>
+            <h2 className="text-md font-semibold text-start mb-4 px-6">
+              <span className='text-amber-700'>*</span>Selecciona un proyecto para comenzar
+            </h2>
 
             <div className="relative">
               <select
                 onChange={(e) => handleProjectChange(e.target.value)}
                 value={selectedProject || ""}
-                className={`block w-full px-4 py-3 border rounded-lg shadow-md focus:outline-none transition-all duration-300 ease-in-out ${selectedProject ? "bg-blue-100 border-blue-500 text-blue-700 font-semibold" : "bg-white border-gray-300 "
-                  }`}
+                className={`block w-full px-6 py-3 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out 
+        ${selectedProject ? "bg-indigo-100 border-indigo-500 text-indigo-700 font-semibold" : "bg-white border-gray-300 text-gray-700"} 
+        hover:border-indigo-400 cursor-pointer`}
               >
                 <option value="" disabled>Selecciona un proyecto...</option>
                 {userProjects.length > 0 ? (
                   userProjects.map((proj) => (
-                    <option key={proj.id} value={proj.id} className="">
+                    <option key={proj.id} value={proj.id}>
                       {selectedProject === proj.id ? `✔ ${proj.name} (Seleccionado)` : proj.name}
                     </option>
                   ))
@@ -195,6 +171,7 @@ function Home() {
               </select>
             </div>
           </div>
+
 
 
         </div>
@@ -210,13 +187,13 @@ function Home() {
             {/* 🔹 Columna Izquierda - Información del Proyecto */}
             <div className="flex flex-col justify-center">
               <div>
-
-                <p className='font-medium text-lg border-b-2 px-6 py-2 mb-4 rounded-t-lg'>Detalles del proyecto</p>
+                <p className='px-6 font-bold text-lg'>{projectData.obra}</p>
+                <div className='w-full border-b-2 pb-2 mb-4'></div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 text-md px-6">
+              <div className="grid grid-cols-1 gap-3 text-sm px-6">
                 <h3 className="flex gap-3 items-center">
-                  <FaBuilding className='text-sky-700' /><span className='font-medium text-xl'>Empresa: </span> {projectData.empresa}
+                  <FaBuilding className='text-sky-700' /><span className='font-medium'>Empresa: </span> {projectData.empresa}
                 </h3>
                 <p className="flex gap-3 items-center "><FaUserTie className='text-sky-700' /> <span className="font-semibold">Promotor:</span> {projectData.promotor}</p>
                 <p className="flex gap-3 items-center"><FaTools className='text-sky-700' /> <span className="font-semibold">Contratista:</span> {projectData.descripcion}</p>
@@ -238,10 +215,10 @@ function Home() {
 
             {/* 🔹 Columna Derecha - Imágenes en Grid */}
             <div className="relative flex gap-4">
-              
-                <img src={projectData.logo || "https://via.placeholder.com/150"} alt="Logo Empresa" className="w-44 h-46 object-contain rounded-lg  bg-white p-2" />
-                <img src={projectData.logoCliente || "https://via.placeholder.com/150"} alt="Logo Cliente" className="w-36 h-20 object-contain rounded-lg bg-white p-2" />
-             
+
+              <img src={projectData.logo || "https://via.placeholder.com/150"} alt="Logo Empresa" className="w-44 h-46 object-contain rounded-lg  bg-white p-2" />
+              <img src={projectData.logoCliente || "https://via.placeholder.com/150"} alt="Logo Cliente" className="w-36 h-20 object-contain rounded-lg bg-white p-2" />
+
             </div>
 
           </div>
