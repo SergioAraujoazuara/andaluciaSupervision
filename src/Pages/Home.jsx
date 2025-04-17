@@ -9,6 +9,7 @@ import { IoArrowBackCircle } from "react-icons/io5";
 import { Link } from 'react-router-dom';
 import { FaBuilding, FaUserTie, FaTools, FaMapMarkerAlt, FaFileContract, FaClock, FaMoneyBillWave, FaShieldAlt, FaUser } from "react-icons/fa";
 import ListaProyectos from './Administrador/ShareTrazabilidadProyectos/ListaProyectos ';
+import PhotoUpload from './ParteObra/PhotoUpload';
 
 function Home() {
   const { user, loading } = useAuth(); // Obtén el usuario y su estado de carga
@@ -180,7 +181,7 @@ function Home() {
 
       {/* Detalles del Proyecto Seleccionado */}
 
-
+<PhotoUpload/>
       {selectedProject && projectData && (role === 'admin' || role === 'usuario') && userProjects.length > 0 && (
         <div className="flex justify-center text-gray-500 mt-6 px-6">
           <div className="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-200 w-full px-6 py-6">
