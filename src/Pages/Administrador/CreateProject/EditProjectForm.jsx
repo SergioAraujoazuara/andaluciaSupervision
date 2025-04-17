@@ -1,6 +1,76 @@
 import React from "react";
 import { getDocs, collection, query, where, getFirestore, updateDoc, doc } from "firebase/firestore";
 import { db } from "../../../../firebase_config";
+/**
+ * `EditProjectForm` Component
+ * 
+ * The `EditProjectForm` component provides a user interface to edit the details of an existing construction project.
+ * It allows users to modify the project information such as the company, work/project name, description, contractor, 
+ * promoter, contract number, project timeline, budget, and the safety coordinator. The form also allows the user to 
+ * update logos for both the project and the client, and preview them before saving the changes.
+ * 
+ * **Features:**
+ * - Form fields for editing project details: Company, Work, Description, Promoter, Contract Number, Project Timeline, Budget, 
+ *   Safety Coordinator, and Director.
+ * - Preview of current project and client logos before updating.
+ * - Ability to upload new logos and preview the selected files.
+ * - Reset functionality for clearing the form.
+ * - Actions for saving the updated project (`onSave`) and canceling the edit (`setIsEditing`).
+ * 
+ * **State Variables:**
+ * - `empresa`: Stores the name of the company.
+ * - `work`: Stores the name of the work/project.
+ * - `descripcion`: Stores the description of the contractor.
+ * - `promotor`: Stores the name of the promoter.
+ * - `contract`: Stores the contract number.
+ * - `plazo`: Stores the project timeline.
+ * - `presupuesto`: Stores the project budget.
+ * - `coordinador`: Stores the name of the safety and health coordinator.
+ * - `director`: Stores the name of the project director.
+ * - `logo`: Stores the selected company logo file for upload.
+ * - `clientLogo`: Stores the selected client logo file for upload.
+ * - `existingLogoURL`: Stores the URL of the current project logo for preview.
+ * - `existingClientLogoURL`: Stores the URL of the current client logo for preview.
+ * - `setIsEditing`: A function to toggle the editing state of the form.
+ * 
+ * **Methods:**
+ * - `onSave`: Triggered when the user submits the form to save the edited project.
+ * - `resetForm`: Clears all form fields.
+ * - `setIsEditing`: Closes the form without saving any changes when the user cancels.
+ * 
+ * **Example:**
+ * ```javascript
+ * // EditProjectForm component usage example:
+ * <EditProjectForm 
+ *    empresa={empresa} 
+ *    setEmpresa={setEmpresa} 
+ *    work={work} 
+ *    setWork={setWork} 
+ *    descripcion={descripcion} 
+ *    setDescripcion={setDescripcion} 
+ *    promotor={promotor} 
+ *    setPromotor={setPromotor} 
+ *    contract={contract} 
+ *    setContract={setContract} 
+ *    plazo={plazo} 
+ *    setPlazo={setPlazo} 
+ *    presupuesto={presupuesto} 
+ *    setPresupuesto={setPresupuesto} 
+ *    coordinador={coordinador} 
+ *    setCoordinador={setCoordinador} 
+ *    director={director} 
+ *    setDirector={setDirector} 
+ *    logo={logo} 
+ *    setLogo={setLogo} 
+ *    clientLogo={clientLogo} 
+ *    setClientLogo={setClientLogo} 
+ *    existingLogoURL={existingLogoURL} 
+ *    existingClientLogoURL={existingClientLogoURL} 
+ *    onSave={handleSave} 
+ *    setIsEditing={setIsEditing} 
+ * />
+ * ```
+ */
 
 const EditProjectForm = ({
   empresa,
@@ -31,9 +101,6 @@ const EditProjectForm = ({
   setIsEditing,
 }) => {
 
-
-
-  // Función para limpiar los campos del formulario
   const resetForm = () => {
     setEmpresa("");
     setWork("");

@@ -14,12 +14,72 @@ import { Link } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
 import { FaArrowRight } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
+/**
+ * `Projects` Component
+ * 
+ * The `Projects` component is responsible for managing construction projects, including adding, editing, deleting, and listing the projects. 
+ * It utilizes several custom hooks (`useProjects`, `useAddProject`, `useUpdateProject`, and `useDeleteProject`) to interact with Firebase Firestore.
+ * The component displays a table of projects, allows users to perform CRUD operations, and shows modals for success, error messages, 
+ * and project deletion confirmation.
+ * 
+ * **Features:**
+ * - Displays a list of construction projects with options to edit, delete, or view project details.
+ * - Allows adding new projects by filling out a form with relevant project data (company, work, description, etc.).
+ * - Supports editing existing project data, including updating project details and logos.
+ * - Handles the deletion of projects with a confirmation modal.
+ * - Uses Firebase Firestore to manage project data and updates the project list dynamically.
+ * - Includes form validation to ensure that required fields are filled out before adding or updating a project.
+ * - Utilizes modals to show feedback messages (success or error) and confirm project deletions.
+ * 
+ * **State Variables:**
+ * - `projects`: Stores the list of projects fetched from Firebase.
+ * - `loading`: Flag indicating whether the project list is still loading.
+ * - `isEditing`: Flag indicating whether the edit form is open.
+ * - `isAdding`: Flag indicating whether the add form is open.
+ * - `modalVisible`: Flag indicating whether the feedback modal is visible.
+ * - `modalMessage`: Stores the message displayed in the modal.
+ * - `modalType`: Stores the type of the modal (`success` or `error`).
+ * - `empresa`: Stores the name of the company.
+ * - `work`: Stores the name of the work/project.
+ * - `descripcion`: Stores the description of the contractor.
+ * - `promotor`: Stores the name of the promoter.
+ * - `contract`: Stores the contract number.
+ * - `plazo`: Stores the project timeline.
+ * - `presupuesto`: Stores the project budget.
+ * - `coordinador`: Stores the name of the safety and health coordinator.
+ * - `director`: Stores the name of the project director.
+ * - `logo`: Stores the selected logo file for the project.
+ * - `clientLogo`: Stores the selected logo file for the client.
+ * - `existingLogoURL`: Stores the URL of the current project logo for preview.
+ * - `existingClientLogoURL`: Stores the URL of the current client logo for preview.
+ * - `selectedProject`: Stores the selected project for editing.
+ * - `projectIdToEdit`: Stores the ID of the project being edited.
+ * - `isDeleteModalOpen`: Flag indicating whether the delete confirmation modal is open.
+ * - `projectIdToDelete`: Stores the ID of the project to be deleted.
+
+ * **Methods:**
+ * - `showModal`: Displays the modal with the success/error message.
+ * - `closeModal`: Closes the modal and resets the form.
+ * - `openEditModal`: Opens the edit form and loads the selected project's data.
+ * - `handleUpdateProject`: Handles the project update process and updates project data in Firestore.
+ * - `handleDeleteProject`: Handles the deletion of a project.
+ * - `validateFields`: Validates the fields before adding a new project to ensure all necessary data is provided.
+ * - `addNewProject`: Handles the process of adding a new project after validating the fields.
+ * - `fetchUsersWithProject`: Fetches the users assigned to a project.
+ * - `updateUsersWithProject`: Updates the project data for users assigned to the project.
+
+ * **Example:**
+ * ```javascript
+ * // Projects component usage example:
+ * <Projects />
+ * ```
+ */
 
 function Projects() {
-  const { projects, loading, refreshProjects } = useProjects(); // Usamos el hook useProjects
-  const { addProject, loading: addingLoading, error: addProjectError } = useAddProject(); // Usamos el hook useAddProject
-  const { updateProject, loading: updatingLoading, error: updateProjectError } = useUpdateProject(); // Usamos el hook useUpdateProject
-  const { deleteProject, loading: deletingLoading, error: deleteProjectError } = useDeleteProject(); // Usamos el hook useDeleteProject
+  const { projects, loading, refreshProjects } = useProjects(); 
+  const { addProject, loading: addingLoading, error: addProjectError } = useAddProject(); 
+  const { updateProject, loading: updatingLoading, error: updateProjectError } = useUpdateProject(); 
+  const { deleteProject, loading: deletingLoading, error: deleteProjectError } = useDeleteProject(); 
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -103,23 +163,18 @@ function Projects() {
         coordinador: coordinador
       };
 
-      // 1️⃣ Actualizar proyecto en Firestore
       const result = await updateProject(selectedProject.id, empresa, work, descripcion, contract, logo, clientLogo, promotor, plazo, presupuesto, coordinador, director);
 
-      // 2️⃣ Actualizar el proyecto en los usuarios que lo tienen asignado
       await updateUsersWithProject(selectedProject.id, updatedProjectData);
 
-      // 3️⃣ Mostrar mensaje de éxito
       showModal(result, "success");
 
-      // 4️⃣ Cerrar modal de edición y refrescar la lista de proyectos
       setIsEditing(false);
       refreshProjects();
     } catch (error) {
       showModal("Error actualizando el proyecto: " + error.message, "error");
     }
   };
-
 
   // Handle deleting the project
   const handleDeleteProject = async (id) => {
@@ -160,10 +215,6 @@ function Projects() {
     navigate(-1);
   };
 
-
-
-  console.log(projectIdToEdit)
-
   // Función para obtener los usuarios con el proyecto asignado
   const fetchUsersWithProject = async () => {
     const usersRef = collection(db, "usuarios");
@@ -178,7 +229,6 @@ function Projects() {
         .filter(user =>
           user.proyectos?.some(proj => proj.id === projectIdToEdit) // Filtramos los que tienen el proyecto
         );
-      console.log(users)
       return users;
     } catch (error) {
       console.error("Error obteniendo los usuarios con el proyecto asignado:", error);
@@ -210,14 +260,10 @@ function Projects() {
       });
 
       await batch.commit(); // Ejecutamos todas las actualizaciones de una vez
-
-      console.log("Usuarios actualizados correctamente con el nuevo name.");
     } catch (error) {
       console.error("Error actualizando los usuarios:", error);
     }
   };
-
-
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // Modal de confirmación
   const [projectIdToDelete, setProjectIdToDelete] = useState(null); // ID del proyecto a eliminar

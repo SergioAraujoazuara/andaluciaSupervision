@@ -13,14 +13,59 @@ import { BsClipboardDataFill } from "react-icons/bs";
 import { FaInfoCircle } from "react-icons/fa";
 import { CiShare2 } from "react-icons/ci";
 import { FaArrowRight } from "react-icons/fa";
+/**
+ * `ListaProyectos` Component
+ * 
+ * The `ListaProyectos` component is responsible for displaying the list of construction projects, allowing the user to select 
+ * an "origin" project and a "destination" project to copy the traceability data from the origin project to the destination project.
+ * 
+ * **Features:**
+ * - Displays a list of available projects for the user to choose from.
+ * - Allows the user to select a "Project of Origin" and a "Project of Destination" from dropdown menus.
+ * - Filters projects to show only those without associated sectors, making them eligible as destination projects.
+ * - Provides a button to trigger the traceability copying process between selected projects.
+ * - Includes a modal to confirm success when traceability is successfully copied.
+ * - Uses Firebase Firestore to interact with the data, including checking if the destination project already has traceability data.
+ * - Validates and ensures that traceability is not overwritten in the destination project.
+ * 
+ * **State Variables:**
+ * - `proyectos`: List of all projects available in the Firestore collection.
+ * - `loading`: Boolean flag to indicate if data is still loading.
+ * - `proyectoDestino`: The destination project selected by the user.
+ * - `proyectoOrigen`: The origin project selected by the user.
+ * - `error`: Stores any error messages related to fetching data or operations.
+ * - `showModal`: Boolean flag to show or hide the modal for success confirmation.
+ * - `proyectosDisponibles`: List of available projects that do not have traceability data associated with them.
+ * 
+ * **Methods:**
+ * - `filtrarProyectosVacios`: Filters and returns projects that do not have associated sectors.
+ * - `obtenerProyectos`: Fetches projects from Firestore and sets the state accordingly.
+ * - `handleGoBack`: Navigates the user back to the previous page.
+ * - `documentoExiste`: Checks if a document already exists in Firestore based on a specific field and value.
+ * - `verificarExistenciaEnDestino`: Verifies if the destination project already has traceability data.
+ * - `copiarTrazabilidad`: Copies the traceability data (sectors, subsectors, parts, elements, lots) from the origin project to the destination project.
+ * - `closeModal`: Closes the modal window after the traceability copy is successful.
+ * 
+ * **UI/UX:**
+ * - Dropdown menus are provided for selecting origin and destination projects.
+ * - Error messages are displayed if there is an issue, such as selecting a project that already contains traceability data.
+ * - A success modal is shown when traceability is successfully copied.
+ * - The user can click on the "Copiar Trazabilidad" button to start the copying process.
+ * 
+ * **Example Usage:**
+ * ```javascript
+ * // To use this component, include it in your routing structure or as part of the admin interface
+ * <ListaProyectos />
+ * ```
+ */
 
 const ListaProyectos = () => {
   const [proyectos, setProyectos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [proyectoDestino, setProyectoDestino] = useState(null); // Proyecto de destino
-  const [proyectoOrigen, setProyectoOrigen] = useState(null); // Proyecto de origen
-  const [error, setError] = useState(null); // Estado para mostrar errores
-  const [showModal, setShowModal] = useState(false); // Estado para mostrar el modal
+  const [proyectoDestino, setProyectoDestino] = useState(null); 
+  const [proyectoOrigen, setProyectoOrigen] = useState(null); 
+  const [error, setError] = useState(null); 
+  const [showModal, setShowModal] = useState(false); 
 
   const [proyectosDisponibles, setProyectosDisponibles] = useState([]);
   const filtrarProyectosVacios = async (listaProyectos) => {
@@ -55,8 +100,6 @@ const ListaProyectos = () => {
       }));
       setProyectos(proyectosData);
       setLoading(false);
-
-      // ⬇️ Filtrar los que están vacíos
       await filtrarProyectosVacios(proyectosData);
     } catch (error) {
       console.error("Error al obtener los proyectos:", error);
@@ -65,27 +108,27 @@ const ListaProyectos = () => {
   };
 
 
-  // Hook for programmatic navigation
+
   const navigate = useNavigate();
   const handleGoBack = () => {
-    navigate('/'); // Esto navega hacia atrás en la historia
+    navigate('/'); 
   };
 
 
-  // Función para verificar si un documento ya existe
+
   const documentoExiste = async (collectionRef, field, value) => {
     const q = query(collectionRef, where(field, "==", value));
     const snapshot = await getDocs(q);
-    return !snapshot.empty; // Retorna true si el documento existe
+    return !snapshot.empty; 
   };
 
-  // Función para verificar si ya existe información en el proyecto de destino
+
   const verificarExistenciaEnDestino = async (proyectoDestino) => {
     try {
       const sectorRef = collection(proyectoDestino.ref, "sector");
       const sectorSnapshot = await getDocs(sectorRef);
 
-      return !sectorSnapshot.empty; // true si hay datos
+      return !sectorSnapshot.empty;
     } catch (error) {
       console.error("Error al verificar la existencia de datos:", error);
       return false;
@@ -93,129 +136,114 @@ const ListaProyectos = () => {
   };
 
 
-  // Función para copiar la trazabilidad de un proyecto al proyecto de destino
+
   const copiarTrazabilidad = async (proyectoOrigen) => {
 
-    // 🛑 Verifica si ya hay datos en el proyecto de destino
+
     const existeInfo = await verificarExistenciaEnDestino(proyectoDestino);
     if (existeInfo) {
       console.error("El proyecto de destino ya contiene información.");
       setError("El proyecto de destino ya contiene información. No se puede sobrescribir.");
-      return; // ❌ Detiene el proceso aquí
+      return; 
     }
     try {
-      console.log(`Seleccionando el proyecto de origen: ${proyectoOrigen.obra}`);
-      console.log(`Seleccionando el proyecto de destino: ${proyectoDestino?.obra}`);
-
       if (!proyectoDestino) {
         console.error("Error: No se ha seleccionado un proyecto de destino.");
         setError("Debe seleccionar un proyecto de destino.");
         return;
       }
 
-      // 1. Obtener los sectores del proyecto origen
+
       const sectorRef = collection(proyectoOrigen.ref, "sector");
       const sectorSnapshot = await getDocs(sectorRef);
 
       for (const sectorDoc of sectorSnapshot.docs) {
         const sectorData = sectorDoc.data();
 
-        // 2. Crear el nuevo documento de sector en el proyecto destino
+
         const nuevoSectorRef = doc(collection(proyectoDestino.ref, "sector"));
         const sectorDataConIdActualizado = {
           ...sectorData,
-          id: nuevoSectorRef.id,  // Actualizamos 'id' con el ID del documento de sector recién creado
+          id: nuevoSectorRef.id,  
         };
         await setDoc(nuevoSectorRef, sectorDataConIdActualizado);
-        console.log(`Nuevo sector creado con ID: ${nuevoSectorRef.id}`);
-
-        // 3. Obtener los subsectores del sector origen
         const subSectorRef = collection(sectorDoc.ref, "subsector");
         const subSectorSnapshot = await getDocs(subSectorRef);
 
         for (const subSectorDoc of subSectorSnapshot.docs) {
           const subSectorData = subSectorDoc.data();
 
-          // 4. Crear el nuevo documento de subsector en el proyecto destino
           const nuevoSubSectorRef = doc(collection(nuevoSectorRef, "subsector"));
           const subSectorDataConIdActualizado = {
             ...subSectorData,
-            sectorId: nuevoSectorRef.id, // Actualizamos el sectorId con el ID del sector recién creado
+            sectorId: nuevoSectorRef.id, 
           };
           await setDoc(nuevoSubSectorRef, subSectorDataConIdActualizado);
-          console.log(`Nuevo subsector creado con ID: ${nuevoSubSectorRef.id}`);
+        
 
-          // 5. Obtener las partes del subsector
           const parteRef = collection(subSectorDoc.ref, "parte");
           const parteSnapshot = await getDocs(parteRef);
 
           for (const parteDoc of parteSnapshot.docs) {
             const parteData = parteDoc.data();
 
-            // 6. Crear el nuevo documento de parte en el proyecto destino
             const nuevoParteRef = doc(collection(nuevoSubSectorRef, "parte"));
             const parteDataConIdActualizado = {
               ...parteData,
-              sectorId: nuevoSectorRef.id, // El ID del sector se pasa a la parte
-              subSectorId: nuevoSubSectorRef.id, // El ID del subsector también se pasa a la parte
+              sectorId: nuevoSectorRef.id, 
+              subSectorId: nuevoSubSectorRef.id, 
             };
             await setDoc(nuevoParteRef, parteDataConIdActualizado);
-            console.log(`Nuevo parte creado con ID: ${nuevoParteRef.id}`);
-
-            // 7. Obtener los elementos del parte origen
+           
             const elementoRef = collection(parteDoc.ref, "elemento");
             const elementoSnapshot = await getDocs(elementoRef);
 
             for (const elementoDoc of elementoSnapshot.docs) {
               const elementoData = elementoDoc.data();
 
-              // 8. Crear el nuevo documento de elemento en el proyecto destino
+           
               const nuevoElementoRef = doc(collection(nuevoParteRef, "elemento"));
               const elementoDataConIdActualizado = {
                 ...elementoData,
-                sectorId: nuevoSectorRef.id, // El ID del sector
-                subSectorId: nuevoSubSectorRef.id, // El ID del subsector
-                parteId: nuevoParteRef.id, // El ID de la parte
+                sectorId: nuevoSectorRef.id, 
+                subSectorId: nuevoSubSectorRef.id, 
+                parteId: nuevoParteRef.id, 
               };
 
-              // 9. Guardar el nuevo documento de elemento
+             
               await setDoc(nuevoElementoRef, elementoDataConIdActualizado);
-              console.log(`Nuevo elemento creado con ID: ${nuevoElementoRef.id}`);
-
-              // 10. Obtener los lotes del elemento origen
+            
               const loteRef = collection(elementoDoc.ref, "lote");
               const loteSnapshot = await getDocs(loteRef);
 
               for (const loteDoc of loteSnapshot.docs) {
                 const loteData = loteDoc.data();
 
-                // 11. Actualizar los campos de trazabilidad del proyecto de destino
                 const loteDataConIdActualizado = {
                   ...loteData,
-                  sectorId: nuevoSectorRef.id, // Actualizamos el sectorId
-                  subSectorId: nuevoSubSectorRef.id, // Actualizamos el subSectorId
-                  parteId: nuevoParteRef.id, // Actualizamos el parteId
-                  idProyecto: proyectoDestino.id, // Actualizamos el idProyecto
-                  nombreProyecto: proyectoDestino.obra, // Actualizamos el nombre del proyecto
+                  sectorId: nuevoSectorRef.id, 
+                  subSectorId: nuevoSubSectorRef.id, 
+                  parteId: nuevoParteRef.id, 
+                  idProyecto: proyectoDestino.id, 
+                  nombreProyecto: proyectoDestino.obra,
                 };
 
-                // 12. Crear el nuevo documento de lote en el elemento destino
+              
                 const nuevoLoteRef = doc(collection(nuevoElementoRef, "lote"));
                 await setDoc(nuevoLoteRef, loteDataConIdActualizado);
-                console.log(`Nuevo lote creado con ID: ${nuevoLoteRef.id}`);
+              
 
-                // 13. Guardar el lote en la colección principal 'lotes'
+               
                 const lotePrincipalRef = doc(db, `lotes/${nuevoLoteRef.id}`);
                 await setDoc(lotePrincipalRef, loteDataConIdActualizado);
-                console.log(`Nuevo lote añadido a la colección principal 'lotes' con ID: ${nuevoLoteRef.id}`);
+             
               }
             }
           }
         }
       }
 
-      console.log("Trazabilidad copiada con éxito!");
-      // Mostrar el modal de éxito al finalizar la copia de la trazabilidad
+     
       setShowModal(true);
     } catch (error) {
       console.error("Error al copiar la trazabilidad:", error);
@@ -224,18 +252,9 @@ const ListaProyectos = () => {
   };
 
 
-
-
-
-
-
-
-
-  // Cerrar el modal
   const closeModal = () => {
     setShowModal(false);
   };
-
 
 
   if (loading) return <p>Cargando proyectos...</p>;

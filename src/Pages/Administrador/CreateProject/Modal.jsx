@@ -4,7 +4,7 @@ const Modal = ({ message, type, onClose }) => {
   return (
     <div 
       className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
-      style={{ zIndex: 1050 }}  // Set a higher z-index here to ensure it shows over the other modals
+      style={{ zIndex: 1050 }} 
     >
       <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full relative">
         <div className={`text-center font-bold text-lg mb-4 ${type === "success" ? "text-green-600" : "text-red-600"}`}>

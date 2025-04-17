@@ -1,4 +1,67 @@
 import React from 'react';
+/**
+ * `AddProjectForm` Component
+ * 
+ * The `AddProjectForm` component provides a user interface to add a new construction project. It allows users to enter 
+ * various details about the project, including information about the company, work, contractor, promoter, contract number, 
+ * project timeline, budget, and the main coordinator. The form also allows the user to upload logos for both the company and 
+ * the client, and preview them before submitting.
+ * 
+ * **Features:**
+ * - Form fields for project details: Company, Work, Description, Promoter, Contract Number, Project Timeline, Budget, 
+ *   Safety Coordinator, and Director.
+ * - File input for uploading company and client logos with preview functionality.
+ * - Input validation and user-friendly placeholders.
+ * - Actions for saving the project (`onSave`) and closing the form (`onClose`).
+ * 
+ * **State Variables:**
+ * - `empresa`: Stores the name of the company.
+ * - `work`: Stores the name of the work/project.
+ * - `descripcion`: Stores the description of the contractor.
+ * - `promotor`: Stores the name of the promoter.
+ * - `contract`: Stores the contract number.
+ * - `plazo`: Stores the project timeline.
+ * - `presupuesto`: Stores the project budget.
+ * - `coordinador`: Stores the name of the safety and health coordinator.
+ * - `director`: Stores the name of the project director.
+ * - `logo`: Stores the selected company logo file.
+ * - `clientLogo`: Stores the selected client logo file.
+ * 
+ * **Methods:**
+ * - `onSave`: Triggered when the user submits the form to save the project.
+ * - `onClose`: Triggered when the user cancels the form or closes the modal.
+ * 
+ * **Example:**
+ * ```javascript
+ * // AddProjectForm component usage example:
+ * <AddProjectForm 
+ *    empresa={empresa} 
+ *    setEmpresa={setEmpresa} 
+ *    work={work} 
+ *    setWork={setWork} 
+ *    descripcion={descripcion} 
+ *    setDescripcion={setDescripcion} 
+ *    promotor={promotor} 
+ *    setPromotor={setPromotor} 
+ *    contract={contract} 
+ *    setContract={setContract} 
+ *    plazo={plazo} 
+ *    setPlazo={setPlazo} 
+ *    presupuesto={presupuesto} 
+ *    setPresupuesto={setPresupuesto} 
+ *    coordinador={coordinador} 
+ *    setCoordinador={setCoordinador} 
+ *    director={director} 
+ *    setDirector={setDirector} 
+ *    logo={logo} 
+ *    setLogo={setLogo} 
+ *    clientLogo={clientLogo} 
+ *    setClientLogo={setClientLogo} 
+ *    onSave={handleSave} 
+ *    onClose={handleClose} 
+ * />
+ * ```
+ */
 
 const AddProjectForm = ({
   empresa,

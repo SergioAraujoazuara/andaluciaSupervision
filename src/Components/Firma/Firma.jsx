@@ -2,6 +2,22 @@ import React, { useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import { AiOutlineClose, AiFillSave } from "react-icons/ai"; 
 import { FaEraser, FaFileSignature, FaCheckCircle } from "react-icons/fa"; 
+/**
+ * Firma Digital Component
+ * 
+ * This component allows the user to sign digitally using a signature pad. 
+ * It provides functionality for saving the signature as an image, clearing the signature pad, 
+ * and displaying success or error messages. The component supports the following actions:
+ * 
+ * - Draw a signature using the canvas.
+ * - Save the signature as a PNG image.
+ * - Clear the signature and reset the canvas.
+ * 
+ * The component receives the following props:
+ * 
+ * @param {function} onSave - Function to handle the saved signature (passed to the parent component).
+ * @param {function} onClose - Function to close the signature modal (passed to the parent component).
+ */
 
 const Firma = ({ onSave, onClose }) => {
   const sigCanvas = useRef(null);
@@ -9,7 +25,6 @@ const Firma = ({ onSave, onClose }) => {
   const [successMessage, setSuccessMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // ✅ Guardar la firma como imagen
   const saveSignature = () => {
     if (sigCanvas.current.isEmpty()) {
       setSuccessMessage("⚠️ Firma vacía. ¡Dibuja algo antes de guardar!");
@@ -23,20 +38,16 @@ const Firma = ({ onSave, onClose }) => {
     onSave(url); // ✅ Enviar la firma sin cerrar el modal
   };
 
-  // 🔄 Limpiar la firma
   const clearSignature = () => {
     sigCanvas.current.clear();
     setIsSigned(false);
     setSuccessMessage("");
     setIsSaving(false);
-    // ❌ Se quita `onSave(null)` para evitar cerrar el modal
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 p-4 backdrop-blur-md">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md relative">
-        
-        {/* 🔹 Botón de cierre */}
         <button 
           onClick={onClose} 
           className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 transition"
@@ -44,12 +55,10 @@ const Firma = ({ onSave, onClose }) => {
           <AiOutlineClose size={22} />
         </button>
 
-        {/* 🔹 Título */}
         <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
           <FaFileSignature className="text-blue-500" /> Firma Digital
         </h2>
 
-        {/* 🔹 Área de firma */}
         <div className={`border-2 rounded-lg mt-4 overflow-hidden shadow-sm ${isSigned ? "border-green-500" : "border-gray-300"}`}>
           <SignatureCanvas
             ref={sigCanvas}
@@ -62,7 +71,6 @@ const Firma = ({ onSave, onClose }) => {
           />
         </div>
 
-        {/* 🔹 Mensaje de éxito */}
         {successMessage && (
           <div className={`mt-3 px-4 py-2 text-sm font-semibold text-center rounded-lg 
             ${isSigned ? "bg-green-100 text-green-700 border border-green-500" : "bg-yellow-100 text-yellow-700 border border-yellow-500"}`}>
@@ -71,7 +79,6 @@ const Firma = ({ onSave, onClose }) => {
           </div>
         )}
 
-        {/* 🔹 Botones de acción */}
         <div className="flex justify-between items-center mt-6">
           <button 
             onClick={clearSignature} 

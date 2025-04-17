@@ -1,5 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { getStorage, ref, listAll, getDownloadURL, getMetadata } from 'firebase/storage';
+/**
+ * PdfListViewer Component
+ * 
+ * This component fetches and displays a list of PDF files stored in Firebase Storage.
+ * It retrieves the file URLs and their metadata, such as the upload date, and presents 
+ * them in a modal for the user to view. Users can click on the links to open the PDFs 
+ * in a new tab. The modal can be opened and closed by the user.
+ * 
+ * Functionalities:
+ * - Fetches PDF files from a specific folder in Firebase Storage.
+ * - Displays the list of PDF files with their names and upload date.
+ * - Allows users to open the PDF file in a new tab.
+ * - The modal can be opened/closed by clicking a button.
+ * 
+ * Dependencies:
+ * - Firebase: Used to interact with Firebase Storage to fetch file URLs and metadata.
+ */
 
 const PdfListViewer = () => {
     const [pdfFiles, setPdfFiles] = useState([]);

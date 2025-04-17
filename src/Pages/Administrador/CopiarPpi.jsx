@@ -1,6 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../../../firebase_config';
 import { getDocs, collection, doc, setDoc } from 'firebase/firestore';
+/**
+ * `CopiarPpi` Component
+ * 
+ * The `CopiarPpi` component is responsible for allowing users to copy an existing PPI (Point of Inspection) from Firestore, 
+ * assigning it a new name and storing it back to the Firestore database. This feature enables easy duplication of existing 
+ * inspection templates for reuse or modification.
+ * 
+ * **Features:**
+ * - Retrieves the list of existing PPIs from Firestore.
+ * - Allows the user to select an existing PPI to copy.
+ * - Takes a new name for the copied PPI.
+ * - Copies the selected PPI's data and saves it as a new document in Firestore with the new name.
+ * - Provides feedback messages for success or error during the copy operation.
+ * 
+ * **State Variables:**
+ * - `ppis`: Stores the list of PPIs fetched from Firestore.
+ * - `selectedPpi`: Stores the ID of the selected PPI to be copied.
+ * - `newPpiName`: Stores the new name for the copied PPI.
+ * - `errorMessage`: Stores any error message encountered during the process.
+ * - `successMessage`: Stores a success message once the PPI is copied.
+ * 
+ * **Methods:**
+ * - `cargarPpis`: Fetches the list of PPIs from Firestore and updates the state.
+ * - `copiarPpi`: Copies the selected PPI data to Firestore with a new name.
+ * 
+ * **Return Values:**
+ * - Renders a form that includes a dropdown to select a PPI to copy, an input field for the new name, 
+ *   and a button to trigger the copy action.
+ * 
+ * **Example:**
+ * ```javascript
+ * // CopiarPpi component will be rendered in a parent component:
+ * <CopiarPpi />
+ * ```
+ */
 
 function CopiarPpi() {
     const [ppis, setPpis] = useState([]);
