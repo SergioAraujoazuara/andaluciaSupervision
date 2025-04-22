@@ -5,7 +5,7 @@ const styles = StyleSheet.create({
   fieldRow: {
     marginBottom: 2,
     paddingHorizontal: 8,
-    flexDirection: "row", // ✅ Campo y valor en línea
+    flexDirection: "column", // ✅ Campo y valor en línea
     alignItems: "flex-start",
     flexWrap: "wrap", 
     marginBottom:8    // Permite que el texto largo se acomode
@@ -14,7 +14,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#4b5563",
     fontSize: 9,
-    marginRight: 4,       // Espacio entre campo y valor
+    marginBottom: "4"
+           // Espacio entre campo y valor
   },
   fieldLabelObservaciones: {
     fontWeight: "normal",

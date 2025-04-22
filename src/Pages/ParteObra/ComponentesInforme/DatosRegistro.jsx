@@ -33,10 +33,10 @@ const DatosRegistro = ({ dataRegister }) => {
 
 
 
-        <SeccionesDatosRegistros
+        {/* <SeccionesDatosRegistros
           nombreCampo={"Localización"}
           valorDelCampo={dataRegister.observacionesLocalizacion}
-        />
+        /> */}
       </View>
 
       {/* Sección 2 - Medios Disponibles en Obra */}
@@ -66,12 +66,15 @@ const DatosRegistro = ({ dataRegister }) => {
               }}
             >
               <SeccionesDatosRegistros
-                nombreCampo={`Nombre`}
+                
                 valorDelCampo={empresa.nombreEmpresa || "No especificado"}
               />
               <SeccionesDatosRegistros
-                nombreCampo={`Trabajadores`}
+                nombreCampo={`Trabajadores: `}
                 valorDelCampo={empresa.numeroTrabajadores || "No especificado"}
+              />
+               <SeccionesDatosRegistros
+                valorDelCampo={empresa.maquinaria || ""}
               />
             </View>
           );

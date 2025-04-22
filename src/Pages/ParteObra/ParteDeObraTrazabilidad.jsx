@@ -35,15 +35,30 @@ const ParteObra = () => {
     observacionesLocalizacion: "",
     fechaHora: "",
     imagenes: [],
-    mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }]
+    mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }],
+    previsionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
   });
   const [activityVisibility, setActivityVisibility] = useState(true);
-  const [visibleActivities, setVisibleActivities] = useState(1); // Inicialmente mostrar 2 actividades
+  const [visibleActivities, setVisibleActivities] = useState(1);
+  const [visiblePrevisiones, setVisiblePrevisiones] = useState(1);
 
-  // Función que se llama cuando se hace clic en el botón para mostrar más actividades
   const handleShowMoreActivities = () => {
-    setVisibleActivities(prev => prev + 1); // Aumenta en 1 el número de actividades visibles
-  }; // Estado para controlar la visibilidad de las observaciones
+    setVisibleActivities(prev => prev + 1);
+  };
+
+  const handleShowMorePrevisiones = () => {
+    setVisiblePrevisiones(prev => prev + 1);
+  };
+  const handlePrevisionChange = (actividad, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      previsionesActividades: {
+        ...prev.previsionesActividades,
+        [actividad]: value,
+      }
+    }));
+  };
+
 
   const fileInputsRefs = useRef([]);
   const [geolocalizacion, setGeolocalizacion] = useState(null);
@@ -334,7 +349,10 @@ const ParteObra = () => {
       imagenes: [],
       mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }],
       observacionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
+      previsionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
     });
+    setVisiblePrevisiones(1);
+    setVisibleActivities(1);
 
     // 🔹 **Reset de actividades**
     setSelectedActivities({});
@@ -466,11 +484,6 @@ const ParteObra = () => {
       errors.push("⚠️ Debes seleccionar una fecha y hora.");
     }
 
-    // Validar observaciones de actividad y localización
-    if (formType === 'visita' && !formData.observacionesLocalizacion.trim()) {
-      errors.push("⚠️ Debes llenar las observaciones de la localización.");
-    }
-
     // Validar que todas las actividades tengan "Aplica" o "No Aplica" seleccionadas
     const actividadesKeys = Object.keys(selectedActivities);
 
@@ -490,11 +503,11 @@ const ParteObra = () => {
     const actividadesObservadas = formType === 'visita' && Object.values(formData.observacionesActividades).every(
       (actividad) => actividad.trim() === ""
     );
-    
+
     if (actividadesObservadas) {
       errors.push("⚠️ Debes ingresar al menos una observación en las actividades.");
     }
-    
+
 
 
     // Si hay errores, mostrar en el modal
@@ -537,14 +550,14 @@ const ParteObra = () => {
 
       // Guardar en Firebase
 
-      if(formType === "visita") {
+      if (formType === "visita") {
         await addDoc(collection(db, "registrosParteDeObra"), registro);
       }
 
-      if(formType === "acta") {
+      if (formType === "acta") {
         await addDoc(collection(db, "registrosActasDeReunion"), registro);
       }
-     
+
 
       // Restablece el estado del formulario asegurando la estructura correcta
       setFormData({
@@ -553,8 +566,12 @@ const ParteObra = () => {
         observacionesLocalizacion: "",
         fechaHora: "",
         imagenes: [],
-        mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }]
+        mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }],
+        previsionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
+        observacionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
       });
+      setVisiblePrevisiones(1);
+      setVisibleActivities(1);
 
       // 🔹 **Reset de actividades**
       setSelectedActivities({});
@@ -1030,7 +1047,7 @@ const ParteObra = () => {
 
                   </div>
 
-                  <div className="mt-4">
+                  {/* <div className="mt-4">
                     <label className="block text-sm font-medium px-4">
                       ¿Dónde se ubica?
                     </label>
@@ -1041,7 +1058,7 @@ const ParteObra = () => {
                       onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
                       placeholder="Escribe tus observaciones aquí..."
                     />
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Medios disponibles, empresa y trabajadores */}
@@ -1243,12 +1260,12 @@ const ParteObra = () => {
                 {/* 5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.*/}
 
                 <div>
-                  <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.</h3>
-                  {/* Previsión de Actividades de Próximo Inicio */}
-                  <div className="mt-4">
+                  {/* <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.</h3>
+                   */}
+                  {/* <div className="mt-4">
 
 
-                    {/* Actividades de Próximo Inicio */}
+                
                     <div className="">
                       <label className="mt-2 block px-4 rounded-md text-sm font-medium">
                         Actividades de Próximo Inicio
@@ -1262,7 +1279,7 @@ const ParteObra = () => {
                       />
                     </div>
 
-                    {/* 4 Medidas Preventivas a Implantar */}
+                 
                     <div>
                       <label className="block px-4 py-2 rounded-md text-sm font-medium">
                         Medidas Preventivas a Implantar en Obra
@@ -1275,7 +1292,40 @@ const ParteObra = () => {
                         placeholder="Escribe tus observaciones aquí..."
                       />
                     </div>
+                  </div> */}
+
+                  <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
+                    5.  Previsión de actividades de próximo inicio y medidas preventivas.
+                  </h3>
+
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium px-4"><span className="text-amber-600 mr-2">*</span>Describe las observaciones necesarias</label>
+                    {visiblePrevisiones < Object.keys(formData.previsionesActividades).length && (
+                      <button
+                        onClick={handleShowMorePrevisiones}
+                        className="px-4 py-2 text-xs bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                      >
+                        Agregar previsión
+                      </button>
+                    )}
                   </div>
+
+                  <div className="mt-2">
+                    {Object.keys(formData.previsionesActividades)
+                      .slice(0, visiblePrevisiones)
+                      .map((key, index) => (
+                        <div key={index}>
+                          <VoiceRecorderInput
+                            maxLength={100}
+                            name={`previsionActividad-${key}`}
+                            value={formData.previsionesActividades[key]}
+                            onChange={(name, value) => handlePrevisionChange(key, value)}
+                            placeholder={`Actividad prevista ${index + 1}`}
+                          />
+                        </div>
+                      ))}
+                  </div>
+
 
 
                 </div>
@@ -1310,8 +1360,16 @@ const ParteObra = () => {
                               Seleccionar archivo
                             </label>
                             <p className="mt-2 text-sm text-gray-500 text-center">
-                              {fileInputsRefs.current[index]?.files[0]?.name || "Ningún archivo seleccionado"}
+                              {fileInputsRefs.current[index]?.files[0] ? (
+                                <>
+                                  <span className="hidden md:inline">{fileInputsRefs.current[index]?.files[0]?.name}</span>
+                                  <span className="inline md:hidden">✅ Imagen cargada</span>
+                                </>
+                              ) : (
+                                "Ninguna imagen"
+                              )}
                             </p>
+
 
                             {/* 🔹 Campo para observaciones */}
                             <textarea
@@ -1501,13 +1559,13 @@ const ParteObra = () => {
                 </div>
 
 
-                
+
 
 
 
                 {/* Formulario */}
                 <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-                  
+
 
                   <div className="w-full p-2 border-b-4"></div>
                   {/* Botones */}

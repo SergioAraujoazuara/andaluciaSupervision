@@ -22,6 +22,7 @@ import Spinner from "./ComponentesInforme/Spinner";
 
 import { View, Text, Image, StyleSheet, Page, Document } from "@react-pdf/renderer";
 import MedidasPreventivas from "./ComponentesInforme/MedidasPreventivas";
+import PrevisionesActividades from "./ComponentesInforme/PrevisionActividades"
 
 const styles = StyleSheet.create({
   page: {
@@ -71,7 +72,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     const minutos = ahora.getMinutes().toString().padStart(2, "0");
     return `${horas}:${minutos}`;  // Devuelve la hora en formato HH:mm
   };
-  
+
 
   const [userNombre, setUserNombre] = useState("");
   const [userSignature, setUserSignature] = useState(null);
@@ -138,12 +139,12 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             const latitude = metadata.customMetadata?.latitude || null;
             const longitude = metadata.customMetadata?.longitude || null;
             const observacion = metadata.customMetadata?.observacion || null;
-  
+
             const googleMapsLink =
               latitude && longitude
                 ? `https://www.google.com/maps?q=${latitude},${longitude}`
                 : null;
-  
+
             return { imageBase64: url, googleMapsLink, observacion };
           } catch (error) {
             console.error(`Error al descargar la imagen ${path}:`, error);
@@ -152,7 +153,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
         })
     );
   };
-  
+
 
 
 
@@ -163,7 +164,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       console.error("⚠️ No hay firmas guardadas en Firestore.");
       return; // Evita continuar si no hay firmas en Firestore
     }
-    
+
 
     if (userNombre !== "NA") {
       await fetchUserDetails();
@@ -174,7 +175,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     let imagesWithMetadata = [];
     if (dataRegister.imagenes && dataRegister.imagenes.length > 0) {
       imagesWithMetadata = await fetchImagesWithMetadata(dataRegister.imagenes);
-      console.log(imagesWithMetadata, 'imagenes ******+')
+
     }
 
     const docContent = (
@@ -188,7 +189,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             description={proyecto?.descripcion || "Contratista"}
             coordinador={proyecto?.coordinador || "Nombre coordinador de seguridad y salud"}
             director={proyecto?.director || "Nombre director de la obra"}
-            rangoFechas={`${fechaInicio || `${formatFechaActual} - ${obtenerHoraActual()} hrs` } ${fechaFin ? ` al ${fechaFin} - ${obtenerHoraActual()} hrs` : ""}`}
+            rangoFechas={`${fechaInicio || `${formatFechaActual} - ${obtenerHoraActual()} hrs`} ${fechaFin ? ` al ${fechaFin} - ${obtenerHoraActual()} hrs` : ""}`}
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />
 
@@ -236,16 +237,18 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
           )}
 
-          <MedidasPreventivas 
-           registro={dataRegister}
-           excluirClaves={[
-             "id", "parteId", "ppiId", "idSubSector", "idSector", "idBim", "elementoId",
-             "imagenes", "idProyecto", "ppiNombre", "loteid", "totalSubactividades",
-             "nombreProyecto", "estado", "pkInicial", "pkFinal", "loteId",
-             "sectorNombre", "subSectorNombre", "parteNombre", "elementoNombre"
-           ]}
-           dataRegister={dataRegister}
-           columnasMap={columnasMap}/>
+          <MedidasPreventivas
+            registro={dataRegister}
+            excluirClaves={[
+              "id", "parteId", "ppiId", "idSubSector", "idSector", "idBim", "elementoId",
+              "imagenes", "idProyecto", "ppiNombre", "loteid", "totalSubactividades",
+              "nombreProyecto", "estado", "pkInicial", "pkFinal", "loteId",
+              "sectorNombre", "subSectorNombre", "parteNombre", "elementoNombre"
+            ]}
+            dataRegister={dataRegister}
+            columnasMap={columnasMap} />
+
+          <PrevisionesActividades dataRegister={dataRegister} />
 
 
           {/* Pie de página con ambas firmas */}
@@ -262,10 +265,10 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       </Document>
     );
 
-     // Generar el PDF como Blob y abrir en una nueva pestaña
-const blob = await pdf(docContent).toBlob();
-const pdfURL = URL.createObjectURL(blob);
-window.open(pdfURL, "_blank");
+    // Generar el PDF como Blob y abrir en una nueva pestaña
+    const blob = await pdf(docContent).toBlob();
+    const pdfURL = URL.createObjectURL(blob);
+    window.open(pdfURL, "_blank");
 
 
   };
@@ -307,8 +310,8 @@ window.open(pdfURL, "_blank");
       ) : (
         <button
           className={`w-10 h-10 flex justify-center items-center text-xl font-medium rounded-md ${dataRegister.firmaEmpresa && dataRegister.firmaCliente
-              ? "text-gray-500 hover:text-sky-700"
-              : "text-gray-500 cursor-not-allowed"
+            ? "text-gray-500 hover:text-sky-700"
+            : "text-gray-500 cursor-not-allowed"
             }`}
           onClick={dataRegister.firmaEmpresa && dataRegister.firmaCliente ? handlegeneratePDF : null}
           disabled={!dataRegister.firmaEmpresa || !dataRegister.firmaCliente} // Si no hay firmas, deshabilitar

@@ -66,31 +66,35 @@ function CopiarPpi() {
             setErrorMessage("Por favor, selecciona un PPI y proporciona un nombre para la copia.");
             return;
         }
-
+    
         try {
-            // Get the selected PPI data
+            // Obtener el PPI original
             const ppiToCopy = ppis.find(ppi => ppi.id === selectedPpi);
-
+    
             if (!ppiToCopy) {
                 setErrorMessage("PPI no encontrado.");
                 return;
             }
-
-            // Create a new PPI with the same data but a different name
-            const newPpiData = { ...ppiToCopy, nombre: newPpiName };
-
-            // Add the new PPI to Firestore
+    
+            // Eliminar el campo 'id' del objeto copiado
+            const { id, ...resto } = ppiToCopy;
+    
+            // Crear nuevo PPI con el nuevo nombre
+            const newPpiData = { ...resto, nombre: newPpiName };
+    
+            // Generar nuevo documento en Firestore
             const newDocRef = doc(collection(db, "ppis"));
             await setDoc(newDocRef, newPpiData);
-
+    
             setSuccessMessage("El PPI ha sido copiado exitosamente.");
-            setNewPpiName(""); // Reset the new name input
-            setSelectedPpi(""); // Reset the selected PPI
+            setNewPpiName("");
+            setSelectedPpi("");
         } catch (error) {
             console.error("Error al copiar el PPI:", error);
             setErrorMessage("Hubo un problema al intentar copiar el PPI.");
         }
     };
+    
 
     return (
         <div className='container mx-auto min-h-screen px-6 py-2 text-gray-500 mt-5'>

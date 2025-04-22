@@ -22,13 +22,11 @@ const MedidasPreventivas = ({ dataRegister }) => {
       
       {/* Sección 7 */}
       <View style={styles.section}>
-        <TituloInforme plantillaSeleccionada="6. Previsión de actividades de próximo inicio. Medias preventivas y pasos." />
+        <TituloInforme plantillaSeleccionada="6. Previsión de actividades de próximo inicio. Medidas preventivas." />
         <SeccionesDatosRegistros
-          nombreCampo={"Actividades próximo inicio"}
           valorDelCampo={dataRegister.actividadesProximoInicio}
         />
         <SeccionesDatosRegistros
-          nombreCampo={"Medidas preventivas"}
           valorDelCampo={dataRegister.medidasPreventivas}
         />
       </View>

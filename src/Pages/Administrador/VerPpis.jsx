@@ -106,6 +106,7 @@ function VerPpis() {
     };
     // Function: Show confirmation modal for deletion
     const mostrarModalEliminar = (idPpi) => {
+        console.log(idPpi)
         setPpiIdAEliminar(idPpi);
         setShowModal(true);
         setErrorMessage(""); // Reinicia el mensaje de error cuando se muestra el modal

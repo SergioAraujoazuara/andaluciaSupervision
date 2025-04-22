@@ -20,8 +20,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,       // Espacio entre las filas
   },
   field: {
-    width: "33.33%",       // Ancho del 33.33% para 3 columnas
-      // Espacio entre los campos
+    width: "33.33%", 
   },
 });
 
@@ -35,9 +34,7 @@ const ObservacionesActividades = ({ dataRegister }) => {
             .filter(([_, observacion]) => observacion.trim() !== "")  // Filtra las observaciones vacías
             .map(([actividadKey, observacion], index) => {
               // Formatear la clave como "Actividad 1", "Actividad 2", etc.
-              const formattedKey = `Actividad ${actividadKey.replace(/\D+/g, '')}`; // Resultado: "Actividad 1"
-
-
+              const formattedKey = `Actividad: `; // Resultado: "Actividad 1"
               return (
                 <View key={index} style={styles.field}>
                   <SeccionesDatosRegistros
