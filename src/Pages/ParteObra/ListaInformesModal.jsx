@@ -6,6 +6,42 @@ import { FaTrashAlt } from "react-icons/fa";
 import { IoSearchCircleOutline } from "react-icons/io5";
 import { FaCheckCircle } from "react-icons/fa";
 
+/**
+ * Component `ListaInformesModal`
+ *
+ * This component provides a modal interface that allows users to **view and manage stored PDF reports** (informes) in Firebase Storage.
+ * It filters the reports by the current project name and displays them in a table with actions to **preview** or **delete** each file.
+ * 
+ * ---
+ * 🔹 Key Features:
+ * - Fetches all PDF files from the `informes/` folder in Firebase Storage.
+ * - Filters the list to show only files whose names begin with the currently selected project name.
+ * - Displays a modal with a searchable, scrollable list of available reports.
+ * - Allows viewing each report in a new browser tab via `getDownloadURL`.
+ * - Allows deletion of individual reports via `deleteObject`, with confirmation.
+ * - Shows a success modal upon successful deletion.
+ *
+ * 🧩 UI Elements:
+ * - Button: "Ver Informes" — Opens the modal.
+ * - Modal: Displays a table of available reports with name, date, and action buttons.
+ * - Confirmation modal: Confirms before deleting a report.
+ * - Success modal: Notifies when a report is successfully deleted.
+ *
+ * 🗃️ Firebase Integration:
+ * - Uses `ref`, `listAll`, `getDownloadURL`, and `deleteObject` from `firebase/storage`.
+ *
+ * 🔐 Project Context:
+ * - Filters reports based on `selectedProjectName` stored in `localStorage`.
+ *
+ * 🧠 State Management:
+ * - `modalOpen`: Controls visibility of the main modal.
+ * - `pdfList`: Holds the filtered list of report files.
+ * - `loading`: Displays loading state while fetching files.
+ * - `confirmDelete`: Tracks which file is about to be deleted.
+ * - `showSuccessModal`, `successMessage`: Handle success notifications.
+ */
+
+
 const ListaInformesModal = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [pdfList, setPdfList] = useState([]);
@@ -16,7 +52,7 @@ const ListaInformesModal = () => {
 
   const selectedProjectName = localStorage.getItem("selectedProjectName");
 
-  // 🔹 Función para obtener la lista de PDFs
+
   const fetchPdfFiles = async () => {
     setLoading(true);
     try {
@@ -38,7 +74,7 @@ const ListaInformesModal = () => {
     setLoading(false);
   };
 
-  // 🔥 **Función para eliminar un archivo**
+ 
   const handleDeleteFile = (file) => {
     setConfirmDelete(file);
   };
@@ -49,11 +85,11 @@ const ListaInformesModal = () => {
       await deleteObject(confirmDelete.ref);
       setPdfList(prevList => prevList.filter(item => item.name !== confirmDelete.name));
 
-      // Mostrar modal de éxito
+   
       setSuccessMessage(`✅ Informe "${confirmDelete.name}" eliminado.`);
       setShowSuccessModal(true);
 
-      // Cerrar el modal después de 3 segundos
+     
       setTimeout(() => setShowSuccessModal(false), 1500);
     } catch (error) {
       console.error(`❌ No se pudo eliminar ${confirmDelete.name}:`, error);
@@ -61,7 +97,7 @@ const ListaInformesModal = () => {
     setConfirmDelete(null);
   };
 
-  // 🔹 Abrir el modal y cargar los PDFs
+ 
   const handleOpenModal = () => {
     setModalOpen(true);
     fetchPdfFiles();
@@ -69,7 +105,7 @@ const ListaInformesModal = () => {
 
   return (
     <div className="relative">
-      {/* Botón para abrir el modal */}
+     
       <button
         className="px-4 py-2 h-12 text-sm bg-sky-700 text-white rounded-md hover:bg-sky-800 flex gap-2 items-center"
         onClick={handleOpenModal}
@@ -77,11 +113,11 @@ const ListaInformesModal = () => {
         <span><IoSearchCircleOutline className="text-2xl" /></span>Ver Informes
       </button>
 
-      {/* Modal principal */}
+    
       {modalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 transition-opacity duration-300 p-4 text-xs">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-4xl h-[80vh] flex flex-col animate-fadeIn">
-            {/* Encabezado */}
+        
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-800">📂 Informes Guardados</h2>
               <button onClick={() => setModalOpen(false)} className="text-gray-500 hover:text-gray-700">
@@ -89,10 +125,10 @@ const ListaInformesModal = () => {
               </button>
             </div>
 
-            {/* Línea separadora */}
+          
             <div className="border-b-2 w-full mb-4"></div>
 
-            {/* Contenido con scroll interno */}
+          
             <div className="overflow-y-auto flex-grow">
               {loading ? (
                 <p className="text-gray-500 text-center">Cargando archivos...</p>
@@ -141,21 +177,21 @@ const ListaInformesModal = () => {
         </div>
       )}
 
-      {/* Modal de confirmación de eliminación */}
+     
       {confirmDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex justify-center items-center z-50 p-4 animate-fadeIn">
           <div className="bg-white p-6 rounded-2xl shadow-xl w-96 text-center border-t-4 relative">
 
-            {/* Icono de advertencia */}
+          
             <div className="flex justify-center">
               <span className="text-red-600 text-5xl">⚠️</span>
             </div>
 
-            {/* Título y mensaje */}
+           
             <h2 className="text-xl font-semibold text-gray-800 mt-4">¿Eliminar informe?</h2>
             <p className="text-gray-600 mt-2">{confirmDelete.name}</p>
 
-            {/* Botones */}
+        
             <div className="mt-6 flex justify-center gap-4">
               <button
                 onClick={confirmDeleteFile}
@@ -174,15 +210,15 @@ const ListaInformesModal = () => {
         </div>
       )}
 
-      {/* Modal de éxito después de eliminar */}
+    
       {showSuccessModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-md z-[100]">
           <div className="bg-white p-6 rounded-lg shadow-2xl w-96 text-center border-t-4 border-green-600 relative z-[110]">
 
-            {/* Ícono de éxito en color verde */}
+           
             <FaCheckCircle className="text-green-600 text-5xl mx-auto" />
 
-            {/* Mensaje de éxito */}
+           
             <p className="text-gray-600 mt-4 font-medium">Documento eliminado</p>
 
           </div>

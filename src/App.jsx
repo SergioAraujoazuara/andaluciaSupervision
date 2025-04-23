@@ -21,14 +21,7 @@ import Pdf_final from './Components/Pdf_final';
 import GrocIA from './Components/GrocIA.jsx';
 import Dashboard from './Pages/Inspeccion/Dashboard.jsx';
 import SendMail from './Components/FeatureSendMail/SendMail.jsx';
-import ParteObra from './Pages/ParteObra/ParteObra.jsx';
-import SistemaDePestanas from './Pages/ParteObra/SistemaPestanas.jsx';
-import GridParteDeObra from './Pages/ParteObra/GridParteDeObra.jsx';
 import TablaRegistrosTrazabilidad from './Pages/ParteObra/TablaRegistrosTrazabilidad.jsx';
-import ViewProject from './Pages/Administrador/ViewProject.jsx';
-import Horta from './Pages/Auscultacion/Horta.jsx';
-import Glorias from './Pages/Auscultacion/Glorias.jsx';
-import Llacuna from './Pages/Auscultacion/Llacuna.jsx';
 import Projects from './Pages/Administrador/CreateProject/Projects.jsx';
 import ParteObraTrazabilidad from './Pages/ParteObra/ParteDeObraTrazabilidad.jsx';
 import TablaRegistrosActaReunion from './Pages/ParteObra/tablaRegistrosActasReunion.jsx';
@@ -55,7 +48,6 @@ function App() {
   const adminRoutes = [
     { path: '/admin', element: <AdminHome />, roles: ['admin', 'usuario'] },
     { path: '/trazabilidad/:id', element: <Trazabilidad />, roles: ['admin', 'usuario'] },
-    { path: '/formularios/:id', element: <SistemaDePestanas />, roles: ['admin', 'usuario'] },
     { path: '/visorAdmin', element: <Viewer_admin />, roles: ['admin', 'usuario'] },
     { path: '/verPPis', element: <TabsPpi />, roles: ['admin'] },
     { path: '/agregarPpi', element: <AgregarPPi />, roles: ['admin'] },
@@ -77,16 +69,11 @@ function App() {
     { path: '/pdf_final', element: <Pdf_final />, roles: ['admin', 'usuario'] },
 
     // Parte de obra
-    { path: '/parteObra', element: <GridParteDeObra />, roles: ['admin', 'usuario'] },
     { path: '/formularios', element: <ParteObraTrazabilidad />, roles: ['admin', 'usuario'] },
     { path: '/verRegistros', element: <TablaRegistrosTrazabilidad />, roles: ['admin', 'usuario'] },
     { path: '/verRegistrosActasReunion', element: <TablaRegistrosActaReunion />, roles: ['admin', 'usuario'] },
 
-    // Auscultación
-    { path: '/auscultacion', element: <GridParteDeObra />, roles: ['admin', 'usuario'] },
-    { path: '/auscultacion/glorias', element: <Glorias />, roles: ['admin', 'usuario'] },
-    { path: '/auscultacion/llacuna', element: <Llacuna />, roles: ['admin', 'usuario'] },
-    { path: '/auscultacion/horta', element: <Horta />, roles: ['admin', 'usuario'] },
+  
   ];
 
   // Main Application Component (App)

@@ -17,6 +17,49 @@ import Firma from "../../Components/Firma/Firma";
 import VoiceRecorderInput from "./AudioTexto/VoiceRecorderInput";
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * ParteObra Component
+ *
+ * This component is a comprehensive inspection form used to register construction site activities.
+ * It supports two types of reports: "visita" (site visit) and "acta" (meeting minutes).
+ *
+ * Features:
+ * - Filters and selects inspection tasks ("lotes") associated with a selected project.
+ * - Dynamically loads PPI (Inspection Point Plan) details and displays associated activities and subactivities.
+ * - Allows recording general observations, safety issues, available resources (companies, workers, equipment), and inspection images with GPS metadata.
+ * - Provides voice-to-text support via the VoiceRecorderInput component for easier input of observations.
+ * - Validates required fields and ensures all activities are assessed.
+ * - Compresses and uploads images with location metadata to Firebase Storage.
+ * - Stores the complete record in Firestore under either `registrosParteDeObra` or `registrosActasDeReunion`, depending on the report type.
+ * - Displays modals for success or validation errors with helpful feedback.
+ *
+ * Dependencies:
+ * - Firebase Firestore & Storage
+ * - React Router
+ * - Tailwind CSS for styling
+ * - UUID for unique file naming
+ * - VoiceRecorderInput for dictation-based input
+ *
+ * This form is optimized for both desktop and mobile views and aims to streamline and validate daily site inspection reporting.
+ * 
+ * Main Functions:
+ * ---------------
+ * - `fetchLotes`: Loads construction work units (lotes) from Firestore associated with the selected project.
+ * - `fetchPpiDetails`: Retrieves the PPI (Inspection Point Plan) data for a selected work unit.
+ * - `handleOpenModal`: Opens the form modal and loads the selected work unit and its PPI.
+ * - `handleCloseModal`: Resets all form data and closes the modal.
+ * - `handleInputChange`: Updates form values based on user input.
+ * - `handleFileChange`: Compresses and prepares an image file for upload.
+ * - `uploadImageWithMetadata`: Uploads an image to Firebase Storage with geolocation and observation metadata.
+ * - `handleSubmit`: Validates the form and submits the final record to Firestore.
+ * - `compressImage`: Compresses images to reduce file size before uploading.
+ * - `handleActivityChange`: Marks an activity as applicable and sets the selected state for its subactivities.
+ * - `handleSubactivityChange`: Toggles the selected state of a subactivity.
+ * - `handleNoAplicaChange`: Marks an activity as "not applicable" and resets its state.
+ * - `handleFilterChange`: Updates filter values for selecting specific work units.
+ * - `getBackgroundColor`: Returns a color class based on the percentage of compliant activities.
+ * - `handleAddEmpresa`, `handleRemoveEmpresa`, `handleMediosChange`: Manage available resources (companies, workers, machinery) in the form.
+ */
 
 
 const ParteObra = () => {
@@ -64,10 +107,9 @@ const ParteObra = () => {
   const [geolocalizacion, setGeolocalizacion] = useState(null);
 
   const [loteOptions, setLoteOptions] = useState([]);
-  const [selectedLoteOption, setSelectedLoteOption] = useState(""); // Opción seleccionada
+  const [selectedLoteOption, setSelectedLoteOption] = useState("");
 
-  // Filtros
-  // Crear estados para filtros
+
   const [filters, setFilters] = useState({
     sector: "",
     subSector: "",
@@ -84,27 +126,18 @@ const ParteObra = () => {
     nombre: [],
   });
 
-  // Modal
+  
   const [modalSend, setModalSend] = useState(false)
   const [messageModalSend, setMessageModalSend] = useState('')
-
-  // Detalles del PPI
-  const [ppiDetails, setPpiDetails] = useState(null); // Estado para almacenar el PPI
-
-  // Estado para almacenar los checkbox seleccionados
+  const [ppiDetails, setPpiDetails] = useState(null); 
   const [selectedSubactivities, setSelectedSubactivities] = useState({});
-
   const [stats, setStats] = useState({ totalSi: 0, totalNo: 0, totalActividades: 0, porcentajeApto: 0 });
   const [activityObservations, setActivityObservations] = useState({});
   const [errorMessages, setErrorMessages] = useState([]);
-
   const [observacionesImagenes, setObservacionesImagenes] = useState({});
-
-
-  const [firma, setFirma] = useState(null);  // Estado para la firma
-
-  // Tipos de formulario
-  const [formType, setFormType] = useState('visita'); // 'visita' o 'acta'
+  const [firma, setFirma] = useState(null); 
+  const [formType, setFormType] = useState('visita'); 
+  const [selectedActivities, setSelectedActivities] = useState({});
 
   const handleVisitaClick = () => {
     setFormType('visita');
@@ -121,11 +154,11 @@ const ParteObra = () => {
   const handleObservationChange = (actividadIndex, value) => {
     setActivityObservations((prev) => ({
       ...prev,
-      [actividadIndex]: value, // Guarda la observación con el índice de la actividad
+      [actividadIndex]: value, 
     }));
   };
 
-  //  medios disponibles
+
   const handleAddEmpresa = () => {
     setFormData((prev) => ({
       ...prev,
@@ -149,20 +182,15 @@ const ParteObra = () => {
 
 
 
-  const [selectedActivities, setSelectedActivities] = useState({});
+
 
 
   useEffect(() => {
     if (ppiDetails && ppiDetails.actividades) {
       const totalActividadesInicial = ppiDetails.actividades.length;
-
-      // Contar cuántas actividades NO están en "No Aplica"
       const totalActividades = totalActividadesInicial - Object.values(selectedActivities).filter(act => act.noAplica).length;
-
       const totalSi = Object.values(selectedActivities).filter(act => act.seleccionada === true).length;
       const totalNo = Object.values(selectedActivities).filter(act => act.seleccionada === false).length;
-
-      // Si aún no se han seleccionado actividades, el porcentaje es 0%
       const porcentajeApto = totalActividades > 0 ? Math.round((totalSi / totalActividades) * 100) : 0;
 
       setStats({ totalSi, totalNo, totalActividades, porcentajeApto, totalActividadesInicial });
@@ -170,7 +198,7 @@ const ParteObra = () => {
   }, [selectedActivities, ppiDetails]);
 
 
-  // Generar valores únicos al cargar los lotes
+
   useEffect(() => {
     if (lotes.length > 0) {
       setUniqueValues({
@@ -219,7 +247,6 @@ const ParteObra = () => {
   }, [filters, lotes]);
 
 
-  // Obtener la geolocalización al montar el componente
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -232,7 +259,7 @@ const ParteObra = () => {
     );
   }, []);
 
-  // Cargar los lotes desde Firestore filtrados por el proyecto seleccionado
+
   const fetchLotes = async () => {
     try {
 
@@ -258,7 +285,7 @@ const ParteObra = () => {
 
       // Actualizar el estado con los lotes obtenidos
       setLotes(lotesData);
-      console.log(`Número de documentos leídos: ${lotesSnapshot.size}`);
+     
 
     } catch (error) {
       console.error("Error al cargar los lotes:", error);
@@ -267,19 +294,19 @@ const ParteObra = () => {
     }
   };
 
-  // Llamar a fetchLotes cuando el componente se monta
+
   useEffect(() => {
     fetchLotes();
-  }, []); // Ejecutar solo una vez al montar el componente
+  }, []); 
 
 
   useEffect(() => {
     if (modalSend) {
       const timer = setTimeout(() => {
-        setModalSend(false);// Cierra el modal después de 3 segundos
-      }, 2000); // 3000 ms = 3 segundos
+        setModalSend(false);
+      }, 2000); 
 
-      return () => clearTimeout(timer); // Limpia el temporizador si el componente se desmonta
+      return () => clearTimeout(timer);
     }
   }, [modalSend]);
 
@@ -290,7 +317,7 @@ const ParteObra = () => {
         return;
       }
 
-      // Referencia directa al documento en Firestore
+    
       const ppiDocRef = doc(db, "ppis", ppiId);
       const ppiDocSnap = await getDoc(ppiDocRef);
 
@@ -308,23 +335,19 @@ const ParteObra = () => {
 
 
   const handleOpenModal = (lote) => {
-    // Llamamos la función para obtener los detalles del PPI
     fetchPpiDetails(lote.ppiId);
-    console.log(lote)
     setSelectedLote(lote);
     setIsModalOpen(true);
 
     const valueLote = lote.nombre;
+    const separators = /[,|\-\/]+/;
 
-    // Expresión regular para dividir por múltiples separadores: ",", "-", "|", "/"
-    const separators = /[,|\-\/]+/;  // Cualquier combinación de ",", "-", "/" o "|"
-
-    if (separators.test(valueLote)) {  // Si contiene alguno de estos separadores
+    if (separators.test(valueLote)) {  
       const optionsValueLote = valueLote.split(separators).map(option => option.trim());
 
       setLoteOptions(optionsValueLote);
     } else {
-      setLoteOptions([valueLote]);  // Si no hay separadores, solo un valor
+      setLoteOptions([valueLote]); 
     }
   };
 
@@ -334,13 +357,9 @@ const ParteObra = () => {
     setModalSend(false);
     setSelectedLote(null);
     setSelectedLoteOption("");
-
-    // Reseteamos los checkboxes de actividades y subactividades
     setSelectedActivities({});
     setSelectedSubactivities({});
     setActivityObservations({});
-
-    // Restablece el estado del formulario asegurando la estructura correcta
     setFormData({
       observaciones: "",
       observacionesActividad: "",
@@ -353,26 +372,21 @@ const ParteObra = () => {
     });
     setVisiblePrevisiones(1);
     setVisibleActivities(1);
-
-    // 🔹 **Reset de actividades**
     setSelectedActivities({});
     setSelectedSubactivities({});
     setActivityObservations({});
 
-    // Limpiar referencias de archivos
     fileInputsRefs.current.forEach((input) => {
       if (input) input.value = null;
     });
   };
 
 
-
-  // Manejar los cambios en los inputs del formulario
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
 
     setFormData((prev) => {
-      // Manejo de campos dentro de objetos anidados
+    
       if (name.startsWith("mediosDisponibles.")) {
         const field = name.split(".")[1];
 
@@ -396,13 +410,6 @@ const ParteObra = () => {
         };
       }
 
-
-
-
-
-
-
-      // Manejo de otros campos normales
       return { ...prev, [name]: value };
     });
   };
@@ -419,17 +426,17 @@ const ParteObra = () => {
 
         setFormData((prev) => {
           const updatedImages = [...prev.imagenes];
-          updatedImages[index] = compressedFile; // Agrega la imagen seleccionada
+          updatedImages[index] = compressedFile;
           return { ...prev, imagenes: updatedImages };
         });
       } catch (error) {
         console.error("Error al procesar la imagen:", error);
       }
     } else {
-      // Elimina valores undefined explícitamente
+   
       setFormData((prev) => {
         const updatedImages = [...prev.imagenes];
-        updatedImages.splice(index, 1); // Remueve el índice si no hay archivo seleccionado
+        updatedImages.splice(index, 1);
         return { ...prev, imagenes: updatedImages };
       });
     }
@@ -442,21 +449,16 @@ const ParteObra = () => {
       throw new Error("Geolocalización no disponible.");
     }
 
-    // Obtener el nombre del proyecto y del lote
     const loteNombre = selectedLote?.nombre || "SinNombreLote";
 
-    // Formatear la fecha actual
-    const fechaActual = new Date().toISOString().split("T")[0]; // Formato: YYYY-MM-DD
+    const fechaActual = new Date().toISOString().split("T")[0];
 
-    // Crear un nombre descriptivo para el archivo
     const fileName = `${selectedProjectName}_${loteNombre}_${fechaActual}_${uniqueId}_${index}.jpg`
       .replace(/[/\\?%*:|"<>]/g, "");
 
-    // Crear la referencia de almacenamiento
     const storagePath = `imagenes/${selectedProjectName}/${loteNombre}/${fileName}`;
     const storageRef = ref(storage, storagePath);
 
-    // Metadatos personalizados
     const metadata = {
       contentType: file.type,
       customMetadata: {
@@ -469,7 +471,6 @@ const ParteObra = () => {
       },
     };
 
-    // Subir la imagen con los metadatos
     await uploadBytes(storageRef, file, metadata);
     return await getDownloadURL(storageRef);
   };
@@ -479,12 +480,10 @@ const ParteObra = () => {
     e.preventDefault();
     let errors = [];
 
-    // Validar fecha y hora
     if (!formData.fechaHora) {
       errors.push("⚠️ Debes seleccionar una fecha y hora.");
     }
 
-    // Validar que todas las actividades tengan "Aplica" o "No Aplica" seleccionadas
     const actividadesKeys = Object.keys(selectedActivities);
 
     if (actividadesKeys.length !== ppiDetails.actividades.length) {
@@ -499,7 +498,6 @@ const ParteObra = () => {
       });
     }
 
-    // Validar que al menos una observación esté presente
     const actividadesObservadas = formType === 'visita' && Object.values(formData.observacionesActividades).every(
       (actividad) => actividad.trim() === ""
     );
@@ -508,9 +506,6 @@ const ParteObra = () => {
       errors.push("⚠️ Debes ingresar al menos una observación en las actividades.");
     }
 
-
-
-    // Si hay errores, mostrar en el modal
     if (errors.length > 0) {
       setErrorMessages(errors);
       setModalSend(true);
@@ -518,20 +513,19 @@ const ParteObra = () => {
     }
 
     try {
-      // Subir imágenes válidas y generar URLs
       const imageUrls = await Promise.all(
         formData.imagenes
-          .filter((image) => image) // Filtra imágenes no válidas antes de mapear
+          .filter((image) => image) 
           .map(async (image, index) => await uploadImageWithMetadata(image, index, observacionesImagenes[index] || ""))
       );
 
-      // Formatear actividades con observaciones
+  
       const actividadesConObservaciones = Object.keys(selectedActivities).map((index) => ({
-        ...selectedActivities[index], // Copiamos los datos originales de la actividad
-        observacion: activityObservations[index] || "", // Agregamos la observación si existe
+        ...selectedActivities[index], 
+        observacion: activityObservations[index] || "", 
       }));
 
-      // Crear el registro sin imágenes undefined o null
+    
       const registro = {
         ...selectedLote,
         ...formData,
@@ -548,7 +542,6 @@ const ParteObra = () => {
         formType: formType
       };
 
-      // Guardar en Firebase
 
       if (formType === "visita") {
         await addDoc(collection(db, "registrosParteDeObra"), registro);
@@ -558,8 +551,6 @@ const ParteObra = () => {
         await addDoc(collection(db, "registrosActasDeReunion"), registro);
       }
 
-
-      // Restablece el estado del formulario asegurando la estructura correcta
       setFormData({
         observaciones: "",
         observacionesActividad: "",
@@ -572,15 +563,10 @@ const ParteObra = () => {
       });
       setVisiblePrevisiones(1);
       setVisibleActivities(1);
-
-      // 🔹 **Reset de actividades**
       setSelectedActivities({});
       setSelectedSubactivities({});
       setActivityObservations({});
 
-
-
-      // Limpiar referencias de archivos
       fileInputsRefs.current.forEach((input) => {
         if (input) input.value = null;
       });
@@ -588,7 +574,7 @@ const ParteObra = () => {
       setIsModalOpen(false);
       setModalSend(true);
       setMessageModalSend("Registro enviado");
-      setErrorMessages([]); // Limpiar errores si el envío fue exitoso
+      setErrorMessages([]); 
 
     } catch (error) {
       console.error("Error al guardar el registro:", error);
@@ -613,32 +599,25 @@ const ParteObra = () => {
 
   const compressImage = async (file) => {
     const options = {
-      maxSizeMB: 0.3, // Tamaño máximo de la imagen en MB
-      maxWidthOrHeight: 1024, // Máximo tamaño en píxeles
-      useWebWorker: true, // Usa un worker para optimizar el rendimiento
+      maxSizeMB: 0.3, 
+      maxWidthOrHeight: 1024,
+      useWebWorker: true,
     };
 
     try {
-      console.log("Compresión de imagen iniciada:", file);
       const compressedFile = await imageCompression(file, options);
-      console.log("Imagen comprimida:", compressedFile);
       return compressedFile;
     } catch (error) {
-      console.error("Error al comprimir la imagen:", error);
-      return file; // Si hay error, sube la imagen original
+      return file;
     }
   };
 
 
-
-
-  // Manejar cambios en los filtros
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prevFilters) => ({ ...prevFilters, [name]: value }));
   };
 
-  // Filtrar los lotes según los filtros aplicados
   const filteredLotes = lotes.filter(
     (l) =>
       (filters.sector === "" || l.sectorNombre === filters.sector) &&
@@ -649,7 +628,7 @@ const ParteObra = () => {
   );
 
   const handleGoBack = () => {
-    navigate('/'); // Navega hacia atrás en el historial
+    navigate('/'); 
   };
 
   const labelMapping = {
@@ -659,9 +638,6 @@ const ParteObra = () => {
     elemento: "Componente",
     nombre: "Área inspección",
   };
-
-
-  // Filtrar valores del lote
 
 
   const handleSubactivityChange = (actividadIndex, subIndex) => {
@@ -685,15 +661,10 @@ const ParteObra = () => {
   };
 
 
-
-
-
-
   const handleActivityChange = (actividadIndex, actividadNombre, subactividades, value) => {
     setSelectedActivities((prev) => {
       const newSelected = { ...prev };
 
-      // Si no existe la actividad en el estado, la creamos
       if (!newSelected[actividadIndex]) {
         newSelected[actividadIndex] = {
           nombre: actividadNombre,
@@ -705,16 +676,12 @@ const ParteObra = () => {
           })),
         };
       } else {
-        // Actualizar la selección dependiendo de si es "Cumple" o "No Cumple"
-        newSelected[actividadIndex].seleccionada = value === "si";
 
-        // Actualizar las subactividades con la misma selección
+        newSelected[actividadIndex].seleccionada = value === "si";
         newSelected[actividadIndex].subactividades = newSelected[actividadIndex].subactividades.map((sub) => ({
           ...sub,
           seleccionada: value === "si",
         }));
-
-        // Si se selecciona "Cumple" o "No Cumple", desactivar "No Aplica"
         newSelected[actividadIndex].noAplica = false;
       }
 
@@ -724,23 +691,10 @@ const ParteObra = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-  // Enviar formulario
-
-
   const handleNoAplicaChange = (actividadIndex) => {
     setSelectedActivities((prev) => {
       const newSelected = { ...prev };
 
-      // Si la actividad aún no está en el estado, la creamos con `noAplica: true`
       if (!newSelected[actividadIndex]) {
         newSelected[actividadIndex] = {
           seleccionada: false,
@@ -748,10 +702,8 @@ const ParteObra = () => {
           subactividades: [],
         };
       } else {
-        // Alternamos el estado de "No Aplica"
         newSelected[actividadIndex].noAplica = !newSelected[actividadIndex].noAplica;
 
-        // Si se activa "No Aplica", desmarcamos la actividad, subactividades y borramos observaciones
         if (newSelected[actividadIndex].noAplica) {
           newSelected[actividadIndex].seleccionada = false;
           newSelected[actividadIndex].subactividades = newSelected[actividadIndex].subactividades.map((sub) => ({
@@ -760,7 +712,7 @@ const ParteObra = () => {
           }));
           setActivityObservations((prev) => ({
             ...prev,
-            [actividadIndex]: "", // Borra la observación de la actividad
+            [actividadIndex]: "", 
           }));
         }
       }
@@ -784,12 +736,11 @@ const ParteObra = () => {
       ...prev,
       observacionesActividades: {
         ...prev.observacionesActividades,
-        [actividad]: value, // Accede directamente a la actividad usando su nombre
+        [actividad]: value, 
       }
     }));
   };
 
-  // Función para alternar la visibilidad de las observaciones
   const toggleActivityVisibility = () => {
     setActivityVisibility((prev) => !prev);
   };
@@ -797,9 +748,9 @@ const ParteObra = () => {
   return (
     <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
       <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
-        {/* Navegación */}
+    
         <div className="flex gap-2 items-center">
-          {/* Elementos visibles solo en pantallas medianas (md) en adelante */}
+        
           <GoHomeFill className="hidden md:block" style={{ width: 15, height: 15, fill: "#d97706" }} />
           <Link to="#" className="hidden md:block font-medium text-gray-600">
             Home
@@ -808,13 +759,13 @@ const ParteObra = () => {
           <h1 className="hidden md:block font-medium">Ver registros</h1>
           <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
 
-          {/* Nombre del proyecto (visible en todas las pantallas) */}
+         
           <h1 className="font-medium text-amber-600 px-2 py-1 rounded-lg">
             {selectedProjectName}
           </h1>
         </div>
 
-        {/* Botón de volver */}
+ 
         <div className="flex items-center">
           <button className="text-amber-600 text-3xl" onClick={handleGoBack}>
             <IoArrowBackCircle />
@@ -868,7 +819,7 @@ const ParteObra = () => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {[...filteredLotes]
-                .sort((a, b) => a.sectorNombre.localeCompare(b.sectorNombre)) // Ordena por sectorNombre
+                .sort((a, b) => a.sectorNombre.localeCompare(b.sectorNombre)) 
                 .map((lote) => (
                   <tr
                     key={lote.loteId}
@@ -1028,7 +979,7 @@ const ParteObra = () => {
                     {/* Sección de observaciones de actividades */}
                     <div className={`${activityVisibility ? "" : "hidden"} mt-4`}>
                       {Object.keys(formData.observacionesActividades)
-                        .slice(0, visibleActivities) // Limita las actividades visibles según el estado
+                        .slice(0, visibleActivities)
                         .map((key, index) => (
                           <div key={index}>
                             <VoiceRecorderInput
@@ -1047,18 +998,7 @@ const ParteObra = () => {
 
                   </div>
 
-                  {/* <div className="mt-4">
-                    <label className="block text-sm font-medium px-4">
-                      ¿Dónde se ubica?
-                    </label>
-                    <VoiceRecorderInput
-                      maxLength={100}
-                      name="observacionesLocalizacion"
-                      value={formData.observacionesLocalizacion}
-                      onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
-                      placeholder="Escribe tus observaciones aquí..."
-                    />
-                  </div> */}
+              
                 </div>
 
                 {/* Medios disponibles, empresa y trabajadores */}
@@ -1234,12 +1174,12 @@ const ParteObra = () => {
                             {/* Observaciones de la actividad */}
                             <VoiceRecorderInput
                               name={`observacionesActividad-${actividadIndex}`}
-                              value={activityObservations[actividadIndex] || ""} // Valor del estado
-                              onChange={(name, value) => handleObservationChange(actividadIndex, value)} // Llama al mismo manejador
+                              value={activityObservations[actividadIndex] || ""} 
+                              onChange={(name, value) => handleObservationChange(actividadIndex, value)}
                               placeholder="Escribe observaciones aquí..."
                               maxLength={150}
-                              disabled={selectedActivities[actividadIndex]?.noAplica} // Deshabilitar cuando sea "No Aplica"
-                              className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} // Estilo cuando es "No Aplica"
+                              disabled={selectedActivities[actividadIndex]?.noAplica} 
+                              className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} 
                             />
 
 
@@ -1260,39 +1200,7 @@ const ParteObra = () => {
                 {/* 5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.*/}
 
                 <div>
-                  {/* <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.</h3>
-                   */}
-                  {/* <div className="mt-4">
-
-
-                
-                    <div className="">
-                      <label className="mt-2 block px-4 rounded-md text-sm font-medium">
-                        Actividades de Próximo Inicio
-                      </label>
-                      <VoiceRecorderInput
-                        maxLength={120}
-                        name="actividadesProximoInicio"
-                        value={formData.actividadesProximoInicio || ""}
-                        onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
-                        placeholder="Escribe tus observaciones aquí..."
-                      />
-                    </div>
-
-                 
-                    <div>
-                      <label className="block px-4 py-2 rounded-md text-sm font-medium">
-                        Medidas Preventivas a Implantar en Obra
-                      </label>
-                      <VoiceRecorderInput
-                        maxLength={120}
-                        name="medidasPreventivas"
-                        value={formData.medidasPreventivas || ""}
-                        onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
-                        placeholder="Escribe tus observaciones aquí..."
-                      />
-                    </div>
-                  </div> */}
+                  
 
                   <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
                     5.  Previsión de actividades de próximo inicio y medidas preventivas.
@@ -1316,7 +1224,7 @@ const ParteObra = () => {
                       .map((key, index) => (
                         <div key={index}>
                           <VoiceRecorderInput
-                            maxLength={100}
+                            maxLength={200}
                             name={`previsionActividad-${key}`}
                             value={formData.previsionesActividades[key]}
                             onChange={(name, value) => handlePrevisionChange(key, value)}
@@ -1351,7 +1259,7 @@ const ParteObra = () => {
                               capture="camera"
                               ref={(el) => (fileInputsRefs.current[index] = el)}
                               onChange={(e) => handleFileChange(e, index)}
-                              className="hidden" // Oculta el input original
+                              className="hidden" 
                               id={`file-upload-${index}`}
                             />
                             <label
@@ -1374,7 +1282,7 @@ const ParteObra = () => {
 
                             {/* 🔹 Campo para observaciones */}
                             <textarea
-                              maxLength={80}
+                              maxLength={50}
                               placeholder="Observaciones de la imagen..."
                               value={observacionesImagenes[index] || ""}
                               onChange={(e) => setObservacionesImagenes((prev) => ({
@@ -1449,7 +1357,7 @@ const ParteObra = () => {
                     {/* Contenedor con scroll vertical */}
                     <div className="mt-4 ps-4">
                       {ppiDetails.actividades.map((actividad, actividadIndex) => {
-                        // Filtramos las subactividades que tienen nombre válido
+                        
                         const subactividadesValidas = Array.isArray(actividad.subactividades)
                           ? actividad.subactividades.filter((sub) => sub.nombre.trim() !== "")
                           : [];
@@ -1537,12 +1445,12 @@ const ParteObra = () => {
                             {/* Observaciones de la actividad */}
                             <VoiceRecorderInput
                               name={`observacionesActividad-${actividadIndex}`}
-                              value={activityObservations[actividadIndex] || ""} // Valor del estado
-                              onChange={(name, value) => handleObservationChange(actividadIndex, value)} // Llama al mismo manejador
+                              value={activityObservations[actividadIndex] || ""} 
+                              onChange={(name, value) => handleObservationChange(actividadIndex, value)} 
                               placeholder="Escribe observaciones aquí..."
                               maxLength={150}
-                              disabled={selectedActivities[actividadIndex]?.noAplica} // Deshabilitar cuando sea "No Aplica"
-                              className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} // Estilo cuando es "No Aplica"
+                              disabled={selectedActivities[actividadIndex]?.noAplica} // 
+                              className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} 
                             />
 
 

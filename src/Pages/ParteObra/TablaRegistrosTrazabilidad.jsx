@@ -7,8 +7,8 @@ import InformeRegistros from "./InformeRegistros.jsx";
 import imageCompression from "browser-image-compression";
 import { FaDeleteLeft } from "react-icons/fa6";
 import { FaEdit } from "react-icons/fa";
-import { AiFillLock, AiOutlineClose, AiOutlineCheck } from "react-icons/ai"; // Icono de candado y botones
-import { FiCamera } from "react-icons/fi"; // Icono de cámara
+import { AiFillLock, AiOutlineClose, AiOutlineCheck } from "react-icons/ai";
+import { FiCamera } from "react-icons/fi";
 import { IoMdAddCircle } from "react-icons/io";
 import { FaArrowRight } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
@@ -28,10 +28,65 @@ import Firma from "../../Components/Firma/Firma.jsx";
 import InformeFinal from "./InformeFinal.jsx";
 import ListaInformesModal from "./ListaInformesModal.jsx";
 
+/**
+ * General Description of the TablaRegistros Component
+ * -------------------------------------------------------------
+ * This component manages inspection records ("registrosParteDeObra") linked to a selected project.
+ * It provides functionalities such as filtering, editing, image management, signing, deletion,
+ * and PDF report generation. It supports both table and card views for different screen sizes.
+ * 
+ * General Functionality:
+ * 
+ * 1. **Loading records**:
+ *    - On component mount, it fetches all records from the `registrosParteDeObra` collection
+ *      in Firestore and filters by the `selectedProjectId` saved in `localStorage`.
+ * 
+ * 2. **Dynamic filtering**:
+ *    - Unique values for filters are generated dynamically from the data.
+ *    - Filters include fields such as sector, part, activity name, and date range.
+ * 
+ * 3. **Editing records**:
+ *    - A modal allows editing image data and observations.
+ *    - Images are compressed with `browser-image-compression` and re-uploaded to Firebase Storage.
+ *    - A change history is saved to `historialRegistrosParteDeObra` with details of what was changed and by whom.
+ * 
+ * 4. **Signing records**:
+ *    - Users can sign records as "empresa" or "cliente".
+ *    - Existing signatures are validated and saved to Firestore fields `firmaEmpresa` and `firmaCliente`.
+ * 
+ * 5. **Deleting records**:
+ *    - Only users with the `admin` role can delete records.
+ *    - Deletion is confirmed via a modal and reflected in both Firestore and local state.
+ * 
+ * 6. **Generating reports**:
+ *    - The `InformeFinal` component generates a consolidated PDF report of all filtered records.
+ *    - The `InformeRegistros` component generates an individual PDF report per record.
+ * 
+ * 7. **Change history**:
+ *    - The component includes a modal that displays all past modifications to a record.
+ * 
+ * 8. **Responsive design**:
+ *    - Table view is shown on large screens.
+ *    - Card-style layout is used for mobile devices.
+ * 
+ * Main Functions:
+ * ----------------------
+ * - `fetchRegistrosParteDeObra`: Loads records from Firestore, filters by project, and initializes columns and filters.
+ * - `handleFilterChange`: Updates the selected value for each filter.
+ * - `handleEliminarRegistro`: Deletes a record from Firestore and removes it from state.
+ * - `handleAbrirModalFirma` / `saveFirmaFirestore`: Handle record signing logic and Firestore updates.
+ * - `handleGuardarEdicion`: Saves changes to a record, uploads new images, and logs the change in the history.
+ * - `subirImagenConMetadatos`: Compresses and uploads an image with metadata to Firebase Storage.
+ * - `handleAbrirModalModificaciones`: Opens the modal and loads historical changes for the selected record.
+ * - `handleGeneratePdfRegistro`: Prepares selected record data for generating an individual PDF.
+ * - `resetFilters`: Resets all filters to their default state.
+ */
+
+
 const TablaRegistros = () => {
   const uniqueId = uuidv4();
   const { user } = useAuth();
-  const userId = user?.uid; // Asegúrate de que 'uid' existe
+  const userId = user?.uid;
   const { usuario } = useUsuario(userId)
   const roleUsuario = usuario?.role
   const [nombreUsuario, setNombreUsuario] = useState("");
@@ -62,9 +117,9 @@ const TablaRegistros = () => {
     visitaNumero: "",
   });
 
-  const [isFirmaModalOpen, setIsFirmaModalOpen] = useState(false); // Estado para abrir/cerrar el modal
-  const [tipoFirma, setTipoFirma] = useState(null); // Almacena si es "empresa" o "cliente"
-  const [registroSeleccionado, setRegistroSeleccionado] = useState(null); // Guarda el registro que se firmará
+  const [isFirmaModalOpen, setIsFirmaModalOpen] = useState(false); 
+  const [tipoFirma, setTipoFirma] = useState(null); 
+  const [registroSeleccionado, setRegistroSeleccionado] = useState(null);
   const [firmaEmpresa, setFirmaEmpresa] = useState(null);
   const [firmaCliente, setFirmaCliente] = useState(null);
   const [modalFirma, setModalFirma] = useState(false)
@@ -81,19 +136,17 @@ const TablaRegistros = () => {
       if (docSnap.exists()) {
         const data = docSnap.data();
 
-        // Si ya tiene ambas firmas, mostrar mensaje y evitar firmar
         if (data.firmaEmpresa && data.firmaCliente) {
           setModalFirma(true)
           setModalFirmaMensaje("Este registro ya ha sido firmado.");
           return;
         }
 
-        // Si solo tiene una firma, mostrar el estado actual
         setFirmaEmpresa(data.firmaEmpresa || null);
         setFirmaCliente(data.firmaCliente || null);
       }
 
-      // Permitir abrir el modal si aún se puede firmar
+
       setRegistroSeleccionado(registro);
       setIsFirmaModalOpen(true);
 
@@ -111,12 +164,10 @@ const TablaRegistros = () => {
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-
-        // Guardar la firma en Firestore
         const campoFirma = tipoFirma === "empresa" ? "firmaEmpresa" : "firmaCliente";
         await updateDoc(docRef, { [campoFirma]: firmaURL });
 
-        // 🔹 **Actualiza el estado localmente**
+       
         setRegistrosParteDeObra((prev) =>
           prev.map((registro) =>
             registro.id === registroId ? { ...registro, [campoFirma]: firmaURL } : registro
@@ -129,7 +180,6 @@ const TablaRegistros = () => {
           )
         );
 
-        // Cerrar el modal después de 3 segundos
         setTimeout(() => {
           setIsFirmaModalOpen(false);
           setRegistroSeleccionado(null);
@@ -148,14 +198,10 @@ const TablaRegistros = () => {
   };
 
   const handleCloseFirmaModal = () => {
-    setIsFirmaModalOpen(false); // Cierra el modal
-    setRegistroSeleccionado(null); // Limpia el registro seleccionado
-    setTipoFirma(null); // Restablece el tipo de firma
+    setIsFirmaModalOpen(false); 
+    setRegistroSeleccionado(null); 
+    setTipoFirma(null); 
   };
-
-
-
-
 
 
 
@@ -168,7 +214,7 @@ const TablaRegistros = () => {
 
   const obtenerFechaActual = () => {
     const hoy = new Date();
-    return hoy.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+    return hoy.toISOString().split("T")[0]; 
   };
 
 
@@ -218,7 +264,7 @@ const TablaRegistros = () => {
               )
               .flatMap((reg) =>
                 (reg.nombre || "").split(/[,|\-\/]+/).map((actividad) => actividad.trim())
-              ) // Divide y limpia las actividades relacionadas
+              ) 
           ),
         ],
       };
@@ -235,23 +281,22 @@ const TablaRegistros = () => {
 
     setValoresFiltro((prev) => ({
       ...prev,
-      [name]: value, // Actualiza el filtro seleccionado
+      [name]: value, 
     }));
   };
 
 
-  // useEffect para obtener el nombre del usuario al cargar el componente
   useEffect(() => {
     const fetchNombreUsuario = async (userId) => {
       try {
-        const userDocRef = doc(db, "usuarios", userId); // Ruta en Firestore: 'usuarios/{uid}'
+        const userDocRef = doc(db, "usuarios", userId); 
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          console.log(userData)
+      
           setNombreUsuario(userData.nombre || 'Sin nombre')
-          console.log(userData.nombre)
+      
         } else {
           console.error(`No se encontró un usuario con UID: ${userId}`);
           return "Usuario desconocido";
@@ -262,30 +307,30 @@ const TablaRegistros = () => {
       }
     };
 
-    fetchNombreUsuario(userId); // Llama a la función para obtener el nombre
-  }, [userId]); // Solo se ejecuta si userId cambia
+    fetchNombreUsuario(userId); 
+  }, [userId]); 
 
   useEffect(() => {
     const fetchRegistrosParteDeObra = async () => {
       try {
-        const selectedProjectId = localStorage.getItem("selectedProjectId"); // Obtén el ID del proyecto del localStorage
+        const selectedProjectId = localStorage.getItem("selectedProjectId"); 
 
         if (!selectedProjectId) {
           console.error("No se encontró un 'selectedProjectId' en el localStorage");
           return;
         }
 
-        // Realiza la consulta a Firestore
+       
         const registrosSnapshot = await getDocs(collection(db, "registrosParteDeObra"));
         const registros = registrosSnapshot.docs
           .map((docSnapshot) => ({
-            id: docSnapshot.id, // ID del documento
+            id: docSnapshot.id, 
             ...docSnapshot.data(),
           }))
-          .filter((registro) => registro.idProyecto === selectedProjectId); // Filtrar por idProyecto
+          .filter((registro) => registro.idProyecto === selectedProjectId); 
 
         if (registros.length > 0) {
-          // Obtener columnas dinámicas excluyendo ID e imágenes
+        
           const columnasDinamicas = Object.keys(registros[0])
             .filter(
               (columna) =>
@@ -294,7 +339,7 @@ const TablaRegistros = () => {
             )
             .sort((a, b) => a.localeCompare(b));
 
-          // Ordenamos columnas, asegurando que "fechahora" aparezca primero
+   
           const columnasOrdenadas = [
             ...columnasDinamicas.filter((col) => col.toLowerCase() === "fechahora"),
             ...columnasDinamicas.filter((col) => col.toLowerCase() !== "fechahora"),
@@ -302,13 +347,13 @@ const TablaRegistros = () => {
 
           setColumnas(columnasOrdenadas);
 
-          // Obtener valores únicos de cada columna para los filtros
+        
           const valoresUnicos = columnasOrdenadas.reduce((acc, columna) => {
             acc[columna] = [...new Set(registros.map((registro) => registro[columna] || ""))];
             return acc;
           }, {});
 
-          // Configurar filtros iniciales con valores únicos
+       
           setValoresFiltro(
             columnasOrdenadas.reduce((acc, columna) => {
               acc[columna] = "";
@@ -316,7 +361,7 @@ const TablaRegistros = () => {
             }, {})
           );
 
-          setValoresUnicos(valoresUnicos); // Guardamos valores únicos para desplegables
+          setValoresUnicos(valoresUnicos); 
         }
 
         setRegistrosParteDeObra(registros);
@@ -333,14 +378,14 @@ const TablaRegistros = () => {
 
   useEffect(() => {
     const registrosFiltrados = registrosParteDeObra.filter((registro) => {
-      const fechaRegistro = new Date(registro.fechaHora).toISOString().split("T")[0]; // Convertir fecha a YYYY-MM-DD
+      const fechaRegistro = new Date(registro.fechaHora).toISOString().split("T")[0]; 
 
-      // ✅ Si NO hay filtro de fecha, no se filtra por fecha
+      
       const cumpleFecha =
         (!valoresFiltro.fechaInicio || fechaRegistro >= valoresFiltro.fechaInicio) &&
         (!valoresFiltro.fechaFin || fechaRegistro <= valoresFiltro.fechaFin);
 
-      // ✅ Aplicar otros filtros
+   
       const cumpleOtrosFiltros = Object.keys(valoresFiltro).every((campo) => {
         if (campo === "fechaInicio" || campo === "fechaFin") return true;
         return !valoresFiltro[campo] || (registro[campo] || "").includes(valoresFiltro[campo]);
@@ -358,13 +403,13 @@ const TablaRegistros = () => {
 
 
   const handleEliminarRegistro = async () => {
-    console.log(registroAEliminar)
+    
     try {
       if (registroAEliminar) {
-        // Eliminar el documento usando su ID en Firestore
+      
         await deleteDoc(doc(db, "registrosParteDeObra", registroAEliminar.id));
 
-        // Actualizar el estado local para eliminar el registro eliminado
+  
         setRegistrosParteDeObra((prev) =>
           prev.filter((registro) => registro.id !== registroAEliminar.id)
         );
@@ -372,7 +417,7 @@ const TablaRegistros = () => {
           prev.filter((registro) => registro.id !== registroAEliminar.id)
         );
 
-        // Cerrar el modal de confirmación
+      
         setShowConfirmModal(false);
         setRegistroAEliminar(null);
       }
@@ -382,27 +427,21 @@ const TablaRegistros = () => {
   };
 
 
-  // Estado para almacenar las imágenes seleccionadas y sus previsualizaciones
+ 
   const [imagenesEditadas, setImagenesEditadas] = useState(new Array(6).fill(null));
   const [previsualizaciones, setPrevisualizaciones] = useState(new Array(6).fill(null));
-
-
-  // Estado para el registro que se está editando
   const [registroEditando, setRegistroEditando] = useState(null);
-  // Estado para almacenar el registro que se está editando
-
-  // Estado para abrir/cerrar el modal de edición
   const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false);
 
   const handleSeleccionarImagen = async (e, index) => {
-    const file = e.target.files[0]; // Obtener la imagen seleccionada
+    const file = e.target.files[0]; 
     if (!file) return;
 
     try {
-      // Comprimir la imagen
+    
       const imagenComprimida = await comprimirImagen(file);
 
-      // Crear URL temporal para previsualizar la imagen comprimida
+     
       const imageUrl = URL.createObjectURL(imagenComprimida);
       setPrevisualizaciones((prev) => {
         const newPreviews = [...prev];
@@ -410,7 +449,7 @@ const TablaRegistros = () => {
         return newPreviews;
       });
 
-      // Guardar la imagen comprimida en el estado para procesarla después
+      
       setImagenesEditadas((prev) => {
         const updatedImages = [...prev];
         updatedImages[index] = imagenComprimida;
@@ -433,12 +472,8 @@ const TablaRegistros = () => {
         return;
       }
 
-      const registroOriginal = docSnapshot.data(); // Datos actuales antes de la edición
+      const registroOriginal = docSnapshot.data(); 
 
-      // 🔍 LOG 1: Mostrar imágenes anteriores
-      console.log("🖼️ Imágenes ANTERIORES del registro:", registroOriginal.imagenes);
-
-      // Procesar las imágenes nuevas o mantener las anteriores
       let nuevasUrls = [];
 
       for (let i = 0; i < 6; i++) {
@@ -451,20 +486,16 @@ const TablaRegistros = () => {
         }
       }
 
-      // 🔍 LOG 2: Mostrar las imágenes actualizadas
-      console.log("✅ Imágenes ACTUALIZADAS que se guardarán:", nuevasUrls);
 
-      // Crear objeto actualizado
       const registroActualizado = {
         ...registroEditando,
         actividades: registroEditando.actividades,
         imagenes: nuevasUrls,
       };
 
-      // Guardar cambios
+   
       await updateDoc(docRef, registroActualizado);
 
-      // Guardar historial
       const historialRef = collection(db, "historialRegistrosParteDeObra");
       await addDoc(historialRef, {
         registroId: registroEditando.id,
@@ -475,7 +506,7 @@ const TablaRegistros = () => {
         registroEditado: registroActualizado,
       });
 
-      // Actualizar estados en frontend
+ 
       setRegistrosParteDeObra((prev) =>
         prev.map((registro) =>
           registro.id === registroEditando.id ? registroActualizado : registro
@@ -488,7 +519,7 @@ const TablaRegistros = () => {
         )
       );
 
-      // Cerrar modal
+   
       setModalEdicionAbierto(false);
       setRegistroEditando(null);
       setMotivoCambio("");
@@ -499,24 +530,19 @@ const TablaRegistros = () => {
 
 
 
-
-
-
-
-  // Comprimir la imagen antes de
   const comprimirImagen = async (file) => {
     try {
       const opciones = {
-        maxSizeMB: 0.3, // Tamaño máximo de la imagen (en MB)
-        maxWidthOrHeight: 1920, // Dimensiones máximas
-        useWebWorker: true, // Usa WebWorker para no bloquear la UI
+        maxSizeMB: 0.3,
+        maxWidthOrHeight: 1920, 
+        useWebWorker: true, 
       };
 
       const imagenComprimida = await imageCompression(file, opciones);
       return imagenComprimida;
     } catch (error) {
       console.error("Error al comprimir la imagen:", error);
-      return file; // Si falla, devuelve la imagen original
+      return file; 
     }
   };
 
@@ -535,7 +561,7 @@ const TablaRegistros = () => {
       const metadata = {
         contentType: file.type,
         customMetadata: {
-          latitude: "", // puedes agregar coords si las capturas al editar
+          latitude: "", 
           longitude: "",
           proyecto: selectedProjectName,
           lote: loteNombre,
@@ -555,7 +581,7 @@ const TablaRegistros = () => {
 
 
   const handleGoBack = () => {
-    navigate(-1); // Navega hacia atrás en el historial
+    navigate(-1); 
   };
 
 
@@ -572,20 +598,20 @@ const TablaRegistros = () => {
     setSelectedObservation("");
   };
 
-  // Limpiar filtros
+  
   const resetFilters = () => {
-    // Restablece los filtros a su estado inicial (todos los valores vacíos)
+   
     setValoresFiltro((prev) =>
       Object.keys(prev).reduce((acc, key) => {
-        acc[key] = ""; // Limpia cada filtro
+        acc[key] = ""; 
         return acc;
       }, {})
     );
 
-    console.log("Filtros restablecidos"); // Para verificar en consola
+
   };
 
-  // Historial de cambios
+  
 
   const [motivoCambio, setMotivoCambio] = useState("");
   const [modalModificacionesAbierto, setModalModificacionesAbierto] = useState(false);
@@ -593,18 +619,18 @@ const TablaRegistros = () => {
 
   const handleAbrirModalModificaciones = async (registro) => {
     try {
-      // Consulta a la colección de historial
+    
       const historialSnapshot = await getDocs(
         collection(db, "historialRegistrosParteDeObra")
       );
 
-      // Filtrar los cambios asociados al registro seleccionado
+    
       const historial = historialSnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
         .filter((item) => item.registroId === registro.id);
 
       setHistorialModificaciones(historial);
-      setModalModificacionesAbierto(true); // Abre el modal
+      setModalModificacionesAbierto(true); 
     } catch (error) {
       console.error("Error al cargar el historial de modificaciones:", error);
     }
@@ -619,11 +645,11 @@ const TablaRegistros = () => {
     parteNombre: "Inventario vial",
     elementoNombre: "Sector",
     nombre: "Actividad",
-    actividad: "Actividad", // Nuevo mapeo para la columna actividad
+    actividad: "Actividad", 
     observaciones: "Observaciones",
   };
 
-  // Orden específico de las columnas
+ 
   const ordenColumnas = [
     "fechaHora",
     "sectorNombre",
@@ -662,16 +688,16 @@ const TablaRegistros = () => {
     const mes = (fechaObj.getMonth() + 1).toString().padStart(2, "0");
     const anio = fechaObj.getFullYear();
 
-    return `${dia}/${mes}/${anio}`; // Devuelve solo DD/MM/YYYY
+    return `${dia}/${mes}/${anio}`; 
   };
 
   const formatCamelCase = (text) => {
     return text
-      .replace(/([a-z])([A-Z])/g, "$1 $2") // Separa camelCase en palabras
-      .replace(/\b[a-z]/g, (c) => c.toUpperCase()); // Capitaliza cada palabra
+      .replace(/([a-z])([A-Z])/g, "$1 $2") 
+      .replace(/\b[a-z]/g, (c) => c.toUpperCase()); 
   };
 
-  // generar informe del registro
+ 
   const [dataRegister, setDataRegister] = useState({})
 
   const handleGeneratePdfRegistro = (registro) => {
@@ -717,8 +743,7 @@ const TablaRegistros = () => {
             type="date"
             value={valoresFiltro.fechaInicio || ""}
             onChange={(e) => {
-              const fechaInicioSeleccionada = e.target.value;
-              console.log("Fecha Inicial seleccionada:", fechaInicioSeleccionada);
+              const fechaInicioSeleccionada = e.target.value;            
               setValoresFiltro((prev) => ({ ...prev, fechaInicio: fechaInicioSeleccionada }));
             }}
             className="border border-gray-300 rounded-md p-2"
@@ -731,7 +756,6 @@ const TablaRegistros = () => {
             value={valoresFiltro.fechaFin || ""}
             onChange={(e) => {
               const fechaFinSeleccionada = e.target.value;
-              console.log("Fecha Final seleccionada:", fechaFinSeleccionada);
               setValoresFiltro((prev) => ({ ...prev, fechaFin: fechaFinSeleccionada }));
             }}
             className="border border-gray-300 rounded-md p-2"
@@ -792,7 +816,6 @@ const TablaRegistros = () => {
         </div>
 
 
-
         <ListaInformesModal />
 
 
@@ -824,7 +847,7 @@ const TablaRegistros = () => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {registrosFiltrados
-                .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora)) // Ordenar por fecha descendente
+                .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora))
                 .map((registro) => (
                   <tr
                     key={registro.id}
@@ -838,7 +861,7 @@ const TablaRegistros = () => {
                           className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap"
                         >
                           {columna === "fechaHora"
-                            ? formatFecha(registro[columna]) // Formato de fecha
+                            ? formatFecha(registro[columna]) 
                             : columna === "observaciones" ? (
                               <button
                                 onClick={() => openModal(registro[columna])}
@@ -856,7 +879,7 @@ const TablaRegistros = () => {
                     <td className="px-6 py-4 text-sm whitespace-nowrap flex flex-col items-center gap-2">
                       {/* Lógica de progreso aquí */}
                     </td>
-                    <td className="px-6 py-4 text-sm w-32"> {/* Fijamos el tamaño a 8rem (32px * 8) */}
+                    <td className="px-6 py-4 text-sm w-32"> 
                       <div className="flex gap-2 items-center">
 
                         {/* Botón de Editar */}
@@ -873,7 +896,7 @@ const TablaRegistros = () => {
                         </button>
 
                         {/* Estado de Firma */}
-                        <div className="w-28 flex justify-center"> {/* Ancho fijo para alinear */}
+                        <div className="w-28 flex justify-center"> 
                           {registro.firmaEmpresa && registro.firmaCliente ? (
                             <div className="flex items-center gap-2 text-green-700 font-semibold flex flex-col gap-2 items-center">
                               <FaCheck className="text-green-600" /> <span>Firmado</span>
@@ -946,14 +969,13 @@ const TablaRegistros = () => {
         <div className="sm:hidden grid gap-4">
           {registrosFiltrados
             .sort((a, b) => {
-              // Primero ordenamos por sectorNombre (Grupo activos)
+            
               if (a.sectorNombre < b.sectorNombre) return -1;
               if (a.sectorNombre > b.sectorNombre) return 1;
 
-              // Si el sectorNombre es igual, ordenamos por fechaHora
               const fechaA = new Date(a.fechaHora);
               const fechaB = new Date(b.fechaHora);
-              return fechaA - fechaB; // Orden ascendente por fecha
+              return fechaA - fechaB; 
             })
             .map((registro) => (
               <div
@@ -969,7 +991,7 @@ const TablaRegistros = () => {
                       </span>
                       <span className="text-gray-600">
                         {columna === "fechaHora" ? (
-                          formatFecha(registro[columna]) // Aplicar formato a la fecha
+                          formatFecha(registro[columna]) 
                         ) : columna === "observaciones" ? (
                           <button
                             onClick={() => openModal(registro[columna])}
@@ -1025,7 +1047,7 @@ const TablaRegistros = () => {
 
                   <div className="flex gap-8 mt-8">
                     {/* Estado de Firma */}
-                    <div className="flex justify-start"> {/* Ancho fijo para alinear */}
+                    <div className="flex justify-start"> 
                       {registro.firmaEmpresa && registro.firmaCliente ? (
                         <div className="flex items-center gap-2 text-green-700 font-semibold flex gap-2 items-center">
                           <FaCheck className="text-green-600" /> <span>Firmado</span>
@@ -1134,7 +1156,7 @@ const TablaRegistros = () => {
   .filter((campo) =>
     ![
       "imagenes",
-      "id",
+      // "id",
       "idBim",
       "nombreProyecto",
       "elementoId",
@@ -1162,31 +1184,31 @@ const TablaRegistros = () => {
       "actividad"
     ].includes(campo)
   )
-  .sort((a, b) => a.localeCompare(b)) // Ordena alfabéticamente
+  .sort((a, b) => a.localeCompare(b)) 
   .map((campo, index) => (
     <div key={index} className="mb-4 tex-xs">
-      {/* Si el campo es "observaciones", agrega un título adicional */}
+    
       {campo === "observaciones" && (
         <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
           Observaciones en materia de seguridad y salud
         </h3>
       )}
 
-      {/* Si el campo es "observaciones", agrega un título adicional */}
+    
       {campo === "observacionesActividades" && (
         <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
           Trabajos inspeccionados
         </h3>
       )}
 
-      {/* Si el campo es "actividadesProximoInicio", agrega un título adicional */}
+     
       {campo === "actividadesProximoInicio" && (
         <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
           Previsión de actividades de próximo inicio
         </h3>
       )}
 
-      {/* Si el campo es "medidasPreventivas", agrega un título adicional */}
+    
       {campo === "medidasPreventivas" && (
         <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
           Medidas preventivas
@@ -1199,10 +1221,10 @@ const TablaRegistros = () => {
         <AiFillLock className="ml-2 text-gray-500" size={16} />
       </label>
 
-      {/* Si es un objeto, mostrar cada propiedad dentro de él */}
+     
       {typeof registroEditando[campo] === "object" && registroEditando[campo] !== null ? (
         Object.entries(registroEditando[campo])
-          .sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) // Ordena alfabéticamente las subpropiedades
+          .sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) 
           .map(([subCampo, valor]) => (
             <div key={subCampo} className="mb-2">
               <label className="ps-2 block text-sm font-medium text-gray-700">
@@ -1372,7 +1394,7 @@ const TablaRegistros = () => {
               {/* Botón de Cancelar */}
               <button
                 className="px-5 py-2 text-gray-700 font-semibold bg-gray-200 rounded-md hover:bg-gray-300 transition flex items-center gap-2"
-                onClick={() => setModalEdicionAbierto(false)} // Lógica para cerrar el modal
+                onClick={() => setModalEdicionAbierto(false)} 
               >
                 <AiOutlineClose size={18} /> Cancelar
               </button>
@@ -1384,7 +1406,7 @@ const TablaRegistros = () => {
                   : "bg-gray-500 text-gray-200 cursor-not-allowed"
                   }`}
                 onClick={handleGuardarEdicion}
-                disabled={!motivoCambio.trim()} // Deshabilita si no hay motivo
+                disabled={!motivoCambio.trim()} 
               >
                 <AiOutlineCheck size={18} /> Guardar Cambios
               </button>
@@ -1447,7 +1469,7 @@ const TablaRegistros = () => {
                       <td className="px-4 py-3 text-sm text-gray-700">
                         <ul className="space-y-1">
                           {Object.entries(modificacion.registroOriginal || {})
-                            .filter(([key]) => ["imagenes", "observaciones"].includes(key)) // 🔥 Solo mostrar imágenes y observaciones
+                            .filter(([key]) => ["imagenes", "observaciones"].includes(key)) 
                             .map(([key, value]) => (
                               <li key={key}>
                                 <strong>{formatCamelCase(key)}:</strong>{" "}
@@ -1479,7 +1501,7 @@ const TablaRegistros = () => {
                       <td className="px-4 py-3 text-sm text-gray-700">
                         <ul className="space-y-1">
                           {Object.entries(modificacion.registroEditado || {})
-                            .filter(([key]) => ["imagenes", "observaciones"].includes(key)) // 🔥 Solo mostrar imágenes y observaciones
+                            .filter(([key]) => ["imagenes", "observaciones"].includes(key)) 
                             .map(([key, value]) => (
                               <li key={key}>
                                 <strong>{formatCamelCase(key)}:</strong>{" "}
@@ -1591,7 +1613,7 @@ const TablaRegistros = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <Firma
             onSave={(firmaURL) => saveFirmaFirestore(firmaURL, registroSeleccionado.id)}
-            onClose={handleCloseFirmaModal} // Ahora pasamos `onClose`
+            onClose={handleCloseFirmaModal}
           />
         </div>
       )}

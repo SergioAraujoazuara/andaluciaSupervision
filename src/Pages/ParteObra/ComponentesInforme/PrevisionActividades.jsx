@@ -35,7 +35,7 @@ const PrevisionActividades = ({ dataRegister }) => {
     <View style={styles.section}>
       {/* Mapeamos las observaciones de actividades */}
       <View style={styles.fieldRow}>
-        {Object.entries(dataRegister.observacionesActividades)
+        {Object.entries(dataRegister.previsionesActividades)
           .filter(([_, observacion]) => observacion.trim() !== "")  // Filtra las observaciones vacías
           .map(([actividadKey, observacion], index) => {
             // Formatear la clave como "Actividad 1", "Actividad 2", etc.

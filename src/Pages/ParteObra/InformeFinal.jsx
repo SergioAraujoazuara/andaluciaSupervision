@@ -24,8 +24,35 @@ import Spinner from "./ComponentesInforme/Spinner";
 import { uploadPdfToStorage } from "../ParteObra/Helpers/uploadPdfToStorage";
 import { FaRegCheckCircle } from "react-icons/fa";
 import MedidasPreventivas from "./ComponentesInforme/MedidasPreventivas";
-
-
+import PrevisionesActividades from "./ComponentesInforme/PrevisionActividades";
+/**
+ * Component `InformeFinal`
+ *
+ * This component is responsible for generating a final inspection report in PDF format based on a list of inspection records linked to a specific project.
+ * For each record, it creates a PDF using `@react-pdf/renderer`, downloads related images and their metadata from Firebase Storage,
+ * and merges all the PDFs into a single final document using `pdf-lib`. The final report is both downloaded by the user and uploaded to Firebase Storage.
+ *
+ * Additionally, it displays a success modal once the report has been successfully saved.
+ *
+ * ---
+ * 🔹 Main functionality:
+ * - Iterates over each inspection record and generates an individual PDF.
+ * - Downloads images and extracts metadata (coordinates, observations) from Firebase Storage.
+ * - Merges all generated PDFs into one final report.
+ * - Allows the user to download the report and automatically uploads it to Firebase Storage.
+ *
+ * ⚙️ Props:
+ * - `fechaInicio`, `fechaFin`, `formatFechaActual`: Dates to display in the report header.
+ * - `nombreUsuario`: Name of the user who creates/signs the report.
+ * - `registros`: List of inspection records to include.
+ * - `selectedProjectName`, `selectedProjectId`: Information about the current project.
+ *
+ * 🧩 Reused components:
+ * - `EncabezadoInforme`, `DatosRegistro`, `DatosRegistroTabla`, `GaleriaImagenes`, `PiePaginaInforme`
+ *
+ * 🗃️ External libraries:
+ * - `@react-pdf/renderer`, `pdf-lib`, `firebase`, `file-saver`
+ */
 
 const styles = StyleSheet.create({
     page: {
@@ -36,47 +63,21 @@ const styles = StyleSheet.create({
 });
 
 const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario, registros, selectedProjectName, selectedProjectId }) => {
-
-    console.log(registros, 'registros')
-
     const [modalOpen, setModalOpen] = useState(false);
     const [fechaVisita, setFechaVisita] = useState(localStorage.getItem("fechaVisita") || "");
     const [hora, setHora] = useState(localStorage.getItem("hora") || "");
     const [visitaNumero, setVisitaNumero] = useState(localStorage.getItem("visitaNumero") || "");
-    const [firma, setFirma] = useState(null);  // Estado para la firma
-    const [isGenerating, setIsGenerating] = useState(false); // Estado para el spinner
+    const [firma, setFirma] = useState(null);  
+    const [isGenerating, setIsGenerating] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showSuccessModalMessage, setShowSuccessModalMessage] = useState('');
+    const { proyecto, loading: proyectoLoading, error: proyectoError } = useProyecto(selectedProjectId);
 
-    const handleSave = () => {
-        localStorage.setItem("firma", firma);  // Guardar la firma en localStorage
-        setModalOpen(false);
-    };
-
-
-
-    // Guardar valores en localStorage cada vez que cambien
     useEffect(() => {
         localStorage.setItem("fechaVisita", fechaVisita);
         localStorage.setItem("hora", hora);
         localStorage.setItem("visitaNumero", visitaNumero);
     }, [fechaVisita, hora, visitaNumero]);
-
-
-
-
-
-
-
-    const formatFechaSolo = (fecha) => {
-        if (!fecha) return "";
-        const fechaObj = new Date(fecha);
-        const dia = fechaObj.getDate().toString().padStart(2, "0");
-        const mes = (fechaObj.getMonth() + 1).toString().padStart(2, "0");
-        const anio = fechaObj.getFullYear();
-
-        return `${dia}/${mes}/${anio}`; // Devuelve solo DD/MM/YYYY
-    };
 
     const [userNombre, setUserNombre] = useState("");
     const [userSignature, setUserSignature] = useState(null);
@@ -92,42 +93,6 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
         nombre: "Actividad",
         observaciones: "Observaciones",
     };
-
-    // Orden específico de las columnas
-    const ordenColumnas = [
-        "fechaHora",
-        "sectorNombre",
-        "subSectorNombre",
-        "parteNombre",
-        "elementoNombre",
-        "nombre",
-        "observaciones",
-    ];
-
-
-    // Extraer el ID del proyecto almacenado en el localStorage
-
-    const { proyecto, loading: proyectoLoading, error: proyectoError } = useProyecto(selectedProjectId);
-
-    // Obtener detalles del usuario desde Firestore
-    const fetchUserDetails = async () => {
-        if (user) {
-            try {
-                const userDocRef = doc(db, "usuarios", user.uid);
-                const userDocSnap = await getDoc(userDocRef);
-                if (userDocSnap.exists()) {
-                    const userData = userDocSnap.data();
-                    setUserNombre(userData.nombre || "Usuario desconocido");
-                    setUserSignature(userData.signature || null);
-                }
-            } catch (error) {
-                console.error("Error al obtener detalles del usuario:", error);
-            }
-        }
-    };
-
-
-
 
     // Descargar imágenes y metadatos
     const fetchImagesWithMetadata = async (imagePaths) => {
@@ -154,7 +119,6 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
             })
         );
     };
-
 
     const obtenerHoraActual = () => {
         const ahora = new Date();
@@ -207,13 +171,17 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         ]}
                         columnasMap={columnasMap}
                     />
+                    
 
                 </Page>
+
+                
 
                 {imagesWithMetadata.length > 0 && (
                     <Page size="A4" style={styles.page}>
                         <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
-                        
+                        <TituloInforme plantillaSeleccionada="6. Previsión de actividades de próximo inicio. Medidas preventivas." />
+                        <PrevisionesActividades dataRegister={registroIndividual} />
                         <PiePaginaInforme
                             userNombre={userNombre}
                             firmaEmpresa={registroIndividual.firmaEmpresa}
@@ -222,14 +190,14 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         />
                     </Page>
                 )}
-                {/* Pie de página con ambas firmas */}
+    
                 
 
 
             </Document>
         );
 
-        // Generamos el PDF y devolvemos el blob
+
         return await pdf(docContent).toBlob();
     };
 
@@ -241,9 +209,9 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
         }
 
         console.log(`📄 Generando ${registros.length} informes...`);
-        setIsGenerating(true); // Activar el spinner
+        setIsGenerating(true); 
 
-        const pdfDoc = await PDFDocument.create(); // Creamos el documento final
+        const pdfDoc = await PDFDocument.create();
 
         for (const registroIndividual of registros) {
             console.log(`📄 Creando informe para el registro ID: ${registroIndividual.id}`);
@@ -251,45 +219,34 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
             const blob = await downloadPdf(registroIndividual);
             if (!blob) continue;
 
-            const pdfBytes = await blob.arrayBuffer(); // Convertimos el blob a array buffer
+            const pdfBytes = await blob.arrayBuffer(); 
             const tempPdf = await PDFDocument.load(pdfBytes);
             const copiedPages = await pdfDoc.copyPages(tempPdf, tempPdf.getPageIndices());
 
-            copiedPages.forEach((page) => pdfDoc.addPage(page)); // Añadimos las páginas al PDF final
+            copiedPages.forEach((page) => pdfDoc.addPage(page)); 
         }
 
-        // Guardamos el documento final como un blob
+
         const finalPdfBytes = await pdfDoc.save();
         const finalBlob = new Blob([finalPdfBytes], { type: "application/pdf" });
 
-        // Descargamos el PDF
+       
         const pdfURL = URL.createObjectURL(finalBlob);
         const link = document.createElement("a");
         link.href = pdfURL;
         link.download = `Informe_${selectedProjectName}_${formatFechaActual}.pdf`;
         link.click();
 
-
-
-        // **Subimos el PDF al Storage**
         const downloadURL = await uploadPdfToStorage(finalBlob, selectedProjectName, selectedProjectId);
         if (downloadURL) {
             setShowSuccessModal(true);
             setShowSuccessModalMessage('Informe guardado correctamente')// Mostrar el modal de éxito
         }
 
-        setIsGenerating(false); // Desactivar el spinner
+        setIsGenerating(false); 
 
-        console.log("✅ Informe final generado con éxito.");
+       
     };
-
-
-
-
-
-
-
-
 
 
     return (
@@ -298,7 +255,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                 <div>
                     {isGenerating ? (
                         <div className="flex justify-center items-center gap-2">
-                            <Spinner /> {/* Spinner en lugar del botón */}
+                            <Spinner />
                             <span className="text-gray-500 text-xl font-medium">Generando...</span>
                         </div>
                     ) : (
@@ -312,13 +269,11 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                 </div>
             </div>
 
-
-            {/* Modal de Éxito */}
             {showSuccessModal && (
                 <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md bg-black bg-opacity-40 transition-opacity">
                     <div className="bg-white p-8 rounded-2xl shadow-2xl w-[350px] text-center relative transform transition-transform scale-95 animate-fadeIn">
 
-                        {/* Botón de Cierre */}
+                     
                         <button
                             className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 transition"
                             onClick={() => setShowSuccessModal(false)}
@@ -326,15 +281,15 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                             <AiOutlineClose size={22} />
                         </button>
 
-                        {/* Icono de éxito en verde */}
+                     
                         <div className="flex justify-center items-center mb-4">
                             <FaRegCheckCircle className="text-green-500 text-6xl" />
                         </div>
 
-                        {/* Mensaje */}
+               
                         <h2 className="text-lg font-semibold text-gray-800">{showSuccessModalMessage}</h2>
 
-                        {/* Botón de acción */}
+                    
                         <div className="mt-6">
                             <button
                                 onClick={() => setShowSuccessModal(false)}

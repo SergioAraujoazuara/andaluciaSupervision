@@ -208,30 +208,7 @@ function AdminHome() {
 
                                 </Link>
                             )}
-                            {/* Forms Management */}
-                            {(userRole === 'admin' || userRole === 'usuario') && (
-                                <Link className='w-full' to={`/formularios/${idProyecto}`}>
-                                    <div className='flex flex-col justify-start items-center xl:flex-row gap-4  transition duration-300 ease-in-out hover:-translate-y-1  w-full'>
-                                        <div className=' flex items-center text-gray-600'>
-                                            <span ><BsClipboardDataFill className='xl:w-[80px] xl:h-[80px] w-[70px] h-[70px]' /></span>
-                                        </div>
-                                        <div className='sm:col-span-9 text-center  xl:text-start flex flex-col justify-center items-center xl:items-start sm:justify-center text-base font-medium ps-5'>
-                                            <p className='flex items-center gap-2'>
-                                                <span className='text-amber-500  transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight />
-                                                </span>Formularios
-                                            </p>
-                                            <p className='mt-4 font-normal text-sm xl:'>
-                                                Configuración de formularios,
-                                                <br />
-                                                Crea los campos y plantillas personalizadas
-
-                                            </p>
-
-                                        </div>
-                                    </div>
-
-                                </Link>
-                            )}
+                            
                             {/* Roles Management */}
                             {
                                 userRole === 'admin' && (

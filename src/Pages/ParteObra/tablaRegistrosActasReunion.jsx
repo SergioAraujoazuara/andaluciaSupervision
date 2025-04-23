@@ -29,10 +29,64 @@ import InformeFinal from "./InformeFinal.jsx";
 import ListaInformesModal from "./ListaInformesModal.jsx";
 import InformeRegistrosActas from "./InformeRegistrosActas.jsx";
 
+/**
+ * General Description of the TablaRegistrosActaReunion Component
+ * -------------------------------------------------------------
+ * This component manages meeting records (actas de reunión) linked to a project in Firestore.
+ * It displays the records in a table (or cards on small devices), allows filtering,
+ * viewing and editing information, uploading images, digitally signing records, and generating PDF reports.
+ * 
+ * General Functionality:
+ * 
+ * 1. **Loading records**:
+ *    - On mount, the component fetches all documents from the `registrosActasDeReunion` collection
+ *      and filters them by the `selectedProjectId` stored in `localStorage`.
+ * 
+ * 2. **Dynamic filtering**:
+ *    - Filters are automatically generated from unique field values (sector, part, name, etc.).
+ *    - Users can also filter by a date range.
+ * 
+ * 3. **Editing records**:
+ *    - A modal can be opened to edit a record.
+ *    - Images can be replaced and are compressed before being uploaded to Firebase Storage.
+ *    - A change history is saved with details of who made the change and why.
+ * 
+ * 4. **Signing records**:
+ *    - Each record can be signed by a "coordinator" and a "contractor".
+ *    - Existing signatures are validated, and signatures are stored as images in Firestore.
+ * 
+ * 5. **Deleting records**:
+ *    - Only users with the "admin" role can delete records.
+ *    - Deletion removes the record both from state and from Firestore.
+ * 
+ * 6. **Generating reports**:
+ *    - Individual or consolidated PDF reports can be generated.
+ *    - The `InformeFinal` component generates a general report,
+ *      and `InformeRegistrosActas` generates per-record reports.
+ * 
+ * 7. **Change history**:
+ *    - Each record has a modal to view its modification history.
+ * 
+ * 8. **Responsive UI**:
+ *    - The interface displays as a table on larger screens and as cards on smaller screens.
+ * 
+ * Main Functions:
+ * ----------------------
+ * - `fetchRegistrosParteDeObra`: Fetches records from Firestore and sets columns and filters.
+ * - `handleFilterChange`: Updates values for dynamic filters.
+ * - `handleEliminarRegistro`: Deletes a record from Firestore and local state.
+ * - `handleAbrirModalFirma` and `saveFirmaFirestore`: Handle signature verification and saving.
+ * - `handleGuardarEdicion`: Saves edited data to a record and updates its change history.
+ * - `subirImagenConMetadatos`: Compresses and uploads images to Storage with custom metadata.
+ * - `handleAbrirModalModificaciones`: Loads a record’s modification history.
+ * - `handleGeneratePdfRegistro`: Prepares a record for generating its individual report.
+ */
+
+
 const TablaRegistrosActaReunion = () => {
   const uniqueId = uuidv4();
   const { user } = useAuth();
-  const userId = user?.uid; // Asegúrate de que 'uid' existe
+  const userId = user?.uid; 
   const { usuario } = useUsuario(userId)
   const roleUsuario = usuario?.role
   const [nombreUsuario, setNombreUsuario] = useState("");
@@ -63,13 +117,17 @@ const TablaRegistrosActaReunion = () => {
     visitaNumero: "",
   });
 
-  const [isFirmaModalOpen, setIsFirmaModalOpen] = useState(false); // Estado para abrir/cerrar el modal
-  const [tipoFirma, setTipoFirma] = useState(null); // Almacena si es "empresa" o "cliente"
-  const [registroSeleccionado, setRegistroSeleccionado] = useState(null); // Guarda el registro que se firmará
+  const [isFirmaModalOpen, setIsFirmaModalOpen] = useState(false); 
+  const [tipoFirma, setTipoFirma] = useState(null); 
+  const [registroSeleccionado, setRegistroSeleccionado] = useState(null);
   const [firmaEmpresa, setFirmaEmpresa] = useState(null);
   const [firmaCliente, setFirmaCliente] = useState(null);
   const [modalFirma, setModalFirma] = useState(false)
   const [modalFirmaMensaje, setModalFirmaMensaje] = useState(false)
+  const [imagenesEditadas, setImagenesEditadas] = useState(new Array(6).fill(null));
+  const [previsualizaciones, setPrevisualizaciones] = useState(new Array(6).fill(null));
+  const [registroEditando, setRegistroEditando] = useState(null);
+  const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false);
 
 
   const handleAbrirModalFirma = async (registro) => {
@@ -81,20 +139,16 @@ const TablaRegistrosActaReunion = () => {
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-
-        // Si ya tiene ambas firmas, mostrar mensaje y evitar firmar
         if (data.firmaEmpresa && data.firmaCliente) {
           setModalFirma(true)
           setModalFirmaMensaje("Este registro ya ha sido firmado.");
           return;
         }
 
-        // Si solo tiene una firma, mostrar el estado actual
         setFirmaEmpresa(data.firmaEmpresa || null);
         setFirmaCliente(data.firmaCliente || null);
       }
 
-      // Permitir abrir el modal si aún se puede firmar
       setRegistroSeleccionado(registro);
       setIsFirmaModalOpen(true);
 
@@ -113,11 +167,9 @@ const TablaRegistrosActaReunion = () => {
       if (docSnap.exists()) {
         const data = docSnap.data();
 
-        // Guardar la firma en Firestore
         const campoFirma = tipoFirma === "empresa" ? "firmaEmpresa" : "firmaCliente";
         await updateDoc(docRef, { [campoFirma]: firmaURL });
 
-        // 🔹 **Actualiza el estado localmente**
         setRegistrosParteDeObra((prev) =>
           prev.map((registro) =>
             registro.id === registroId ? { ...registro, [campoFirma]: firmaURL } : registro
@@ -130,7 +182,6 @@ const TablaRegistrosActaReunion = () => {
           )
         );
 
-        // Cerrar el modal después de 3 segundos
         setTimeout(() => {
           setIsFirmaModalOpen(false);
           setRegistroSeleccionado(null);
@@ -149,16 +200,10 @@ const TablaRegistrosActaReunion = () => {
   };
 
   const handleCloseFirmaModal = () => {
-    setIsFirmaModalOpen(false); // Cierra el modal
-    setRegistroSeleccionado(null); // Limpia el registro seleccionado
-    setTipoFirma(null); // Restablece el tipo de firma
+    setIsFirmaModalOpen(false); 
+    setRegistroSeleccionado(null);
+    setTipoFirma(null);
   };
-
-
-
-
-
-
 
   const handleGuardarVisita = (datos) => {
     setDatosVisita(datos);
@@ -169,9 +214,8 @@ const TablaRegistrosActaReunion = () => {
 
   const obtenerFechaActual = () => {
     const hoy = new Date();
-    return hoy.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+    return hoy.toISOString().split("T")[0];
   };
-
 
   useEffect(() => {
     const actualizarValoresUnicos = () => {
@@ -219,7 +263,7 @@ const TablaRegistrosActaReunion = () => {
               )
               .flatMap((reg) =>
                 (reg.nombre || "").split(/[,|\-\/]+/).map((actividad) => actividad.trim())
-              ) // Divide y limpia las actividades relacionadas
+              ) 
           ),
         ],
       };
@@ -236,23 +280,20 @@ const TablaRegistrosActaReunion = () => {
 
     setValoresFiltro((prev) => ({
       ...prev,
-      [name]: value, // Actualiza el filtro seleccionado
+      [name]: value,
     }));
   };
 
-
-  // useEffect para obtener el nombre del usuario al cargar el componente
   useEffect(() => {
     const fetchNombreUsuario = async (userId) => {
       try {
-        const userDocRef = doc(db, "usuarios", userId); // Ruta en Firestore: 'usuarios/{uid}'
+        const userDocRef = doc(db, "usuarios", userId);
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          console.log(userData)
           setNombreUsuario(userData.nombre || 'Sin nombre')
-          console.log(userData.nombre)
+        
         } else {
           console.error(`No se encontró un usuario con UID: ${userId}`);
           return "Usuario desconocido";
@@ -263,30 +304,30 @@ const TablaRegistrosActaReunion = () => {
       }
     };
 
-    fetchNombreUsuario(userId); // Llama a la función para obtener el nombre
-  }, [userId]); // Solo se ejecuta si userId cambia
+    fetchNombreUsuario(userId); 
+  }, [userId]); 
 
   useEffect(() => {
     const fetchRegistrosParteDeObra = async () => {
       try {
-        const selectedProjectId = localStorage.getItem("selectedProjectId"); // Obtén el ID del proyecto del localStorage
+        const selectedProjectId = localStorage.getItem("selectedProjectId"); 
 
         if (!selectedProjectId) {
           console.error("No se encontró un 'selectedProjectId' en el localStorage");
           return;
         }
 
-        // Realiza la consulta a Firestore
+       
         const registrosSnapshot = await getDocs(collection(db, "registrosActasDeReunion"));
         const registros = registrosSnapshot.docs
           .map((docSnapshot) => ({
-            id: docSnapshot.id, // ID del documento
+            id: docSnapshot.id, 
             ...docSnapshot.data(),
           }))
-          .filter((registro) => registro.idProyecto === selectedProjectId); // Filtrar por idProyecto
+          .filter((registro) => registro.idProyecto === selectedProjectId); 
 
         if (registros.length > 0) {
-          // Obtener columnas dinámicas excluyendo ID e imágenes
+          
           const columnasDinamicas = Object.keys(registros[0])
             .filter(
               (columna) =>
@@ -295,7 +336,7 @@ const TablaRegistrosActaReunion = () => {
             )
             .sort((a, b) => a.localeCompare(b));
 
-          // Ordenamos columnas, asegurando que "fechahora" aparezca primero
+        
           const columnasOrdenadas = [
             ...columnasDinamicas.filter((col) => col.toLowerCase() === "fechahora"),
             ...columnasDinamicas.filter((col) => col.toLowerCase() !== "fechahora"),
@@ -303,13 +344,13 @@ const TablaRegistrosActaReunion = () => {
 
           setColumnas(columnasOrdenadas);
 
-          // Obtener valores únicos de cada columna para los filtros
+          
           const valoresUnicos = columnasOrdenadas.reduce((acc, columna) => {
             acc[columna] = [...new Set(registros.map((registro) => registro[columna] || ""))];
             return acc;
           }, {});
 
-          // Configurar filtros iniciales con valores únicos
+          
           setValoresFiltro(
             columnasOrdenadas.reduce((acc, columna) => {
               acc[columna] = "";
@@ -317,7 +358,7 @@ const TablaRegistrosActaReunion = () => {
             }, {})
           );
 
-          setValoresUnicos(valoresUnicos); // Guardamos valores únicos para desplegables
+          setValoresUnicos(valoresUnicos);
         }
 
         setRegistrosParteDeObra(registros);
@@ -334,14 +375,14 @@ const TablaRegistrosActaReunion = () => {
 
   useEffect(() => {
     const registrosFiltrados = registrosParteDeObra.filter((registro) => {
-      const fechaRegistro = new Date(registro.fechaHora).toISOString().split("T")[0]; // Convertir fecha a YYYY-MM-DD
+      const fechaRegistro = new Date(registro.fechaHora).toISOString().split("T")[0]; 
 
-      // ✅ Si NO hay filtro de fecha, no se filtra por fecha
+     
       const cumpleFecha =
         (!valoresFiltro.fechaInicio || fechaRegistro >= valoresFiltro.fechaInicio) &&
         (!valoresFiltro.fechaFin || fechaRegistro <= valoresFiltro.fechaFin);
 
-      // ✅ Aplicar otros filtros
+      
       const cumpleOtrosFiltros = Object.keys(valoresFiltro).every((campo) => {
         if (campo === "fechaInicio" || campo === "fechaFin") return true;
         return !valoresFiltro[campo] || (registro[campo] || "").includes(valoresFiltro[campo]);
@@ -362,10 +403,10 @@ const TablaRegistrosActaReunion = () => {
     console.log(registroAEliminar)
     try {
       if (registroAEliminar) {
-        // Eliminar el documento usando su ID en Firestore
+    
         await deleteDoc(doc(db, "registrosActasDeReunion", registroAEliminar.id));
 
-        // Actualizar el estado local para eliminar el registro eliminado
+       
         setRegistrosParteDeObra((prev) =>
           prev.filter((registro) => registro.id !== registroAEliminar.id)
         );
@@ -373,7 +414,7 @@ const TablaRegistrosActaReunion = () => {
           prev.filter((registro) => registro.id !== registroAEliminar.id)
         );
 
-        // Cerrar el modal de confirmación
+      
         setShowConfirmModal(false);
         setRegistroAEliminar(null);
       }
@@ -383,27 +424,13 @@ const TablaRegistrosActaReunion = () => {
   };
 
 
-  // Estado para almacenar las imágenes seleccionadas y sus previsualizaciones
-  const [imagenesEditadas, setImagenesEditadas] = useState(new Array(6).fill(null));
-  const [previsualizaciones, setPrevisualizaciones] = useState(new Array(6).fill(null));
-
-
-  // Estado para el registro que se está editando
-  const [registroEditando, setRegistroEditando] = useState(null);
-  // Estado para almacenar el registro que se está editando
-
-  // Estado para abrir/cerrar el modal de edición
-  const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false);
-
   const handleSeleccionarImagen = async (e, index) => {
-    const file = e.target.files[0]; // Obtener la imagen seleccionada
+    const file = e.target.files[0]; 
     if (!file) return;
 
     try {
-      // Comprimir la imagen
+  
       const imagenComprimida = await comprimirImagen(file);
-
-      // Crear URL temporal para previsualizar la imagen comprimida
       const imageUrl = URL.createObjectURL(imagenComprimida);
       setPrevisualizaciones((prev) => {
         const newPreviews = [...prev];
@@ -411,7 +438,7 @@ const TablaRegistrosActaReunion = () => {
         return newPreviews;
       });
 
-      // Guardar la imagen comprimida en el estado para procesarla después
+    
       setImagenesEditadas((prev) => {
         const updatedImages = [...prev];
         updatedImages[index] = imagenComprimida;
@@ -434,12 +461,7 @@ const TablaRegistrosActaReunion = () => {
         return;
       }
 
-      const registroOriginal = docSnapshot.data(); // Datos actuales antes de la edición
-
-      // 🔍 LOG 1: Mostrar imágenes anteriores
-      console.log("🖼️ Imágenes ANTERIORES del registro:", registroOriginal.imagenes);
-
-      // Procesar las imágenes nuevas o mantener las anteriores
+      const registroOriginal = docSnapshot.data(); 
       let nuevasUrls = [];
 
       for (let i = 0; i < 6; i++) {
@@ -452,20 +474,16 @@ const TablaRegistrosActaReunion = () => {
         }
       }
 
-      // 🔍 LOG 2: Mostrar las imágenes actualizadas
-      console.log("✅ Imágenes ACTUALIZADAS que se guardarán:", nuevasUrls);
-
-      // Crear objeto actualizado
       const registroActualizado = {
         ...registroEditando,
         actividades: registroEditando.actividades,
         imagenes: nuevasUrls,
       };
 
-      // Guardar cambios
+ 
       await updateDoc(docRef, registroActualizado);
 
-      // Guardar historial
+     
       const historialRef = collection(db, "historialRegistrosActasDeReunion");
       await addDoc(historialRef, {
         registroId: registroEditando.id,
@@ -476,7 +494,6 @@ const TablaRegistrosActaReunion = () => {
         registroEditado: registroActualizado,
       });
 
-      // Actualizar estados en frontend
       setRegistrosParteDeObra((prev) =>
         prev.map((registro) =>
           registro.id === registroEditando.id ? registroActualizado : registro
@@ -489,7 +506,7 @@ const TablaRegistrosActaReunion = () => {
         )
       );
 
-      // Cerrar modal
+  
       setModalEdicionAbierto(false);
       setRegistroEditando(null);
       setMotivoCambio("");
@@ -500,24 +517,19 @@ const TablaRegistrosActaReunion = () => {
 
 
 
-
-
-
-
-  // Comprimir la imagen antes de
   const comprimirImagen = async (file) => {
     try {
       const opciones = {
-        maxSizeMB: 0.3, // Tamaño máximo de la imagen (en MB)
-        maxWidthOrHeight: 1920, // Dimensiones máximas
-        useWebWorker: true, // Usa WebWorker para no bloquear la UI
+        maxSizeMB: 0.3, 
+        maxWidthOrHeight: 1920,
+        useWebWorker: true, 
       };
 
       const imagenComprimida = await imageCompression(file, opciones);
       return imagenComprimida;
     } catch (error) {
       console.error("Error al comprimir la imagen:", error);
-      return file; // Si falla, devuelve la imagen original
+      return file; 
     }
   };
 
@@ -536,7 +548,7 @@ const TablaRegistrosActaReunion = () => {
       const metadata = {
         contentType: file.type,
         customMetadata: {
-          latitude: "", // puedes agregar coords si las capturas al editar
+          latitude: "",
           longitude: "",
           proyecto: selectedProjectName,
           lote: loteNombre,
@@ -556,7 +568,7 @@ const TablaRegistrosActaReunion = () => {
 
 
   const handleGoBack = () => {
-    navigate(-1); // Navega hacia atrás en el historial
+    navigate(-1);
   };
 
 
@@ -573,20 +585,18 @@ const TablaRegistrosActaReunion = () => {
     setSelectedObservation("");
   };
 
-  // Limpiar filtros
+ 
   const resetFilters = () => {
-    // Restablece los filtros a su estado inicial (todos los valores vacíos)
+   
     setValoresFiltro((prev) =>
       Object.keys(prev).reduce((acc, key) => {
-        acc[key] = ""; // Limpia cada filtro
+        acc[key] = ""; 
         return acc;
       }, {})
     );
 
-    console.log("Filtros restablecidos"); // Para verificar en consola
   };
 
-  // Historial de cambios
 
   const [motivoCambio, setMotivoCambio] = useState("");
   const [modalModificacionesAbierto, setModalModificacionesAbierto] = useState(false);
@@ -594,24 +604,21 @@ const TablaRegistrosActaReunion = () => {
 
   const handleAbrirModalModificaciones = async (registro) => {
     try {
-      // Consulta a la colección de historial
+     
       const historialSnapshot = await getDocs(
         collection(db, "historialRegistrosActasDeReunion")
       );
 
-      // Filtrar los cambios asociados al registro seleccionado
       const historial = historialSnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
         .filter((item) => item.registroId === registro.id);
 
       setHistorialModificaciones(historial);
-      setModalModificacionesAbierto(true); // Abre el modal
+      setModalModificacionesAbierto(true);
     } catch (error) {
       console.error("Error al cargar el historial de modificaciones:", error);
     }
   };
-
-
 
   const columnasMap = {
     fechaHora: "Fecha y hora",
@@ -620,11 +627,11 @@ const TablaRegistrosActaReunion = () => {
     parteNombre: "Inventario vial",
     elementoNombre: "Sector",
     nombre: "Actividad",
-    actividad: "Actividad", // Nuevo mapeo para la columna actividad
+    actividad: "Actividad", 
     observaciones: "Observaciones",
   };
 
-  // Orden específico de las columnas
+
   const ordenColumnas = [
     "fechaHora",
     "sectorNombre",
@@ -663,16 +670,16 @@ const TablaRegistrosActaReunion = () => {
     const mes = (fechaObj.getMonth() + 1).toString().padStart(2, "0");
     const anio = fechaObj.getFullYear();
 
-    return `${dia}/${mes}/${anio}`; // Devuelve solo DD/MM/YYYY
+    return `${dia}/${mes}/${anio}`; 
   };
 
   const formatCamelCase = (text) => {
     return text
-      .replace(/([a-z])([A-Z])/g, "$1 $2") // Separa camelCase en palabras
-      .replace(/\b[a-z]/g, (c) => c.toUpperCase()); // Capitaliza cada palabra
+      .replace(/([a-z])([A-Z])/g, "$1 $2") 
+      .replace(/\b[a-z]/g, (c) => c.toUpperCase());
   };
 
-  // generar informe del registro
+ 
   const [dataRegister, setDataRegister] = useState({})
 
   const handleGeneratePdfRegistro = (registro) => {
@@ -719,7 +726,7 @@ const TablaRegistrosActaReunion = () => {
             value={valoresFiltro.fechaInicio || ""}
             onChange={(e) => {
               const fechaInicioSeleccionada = e.target.value;
-              console.log("Fecha Inicial seleccionada:", fechaInicioSeleccionada);
+         
               setValoresFiltro((prev) => ({ ...prev, fechaInicio: fechaInicioSeleccionada }));
             }}
             className="border border-gray-300 rounded-md p-2"
@@ -731,8 +738,7 @@ const TablaRegistrosActaReunion = () => {
             type="date"
             value={valoresFiltro.fechaFin || ""}
             onChange={(e) => {
-              const fechaFinSeleccionada = e.target.value;
-              console.log("Fecha Final seleccionada:", fechaFinSeleccionada);
+              const fechaFinSeleccionada = e.target.value;             
               setValoresFiltro((prev) => ({ ...prev, fechaFin: fechaFinSeleccionada }));
             }}
             className="border border-gray-300 rounded-md p-2"
@@ -791,12 +797,7 @@ const TablaRegistrosActaReunion = () => {
 
           />
         </div>
-
-
-
         <ListaInformesModal />
-
-
       </div>
 
       <div className="overflow-x-auto px-6">
@@ -825,7 +826,7 @@ const TablaRegistrosActaReunion = () => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {registrosFiltrados
-                .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora)) // Ordenar por fecha descendente
+                .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora))
                 .map((registro) => (
                   <tr
                     key={registro.id}
@@ -839,7 +840,7 @@ const TablaRegistrosActaReunion = () => {
                           className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap"
                         >
                           {columna === "fechaHora"
-                            ? formatFecha(registro[columna]) // Formato de fecha
+                            ? formatFecha(registro[columna])
                             : columna === "observaciones" ? (
                               <button
                                 onClick={() => openModal(registro[columna])}
@@ -855,9 +856,9 @@ const TablaRegistrosActaReunion = () => {
                         </td>
                       ))}
                     <td className="px-6 py-4 text-sm whitespace-nowrap flex flex-col items-center gap-2">
-                      {/* Lógica de progreso aquí */}
+                      {/* Lógica de progreso */}
                     </td>
-                    <td className="px-6 py-4 text-sm w-32"> {/* Fijamos el tamaño a 8rem (32px * 8) */}
+                    <td className="px-6 py-4 text-sm w-32">
                       <div className="flex gap-2 items-center">
 
                         {/* Botón de Editar */}
@@ -874,7 +875,7 @@ const TablaRegistrosActaReunion = () => {
                         </button>
 
                         {/* Estado de Firma */}
-                        <div className="w-28 flex justify-center"> {/* Ancho fijo para alinear */}
+                        <div className="w-28 flex justify-center">
                           {registro.firmaEmpresa && registro.firmaCliente ? (
                             <div className="flex items-center gap-2 text-green-700 font-semibold flex flex-col gap-2 items-center">
                               <FaCheck className="text-green-600" /> <span>Firmado</span>
@@ -889,7 +890,7 @@ const TablaRegistrosActaReunion = () => {
                           )}
                         </div>
 
-                        {/* Botón de Historial */}
+                   
                         <button
                           onClick={() => handleAbrirModalModificaciones(registro)}
                           className="px-3 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex items-center"
@@ -897,7 +898,7 @@ const TablaRegistrosActaReunion = () => {
                           <MdOutlineHistory />
                         </button>
 
-                        {/* Botón de Eliminar (solo admin) */}
+                   
                         {roleUsuario === "admin" && (
                           <button
                             onClick={() => {
@@ -946,15 +947,12 @@ const TablaRegistrosActaReunion = () => {
         {/* Vista en modo cards para dispositivos pequeños */}
         <div className="sm:hidden grid gap-4">
           {registrosFiltrados
-            .sort((a, b) => {
-              // Primero ordenamos por sectorNombre (Grupo activos)
+            .sort((a, b) => {            
               if (a.sectorNombre < b.sectorNombre) return -1;
               if (a.sectorNombre > b.sectorNombre) return 1;
-
-              // Si el sectorNombre es igual, ordenamos por fechaHora
               const fechaA = new Date(a.fechaHora);
               const fechaB = new Date(b.fechaHora);
-              return fechaA - fechaB; // Orden ascendente por fecha
+              return fechaA - fechaB;
             })
             .map((registro) => (
               <div
@@ -970,7 +968,7 @@ const TablaRegistrosActaReunion = () => {
                       </span>
                       <span className="text-gray-600">
                         {columna === "fechaHora" ? (
-                          formatFecha(registro[columna]) // Aplicar formato a la fecha
+                          formatFecha(registro[columna])
                         ) : columna === "observaciones" ? (
                           <button
                             onClick={() => openModal(registro[columna])}
@@ -1026,7 +1024,7 @@ const TablaRegistrosActaReunion = () => {
 
                   <div className="flex gap-8 mt-8">
                     {/* Estado de Firma */}
-                    <div className="flex justify-start"> {/* Ancho fijo para alinear */}
+                    <div className="flex justify-start">
                       {registro.firmaEmpresa && registro.firmaCliente ? (
                         <div className="flex items-center gap-2 text-green-700 font-semibold flex gap-2 items-center">
                           <FaCheck className="text-green-600" /> <span>Firmado</span>
@@ -1168,7 +1166,7 @@ const TablaRegistrosActaReunion = () => {
       "observacionesActividades",
     ].includes(campo)
   )
-  .sort((a, b) => a.localeCompare(b)) // Ordena alfabéticamente
+  .sort((a, b) => a.localeCompare(b))
   .map((campo, index) => (
     <div key={index} className="mb-4 tex-xs">  
     </div>
@@ -1220,31 +1218,13 @@ const TablaRegistrosActaReunion = () => {
             </div>
 
 
-            
-
-
-
-            
-          
-            {/* Motivo del cambio
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-1 bg-gray-200 p-2">Motivo del cambio</label>
-              <textarea
-                value={motivoCambio}
-                onChange={(e) => setMotivoCambio(e.target.value)}
-                placeholder="Describe el motivo de este cambio"
-                className="w-full px-4 py-2 border rounded-md border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                rows={3}
-                required
-              />
-            </div> */}
 
             {/* Botones de acción */}
             <div className="flex justify-end gap-4 mt-6">
               {/* Botón de Cancelar */}
               <button
                 className="px-5 py-2 text-gray-700 font-semibold bg-gray-200 rounded-md hover:bg-gray-300 transition flex items-center gap-2"
-                onClick={() => setModalEdicionAbierto(false)} // Lógica para cerrar el modal
+                onClick={() => setModalEdicionAbierto(false)}
               >
                 <AiOutlineClose size={18} /> Cancelar
               </button>
@@ -1256,7 +1236,7 @@ const TablaRegistrosActaReunion = () => {
                   : "bg-gray-500 text-gray-200 cursor-not-allowed"
                   }`}
                 onClick={handleGuardarEdicion}
-                disabled={!motivoCambio.trim()} // Deshabilita si no hay motivo
+                disabled={!motivoCambio.trim()}
               >
                 <AiOutlineCheck size={18} /> Guardar Cambios
               </button>
@@ -1319,7 +1299,7 @@ const TablaRegistrosActaReunion = () => {
                       <td className="px-4 py-3 text-sm text-gray-700">
                         <ul className="space-y-1">
                           {Object.entries(modificacion.registroOriginal || {})
-                            .filter(([key]) => ["imagenes", "observaciones"].includes(key)) // 🔥 Solo mostrar imágenes y observaciones
+                            .filter(([key]) => ["imagenes", "observaciones"].includes(key))
                             .map(([key, value]) => (
                               <li key={key}>
                                 <strong>{formatCamelCase(key)}:</strong>{" "}
@@ -1351,7 +1331,7 @@ const TablaRegistrosActaReunion = () => {
                       <td className="px-4 py-3 text-sm text-gray-700">
                         <ul className="space-y-1">
                           {Object.entries(modificacion.registroEditado || {})
-                            .filter(([key]) => ["imagenes", "observaciones"].includes(key)) // 🔥 Solo mostrar imágenes y observaciones
+                            .filter(([key]) => ["imagenes", "observaciones"].includes(key))
                             .map(([key, value]) => (
                               <li key={key}>
                                 <strong>{formatCamelCase(key)}:</strong>{" "}
@@ -1463,7 +1443,7 @@ const TablaRegistrosActaReunion = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <Firma
             onSave={(firmaURL) => saveFirmaFirestore(firmaURL, registroSeleccionado.id)}
-            onClose={handleCloseFirmaModal} // Ahora pasamos `onClose`
+            onClose={handleCloseFirmaModal}
           />
         </div>
       )}
@@ -1500,14 +1480,6 @@ const TablaRegistrosActaReunion = () => {
           </div>
         </div>
       )}
-
-
-
-
-
-
-
-
 
     </div>
   );

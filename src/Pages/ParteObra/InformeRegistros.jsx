@@ -24,6 +24,44 @@ import { View, Text, Image, StyleSheet, Page, Document } from "@react-pdf/render
 import MedidasPreventivas from "./ComponentesInforme/MedidasPreventivas";
 import PrevisionesActividades from "./ComponentesInforme/PrevisionActividades"
 
+/**
+ * Component `PdfInformeTablaRegistros`
+ *
+ * This component is used to generate a single-page PDF report for a specific inspection record.
+ * It builds the report using reusable PDF sections such as project header, data tables, image galleries with metadata, preventive measures,
+ * and activity forecasts. It validates the presence of both client and company signatures before allowing PDF generation.
+ * 
+ * Upon generation:
+ * - It fetches related images from Firebase Storage, including their metadata (coordinates and notes).
+ * - Renders all content using `@react-pdf/renderer` and opens the final document in a new browser tab.
+ * - Uses localStorage to persist visit data temporarily (date, hour, visit number).
+ *
+ * ---
+ * 🔹 Main functionality:
+ * - Renders PDF with project info, registry data, image gallery, preventive measures, and user/company signatures.
+ * - Fetches and includes images with metadata from Firebase Storage.
+ * - Prevents PDF generation unless both signatures are present.
+ * - Automatically clears visit data stored in localStorage after generation.
+ *
+ * ⚙️ Props:
+ * - `registros`: (Optional) List of all records — not used directly in generation here.
+ * - `columnas`: Column mapping for the data table.
+ * - `fechaInicio`, `fechaFin`, `formatFechaActual`: Dates for display in the header.
+ * - `fileName`: (Unused here, possibly legacy).
+ * - `datosVisita`: Additional visit info (hour, number, etc.).
+ * - `dataRegister`: The inspection record to render in the report.
+ * - `registro`: (Alias of `dataRegister` – might be refactored).
+ * - `nombreUsuario`: Name of the user signing or generating the report.
+ *
+ * 🧩 Components used:
+ * - `EncabezadoInforme`, `DatosRegistro`, `DatosRegistroTabla`, `GaleriaImagenes`
+ * - `MedidasPreventivas`, `PrevisionesActividades`, `PiePaginaInforme`
+ *
+ * 🗃️ Libraries:
+ * - `@react-pdf/renderer`, `firebase/storage`, `firebase/firestore`, `file-saver`, `react-icons`
+ */
+
+
 const styles = StyleSheet.create({
   page: {
     padding: 30,
@@ -44,16 +82,9 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   const [fechaVisita, setFechaVisita] = useState(localStorage.getItem("fechaVisita") || "");
   const [hora, setHora] = useState(localStorage.getItem("hora") || "");
   const [visitaNumero, setVisitaNumero] = useState(localStorage.getItem("visitaNumero") || "");
-  const [firma, setFirma] = useState(null);  // Estado para la firma
-  const [isGenerating, setIsGenerating] = useState(false); // Estado para el spinner
-  const handleSave = () => {
-    localStorage.setItem("firma", firma);  // Guardar la firma en localStorage
-    setModalOpen(false);
-  };
-
-
-
-  // Guardar valores en localStorage cada vez que cambien
+  const [firma, setFirma] = useState(null);  
+  const [isGenerating, setIsGenerating] = useState(false);
+ 
   useEffect(() => {
     localStorage.setItem("fechaVisita", fechaVisita);
     localStorage.setItem("hora", hora);
@@ -61,16 +92,11 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   }, [fechaVisita, hora, visitaNumero]);
 
 
-
-
-
-
-
   const obtenerHoraActual = () => {
     const ahora = new Date();
     const horas = ahora.getHours().toString().padStart(2, "0");
     const minutos = ahora.getMinutes().toString().padStart(2, "0");
-    return `${horas}:${minutos}`;  // Devuelve la hora en formato HH:mm
+    return `${horas}:${minutos}`;  
   };
 
 
@@ -89,24 +115,12 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     observaciones: "Observaciones",
   };
 
-  // Orden específico de las columnas
-  const ordenColumnas = [
-    "fechaHora",
-    "sectorNombre",
-    "subSectorNombre",
-    "parteNombre",
-    "elementoNombre",
-    "nombre",
-    "observaciones",
-  ];
 
-
-  // Extraer el ID del proyecto almacenado en el localStorage
   const selectedProjectId = localStorage.getItem("selectedProjectId");
   const selectedProjectName = localStorage.getItem("selectedProjectName");
   const { proyecto, loading: proyectoLoading, error: proyectoError } = useProyecto(selectedProjectId);
 
-  // Obtener detalles del usuario desde Firestore
+
   const fetchUserDetails = async () => {
     if (user) {
       try {
@@ -124,13 +138,10 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   };
 
 
-
-
-  // Descargar imágenes y metadatos
   const fetchImagesWithMetadata = async (imagePaths) => {
     return await Promise.all(
       imagePaths
-        .filter((path) => path) // 🔥 Solo paths válidos (no null, no undefined)
+        .filter((path) => path) 
         .map(async (path) => {
           try {
             const storageRef = ref(storage, path);
@@ -155,14 +166,11 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   };
 
 
-
-
   const downloadPdf = async () => {
-    console.log(dataRegister, 'valor del objeto');
 
     if (!dataRegister?.firmaEmpresa || !dataRegister?.firmaCliente) {
       console.error("⚠️ No hay firmas guardadas en Firestore.");
-      return; // Evita continuar si no hay firmas en Firestore
+      return; 
     }
 
 
@@ -171,7 +179,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     }
 
 
-    // Descargar imágenes antes de renderizar el PDF
+  
     let imagesWithMetadata = [];
     if (dataRegister.imagenes && dataRegister.imagenes.length > 0) {
       imagesWithMetadata = await fetchImagesWithMetadata(dataRegister.imagenes);
@@ -180,7 +188,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
 
     const docContent = (
       <Document>
-        {/* Página con los datos del único registro */}
+      
         <Page size="A4" style={styles.page}>
           <EncabezadoInforme
             empresa={proyecto?.empresa || "Nombre de mpresa"}
@@ -232,7 +240,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
         <Page size="A4" style={styles.page}>
 
 
-          {/* Insertar Galería de Imágenes solo si hay imágenes */}
+      
           {imagesWithMetadata.length > 0 && (
             <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
           )}
@@ -251,7 +259,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
           <PrevisionesActividades dataRegister={dataRegister} />
 
 
-          {/* Pie de página con ambas firmas */}
+  
           <PiePaginaInforme
             userNombre={userNombre}
             firmaEmpresa={dataRegister.firmaEmpresa}  // Firma de la empresa desde Firestore
@@ -265,7 +273,6 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       </Document>
     );
 
-    // Generar el PDF como Blob y abrir en una nueva pestaña
     const blob = await pdf(docContent).toBlob();
     const pdfURL = URL.createObjectURL(blob);
     window.open(pdfURL, "_blank");
@@ -280,22 +287,22 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       return;
     }
     setIsGenerating(true)
-    setModalOpen(true); // Abre el modal
+    setModalOpen(true);
 
     setTimeout(() => {
-      downloadPdf(); // Genera el PDF
-    }, 200); // Espera un pequeño tiempo para asegurarse que `dataRegister` está listo
+      downloadPdf(); 
+    }, 200); 
 
     setTimeout(() => {
-      // Resetea las variables en localStorage
+    
       localStorage.removeItem("fechaVisita");
       localStorage.removeItem("hora");
       localStorage.removeItem("visitaNumero");
 
 
       setIsGenerating(false)
-      setModalOpen(false); // Cierra el modal
-    }, 2000); // Espera 2 segundos antes de limpiar y cerrar
+      setModalOpen(false);
+    }, 2000);
   };
 
 
@@ -305,7 +312,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     <div>
       {isGenerating ? (
         <div className="flex justify-center items-center gap-2">
-          <Spinner /> {/* Spinner en lugar del botón */}
+          <Spinner /> 
         </div>
       ) : (
         <button
@@ -314,7 +321,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             : "text-gray-500 cursor-not-allowed"
             }`}
           onClick={dataRegister.firmaEmpresa && dataRegister.firmaCliente ? handlegeneratePDF : null}
-          disabled={!dataRegister.firmaEmpresa || !dataRegister.firmaCliente} // Si no hay firmas, deshabilitar
+          disabled={!dataRegister.firmaEmpresa || !dataRegister.firmaCliente} 
         >
           {dataRegister.firmaEmpresa && dataRegister.firmaCliente ? (
             <FaFilePdf className="w-6 h-6" />
