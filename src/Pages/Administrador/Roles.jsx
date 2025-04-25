@@ -16,6 +16,8 @@ function AdminPanel() {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [signatureImage, setSignatureImage] = useState(null);
     const [selectedProjects, setSelectedProjects] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+
 
     const { projects, loading: loadingProjects } = useProjects();
 
@@ -140,19 +142,19 @@ function AdminPanel() {
     const handleProjectRemoval = async (projectId, userId) => {
         // Primero, obtenemos la referencia al documento del usuario usando el ID
         const userDocRef = doc(db, 'usuarios', userId);
-    
+
         // Obtenemos los proyectos actuales del usuario
         const userSnapshot = await getDoc(userDocRef);
         const currentProjects = userSnapshot.data().proyectos || [];
-    
+
         // Filtramos el proyecto que se debe eliminar
         const updatedProjects = currentProjects.filter(proj => proj.id !== projectId);
-    
+
         // Actualizamos el documento del usuario con el nuevo array de proyectos
         await updateDoc(userDocRef, {
             proyectos: updatedProjects,  // Asignamos el nuevo array sin el proyecto eliminado
         });
-    
+
         // Actualizamos el estado local para reflejar los cambios en la interfaz de usuario
         setUsers(users.map(user => {
             if (user.id === userId) {
@@ -163,11 +165,11 @@ function AdminPanel() {
             }
             return user;
         }));
-    
+
         // Opcionalmente, si quieres eliminar el proyecto también de los proyectos seleccionados
         setSelectedProjects(selectedProjects.filter(proj => proj.id !== projectId));
     };
-    
+
     return (
         <div className="container mx-auto min-h-screen text-gray-500 xl:px-14 py-2">
             {/* Navigation Header */}
@@ -237,7 +239,7 @@ function AdminPanel() {
                             <select
                                 value={selectedUserId}
                                 onChange={(e) => setSelectedUserId(e.target.value)}
-                                className="w-full py-2 px-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                                className="w-full py-2 px-3 my-4 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                             >
                                 <option value="">Seleccione un usuario</option>
                                 {users.map(user => (
@@ -257,17 +259,31 @@ function AdminPanel() {
                             </select>
 
                             {/* Projects Dropdown */}
+                           
+                            {/* Filtro de búsqueda */}
+                            <input
+                                type="text"
+                                placeholder="Buscar proyecto por nombre..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full py-2 px-3 mb-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                            />
+
+                            {/* Dropdown filtrado */}
                             <select
                                 multiple
-                                value={selectedProjects.map(proj => proj.id)} // Se seleccionan los ids
+                                value={selectedProjects.map(proj => proj.id)}
                                 onChange={handleProjectChange}
                                 className="w-full py-2 px-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500 text-gray-700"
                             >
-                                <option value="">Seleccione proyectos</option>
-                                {projects.map((proj) => (
-                                    <option key={proj.id} value={proj.id}>{proj.obra}</option>
-                                ))}
+                                {projects
+                                    .filter(proj => proj.obra.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    .map((proj) => (
+                                        <option key={proj.id} value={proj.id}>{proj.obra}</option>
+                                    ))
+                                }
                             </select>
+
 
                             <input
                                 type="file"

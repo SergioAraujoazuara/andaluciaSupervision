@@ -190,10 +190,6 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         />
                     </Page>
                 )}
-    
-                
-
-
             </Document>
         );
 

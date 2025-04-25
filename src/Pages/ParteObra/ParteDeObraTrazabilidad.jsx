@@ -1068,7 +1068,7 @@ const ParteObra = () => {
                     Observaciones generales
                   </label>
                   <VoiceRecorderInput
-                    maxLength={300}
+                    maxLength={600}
                     name="observaciones"
                     value={formData.observaciones}
                     onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData

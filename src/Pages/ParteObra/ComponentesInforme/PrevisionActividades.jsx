@@ -19,7 +19,10 @@ const styles = StyleSheet.create({
     marginBottom: 2,       // Espacio entre las filas
   },
   field: {
-    width: "33.33%",
+    width: "33.33%", // Ancho de cada columna (para 3 columnas)
+  },
+  singleField: {
+    width: "100%",  // Si solo hay 1 actividad, ocupará el 100% del ancho
   },
 });
 
@@ -30,18 +33,22 @@ const PrevisionActividades = ({ dataRegister }) => {
 
   if (actividades.length === 0) return null;
 
+  // Si hay solo 1 actividad, usamos singleField
+  const isSingleActivity = actividades.length === 1;
+
   return (
     <View style={styles.fieldGroup}>
-    <View style={styles.section}>
-      {/* Mapeamos las observaciones de actividades */}
-      <View style={styles.fieldRow}>
-        {Object.entries(dataRegister.previsionesActividades)
-          .filter(([_, observacion]) => observacion.trim() !== "")  // Filtra las observaciones vacías
-          .map(([actividadKey, observacion], index) => {
-            // Formatear la clave como "Actividad 1", "Actividad 2", etc.
+      <View style={styles.section}>
+        {/* Mapeamos las observaciones de actividades */}
+        <View style={styles.fieldRow}>
+          {actividades.map(([actividadKey, observacion], index) => {
+            // Formatear la clave como "Actividad: "
             const formattedKey = `Actividad: `; // Resultado: "Actividad 1"
             return (
-              <View key={index} style={styles.field}>
+              <View
+                key={index}
+                style={isSingleActivity ? styles.singleField : styles.field} // Condicional para 1 actividad o más
+              >
                 <SeccionesDatosRegistros
                   nombreCampo={formattedKey}  // Título de la actividad
                   valorDelCampo={observacion || "No especificado"}  // Valor de la observación
@@ -49,9 +56,9 @@ const PrevisionActividades = ({ dataRegister }) => {
               </View>
             );
           })}
+        </View>
       </View>
     </View>
-  </View>
   );
 };
 
