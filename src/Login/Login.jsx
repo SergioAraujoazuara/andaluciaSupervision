@@ -6,6 +6,7 @@ import { RiLockPasswordLine } from "react-icons/ri";
 import Logo_solo from '../assets/logo_solo.png';
 import AlertLogin from './AlertLogin'; // Asume que este componente ya está creado
 import { FaArrowAltCircleRight } from "react-icons/fa";
+import RecoverPassword from './RecoverPassword';
 
 function Login() {
   const { login } = useAuth();
@@ -17,6 +18,7 @@ function Login() {
   });
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showRecoverPassword, setShowRecoverPassword] = useState(false); 
 
   const handleChange = ({ target: { name, value } }) => {
     setCredentials({ ...credentials, [name]: value });
@@ -38,6 +40,10 @@ function Login() {
 
   const closeModal = () => {
     setShowModal(false);
+  };
+
+  const handleRecoverPassword = () => {
+    setShowRecoverPassword(true);
   };
 
   return (
@@ -100,8 +106,22 @@ function Login() {
                 Entrar
               </button>
             </div>
+
+            {/* Enlace para mostrar el formulario de recuperación de contraseña */}
+            <div className="flex justify-center mt-4">
+              <button
+                type="button"
+                onClick={handleRecoverPassword}
+                className="text-amber-700 hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
           </form>
+          {/* Mostrar componente de recuperación de contraseña solo cuando se hace clic */}
+          {showRecoverPassword && <RecoverPassword />}
           {showModal && <AlertLogin message={error} closeModal={closeModal} />}
+          
         </div>
 
       </div>

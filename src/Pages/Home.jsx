@@ -64,17 +64,11 @@ function Home() {
       const projectSnap = await getDoc(projectRef);
       if (projectSnap.exists()) {
         let infoProject = projectSnap.data();
-
-        // Almacena la información completa del proyecto en el localStorage
         localStorage.setItem('selectedProjectId', id);
         localStorage.setItem('selectedProjectName', infoProject.obra);
         localStorage.setItem('obra', infoProject.contrato);
         localStorage.setItem('tramo', infoProject.descripcion);
-
-        // Actualiza el estado del proyecto
         setProjectData(infoProject);
-
-        console.log("Proyecto guardado en localStorage:", infoProject);
       } else {
         console.error("No se encontró el proyecto en la base de datos.");
         setProjectData(null);
