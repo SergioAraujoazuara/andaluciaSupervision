@@ -82,9 +82,9 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   const [fechaVisita, setFechaVisita] = useState(localStorage.getItem("fechaVisita") || "");
   const [hora, setHora] = useState(localStorage.getItem("hora") || "");
   const [visitaNumero, setVisitaNumero] = useState(localStorage.getItem("visitaNumero") || "");
-  const [firma, setFirma] = useState(null);  
+  const [firma, setFirma] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
- 
+
   useEffect(() => {
     localStorage.setItem("fechaVisita", fechaVisita);
     localStorage.setItem("hora", hora);
@@ -96,7 +96,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     const ahora = new Date();
     const horas = ahora.getHours().toString().padStart(2, "0");
     const minutos = ahora.getMinutes().toString().padStart(2, "0");
-    return `${horas}:${minutos}`;  
+    return `${horas}:${minutos}`;
   };
 
 
@@ -141,7 +141,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
   const fetchImagesWithMetadata = async (imagePaths) => {
     return await Promise.all(
       imagePaths
-        .filter((path) => path) 
+        .filter((path) => path)
         .map(async (path) => {
           try {
             const storageRef = ref(storage, path);
@@ -170,7 +170,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
 
     if (!dataRegister?.firmaEmpresa || !dataRegister?.firmaCliente) {
       console.error("⚠️ No hay firmas guardadas en Firestore.");
-      return; 
+      return;
     }
 
 
@@ -179,16 +179,21 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     }
 
 
-  
+
     let imagesWithMetadata = [];
     if (dataRegister.imagenes && dataRegister.imagenes.length > 0) {
       imagesWithMetadata = await fetchImagesWithMetadata(dataRegister.imagenes);
 
     }
 
+    console.log(dataRegister.fechaHora, 'fecha y hora')
+    console.log(dataRegister, 'registro completo')
+
+
+
     const docContent = (
       <Document>
-      
+
         <Page size="A4" style={styles.page}>
           <EncabezadoInforme
             empresa={proyecto?.empresa || "Nombre de mpresa"}
@@ -197,7 +202,18 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             description={proyecto?.descripcion || "Contratista"}
             coordinador={proyecto?.coordinador || "Nombre coordinador de seguridad y salud"}
             director={proyecto?.director || "Nombre director de la obra"}
-            rangoFechas={`${fechaInicio || `${formatFechaActual} - ${obtenerHoraActual()} hrs`} ${fechaFin ? ` al ${fechaFin} - ${obtenerHoraActual()} hrs` : ""}`}
+            rangoFechas={`${dataRegister?.fechaHora
+              ? new Date(dataRegister.fechaHora).toLocaleString("es-ES", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              }) + " hrs"
+              : "Fecha no disponible"
+              }`}
+
+
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />
 
@@ -240,7 +256,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
         <Page size="A4" style={styles.page}>
 
 
-      
+
           {imagesWithMetadata.length > 0 && (
             <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
           )}
@@ -259,7 +275,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
           <PrevisionesActividades dataRegister={dataRegister} />
 
 
-  
+
           <PiePaginaInforme
             userNombre={userNombre}
             firmaEmpresa={dataRegister.firmaEmpresa}  // Firma de la empresa desde Firestore
@@ -273,9 +289,17 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       </Document>
     );
 
+
+    const fecha = new Date(dataRegister.fechaHora);
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    const hours = String(fecha.getHours()).padStart(2, '0');
+    const minutes = String(fecha.getMinutes()).padStart(2, '0');
+    const cleanProjectName = selectedProjectName?.replace(/\s+/g, "_") || "Proyecto";
+    const fileName = `${cleanProjectName}_${year}-${month}-${day}_${hours}-${minutes}-hrs.pdf`;
     const blob = await pdf(docContent).toBlob();
-    const pdfURL = URL.createObjectURL(blob);
-    window.open(pdfURL, "_blank");
+    saveAs(blob, fileName);
 
 
   };
@@ -290,11 +314,11 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     setModalOpen(true);
 
     setTimeout(() => {
-      downloadPdf(); 
-    }, 200); 
+      downloadPdf();
+    }, 200);
 
     setTimeout(() => {
-    
+
       localStorage.removeItem("fechaVisita");
       localStorage.removeItem("hora");
       localStorage.removeItem("visitaNumero");
@@ -312,7 +336,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     <div>
       {isGenerating ? (
         <div className="flex justify-center items-center gap-2">
-          <Spinner /> 
+          <Spinner />
         </div>
       ) : (
         <button
@@ -321,7 +345,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             : "text-gray-500 cursor-not-allowed"
             }`}
           onClick={dataRegister.firmaEmpresa && dataRegister.firmaCliente ? handlegeneratePDF : null}
-          disabled={!dataRegister.firmaEmpresa || !dataRegister.firmaCliente} 
+          disabled={!dataRegister.firmaEmpresa || !dataRegister.firmaCliente}
         >
           {dataRegister.firmaEmpresa && dataRegister.firmaCliente ? (
             <FaFilePdf className="w-6 h-6" />

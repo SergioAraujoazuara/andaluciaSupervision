@@ -67,7 +67,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
     const [fechaVisita, setFechaVisita] = useState(localStorage.getItem("fechaVisita") || "");
     const [hora, setHora] = useState(localStorage.getItem("hora") || "");
     const [visitaNumero, setVisitaNumero] = useState(localStorage.getItem("visitaNumero") || "");
-    const [firma, setFirma] = useState(null);  
+    const [firma, setFirma] = useState(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showSuccessModalMessage, setShowSuccessModalMessage] = useState('');
@@ -125,7 +125,24 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
         const horas = ahora.getHours().toString().padStart(2, "0");
         const minutos = ahora.getMinutes().toString().padStart(2, "0");
         return `${horas}:${minutos}`;  // Devuelve la hora en formato HH:mm
-      };
+    };
+
+    const obtenerFechaHoraActual = () => {
+        const ahora = new Date();
+        const year = ahora.getFullYear();
+        const month = String(ahora.getMonth() + 1).padStart(2, '0');
+        const day = String(ahora.getDate()).padStart(2, '0');
+        const hours = String(ahora.getHours()).padStart(2, '0');
+        const minutes = String(ahora.getMinutes()).toString().padStart(2, '0');
+
+        const nombreArchivo = `${year}-${month}-${day}_${hours}-${minutes}`;
+        const fechaTexto = `${day}/${month}/${year} a las ${hours}:${minutes} hrs`;
+
+        return { nombreArchivo, fechaTexto };
+    };
+
+    const { fechaTexto } = obtenerFechaHoraActual();
+
 
     const downloadPdf = async (registroIndividual) => {
         if (!registroIndividual) return null;
@@ -134,7 +151,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
         if (registroIndividual.imagenes && registroIndividual.imagenes.length > 0) {
             imagesWithMetadata = await fetchImagesWithMetadata(registroIndividual.imagenes);
         }
-        
+
 
         const docContent = (
             <Document>
@@ -146,7 +163,16 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         description={proyecto?.descripcion || "Nombre contratista"}
                         coordinador={proyecto?.coordinador || "Nombre coordinador de seguridad y salud"}
                         director={proyecto?.director || "Nombre director de la obra"}
-                        rangoFechas={`${fechaInicio || formatFechaActual}${fechaFin ? ` al ${fechaFin} - ${obtenerHoraActual()} hrs` : ""}`}
+                        rangoFechas={`${registroIndividual?.fechaHora
+                            ? new Date(registroIndividual.fechaHora).toLocaleString("es-ES", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            }) + " hrs"
+                            : "Fecha no disponible"
+                            }`}
                         logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
                     />
 
@@ -171,11 +197,11 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         ]}
                         columnasMap={columnasMap}
                     />
-                    
+
 
                 </Page>
 
-                
+
 
                 {imagesWithMetadata.length > 0 && (
                     <Page size="A4" style={styles.page}>
@@ -204,8 +230,8 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
             return;
         }
 
-        console.log(`📄 Generando ${registros.length} informes...`);
-        setIsGenerating(true); 
+
+        setIsGenerating(true);
 
         const pdfDoc = await PDFDocument.create();
 
@@ -215,22 +241,22 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
             const blob = await downloadPdf(registroIndividual);
             if (!blob) continue;
 
-            const pdfBytes = await blob.arrayBuffer(); 
+            const pdfBytes = await blob.arrayBuffer();
             const tempPdf = await PDFDocument.load(pdfBytes);
             const copiedPages = await pdfDoc.copyPages(tempPdf, tempPdf.getPageIndices());
 
-            copiedPages.forEach((page) => pdfDoc.addPage(page)); 
+            copiedPages.forEach((page) => pdfDoc.addPage(page));
         }
 
 
         const finalPdfBytes = await pdfDoc.save();
         const finalBlob = new Blob([finalPdfBytes], { type: "application/pdf" });
 
-       
+
         const pdfURL = URL.createObjectURL(finalBlob);
         const link = document.createElement("a");
         link.href = pdfURL;
-        link.download = `Informe_${selectedProjectName}_${formatFechaActual}.pdf`;
+        link.download = `Informe_${selectedProjectName}_${fechaTexto}.pdf`;
         link.click();
 
         const downloadURL = await uploadPdfToStorage(finalBlob, selectedProjectName, selectedProjectId);
@@ -239,9 +265,9 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
             setShowSuccessModalMessage('Informe guardado correctamente')// Mostrar el modal de éxito
         }
 
-        setIsGenerating(false); 
+        setIsGenerating(false);
 
-       
+
     };
 
 
@@ -269,7 +295,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                 <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md bg-black bg-opacity-40 transition-opacity">
                     <div className="bg-white p-8 rounded-2xl shadow-2xl w-[350px] text-center relative transform transition-transform scale-95 animate-fadeIn">
 
-                     
+
                         <button
                             className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 transition"
                             onClick={() => setShowSuccessModal(false)}
@@ -277,15 +303,15 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                             <AiOutlineClose size={22} />
                         </button>
 
-                     
+
                         <div className="flex justify-center items-center mb-4">
                             <FaRegCheckCircle className="text-green-500 text-6xl" />
                         </div>
 
-               
+
                         <h2 className="text-lg font-semibold text-gray-800">{showSuccessModalMessage}</h2>
 
-                    
+
                         <div className="mt-6">
                             <button
                                 onClick={() => setShowSuccessModal(false)}
