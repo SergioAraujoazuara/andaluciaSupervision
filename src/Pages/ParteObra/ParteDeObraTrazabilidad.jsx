@@ -599,8 +599,8 @@ const ParteObra = () => {
 
   const compressImage = async (file) => {
     const options = {
-      maxSizeMB: 0.3, 
-      maxWidthOrHeight: 1024,
+      maxSizeMB: 0.4, 
+      maxWidthOrHeight: 2048,
       useWebWorker: true,
     };
 

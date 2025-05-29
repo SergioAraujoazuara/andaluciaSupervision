@@ -4,62 +4,69 @@ import SeccionesDatosRegistros from "./SeccionesDatosRegistros";
 
 const styles = StyleSheet.create({
   fieldGroup: {
-    flexDirection: "column", // Asegura que cada sección use el ancho completo
+    flexDirection: "column",
     justifyContent: "flex-start",
     alignItems: "stretch",
-    width: "100%", // Usa todo el ancho disponible
+    width: "100%", 
     marginBottom: 2,
   },
   section: {
-    width: "100%", // Cada sección ocupa todo el ancho disponible
+    width: "100%", 
   },
   fieldRow: {
-    flexDirection: "row",  // Usamos filas para las columnas
-    flexWrap: "wrap",      // Asegura que los elementos se acomoden si se acaba el espacio
-    marginBottom: 2,       // Espacio entre las filas
+    flexDirection: "row",  
+    flexWrap: "wrap",     
+    marginBottom: 2,       
   },
   field: {
-    width: "33.33%", // Ancho de cada columna (para 3 columnas)
+    width: "33.33%", 
   },
   singleField: {
-    width: "100%",  // Si solo hay 1 actividad, ocupará el 100% del ancho
+    width: "100%",  
   },
 });
 
 const PrevisionActividades = ({ dataRegister }) => {
-  const actividades = dataRegister.previsionesActividades
-    ? Object.entries(dataRegister.previsionesActividades).filter(([_, valor]) => valor.trim() !== "")
-    : [];
+  const actividadesRaw = dataRegister.previsionesActividades || {};
 
-  if (actividades.length === 0) return null;
+  // Filtrar solo los campos con texto no vacío
+  const actividades = Object.entries(actividadesRaw).filter(
+    ([_, valor]) => typeof valor === "string" && valor.trim() !== ""
+  );
 
-  // Si hay solo 1 actividad, usamos singleField
   const isSingleActivity = actividades.length === 1;
 
   return (
     <View style={styles.fieldGroup}>
       <View style={styles.section}>
-        {/* Mapeamos las observaciones de actividades */}
         <View style={styles.fieldRow}>
-          {actividades.map(([actividadKey, observacion], index) => {
-            // Formatear la clave como "Actividad: "
-            const formattedKey = `Actividad: `; // Resultado: "Actividad 1"
-            return (
-              <View
-                key={index}
-                style={isSingleActivity ? styles.singleField : styles.field} // Condicional para 1 actividad o más
-              >
-                <SeccionesDatosRegistros
-                  nombreCampo={formattedKey}  // Título de la actividad
-                  valorDelCampo={observacion || "No especificado"}  // Valor de la observación
-                />
-              </View>
-            );
-          })}
+          {actividades.length > 0 ? (
+            actividades.map(([actividadKey, observacion], index) => {
+              const formattedKey = `Actividad: `;
+              return (
+                <View
+                  key={index}
+                  style={isSingleActivity ? styles.singleField : styles.field}
+                >
+                  <SeccionesDatosRegistros
+                    nombreCampo={formattedKey}
+                    valorDelCampo={observacion}
+                  />
+                </View>
+              );
+            })
+          ) : (
+            <View style={styles.singleField}>
+              <SeccionesDatosRegistros
+                valorDelCampo="Sin previsión de actividades registrada."
+              />
+            </View>
+          )}
         </View>
       </View>
     </View>
   );
 };
+
 
 export default PrevisionActividades;

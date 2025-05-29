@@ -16,18 +16,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   image: {
-    width: "60%",
-    height: 80,
+    width: "85%",
+    height: 120,
     borderRadius: 8,
     border: "1px solid #cccccc",
     margin: 0,
   },
   imageLink: {
-    fontSize: 8,
+    fontSize: 7,
     color: "#1d4ed8",
     textDecoration: "underline",
     textAlign: "center",
-    marginTop: 5,
+    marginTop: 2,
   },
 });
 
