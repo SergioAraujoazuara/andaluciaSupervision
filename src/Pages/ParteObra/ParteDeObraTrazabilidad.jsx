@@ -85,6 +85,11 @@ const ParteObra = () => {
   const [visibleActivities, setVisibleActivities] = useState(1);
   const [visiblePrevisiones, setVisiblePrevisiones] = useState(1);
 
+  // Nuevos estados para el manejo de imágenes
+  const [imageUploadStatus, setImageUploadStatus] = useState({});
+  const [imagePreviews, setImagePreviews] = useState({});
+  const [imageErrors, setImageErrors] = useState({});
+
   const handleShowMoreActivities = () => {
     setVisibleActivities(prev => prev + 1);
   };
@@ -332,11 +337,84 @@ const ParteObra = () => {
     }
   };
 
-
+  // Función para inicializar el estado del formulario a valores por defecto
+  const initializeFormState = () => {
+    setFormData({
+      observaciones: "",
+      observacionesActividad: "",
+      observacionesLocalizacion: "",
+      fechaHora: "",
+      imagenes: [],
+      mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }],
+      observacionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
+      previsionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
+    });
+    setVisiblePrevisiones(1);
+    setVisibleActivities(1);
+    setSelectedActivities({});
+    setSelectedSubactivities({});
+    setActivityObservations({});
+    setImageUploadStatus({});
+    setImagePreviews({});
+    setImageErrors({});
+    fileInputsRefs.current.forEach((input) => {
+      if (input) input.value = null;
+    });
+    setErrorMessages([]); // Limpiar mensajes de error
+    setMessageModalSend(''); // Limpiar mensaje del modal de envío
+  };
 
   const handleOpenModal = (lote) => {
     fetchPpiDetails(lote.ppiId);
     setSelectedLote(lote);
+
+    // Intentar cargar borrador desde LocalStorage
+    const savedDraft = localStorage.getItem(`parteObraDraft_${lote.loteId}`);
+
+    if (savedDraft) {
+      // Si hay un borrador, preguntar al usuario
+      const loadDraft = window.confirm("Se encontró un borrador guardado para este lote. ¿Deseas cargarlo?");
+
+      if (loadDraft) {
+        try {
+          const draftState = JSON.parse(savedDraft);
+          // Cargar los estados desde el borrador
+          setFormData(draftState.formData);
+          setSelectedActivities(draftState.selectedActivities);
+          setSelectedSubactivities(draftState.selectedSubactivities);
+          setActivityObservations(draftState.activityObservations);
+          setObservacionesImagenes(draftState.observacionesImagenes);
+          setVisibleActivities(draftState.visibleActivities);
+          setVisiblePrevisiones(draftState.visiblePrevisiones);
+
+          // Cargar estados relacionados con imágenes si existen en el borrador
+          if (draftState.imagePreviews) {
+            setImagePreviews(draftState.imagePreviews);
+          }
+          if (draftState.imageUploadStatus) {
+            setImageUploadStatus(draftState.imageUploadStatus);
+          }
+          if (draftState.imageErrors) {
+            setImageErrors(draftState.imageErrors);
+          }
+
+          // No cargamos fileInputsRefs ni formData.imagenes (objetos File)
+          // ya que dependen de la sesión actual y los archivos cargados.
+
+        } catch (error) {
+          console.error("Error al cargar borrador desde LocalStorage:", error);
+          alert("Error al cargar borrador. Se iniciará un formulario nuevo.");
+          initializeFormState(); // Inicializar si falla la carga
+        }
+      } else {
+        // Si el usuario no quiere cargar, inicializar formulario
+        initializeFormState();
+      }
+    } else {
+      // Si no hay borrador, inicializar formulario
+      initializeFormState();
+    }
+
     setIsModalOpen(true);
 
     const valueLote = lote.nombre;
@@ -357,83 +435,83 @@ const ParteObra = () => {
     setModalSend(false);
     setSelectedLote(null);
     setSelectedLoteOption("");
-    setSelectedActivities({});
-    setSelectedSubactivities({});
-    setActivityObservations({});
-    setFormData({
-      observaciones: "",
-      observacionesActividad: "",
-      observacionesLocalizacion: "",
-      fechaHora: "",
-      imagenes: [],
-      mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }],
-      observacionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
-      previsionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
-    });
-    setVisiblePrevisiones(1);
-    setVisibleActivities(1);
-    setSelectedActivities({});
-    setSelectedSubactivities({});
-    setActivityObservations({});
-
-    fileInputsRefs.current.forEach((input) => {
-      if (input) input.value = null;
-    });
+    initializeFormState(); // Usar la nueva función para resetear estados
   };
-
-
-  const handleInputChange = (e) => {
-    const { name, value, type } = e.target;
-
-    setFormData((prev) => {
-    
-      if (name.startsWith("mediosDisponibles.")) {
-        const field = name.split(".")[1];
-
-        if (field === "numeroTrabajadores") {
-          const numericValue = value.replace(/\D/g, "");
-          return {
-            ...prev,
-            mediosDisponibles: {
-              ...prev.mediosDisponibles,
-              [field]: numericValue === "" ? "" : Number(numericValue),
-            },
-          };
-        }
-
-        return {
-          ...prev,
-          mediosDisponibles: {
-            ...prev.mediosDisponibles,
-            [field]: value,
-          },
-        };
-      }
-
-      return { ...prev, [name]: value };
-    });
-  };
-
-
 
 
   const handleFileChange = async (e, index) => {
     const file = e.target.files[0];
-
+    
     if (file) {
       try {
-        const compressedFile = await compressImage(file);
+        // Actualizar estado de carga
+        setImageUploadStatus(prev => ({
+          ...prev,
+          [index]: { status: 'compressing', progress: 0 }
+        }));
+        
+        // Crear preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => ({
+            ...prev,
+            [index]: reader.result
+          }));
+        };
+        reader.readAsDataURL(file);
 
+        // Comprimir imagen
+        const compressedFile = await compressImage(file);
+        
+        // Actualizar estado de compresión completada
+        setImageUploadStatus(prev => ({
+          ...prev,
+          [index]: { status: 'compressed', progress: 100 }
+        }));
+
+        // Actualizar formData
         setFormData((prev) => {
           const updatedImages = [...prev.imagenes];
           updatedImages[index] = compressedFile;
           return { ...prev, imagenes: updatedImages };
         });
+
+        // Limpiar error si existía
+        setImageErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[index];
+          return newErrors;
+        });
+
       } catch (error) {
         console.error("Error al procesar la imagen:", error);
+        setImageErrors(prev => ({
+          ...prev,
+          [index]: "Error al procesar la imagen. Intente nuevamente."
+        }));
+        setImageUploadStatus(prev => ({
+          ...prev,
+          [index]: { status: 'error', progress: 0 }
+        }));
       }
     } else {
-   
+      // Limpiar estados si se elimina la imagen
+      setImageUploadStatus(prev => {
+        const newStatus = { ...prev };
+        delete newStatus[index];
+        return newStatus;
+      });
+      setImagePreviews(prev => {
+        const newPreviews = { ...prev };
+        delete newPreviews[index];
+        return newPreviews;
+      });
+      setImageErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[index];
+        return newErrors;
+      });
+      
       setFormData((prev) => {
         const updatedImages = [...prev.imagenes];
         updatedImages.splice(index, 1);
@@ -745,6 +823,33 @@ const ParteObra = () => {
     setActivityVisibility((prev) => !prev);
   };
 
+  // Función para guardar borrador en LocalStorage
+  const saveDraft = () => {
+    if (!selectedLote) {
+      console.warn("No hay lote seleccionado para guardar borrador.");
+      return;
+    }
+
+    const formState = {
+      formData,
+      selectedActivities,
+      selectedSubactivities,
+      activityObservations,
+      observacionesImagenes,
+      visibleActivities,
+      visiblePrevisiones,
+      // Otros estados que necesites guardar
+    };
+
+    try {
+      localStorage.setItem(`parteObraDraft_${selectedLote.loteId}`, JSON.stringify(formState));
+      alert("Borrador guardado exitosamente."); // Feedback simple al usuario
+    } catch (error) {
+      console.error("Error al guardar borrador en LocalStorage:", error);
+      alert("Error al guardar borrador.");
+    }
+  };
+
   return (
     <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
       <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
@@ -948,7 +1053,7 @@ const ParteObra = () => {
                       type="datetime-local"
                       name="fechaHora"
                       value={formData.fechaHora}
-                      onChange={handleInputChange}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))}
                       className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
                     />
                   </div>
@@ -1244,6 +1349,10 @@ const ParteObra = () => {
                 <form onSubmit={handleSubmit} className="space-y-6 mt-4">
                   <div className="mt-6">
                     <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">6. Reportaje fotográfico de la visita.</h3>
+                    {/* Nota sobre imágenes en borrador (más concisa)*/}
+                    <p className="text-sm text-amber-700 bg-amber-100 p-3 rounded-md mb-4 border border-amber-300">
+                      Las imágenes *NO* se guardan en borrador. Si cargas un borrador, deberás volver a seleccionar las fotos antes de enviar.
+                    </p>
                     {/* Imágenes */}
                     <div className="mb-4 ps-4">
                       <label className="block text-sm font-medium text-gray-700">
@@ -1264,23 +1373,42 @@ const ParteObra = () => {
                             />
                             <label
                               htmlFor={`file-upload-${index}`}
-                              className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg shadow-sm py-2 px-4 text-center bg-indigo-100 text-indigo-600 font-semibold cursor-pointer hover:bg-indigo-200"
+                              className={`block w-full text-sm text-gray-500 border border-gray-300 rounded-lg shadow-sm py-2 px-4 text-center cursor-pointer hover:bg-gray-50 ${
+                                imageUploadStatus[index]?.status === 'compressing' ? 'bg-blue-100' :
+                                imageUploadStatus[index]?.status === 'compressed' ? 'bg-green-100' :
+                                imageUploadStatus[index]?.status === 'error' ? 'bg-red-100' : 'bg-indigo-100'
+                              }`}
                             >
-                              Seleccionar archivo
+                              {imageUploadStatus[index]?.status === 'compressing' ? '⏳ Comprimiendo...' :
+                               imageUploadStatus[index]?.status === 'compressed' ? '✅ Imagen lista' :
+                               imageUploadStatus[index]?.status === 'error' ? '❌ Error' :
+                               'Seleccionar archivo'}
                             </label>
-                            <p className="mt-2 text-sm text-gray-500 text-center">
-                              {fileInputsRefs.current[index]?.files[0] ? (
-                                <>
-                                  <span className="hidden md:inline">{fileInputsRefs.current[index]?.files[0]?.name}</span>
-                                  <span className="inline md:hidden">✅ Imagen cargada</span>
-                                </>
-                              ) : (
-                                "Ninguna imagen"
-                              )}
-                            </p>
 
+                            {/* Preview de la imagen */}
+                            {imagePreviews[index] && (
+                              <div className="mt-2 relative">
+                                <img
+                                  src={imagePreviews[index]}
+                                  alt={`Preview ${index}`}
+                                  className="w-full h-48 object-contain rounded-lg border border-gray-200"
+                                />
+                                {imageUploadStatus[index]?.status === 'compressing' && (
+                                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                                    <div className="text-white text-sm">Comprimiendo...</div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
 
-                            {/* 🔹 Campo para observaciones */}
+                            {/* Mensaje de error */}
+                            {imageErrors[index] && (
+                              <div className="mt-2 text-red-500 text-sm">
+                                {imageErrors[index]}
+                              </div>
+                            )}
+
+                            {/* Campo para observaciones */}
                             <textarea
                               maxLength={50}
                               placeholder="Observaciones de la imagen..."
@@ -1307,6 +1435,14 @@ const ParteObra = () => {
                       onClick={handleSubmit}
                     >
                       Enviar
+                    </button>
+                    {/* Botón Guardar Borrador */}
+                    <button
+                      type="button"
+                      onClick={saveDraft}
+                      className="w-1/3 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition mt-4"
+                    >
+                      Guardar Borrador
                     </button>
                     <button
                       type="button"
@@ -1342,7 +1478,7 @@ const ParteObra = () => {
                       type="datetime-local"
                       name="fechaHora"
                       value={formData.fechaHora}
-                      onChange={handleInputChange}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))}
                       className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
                     />
                   </div>
@@ -1446,7 +1582,7 @@ const ParteObra = () => {
                             <VoiceRecorderInput
                               name={`observacionesActividad-${actividadIndex}`}
                               value={activityObservations[actividadIndex] || ""} 
-                              onChange={(name, value) => handleObservationChange(actividadIndex, value)} 
+                              onChange={(name, value) => handleObservationChange(actividadIndex, value)}
                               placeholder="Escribe observaciones aquí..."
                               maxLength={150}
                               disabled={selectedActivities[actividadIndex]?.noAplica} // 
@@ -1485,6 +1621,14 @@ const ParteObra = () => {
                       onClick={handleSubmit}
                     >
                       Enviar
+                    </button>
+                    {/* Botón Guardar Borrador */}
+                    <button
+                      type="button"
+                      onClick={saveDraft}
+                      className="w-1/3 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition mt-4"
+                    >
+                      Guardar Borrador
                     </button>
                     <button
                       type="button"
