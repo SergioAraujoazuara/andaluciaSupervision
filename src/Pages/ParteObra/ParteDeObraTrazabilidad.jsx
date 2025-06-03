@@ -90,6 +90,14 @@ const ParteObra = () => {
   const [imagePreviews, setImagePreviews] = useState({});
   const [imageErrors, setImageErrors] = useState({});
 
+  // Estados para el modal del borrador
+  const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
+  const [draftModalContent, setDraftModalContent] = useState('');
+  const [draftModalType, setDraftModalType] = useState('info'); // 'info' o 'confirm'
+  const [draftModalCallback, setDraftModalCallback] = useState(null); // Para la acción de confirmar
+
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+
   const handleShowMoreActivities = () => {
     setVisibleActivities(prev => prev + 1);
   };
@@ -131,17 +139,17 @@ const ParteObra = () => {
     nombre: [],
   });
 
-  
+
   const [modalSend, setModalSend] = useState(false)
   const [messageModalSend, setMessageModalSend] = useState('')
-  const [ppiDetails, setPpiDetails] = useState(null); 
+  const [ppiDetails, setPpiDetails] = useState(null);
   const [selectedSubactivities, setSelectedSubactivities] = useState({});
   const [stats, setStats] = useState({ totalSi: 0, totalNo: 0, totalActividades: 0, porcentajeApto: 0 });
   const [activityObservations, setActivityObservations] = useState({});
   const [errorMessages, setErrorMessages] = useState([]);
   const [observacionesImagenes, setObservacionesImagenes] = useState({});
-  const [firma, setFirma] = useState(null); 
-  const [formType, setFormType] = useState('visita'); 
+  const [firma, setFirma] = useState(null);
+  const [formType, setFormType] = useState('visita');
   const [selectedActivities, setSelectedActivities] = useState({});
 
   const handleVisitaClick = () => {
@@ -159,7 +167,7 @@ const ParteObra = () => {
   const handleObservationChange = (actividadIndex, value) => {
     setActivityObservations((prev) => ({
       ...prev,
-      [actividadIndex]: value, 
+      [actividadIndex]: value,
     }));
   };
 
@@ -290,7 +298,7 @@ const ParteObra = () => {
 
       // Actualizar el estado con los lotes obtenidos
       setLotes(lotesData);
-     
+
 
     } catch (error) {
       console.error("Error al cargar los lotes:", error);
@@ -302,14 +310,14 @@ const ParteObra = () => {
 
   useEffect(() => {
     fetchLotes();
-  }, []); 
+  }, []);
 
 
   useEffect(() => {
     if (modalSend) {
       const timer = setTimeout(() => {
         setModalSend(false);
-      }, 2000); 
+      }, 2000);
 
       return () => clearTimeout(timer);
     }
@@ -322,7 +330,7 @@ const ParteObra = () => {
         return;
       }
 
-    
+
       const ppiDocRef = doc(db, "ppis", ppiId);
       const ppiDocSnap = await getDoc(ppiDocRef);
 
@@ -364,6 +372,21 @@ const ParteObra = () => {
     setMessageModalSend(''); // Limpiar mensaje del modal de envío
   };
 
+  // Función auxiliar para finalizar la apertura del modal principal
+  const finalizeOpenModal = (lote) => {
+    setIsModalOpen(true);
+
+    const valueLote = lote.nombre;
+    const separators = /[,|\-\/]+/; // Regex corregida para incluir espacios
+
+    if (separators.test(valueLote)) {
+      const optionsValueLote = valueLote.split(separators).map(option => option.trim()).filter(option => option !== ""); // Filtrar cadenas vacías
+      setLoteOptions(optionsValueLote);
+    } else {
+      setLoteOptions([valueLote]);
+    }
+  };
+
   const handleOpenModal = (lote) => {
     fetchPpiDetails(lote.ppiId);
     setSelectedLote(lote);
@@ -372,60 +395,59 @@ const ParteObra = () => {
     const savedDraft = localStorage.getItem(`parteObraDraft_${lote.loteId}`);
 
     if (savedDraft) {
-      // Si hay un borrador, preguntar al usuario
-      const loadDraft = window.confirm("Se encontró un borrador guardado para este lote. ¿Deseas cargarlo?");
+      // Si hay un borrador, preguntar al usuario con el modal personalizado
+      setDraftModalContent("Se encontró un borrador guardado para este lote. ¿Deseas cargarlo?");
+      setIsDraftModalOpen(true);
+      setDraftModalType('confirm');
+      // Configurar el callback para manejar la respuesta del usuario
+      setDraftModalCallback(() => (loadDraft) => {
+        if (loadDraft) {
+          try {
+            const draftState = JSON.parse(savedDraft);
+            // Cargar los estados desde el borrador
+            setFormData(draftState.formData);
+            setSelectedActivities(draftState.selectedActivities);
+            setSelectedSubactivities(draftState.selectedSubactivities);
+            setActivityObservations(draftState.activityObservations);
+            setObservacionesImagenes(draftState.observacionesImagenes);
+            setVisibleActivities(draftState.visibleActivities);
+            setVisiblePrevisiones(draftState.visiblePrevisiones);
 
-      if (loadDraft) {
-        try {
-          const draftState = JSON.parse(savedDraft);
-          // Cargar los estados desde el borrador
-          setFormData(draftState.formData);
-          setSelectedActivities(draftState.selectedActivities);
-          setSelectedSubactivities(draftState.selectedSubactivities);
-          setActivityObservations(draftState.activityObservations);
-          setObservacionesImagenes(draftState.observacionesImagenes);
-          setVisibleActivities(draftState.visibleActivities);
-          setVisiblePrevisiones(draftState.visiblePrevisiones);
+            // Cargar estados relacionados con imágenes si existen en el borrador
+            if (draftState.imagePreviews) {
+              setImagePreviews(draftState.imagePreviews);
+            }
+            if (draftState.imageUploadStatus) {
+              setImageUploadStatus(draftState.imageUploadStatus);
+            }
+            if (draftState.imageErrors) {
+              setImageErrors(draftState.imageErrors);
+            }
 
-          // Cargar estados relacionados con imágenes si existen en el borrador
-          if (draftState.imagePreviews) {
-            setImagePreviews(draftState.imagePreviews);
+            // No cargamos fileInputsRefs ni formData.imagenes (objetos File)
+            // ya que dependen de la sesión actual y los archivos cargados.
+
+            // Finalizar la apertura del modal principal después de cargar el borrador
+            finalizeOpenModal(lote);
+
+          } catch (error) {
+            console.error("Error al cargar borrador desde LocalStorage:", error);
+            alert("Error al cargar borrador. Se iniciará un formulario nuevo.");
+            initializeFormState(); // Inicializar si falla la carga
+            // Finalizar la apertura del modal principal incluso si falla la carga del borrador
+            finalizeOpenModal(lote);
           }
-          if (draftState.imageUploadStatus) {
-            setImageUploadStatus(draftState.imageUploadStatus);
-          }
-          if (draftState.imageErrors) {
-            setImageErrors(draftState.imageErrors);
-          }
-
-          // No cargamos fileInputsRefs ni formData.imagenes (objetos File)
-          // ya que dependen de la sesión actual y los archivos cargados.
-
-        } catch (error) {
-          console.error("Error al cargar borrador desde LocalStorage:", error);
-          alert("Error al cargar borrador. Se iniciará un formulario nuevo.");
-          initializeFormState(); // Inicializar si falla la carga
+        } else {
+          // Si el usuario no quiere cargar, inicializar formulario
+          initializeFormState();
+          // Finalizar la apertura del modal principal después de inicializar el formulario
+          finalizeOpenModal(lote);
         }
-      } else {
-        // Si el usuario no quiere cargar, inicializar formulario
-        initializeFormState();
-      }
+      });
     } else {
-      // Si no hay borrador, inicializar formulario
+      // Si no hay borrador, inicializar formulario y abrir el modal principal directamente
       initializeFormState();
-    }
-
-    setIsModalOpen(true);
-
-    const valueLote = lote.nombre;
-    const separators = /[,|\-\/]+/;
-
-    if (separators.test(valueLote)) {  
-      const optionsValueLote = valueLote.split(separators).map(option => option.trim());
-
-      setLoteOptions(optionsValueLote);
-    } else {
-      setLoteOptions([valueLote]); 
+      finalizeOpenModal(lote);
     }
   };
 
@@ -438,18 +460,62 @@ const ParteObra = () => {
     initializeFormState(); // Usar la nueva función para resetear estados
   };
 
+  // Función unificada de guardado
+  const saveState = (isTemporary = false) => {
+    const state = {
+      formData,
+      selectedActivities,
+      selectedSubactivities,
+      activityObservations,
+      observacionesImagenes,
+      visibleActivities,
+      visiblePrevisiones,
+      timestamp: Date.now()
+    };
+    
+    if (isTemporary) {
+      localStorage.setItem('tempState', JSON.stringify(state));
+    } else {
+      localStorage.setItem(`parteObraDraft_${selectedLote.loteId}`, JSON.stringify(state));
+    }
+  };
+
+  // Función para restaurar estado
+  const restoreState = (isTemporary = false) => {
+    const key = isTemporary ? 'tempState' : `parteObraDraft_${selectedLote.loteId}`;
+    const savedState = localStorage.getItem(key);
+    
+    if (savedState) {
+      const state = JSON.parse(savedState);
+      setFormData(state.formData);
+      setSelectedActivities(state.selectedActivities);
+      setSelectedSubactivities(state.selectedSubactivities);
+      setActivityObservations(state.activityObservations);
+      setObservacionesImagenes(state.observacionesImagenes);
+      setVisibleActivities(state.visibleActivities);
+      setVisiblePrevisiones(state.visiblePrevisiones);
+      return true;
+    }
+    return false;
+  };
 
   const handleFileChange = async (e, index) => {
     const file = e.target.files[0];
-    
+
     if (file) {
       try {
+        // Guardar estado temporal antes de procesar
+        saveState(true);
+        
+        // Deshabilitar interacciones durante el procesamiento
+        setIsProcessingImage(true);
+        
         // Actualizar estado de carga
         setImageUploadStatus(prev => ({
           ...prev,
           [index]: { status: 'compressing', progress: 0 }
         }));
-        
+
         // Crear preview
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -462,7 +528,7 @@ const ParteObra = () => {
 
         // Comprimir imagen
         const compressedFile = await compressImage(file);
-        
+
         // Actualizar estado de compresión completada
         setImageUploadStatus(prev => ({
           ...prev,
@@ -483,8 +549,13 @@ const ParteObra = () => {
           return newErrors;
         });
 
+        // Si todo sale bien, eliminar el estado temporal
+        localStorage.removeItem('tempState');
+
       } catch (error) {
         console.error("Error al procesar la imagen:", error);
+        // Restaurar el estado si algo falla
+        restoreState(true);
         setImageErrors(prev => ({
           ...prev,
           [index]: "Error al procesar la imagen. Intente nuevamente."
@@ -493,30 +564,9 @@ const ParteObra = () => {
           ...prev,
           [index]: { status: 'error', progress: 0 }
         }));
+      } finally {
+        setIsProcessingImage(false);
       }
-    } else {
-      // Limpiar estados si se elimina la imagen
-      setImageUploadStatus(prev => {
-        const newStatus = { ...prev };
-        delete newStatus[index];
-        return newStatus;
-      });
-      setImagePreviews(prev => {
-        const newPreviews = { ...prev };
-        delete newPreviews[index];
-        return newPreviews;
-      });
-      setImageErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[index];
-        return newErrors;
-      });
-      
-      setFormData((prev) => {
-        const updatedImages = [...prev.imagenes];
-        updatedImages.splice(index, 1);
-        return { ...prev, imagenes: updatedImages };
-      });
     }
   };
 
@@ -593,17 +643,17 @@ const ParteObra = () => {
     try {
       const imageUrls = await Promise.all(
         formData.imagenes
-          .filter((image) => image) 
+          .filter((image) => image)
           .map(async (image, index) => await uploadImageWithMetadata(image, index, observacionesImagenes[index] || ""))
       );
 
-  
+
       const actividadesConObservaciones = Object.keys(selectedActivities).map((index) => ({
-        ...selectedActivities[index], 
-        observacion: activityObservations[index] || "", 
+        ...selectedActivities[index],
+        observacion: activityObservations[index] || "",
       }));
 
-    
+
       const registro = {
         ...selectedLote,
         ...formData,
@@ -629,6 +679,9 @@ const ParteObra = () => {
         await addDoc(collection(db, "registrosActasDeReunion"), registro);
       }
 
+      // Eliminar el borrador del localStorage después de enviar exitosamente
+      localStorage.removeItem(`parteObraDraft_${selectedLote.loteId}`);
+
       setFormData({
         observaciones: "",
         observacionesActividad: "",
@@ -652,7 +705,7 @@ const ParteObra = () => {
       setIsModalOpen(false);
       setModalSend(true);
       setMessageModalSend("Registro enviado");
-      setErrorMessages([]); 
+      setErrorMessages([]);
 
     } catch (error) {
       console.error("Error al guardar el registro:", error);
@@ -677,7 +730,7 @@ const ParteObra = () => {
 
   const compressImage = async (file) => {
     const options = {
-      maxSizeMB: 0.4, 
+      maxSizeMB: 0.4,
       maxWidthOrHeight: 2048,
       useWebWorker: true,
     };
@@ -706,7 +759,7 @@ const ParteObra = () => {
   );
 
   const handleGoBack = () => {
-    navigate('/'); 
+    navigate('/');
   };
 
   const labelMapping = {
@@ -790,7 +843,7 @@ const ParteObra = () => {
           }));
           setActivityObservations((prev) => ({
             ...prev,
-            [actividadIndex]: "", 
+            [actividadIndex]: "",
           }));
         }
       }
@@ -814,7 +867,7 @@ const ParteObra = () => {
       ...prev,
       observacionesActividades: {
         ...prev.observacionesActividades,
-        [actividad]: value, 
+        [actividad]: value,
       }
     }));
   };
@@ -823,39 +876,32 @@ const ParteObra = () => {
     setActivityVisibility((prev) => !prev);
   };
 
-  // Función para guardar borrador en LocalStorage
+  // Modificar la función saveDraft existente para usar el nuevo sistema
   const saveDraft = () => {
     if (!selectedLote) {
       console.warn("No hay lote seleccionado para guardar borrador.");
       return;
     }
 
-    const formState = {
-      formData,
-      selectedActivities,
-      selectedSubactivities,
-      activityObservations,
-      observacionesImagenes,
-      visibleActivities,
-      visiblePrevisiones,
-      // Otros estados que necesites guardar
-    };
-
     try {
-      localStorage.setItem(`parteObraDraft_${selectedLote.loteId}`, JSON.stringify(formState));
-      alert("Borrador guardado exitosamente."); // Feedback simple al usuario
+      saveState(false); // Guardar como borrador
+      setDraftModalContent("Borrador guardado exitosamente.");
+      setDraftModalType('info');
+      setIsDraftModalOpen(true);
     } catch (error) {
-      console.error("Error al guardar borrador en LocalStorage:", error);
-      alert("Error al guardar borrador.");
+      console.error("Error al guardar borrador:", error);
+      setDraftModalContent("Error al guardar borrador.");
+      setDraftModalType('info');
+      setIsDraftModalOpen(true);
     }
   };
 
   return (
     <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
       <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
-    
+
         <div className="flex gap-2 items-center">
-        
+
           <GoHomeFill className="hidden md:block" style={{ width: 15, height: 15, fill: "#d97706" }} />
           <Link to="#" className="hidden md:block font-medium text-gray-600">
             Home
@@ -864,13 +910,13 @@ const ParteObra = () => {
           <h1 className="hidden md:block font-medium">Ver registros</h1>
           <FaArrowRight className="hidden md:block" style={{ width: 12, height: 12, fill: "#d97706" }} />
 
-         
+
           <h1 className="font-medium text-amber-600 px-2 py-1 rounded-lg">
             {selectedProjectName}
           </h1>
         </div>
 
- 
+
         <div className="flex items-center">
           <button className="text-amber-600 text-3xl" onClick={handleGoBack}>
             <IoArrowBackCircle />
@@ -924,7 +970,7 @@ const ParteObra = () => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {[...filteredLotes]
-                .sort((a, b) => a.sectorNombre.localeCompare(b.sectorNombre)) 
+                .sort((a, b) => a.sectorNombre.localeCompare(b.sectorNombre))
                 .map((lote) => (
                   <tr
                     key={lote.loteId}
@@ -990,6 +1036,16 @@ const ParteObra = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-sm">
           <div className="bg-white p-8 rounded-2xl shadow-xl w-11/12 max-w-lg md:max-w-xl lg:max-w-2xl max-h-[90vh] relative overflow-y-auto">
+            {/* Indicador de procesamiento de imagen */}
+            {isProcessingImage && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+                <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center gap-4">
+                  <div className="w-12 h-12 border-4 border-t-4 border-amber-600 rounded-full animate-spin"></div>
+                  <p className="text-gray-700 font-medium">Procesando imagen...</p>
+                </div>
+              </div>
+            )}
+            
             {/* Botón de cerrar */}
             <button
               onClick={handleCloseModal}
@@ -1000,14 +1056,41 @@ const ParteObra = () => {
             </button>
 
             {/* Título del modal */}
-            <h2 className="text-lg font-semibold text-start flex gap-2 items-center">
-              <BsClipboardData className="text-2xl" />
-              Registro de actividades
-            </h2>
-            <p className="text-md ps-8">Formulario seguridad y salud.</p>
+            <div className="bg-gray-200 rounded-xl p-6 border border-gray-200 text-gray-500">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg">
+                  <BsClipboardData className="text-2xl text-gray-500" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">
+                    Registro de actividades
+                  </h2>
+                  <p className="text-gray-500 text-sm">Formulario seguridad y salud</p>
+                </div>
+              </div>
+              <div className="bg-white border border-gray-200 p-4 rounded-lg shadow-sm">
+                <div className="flex items-start gap-3">
+                  <span className="text-amber-500 text-xl">💡</span>
+                  <p className="text-sm text-gray-600">
+                    Guarda tu progreso usando el botón "Guardar Borrador" para no perder información. (Las imagenes no pueden guardase en borrador)
+                  </p>
+                </div>
+              </div>
+            </div>
 
-            <div className="w-full border-b-2 mt-2 mb-6"></div>
+            <div className="w-full border-b-2 mt-6 mb-6"></div>
 
+            {/* Botón flotante de guardar borrador dentro del modal */}
+            <div className="fixed bottom-6 right-6 z-50">
+              <button
+                type="button"
+                onClick={saveDraft}
+                className="bg-teal-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2"
+              >
+
+                Guardar Borrador
+              </button>
+            </div>
 
             {/* Botones de tipos de formulario */}
             <div className="flex gap-4 mb-4">
@@ -1103,7 +1186,7 @@ const ParteObra = () => {
 
                   </div>
 
-              
+
                 </div>
 
                 {/* Medios disponibles, empresa y trabajadores */}
@@ -1279,12 +1362,12 @@ const ParteObra = () => {
                             {/* Observaciones de la actividad */}
                             <VoiceRecorderInput
                               name={`observacionesActividad-${actividadIndex}`}
-                              value={activityObservations[actividadIndex] || ""} 
+                              value={activityObservations[actividadIndex] || ""}
                               onChange={(name, value) => handleObservationChange(actividadIndex, value)}
                               placeholder="Escribe observaciones aquí..."
                               maxLength={150}
-                              disabled={selectedActivities[actividadIndex]?.noAplica} 
-                              className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} 
+                              disabled={selectedActivities[actividadIndex]?.noAplica}
+                              className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""}
                             />
 
 
@@ -1305,7 +1388,7 @@ const ParteObra = () => {
                 {/* 5. Previsión de actividades de próximo inicio. Medias preventivas y pasos.*/}
 
                 <div>
-                  
+
 
                   <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">
                     5.  Previsión de actividades de próximo inicio y medidas preventivas.
@@ -1368,21 +1451,20 @@ const ParteObra = () => {
                               capture="camera"
                               ref={(el) => (fileInputsRefs.current[index] = el)}
                               onChange={(e) => handleFileChange(e, index)}
-                              className="hidden" 
+                              className="hidden"
                               id={`file-upload-${index}`}
                             />
                             <label
                               htmlFor={`file-upload-${index}`}
-                              className={`block w-full text-sm text-gray-500 border border-gray-300 rounded-lg shadow-sm py-2 px-4 text-center cursor-pointer hover:bg-gray-50 ${
-                                imageUploadStatus[index]?.status === 'compressing' ? 'bg-blue-100' :
-                                imageUploadStatus[index]?.status === 'compressed' ? 'bg-green-100' :
-                                imageUploadStatus[index]?.status === 'error' ? 'bg-red-100' : 'bg-indigo-100'
-                              }`}
+                              className={`block w-full text-sm text-gray-500 border border-gray-300 rounded-lg shadow-sm py-2 px-4 text-center cursor-pointer hover:bg-gray-50 ${imageUploadStatus[index]?.status === 'compressing' ? 'bg-blue-100' :
+                                  imageUploadStatus[index]?.status === 'compressed' ? 'bg-green-100' :
+                                    imageUploadStatus[index]?.status === 'error' ? 'bg-red-100' : 'bg-indigo-100'
+                                }`}
                             >
                               {imageUploadStatus[index]?.status === 'compressing' ? '⏳ Comprimiendo...' :
-                               imageUploadStatus[index]?.status === 'compressed' ? '✅ Imagen lista' :
-                               imageUploadStatus[index]?.status === 'error' ? '❌ Error' :
-                               'Seleccionar archivo'}
+                                imageUploadStatus[index]?.status === 'compressed' ? '✅ Imagen lista' :
+                                  imageUploadStatus[index]?.status === 'error' ? '❌ Error' :
+                                    'Seleccionar archivo'}
                             </label>
 
                             {/* Preview de la imagen */}
@@ -1426,7 +1508,7 @@ const ParteObra = () => {
 
                   </div>
 
-                  <div className="w-full p-2 border-b-4"></div>
+                  <div className="w-full pb-8 border-b-4"></div>
                   {/* Botones */}
                   <div className="flex justify-between items-center gap-4 mt-12">
                     <button
@@ -1435,14 +1517,6 @@ const ParteObra = () => {
                       onClick={handleSubmit}
                     >
                       Enviar
-                    </button>
-                    {/* Botón Guardar Borrador */}
-                    <button
-                      type="button"
-                      onClick={saveDraft}
-                      className="w-1/3 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition mt-4"
-                    >
-                      Guardar Borrador
                     </button>
                     <button
                       type="button"
@@ -1493,7 +1567,7 @@ const ParteObra = () => {
                     {/* Contenedor con scroll vertical */}
                     <div className="mt-4 ps-4">
                       {ppiDetails.actividades.map((actividad, actividadIndex) => {
-                        
+
                         const subactividadesValidas = Array.isArray(actividad.subactividades)
                           ? actividad.subactividades.filter((sub) => sub.nombre.trim() !== "")
                           : [];
@@ -1581,12 +1655,12 @@ const ParteObra = () => {
                             {/* Observaciones de la actividad */}
                             <VoiceRecorderInput
                               name={`observacionesActividad-${actividadIndex}`}
-                              value={activityObservations[actividadIndex] || ""} 
+                              value={activityObservations[actividadIndex] || ""}
                               onChange={(name, value) => handleObservationChange(actividadIndex, value)}
                               placeholder="Escribe observaciones aquí..."
                               maxLength={150}
                               disabled={selectedActivities[actividadIndex]?.noAplica} // 
-                              className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""} 
+                              className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""}
                             />
 
 
@@ -1622,14 +1696,6 @@ const ParteObra = () => {
                     >
                       Enviar
                     </button>
-                    {/* Botón Guardar Borrador */}
-                    <button
-                      type="button"
-                      onClick={saveDraft}
-                      className="w-1/3 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition mt-4"
-                    >
-                      Guardar Borrador
-                    </button>
                     <button
                       type="button"
                       onClick={handleCloseModal}
@@ -1647,42 +1713,15 @@ const ParteObra = () => {
 
           </div>
         </div>
-      )
-      }
+      )}
 
-      {
-        modalSend && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-4 w-80">
 
-              {/* ❌ Botón de cerrar */}
-              <button
-                onClick={handleCloseModal}
-                className="absolute top-4 right-4 text-gray-500 text-2xl hover:text-gray-800 transition"
-                aria-label="Cerrar"
-              >
-                <IoClose />
-              </button>
-
-              {/* ✅ Ícono dinámico según el mensaje */}
-              {messageModalSend === 'Registro enviado' ? (
-                <FaCheck className="text-teal-500 text-4xl" />
-              ) : (
-                <MdOutlineError className="text-red-500 text-4xl" />
-              )}
-
-              {/* 📌 Mensaje dinámico */}
-              <p className="text-lg font-medium text-gray-700">{messageModalSend}</p>
-            </div>
-          </div>
-        )
-      }
 
 
       {
         modalSend && (
           <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
-            <div className={`bg-white p-8 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-4 w-96 
+            <div className={`bg-white p-8 rounded-2xl shadow-xl relative flex flex-col justify-center items-center gap-4 w-80 
       ${errorMessages.length > 0 ? 'border-red-500' : 'border-teal-500'}`}>
 
               {/* ❌ Botón de cerrar */}
@@ -1716,6 +1755,59 @@ const ParteObra = () => {
           </div>
         )
       }
+
+
+      {/* Modal del borrador (personalizado, sin iconos) */}
+      {isDraftModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-[60]"> {/* z-[60] asegura que esté por encima de todo */}
+          <div className="bg-white p-8 rounded-xl shadow-2xl relative flex flex-col items-center gap-6 w-11/12 max-w-sm text-gray-700 border border-gray-200">
+
+            {/* Contenido del modal */}
+            {/* Agregar checkmark si es modal de info (éxito) */}
+            {draftModalType === 'info' && (
+              <div className="text-teal-500 text-4xl mb-2">✅</div> // Checkmark de Unicode
+            )}
+            <p className="text-lg font-medium text-center">{draftModalContent}</p>
+
+            {/* Botones de acción */}
+            {draftModalType === 'confirm' && (
+              <div className="flex gap-4 w-full">
+                <button
+                  onClick={() => {
+                    if (draftModalCallback) draftModalCallback(true); // Ejecuta callback con true (Aceptar)
+                    setIsDraftModalOpen(false); // Cierra el modal
+                    setDraftModalCallback(null); // Limpiar callback
+                  }}
+                  className="flex-1 px-4 py-2 bg-amber-600 text-white font-semibold rounded-md shadow-md hover:bg-amber-700 transition"
+                >
+                  Aceptar
+                </button>
+                <button
+                  onClick={() => {
+                    if (draftModalCallback) draftModalCallback(false); // Ejecuta callback con false (Cancelar)
+                    setIsDraftModalOpen(false); // Cierra el modal
+                    setDraftModalCallback(null); // Limpiar callback
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-500 text-white font-semibold rounded-md shadow-md hover:bg-gray-600 transition"
+                >
+                  Nuevo
+                </button>
+              </div>
+            )}
+
+            {/* Botón de cerrar (solo para modals de tipo info) */}
+            {draftModalType === 'info' && (
+              <button
+                onClick={() => setIsDraftModalOpen(false)} // Simplemente cierra el modal
+                className="px-4 py-2 w-full bg-gray-500 text-white font-semibold rounded-md shadow-md hover:bg-gray-600 transition"
+              >
+                Cerrar
+              </button>
+            )}
+
+          </div>
+        </div>
+      )}
 
 
     </div >
