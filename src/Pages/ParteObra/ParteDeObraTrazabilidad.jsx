@@ -16,6 +16,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Firma from "../../Components/Firma/Firma";
 import VoiceRecorderInput from "./AudioTexto/VoiceRecorderInput";
 import { v4 as uuidv4 } from 'uuid';
+import PhotoUpload from "./PhotoUpload";
 
 /**
  * ParteObra Component
@@ -95,8 +96,6 @@ const ParteObra = () => {
   const [draftModalContent, setDraftModalContent] = useState('');
   const [draftModalType, setDraftModalType] = useState('info'); // 'info' o 'confirm'
   const [draftModalCallback, setDraftModalCallback] = useState(null); // Para la acción de confirmar
-
-  const [isProcessingImage, setIsProcessingImage] = useState(false);
 
   const handleShowMoreActivities = () => {
     setVisibleActivities(prev => prev + 1);
@@ -460,56 +459,12 @@ const ParteObra = () => {
     initializeFormState(); // Usar la nueva función para resetear estados
   };
 
-  // Función unificada de guardado
-  const saveState = (isTemporary = false) => {
-    const state = {
-      formData,
-      selectedActivities,
-      selectedSubactivities,
-      activityObservations,
-      observacionesImagenes,
-      visibleActivities,
-      visiblePrevisiones,
-      timestamp: Date.now()
-    };
-    
-    if (isTemporary) {
-      localStorage.setItem('tempState', JSON.stringify(state));
-    } else {
-      localStorage.setItem(`parteObraDraft_${selectedLote.loteId}`, JSON.stringify(state));
-    }
-  };
-
-  // Función para restaurar estado
-  const restoreState = (isTemporary = false) => {
-    const key = isTemporary ? 'tempState' : `parteObraDraft_${selectedLote.loteId}`;
-    const savedState = localStorage.getItem(key);
-    
-    if (savedState) {
-      const state = JSON.parse(savedState);
-      setFormData(state.formData);
-      setSelectedActivities(state.selectedActivities);
-      setSelectedSubactivities(state.selectedSubactivities);
-      setActivityObservations(state.activityObservations);
-      setObservacionesImagenes(state.observacionesImagenes);
-      setVisibleActivities(state.visibleActivities);
-      setVisiblePrevisiones(state.visiblePrevisiones);
-      return true;
-    }
-    return false;
-  };
 
   const handleFileChange = async (e, index) => {
     const file = e.target.files[0];
 
     if (file) {
       try {
-        // Guardar estado temporal antes de procesar
-        saveState(true);
-        
-        // Deshabilitar interacciones durante el procesamiento
-        setIsProcessingImage(true);
-        
         // Actualizar estado de carga
         setImageUploadStatus(prev => ({
           ...prev,
@@ -549,13 +504,8 @@ const ParteObra = () => {
           return newErrors;
         });
 
-        // Si todo sale bien, eliminar el estado temporal
-        localStorage.removeItem('tempState');
-
       } catch (error) {
         console.error("Error al procesar la imagen:", error);
-        // Restaurar el estado si algo falla
-        restoreState(true);
         setImageErrors(prev => ({
           ...prev,
           [index]: "Error al procesar la imagen. Intente nuevamente."
@@ -564,9 +514,30 @@ const ParteObra = () => {
           ...prev,
           [index]: { status: 'error', progress: 0 }
         }));
-      } finally {
-        setIsProcessingImage(false);
       }
+    } else {
+      // Limpiar estados si se elimina la imagen
+      setImageUploadStatus(prev => {
+        const newStatus = { ...prev };
+        delete newStatus[index];
+        return newStatus;
+      });
+      setImagePreviews(prev => {
+        const newPreviews = { ...prev };
+        delete newPreviews[index];
+        return newPreviews;
+      });
+      setImageErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[index];
+        return newErrors;
+      });
+
+      setFormData((prev) => {
+        const updatedImages = [...prev.imagenes];
+        updatedImages.splice(index, 1);
+        return { ...prev, imagenes: updatedImages };
+      });
     }
   };
 
@@ -876,23 +847,38 @@ const ParteObra = () => {
     setActivityVisibility((prev) => !prev);
   };
 
-  // Modificar la función saveDraft existente para usar el nuevo sistema
+  // Función para guardar borrador en LocalStorage
   const saveDraft = () => {
     if (!selectedLote) {
       console.warn("No hay lote seleccionado para guardar borrador.");
       return;
     }
 
+    const formState = {
+      formData,
+      selectedActivities,
+      selectedSubactivities,
+      activityObservations,
+      observacionesImagenes,
+      visibleActivities,
+      visiblePrevisiones,
+      // Otros estados que necesites guardar
+    };
+
     try {
-      saveState(false); // Guardar como borrador
+      localStorage.setItem(`parteObraDraft_${selectedLote.loteId}`, JSON.stringify(formState));
+      // Mostrar modal de éxito en lugar de alert
       setDraftModalContent("Borrador guardado exitosamente.");
-      setDraftModalType('info');
-      setIsDraftModalOpen(true);
+      setDraftModalType('info'); // Tipo info para solo mostrar el mensaje
+      setIsDraftModalOpen(true); // Abrir el modal
+      // alert("Borrador guardado exitosamente."); // Feedback simple al usuario
     } catch (error) {
-      console.error("Error al guardar borrador:", error);
+      console.error("Error al guardar borrador en LocalStorage:", error);
+      // Mostrar modal de error en lugar de alert
       setDraftModalContent("Error al guardar borrador.");
-      setDraftModalType('info');
-      setIsDraftModalOpen(true);
+      setDraftModalType('info'); // O podrías tener un tipo 'error' si quieres un estilo diferente
+      setIsDraftModalOpen(true); // Abrir el modal
+      // alert("Error al guardar borrador.");
     }
   };
 
@@ -1036,16 +1022,6 @@ const ParteObra = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-sm">
           <div className="bg-white p-8 rounded-2xl shadow-xl w-11/12 max-w-lg md:max-w-xl lg:max-w-2xl max-h-[90vh] relative overflow-y-auto">
-            {/* Indicador de procesamiento de imagen */}
-            {isProcessingImage && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-                <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center gap-4">
-                  <div className="w-12 h-12 border-4 border-t-4 border-amber-600 rounded-full animate-spin"></div>
-                  <p className="text-gray-700 font-medium">Procesando imagen...</p>
-                </div>
-              </div>
-            )}
-            
             {/* Botón de cerrar */}
             <button
               onClick={handleCloseModal}
@@ -1445,26 +1421,10 @@ const ParteObra = () => {
                       <div className="grid grid-cols-2 gap-4 mt-4">
                         {[0, 1, 2, 3, 4, 5].map((index) => (
                           <div key={index} className="relative">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              ref={(el) => (fileInputsRefs.current[index] = el)}
-                              onChange={(e) => handleFileChange(e, index)}
-                              className="hidden"
-                              id={`file-upload-${index}`}
+                            <PhotoUpload
+                              index={index}
+                              onFileSelected={(file, index) => handleFileChange({ target: { files: [file] } }, index)}
                             />
-                            <label
-                              htmlFor={`file-upload-${index}`}
-                              className={`block w-full text-sm text-gray-500 border border-gray-300 rounded-lg shadow-sm py-2 px-4 text-center cursor-pointer hover:bg-gray-50 ${imageUploadStatus[index]?.status === 'compressing' ? 'bg-blue-100' :
-                                  imageUploadStatus[index]?.status === 'compressed' ? 'bg-green-100' :
-                                    imageUploadStatus[index]?.status === 'error' ? 'bg-red-100' : 'bg-indigo-100'
-                                }`}
-                            >
-                              {imageUploadStatus[index]?.status === 'compressing' ? '⏳ Comprimiendo...' :
-                                imageUploadStatus[index]?.status === 'compressed' ? '✅ Imagen lista' :
-                                  imageUploadStatus[index]?.status === 'error' ? '❌ Error' :
-                                    'Seleccionar archivo'}
-                            </label>
 
                             {/* Preview de la imagen */}
                             {imagePreviews[index] && (
@@ -1712,10 +1672,8 @@ const ParteObra = () => {
 
           </div>
         </div>
-      )}
-
-
-
+      )
+      }
 
       {
         modalSend && (

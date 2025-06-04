@@ -1,75 +1,65 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-const PhotoUpload = () => {
-  const [imageData, setImageData] = useState(null);
+const PhotoUpload = ({ index, onFileSelected }) => {
+  
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageData(reader.result); // Guarda la imagen seleccionada
-      };
-      reader.readAsDataURL(file); // Convierte la imagen a base64
+      onFileSelected(file, index);
     }
   };
 
   const handleTakePhoto = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageData(reader.result); // Guarda la imagen tomada
-      };
-      reader.readAsDataURL(file); // Convierte la imagen a base64
+      onFileSelected(file, index);
     }
   };
 
   return (
     <div className="photo-upload-container">
-      <h2 className="text-xl font-bold mb-4">Selecciona o toma una foto</h2>
+      {/* Eliminar título local, será manejado por el padre */}
+      {/* Eliminar previsualización de imagen, será manejado por el padre */}
       
       {/* Botones para elegir */}
-      <div className="flex gap-4 mb-4">
+      <div className="flex gap-2 mb-2">
         <button 
-          onClick={() => document.getElementById('cameraInput').click()}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          type="button"
+          onClick={() => document.getElementById(`cameraInput-${index}`).click()}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm"
         >
-          Tomar Foto
+          Usar Cámara
         </button>
 
         <button 
-          onClick={() => document.getElementById('fileInput').click()}
-          className="bg-gray-500 text-white px-4 py-2 rounded"
+          type="button"
+          onClick={() => document.getElementById(`fileInput-${index}`).click()}
+          className="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm"
         >
-          Seleccionar Foto
+          Elegir Archivo
         </button>
       </div>
 
       {/* Ocultamos el input con la cámara y con la selección de archivos */}
       <input
         type="file"
-        id="fileInput"
+        id={`fileInput-${index}`}
         accept="image/*"
-        style={{ display: 'none' }}
+        className="hidden"
         onChange={handleFileSelect}
       />
       <input
         type="file"
-        id="cameraInput"
+        id={`cameraInput-${index}`}
         accept="image/*"
         capture="camera"
-        style={{ display: 'none' }}
+        className="hidden"
         onChange={handleTakePhoto}
       />
 
-      {/* Mostrar la imagen seleccionada o tomada */}
-      {imageData && (
-        <div className="mt-4">
-          <h3 className="font-semibold">Imagen seleccionada/tomada:</h3>
-          <img src={imageData} alt="Vista previa" className="w-full max-w-xs mx-auto mt-4" />
-        </div>
-      )}
+      {/* La previsualización y el manejo del estado de la imagen se harán en el componente padre */}
+
     </div>
   );
 };
