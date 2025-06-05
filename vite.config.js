@@ -11,10 +11,5 @@ export default defineConfig(({ mode }) => {
     define: {
       'process.env': env // Asegúrate de pasar las variables de entorno al build
     },
-    build: {
-      rollupOptions: {
-        external: ['jspdf', 'pdf-lib', 'emailjs-com'],
-      },
-    },
   };
 });
