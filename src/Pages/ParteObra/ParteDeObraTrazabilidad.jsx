@@ -17,6 +17,7 @@ import Firma from "../../Components/Firma/Firma";
 import VoiceRecorderInput from "./AudioTexto/VoiceRecorderInput";
 import { v4 as uuidv4 } from 'uuid';
 import PhotoUpload from "./PhotoUpload";
+import { set, get, del } from "idb-keyval";
 
 /**
  * ParteObra Component
@@ -386,65 +387,47 @@ const ParteObra = () => {
     }
   };
 
-  const handleOpenModal = (lote) => {
+  const handleOpenModal = async (lote) => {
     fetchPpiDetails(lote.ppiId);
     setSelectedLote(lote);
 
-    // Intentar cargar borrador desde LocalStorage
-    const savedDraft = localStorage.getItem(`parteObraDraft_${lote.loteId}`);
+    try {
+      const savedDraft = await get(`parteObraDraft_${lote.loteId}`);
 
-    if (savedDraft) {
-      // Si hay un borrador, preguntar al usuario con el modal personalizado
-      setDraftModalContent("Se encontró un borrador guardado para este lote. ¿Deseas cargarlo?");
-      setIsDraftModalOpen(true);
-      setDraftModalType('confirm');
-      // Configurar el callback para manejar la respuesta del usuario
-      setDraftModalCallback(() => (loadDraft) => {
-        if (loadDraft) {
-          try {
-            const draftState = JSON.parse(savedDraft);
-            // Cargar los estados desde el borrador
-            setFormData(draftState.formData);
-            setSelectedActivities(draftState.selectedActivities);
-            setSelectedSubactivities(draftState.selectedSubactivities);
-            setActivityObservations(draftState.activityObservations);
-            setObservacionesImagenes(draftState.observacionesImagenes);
-            setVisibleActivities(draftState.visibleActivities);
-            setVisiblePrevisiones(draftState.visiblePrevisiones);
+      if (savedDraft) {
+        setDraftModalContent("Se encontró un borrador guardado para este lote. ¿Deseas cargarlo?");
+        setIsDraftModalOpen(true);
+        setDraftModalType('confirm');
+        setDraftModalCallback(() => async (loadDraft) => {
+          if (loadDraft) {
+            try {
+              setFormData(savedDraft.formData);
+              setSelectedActivities(savedDraft.selectedActivities);
+              setSelectedSubactivities(savedDraft.selectedSubactivities);
+              setActivityObservations(savedDraft.activityObservations);
+              setObservacionesImagenes(savedDraft.observacionesImagenes);
+              setVisibleActivities(savedDraft.visibleActivities);
+              setVisiblePrevisiones(savedDraft.visiblePrevisiones);
 
-            // Cargar estados relacionados con imágenes si existen en el borrador
-            if (draftState.imagePreviews) {
-              setImagePreviews(draftState.imagePreviews);
+              finalizeOpenModal(lote);
+            } catch (error) {
+              console.error("Error al cargar borrador desde IndexedDB:", error);
+              alert("Error al cargar borrador. Se iniciará un formulario nuevo.");
+              initializeFormState();
+              finalizeOpenModal(lote);
             }
-            if (draftState.imageUploadStatus) {
-              setImageUploadStatus(draftState.imageUploadStatus);
-            }
-            if (draftState.imageErrors) {
-              setImageErrors(draftState.imageErrors);
-            }
-
-            // No cargamos fileInputsRefs ni formData.imagenes (objetos File)
-            // ya que dependen de la sesión actual y los archivos cargados.
-
-            // Finalizar la apertura del modal principal después de cargar el borrador
-            finalizeOpenModal(lote);
-
-          } catch (error) {
-            console.error("Error al cargar borrador desde LocalStorage:", error);
-            alert("Error al cargar borrador. Se iniciará un formulario nuevo.");
-            initializeFormState(); // Inicializar si falla la carga
-            // Finalizar la apertura del modal principal incluso si falla la carga del borrador
+          } else {
+            await del(`parteObraDraft_${lote.loteId}`);
+            initializeFormState();
             finalizeOpenModal(lote);
           }
-        } else {
-          // Si el usuario no quiere cargar, inicializar formulario
-          initializeFormState();
-          // Finalizar la apertura del modal principal después de inicializar el formulario
-          finalizeOpenModal(lote);
-        }
-      });
-    } else {
-      // Si no hay borrador, inicializar formulario y abrir el modal principal directamente
+        });
+      } else {
+        initializeFormState();
+        finalizeOpenModal(lote);
+      }
+    } catch (error) {
+      console.error("Error al verificar borrador:", error);
       initializeFormState();
       finalizeOpenModal(lote);
     }
@@ -650,8 +633,8 @@ const ParteObra = () => {
         await addDoc(collection(db, "registrosActasDeReunion"), registro);
       }
 
-      // Eliminar el borrador del localStorage después de enviar exitosamente
-      localStorage.removeItem(`parteObraDraft_${selectedLote.loteId}`);
+      // Eliminar el borrador de IndexedDB después de enviar exitosamente
+      await del(`parteObraDraft_${selectedLote.loteId}`);
 
       setFormData({
         observaciones: "",
@@ -847,8 +830,8 @@ const ParteObra = () => {
     setActivityVisibility((prev) => !prev);
   };
 
-  // Función para guardar borrador en LocalStorage
-  const saveDraft = () => {
+  // Función para guardar borrador en IndexedDB
+  const saveDraft = async () => {
     if (!selectedLote) {
       console.warn("No hay lote seleccionado para guardar borrador.");
       return;
@@ -862,23 +845,18 @@ const ParteObra = () => {
       observacionesImagenes,
       visibleActivities,
       visiblePrevisiones,
-      // Otros estados que necesites guardar
     };
 
     try {
-      localStorage.setItem(`parteObraDraft_${selectedLote.loteId}`, JSON.stringify(formState));
-      // Mostrar modal de éxito en lugar de alert
+      await set(`parteObraDraft_${selectedLote.loteId}`, formState);
       setDraftModalContent("Borrador guardado exitosamente.");
-      setDraftModalType('info'); // Tipo info para solo mostrar el mensaje
-      setIsDraftModalOpen(true); // Abrir el modal
-      // alert("Borrador guardado exitosamente."); // Feedback simple al usuario
+      setDraftModalType('info');
+      setIsDraftModalOpen(true);
     } catch (error) {
-      console.error("Error al guardar borrador en LocalStorage:", error);
-      // Mostrar modal de error en lugar de alert
+      console.error("Error al guardar borrador en IndexedDB:", error);
       setDraftModalContent("Error al guardar borrador.");
-      setDraftModalType('info'); // O podrías tener un tipo 'error' si quieres un estilo diferente
-      setIsDraftModalOpen(true); // Abrir el modal
-      // alert("Error al guardar borrador.");
+      setDraftModalType('info');
+      setIsDraftModalOpen(true);
     }
   };
 

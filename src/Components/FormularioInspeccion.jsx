@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FaFilePdf } from "react-icons/fa";
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import logo from '../assets/tpf_logo_azul.png'
 import { IoIosWarning } from "react-icons/io";
 import { BsStars } from "react-icons/bs";
