@@ -1418,7 +1418,7 @@ const ParteObra = () => {
                         Registro fotográfico
                         <p className="text-amber-600 text-xs">* Mínimo 1 imagen</p>
                       </label>
-                      <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         {[0, 1, 2, 3, 4, 5].map((index) => (
                           <div key={index} className="relative">
                             <PhotoUpload
