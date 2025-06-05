@@ -41,7 +41,7 @@ import { set, get, del } from "idb-keyval";
  * - Tailwind CSS for styling
  * - UUID for unique file naming
  * - VoiceRecorderInput for dictation-based input
- *
+ * //TODO: Agregar la funcionalidad de la trazabilidad de la obra/lote
  * This form is optimized for both desktop and mobile views and aims to streamline and validate daily site inspection reporting.
  * 
  * Main Functions:
@@ -57,7 +57,7 @@ import { set, get, del } from "idb-keyval";
  * - `compressImage`: Compresses images to reduce file size before uploading.
  * - `handleActivityChange`: Marks an activity as applicable and sets the selected state for its subactivities.
  * - `handleSubactivityChange`: Toggles the selected state of a subactivity.
- * - `handleNoAplicaChange`: Marks an activity as "not applicable" and resets its state.
+ * - `handleNoAplicaChange`: Marks an activity as "not applicable" and resets its statess.
  * - `handleFilterChange`: Updates filter values for selecting specific work units.
  * - `getBackgroundColor`: Returns a color class based on the percentage of compliant activities.
  * - `handleAddEmpresa`, `handleRemoveEmpresa`, `handleMediosChange`: Manage available resources (companies, workers, machinery) in the form.
@@ -395,12 +395,21 @@ const ParteObra = () => {
       const savedDraft = await get(`parteObraDraft_${lote.loteId}`);
 
       if (savedDraft) {
+        console.log('Cargando borrador con estructura:', {
+          formData: savedDraft.formData,
+          imagenes: savedDraft.formData.imagenes,
+          imagePreviews: savedDraft.imagePreviews,
+          imageUploadStatus: savedDraft.imageUploadStatus,
+          imageErrors: savedDraft.imageErrors
+        });
+
         setDraftModalContent("Se encontró un borrador guardado para este lote. ¿Deseas cargarlo?");
         setIsDraftModalOpen(true);
         setDraftModalType('confirm');
         setDraftModalCallback(() => async (loadDraft) => {
           if (loadDraft) {
             try {
+              // Cargar estados básicos
               setFormData(savedDraft.formData);
               setSelectedActivities(savedDraft.selectedActivities);
               setSelectedSubactivities(savedDraft.selectedSubactivities);
@@ -409,9 +418,35 @@ const ParteObra = () => {
               setVisibleActivities(savedDraft.visibleActivities);
               setVisiblePrevisiones(savedDraft.visiblePrevisiones);
 
+              // Cargar estados de imágenes
+              setImagePreviews(savedDraft.imagePreviews || {});
+              setImageUploadStatus(savedDraft.imageUploadStatus || {});
+              setImageErrors(savedDraft.imageErrors || {});
+
+              // Convertir las imágenes base64 a File objects
+              const imagenesFiles = await Promise.all(
+                savedDraft.formData.imagenes.map(async (imgData, index) => {
+                  if (imgData && imgData.base64) {
+                    const response = await fetch(imgData.base64);
+                    const blob = await response.blob();
+                    return new File([blob], imgData.metadata.name, {
+                      type: imgData.metadata.type,
+                      lastModified: imgData.metadata.lastModified
+                    });
+                  }
+                  return null;
+                })
+              );
+
+              // Actualizar formData con los File objects
+              setFormData(prev => ({
+                ...prev,
+                imagenes: imagenesFiles
+              }));
+
               finalizeOpenModal(lote);
             } catch (error) {
-              console.error("Error al cargar borrador desde IndexedDB:", error);
+              console.error("Error al cargar borrador:", error);
               alert("Error al cargar borrador. Se iniciará un formulario nuevo.");
               initializeFormState();
               finalizeOpenModal(lote);
@@ -837,15 +872,47 @@ const ParteObra = () => {
       return;
     }
 
+    // Convertir las imágenes a base64
+    const imagenesBase64 = await Promise.all(
+      formData.imagenes.map(async (file, index) => {
+        if (file) {
+          return {
+            base64: imagePreviews[index],
+            metadata: {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              lastModified: file.lastModified
+            }
+          };
+        }
+        return null;
+      })
+    );
+
     const formState = {
-      formData,
+      formData: {
+        ...formData,
+        imagenes: imagenesBase64
+      },
       selectedActivities,
       selectedSubactivities,
       activityObservations,
       observacionesImagenes,
       visibleActivities,
       visiblePrevisiones,
+      imagePreviews,
+      imageUploadStatus,
+      imageErrors
     };
+
+    console.log('Guardando borrador con estructura:', {
+      formData: formState.formData,
+      imagenes: formState.formData.imagenes,
+      imagePreviews: formState.imagePreviews,
+      imageUploadStatus: formState.imageUploadStatus,
+      imageErrors: formState.imageErrors
+    });
 
     try {
       await set(`parteObraDraft_${selectedLote.loteId}`, formState);
