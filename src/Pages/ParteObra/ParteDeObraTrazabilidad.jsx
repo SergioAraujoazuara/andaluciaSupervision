@@ -811,12 +811,13 @@ const ParteObra = () => {
 
 
 
-  const handleNoAplicaChange = (actividadIndex) => {
+  const handleNoAplicaChange = (actividadIndex, actividadNombre) => {
     setSelectedActivities((prev) => {
       const newSelected = { ...prev };
 
       if (!newSelected[actividadIndex]) {
         newSelected[actividadIndex] = {
+          nombre: actividadNombre,
           seleccionada: false,
           noAplica: true,
           subactividades: [],
@@ -1341,7 +1342,7 @@ const ParteObra = () => {
                                     <input
                                       type="checkbox"
                                       checked={selectedActivities[actividadIndex]?.noAplica || false}
-                                      onChange={() => handleNoAplicaChange(actividadIndex)}
+                                      onChange={() => handleNoAplicaChange(actividadIndex, actividad.actividad)}
                                       className="hidden"
                                     />
                                     ⚪ No Aplica
@@ -1617,7 +1618,7 @@ const ParteObra = () => {
                                     <input
                                       type="checkbox"
                                       checked={selectedActivities[actividadIndex]?.noAplica || false}
-                                      onChange={() => handleNoAplicaChange(actividadIndex)}
+                                      onChange={() => handleNoAplicaChange(actividadIndex, actividad.actividad)}
                                       className="hidden"
                                     />
                                     ⚪ No Aplica
