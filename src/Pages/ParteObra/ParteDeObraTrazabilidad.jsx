@@ -1094,7 +1094,7 @@ const ParteObra = () => {
                 <div className="flex items-start gap-3">
                   <span className="text-amber-500 text-xl">💡</span>
                   <p className="text-sm text-gray-600">
-                    Guarda tu progreso usando el botón "Guardar Borrador" para no perder información. (Las imagenes no pueden guardase en borrador)
+                    Si te encuentras en una zona de baja cobertura o necesitas llenar el formulario en un tiempo largo dispones de la opción guardar borrador para no perder los datos. Puedes guardar tanto los datos del formulario como las imágenes.
                   </p>
                 </div>
               </div>
@@ -1454,9 +1454,8 @@ const ParteObra = () => {
                 <form onSubmit={handleSubmit} className="space-y-6 mt-4">
                   <div className="mt-6">
                     <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">6. Reportaje fotográfico de la visita.</h3>
-                    {/* Nota sobre imágenes en borrador (más concisa)*/}
-                    <p className="text-sm text-amber-700 bg-amber-100 p-3 rounded-md mb-4 border border-amber-300">
-                      Las imágenes *NO* se guardan en borrador. Si cargas un borrador, deberás volver a seleccionar las fotos antes de enviar.
+                    <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md mb-4 border border-amber-200">
+                      Si tienes poca cobertura, guarda las imágenes en el borrador o adjúntalas al final de la inspección
                     </p>
                     {/* Imágenes */}
                     <div className="mb-4 ps-4">

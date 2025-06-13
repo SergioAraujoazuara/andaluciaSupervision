@@ -25,23 +25,29 @@ const PhotoUpload = ({ index, onFileSelected }) => {
       
       {/* Botones para elegir */}
       <div className="flex gap-2 mb-2">
-        <button 
-          type="button"
-          onClick={() => document.getElementById(`cameraInput-${index}`).click()}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors"
-          title="Usar Cámara"
-        >
-          <FaCamera className="text-lg" />
-        </button>
+        <div className="flex flex-col items-center">
+          <button 
+            type="button"
+            onClick={() => document.getElementById(`cameraInput-${index}`).click()}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors"
+            title="Usar Cámara"
+          >
+            <FaCamera className="text-lg" />
+          </button>
+          <span className="text-xs text-gray-600 mt-1">Tomar foto con la app</span>
+        </div>
 
-        <button 
-          type="button"
-          onClick={() => document.getElementById(`fileInput-${index}`).click()}
-          className="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 transition-colors"
-          title="Elegir Archivo"
-        >
-          <FaFolder className="text-lg" />
-        </button>
+        <div className="flex flex-col items-center">
+          <button 
+            type="button"
+            onClick={() => document.getElementById(`fileInput-${index}`).click()}
+            className="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 transition-colors"
+            title="Elegir Archivo"
+          >
+            <FaFolder className="text-lg" />
+          </button>
+          <span className="text-xs text-gray-600 mt-1">Adjuntar imagen</span>
+        </div>
       </div>
 
       {/* Ocultamos el input con la cámara y con la selección de archivos */}
