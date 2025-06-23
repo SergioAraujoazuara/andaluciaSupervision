@@ -63,6 +63,16 @@ import { set, get, del } from "idb-keyval";
  * - `handleAddEmpresa`, `handleRemoveEmpresa`, `handleMediosChange`: Manage available resources (companies, workers, machinery) in the form.
  */
 
+// Función para obtener la fecha y hora local en formato compatible con datetime-local
+function getLocalDateTimeString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
 
 const ParteObra = () => {
   const uniqueId = uuidv4();
@@ -76,12 +86,12 @@ const ParteObra = () => {
   const [formData, setFormData] = useState({
     observaciones: "",
     observacionesActividad: "",
-    observacionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
+    observacionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "", actividad6: "" },
     observacionesLocalizacion: "",
-    fechaHora: "",
+    fechaHora: getLocalDateTimeString(), // Fecha y hora local por defecto
     imagenes: [],
     mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }],
-    previsionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
+    previsionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "", actividad6: "" },
   });
   const [activityVisibility, setActivityVisibility] = useState(true);
   const [visibleActivities, setVisibleActivities] = useState(1);
@@ -173,10 +183,12 @@ const ParteObra = () => {
 
 
   const handleAddEmpresa = () => {
-    setFormData((prev) => ({
-      ...prev,
-      mediosDisponibles: [...prev.mediosDisponibles, { nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }]
-    }));
+    if (formData.mediosDisponibles.length < 9) {
+      setFormData((prev) => ({
+        ...prev,
+        mediosDisponibles: [...prev.mediosDisponibles, { nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }]
+      }));
+    }
   };
   const handleRemoveEmpresa = (index) => {
     setFormData((prev) => ({
@@ -354,8 +366,8 @@ const ParteObra = () => {
       fechaHora: "",
       imagenes: [],
       mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }],
-      observacionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
-      previsionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
+      observacionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "", actividad6: "" },
+      previsionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "", actividad6: "" },
     });
     setVisiblePrevisiones(1);
     setVisibleActivities(1);
@@ -375,6 +387,12 @@ const ParteObra = () => {
   // Función auxiliar para finalizar la apertura del modal principal
   const finalizeOpenModal = (lote) => {
     setIsModalOpen(true);
+
+    // Asignar fecha y hora local al abrir el modal
+    setFormData((prev) => ({
+      ...prev,
+      fechaHora: getLocalDateTimeString(),
+    }));
 
     const valueLote = lote.nombre;
     const separators = /[,|\-\/]+/; // Regex corregida para incluir espacios
@@ -678,8 +696,8 @@ const ParteObra = () => {
         fechaHora: "",
         imagenes: [],
         mediosDisponibles: [{ nombreEmpresa: "", numeroTrabajadores: "", maquinaria: "" }],
-        previsionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
-        observacionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "" },
+        previsionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "", actividad6: "" },
+        observacionesActividades: { actividad1: "", actividad2: "", actividad3: "", actividad4: "", actividad5: "", actividad6: "" },
       });
       setVisiblePrevisiones(1);
       setVisibleActivities(1);
@@ -1094,7 +1112,7 @@ const ParteObra = () => {
                 <div className="flex items-start gap-3">
                   <span className="text-amber-500 text-xl">💡</span>
                   <p className="text-sm text-gray-600">
-                    Si te encuentras en una zona de baja cobertura o necesitas llenar el formulario en un tiempo largo dispones de la opción guardar borrador para no perder los datos. Puedes guardar tanto los datos del formulario como las imágenes.
+                    Si te encuentras en una zona de baja cobertura o necesitas llenar el formulario en un tiempo largo dispones de la opción guardar borrador para no perder los datos
                   </p>
                 </div>
               </div>
@@ -1158,8 +1176,8 @@ const ParteObra = () => {
                       type="datetime-local"
                       name="fechaHora"
                       value={formData.fechaHora}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))}
-                      className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                      readOnly
+                      className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 bg-gray-100 cursor-not-allowed"
                     />
                   </div>
 
@@ -1193,7 +1211,7 @@ const ParteObra = () => {
                         .map((key, index) => (
                           <div key={index}>
                             <VoiceRecorderInput
-                              maxLength={100}
+                              maxLength={200}
                               name={`observacionesActividad-${key}`}
                               value={formData.observacionesActividades[key]}
                               onChange={(name, value) => handleActivityObservationChange(key, value)}
@@ -1222,7 +1240,7 @@ const ParteObra = () => {
                     <input
                       type="text"
                       required
-                      maxLength={150}
+                      maxLength={100}
                       placeholder="Nombre empresa"
                       value={empresa.nombreEmpresa}
                       onChange={(e) => handleMediosChange(index, "nombreEmpresa", e.target.value)}
@@ -1242,7 +1260,7 @@ const ParteObra = () => {
                     <input
                       type="text"
                       required
-                      maxLength={100}
+                      maxLength={150}
                       placeholder="Maquinaria"
                       value={empresa.maquinaria}
                       onChange={(e) => handleMediosChange(index, "maquinaria", e.target.value)}
@@ -1262,13 +1280,15 @@ const ParteObra = () => {
                   </div>
                 ))}
 
-                <button
-                  type="button"
-                  onClick={handleAddEmpresa}
-                  className="mt-2 px-4 py-2 bg-gray-500 text-white rounded-lg shadow-sm hover:bg-gray-500"
-                >
-                  + Agregar Empresa
-                </button>
+                {formData.mediosDisponibles.length < 9 && (
+                  <button
+                    type="button"
+                    onClick={handleAddEmpresa}
+                    className="mt-2 px-4 py-2 bg-gray-500 text-white rounded-lg shadow-sm hover:bg-gray-500"
+                  >
+                    + Agregar Empresa
+                  </button>
+                )}
 
                 {/* Observaciones en materia seguridad y salud */}
                 <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">3. Observaciones en materia de seguridad y salud</h3>
@@ -1278,7 +1298,7 @@ const ParteObra = () => {
                     Observaciones generales
                   </label>
                   <VoiceRecorderInput
-                    maxLength={600}
+                    maxLength={1800}
                     name="observaciones"
                     value={formData.observaciones}
                     onChange={(name, value) => setFormData((prev) => ({ ...prev, [name]: value }))}  // Actualizamos el estado de formData
@@ -1321,7 +1341,7 @@ const ParteObra = () => {
                                       selectedActivities[actividadIndex]?.seleccionada === true ? "text-gray-800 font-bold bg-gray-300 border-gray-500" : "text-gray-500 border-gray-300"}`}
                                   >
                                     <input
-                                      maxLength={300}
+                                      maxLength={600}
                                       type="radio"
                                       name={`actividad-${actividadIndex}`}
                                       value="si"
@@ -1387,7 +1407,7 @@ const ParteObra = () => {
                               value={activityObservations[actividadIndex] || ""}
                               onChange={(name, value) => handleObservationChange(actividadIndex, value)}
                               placeholder="Escribe observaciones aquí..."
-                              maxLength={150}
+                              maxLength={500}
                               disabled={selectedActivities[actividadIndex]?.noAplica}
                               className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""}
                             />
@@ -1434,7 +1454,7 @@ const ParteObra = () => {
                       .map((key, index) => (
                         <div key={index}>
                           <VoiceRecorderInput
-                            maxLength={200}
+                            maxLength={250}
                             name={`previsionActividad-${key}`}
                             value={formData.previsionesActividades[key]}
                             onChange={(name, value) => handlePrevisionChange(key, value)}
@@ -1455,7 +1475,7 @@ const ParteObra = () => {
                   <div className="mt-6">
                     <h3 className="w-full bg-sky-600 text-white font-medium rounded-md px-4 py-2 my-4">6. Reportaje fotográfico de la visita.</h3>
                     <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md mb-4 border border-amber-200">
-                      Si tienes poca cobertura, guarda las imágenes en el borrador o adjúntalas al final de la inspección
+                      Si tienes poca cobertura, guarda el borrador o adjunta las imágenes al final de la inspección
                     </p>
                     {/* Imágenes */}
                     <div className="mb-4 ps-4">
@@ -1496,7 +1516,7 @@ const ParteObra = () => {
 
                             {/* Campo para observaciones */}
                             <textarea
-                              maxLength={50}
+                              maxLength={150}
                               placeholder="Observaciones de la imagen..."
                               value={observacionesImagenes[index] || ""}
                               onChange={(e) => setObservacionesImagenes((prev) => ({
@@ -1556,8 +1576,8 @@ const ParteObra = () => {
                       type="datetime-local"
                       name="fechaHora"
                       value={formData.fechaHora}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))}
-                      className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                      readOnly
+                      className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 bg-gray-100 cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -1662,7 +1682,7 @@ const ParteObra = () => {
                               value={activityObservations[actividadIndex] || ""}
                               onChange={(name, value) => handleObservationChange(actividadIndex, value)}
                               placeholder="Escribe observaciones aquí..."
-                              maxLength={150}
+                              maxLength={500}
                               disabled={selectedActivities[actividadIndex]?.noAplica} // 
                               className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""}
                             />

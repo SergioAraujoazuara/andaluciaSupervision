@@ -4,79 +4,87 @@ import TituloInforme from "./TituloInforme";
 
 const styles = StyleSheet.create({
   fieldGroup: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+    flexDirection: "column",
     marginBottom: 6,
     marginLeft: 8,
   },
-  tableContainer: {
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 4,
-    width: "100%",
+  actividadBlock: {
+    borderRadius: 6,
+    marginBottom: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    backgroundColor: "#fff",
+    position: "relative",
   },
-  tableHeader: {
+  actividadHeader: {
     flexDirection: "row",
-    backgroundColor: "#E5E7EB",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+    paddingBottom: 4,
     borderBottomWidth: 1,
-    borderBottomColor: "#D1D5DB",
-    padding: 5,
-    width: "100%",
+    borderBottomColor: "#e5e7eb",
   },
-  tableRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#D1D5DB",
-    paddingVertical: 4,
-    width: "100%",
-  },
-  tableCellHeader: {
-    fontSize: 9,
+  actividadTitle: {
+    fontSize: 8,
     fontWeight: "bold",
-    textAlign: "start",
+    color: "#5F6B75",
+    flex: 3,
+  },
+  actividadEstado: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#388e3c",
+    flex: 1,
+    textAlign: "right",
+  },
+  observacionText: {
+    fontSize: 8,
+    color: "#5F6B75",
+    marginBottom: 4,
+    lineHeight: 1.2,
+  },
+  subActividadBlock: {
+    borderRadius: 4,
+    marginTop: 6,
+    marginBottom: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: "#fff",
+  },
+  subActividadTitle: {
+    fontSize: 8,
+    fontWeight: "bold",
     color: "#374151",
-    paddingHorizontal: 14,
+    marginBottom: 2,
   },
-  tableCell: {
-    fontSize: 9,
-    textAlign: "start",
-    color: "#4B5563",
-    paddingHorizontal: 14,
-    paddingVertical:14,
-    wordWrap: "break-word",
-  },
-  tableCellSmall: {
-    width: "25%", // 🔹 Primeras dos columnas ocupan el 25%
-  },
-  tableCellLarge: {
-    width: "50%", // 🔹 La columna Observación ocupa el 50%
+  subActividadText: {
+    fontSize: 8,
+    color: "#5F6B75",
+    marginBottom: 2,
+    lineHeight: 1.2,
   },
   subActividadRow: {
     flexDirection: "row",
-    backgroundColor: "#F3F4F6",
-    paddingVertical: 3,
-    width: "100%",
+    justifyContent: "space-between",
+    marginBottom: 2,
   },
-  subActividadCell: {
+  subActividadStatus: {
     fontSize: 8,
-    textAlign: "center",
-    color: "#4B5563",
-    paddingHorizontal: 4,
-    wordWrap: "break-word",
-  },
-  resultadoVisita: {
-    marginTop: 10,
-    paddingVertical: 6,
-    borderTopWidth: 1,
-    borderColor: "#D1D5DB",
-    textAlign: "center",
-  },
-  resultadoTexto: {
-    fontSize: 12,
     fontWeight: "bold",
-    textAlign: "center",
+    color: "#388e3c",
+  },
+  label: {
+    fontSize: 8,
+    fontWeight: "bold",
     color: "#374151",
+    marginBottom: 2,
+  },
+  value: {
+    fontSize: 8,
+    color: "#5F6B75",
+    marginBottom: 4,
+    lineHeight: 1.2,
   },
 });
 
@@ -85,84 +93,45 @@ const DatosRegistroTabla = ({ registro }) => {
     <View style={styles.fieldGroup}>
       <TituloInforme plantillaSeleccionada="4. Detalles de la inspección" />
 
-      {/* 🔹 Tabla de Actividades y Subactividades */}
-      {registro.actividades && (
-        <View style={styles.tableContainer}>
-          {/* Encabezado de la Tabla */}
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableCellHeader, styles.tableCellSmall]}>Actividad</Text>
-            <Text style={[styles.tableCellHeader, styles.tableCellSmall]}>Estado</Text>
-            <Text style={[styles.tableCellHeader, styles.tableCellLarge]}>Observación</Text>
-          </View>
+      {registro.actividades &&
+        Object.values(registro.actividades)
+          .filter((actividad) => actividad.seleccionada === true)
+          .map((actividad, index) => (
+            <View key={index} style={styles.actividadBlock}>
+              <View style={styles.actividadHeader}>
+                <Text style={styles.actividadTitle}>
+                  Actividad: {actividad.nombre || `Actividad ${index + 1}`}
+                </Text>
+                <Text style={styles.actividadEstado}>Aplica ✅</Text>
+              </View>
 
-          {/* 🔥 Filtrar y mostrar solo actividades seleccionadas */}
-          {Object.values(registro.actividades)
-            .filter((actividad) => actividad.seleccionada === true)
-            .map((actividad, index) => {
-              return (
-                <View key={index}>
-                  <View style={styles.tableRow}>
-                    <Text style={[styles.tableCell, styles.tableCellSmall]}>
-                      {actividad.nombre || `Actividad ${index + 1}`}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.tableCell,
-                        styles.tableCellSmall,
-                        { color: "green", fontWeight: "bold" },
-                      ]}
-                    >
-                      Aplica ✅
-                    </Text>
-                    <Text style={[styles.tableCell, styles.tableCellLarge]}>
-                      {actividad.observacion || "—"}
-                    </Text>
-                  </View>
+              <Text style={styles.observacionText}>
+                {actividad.observacion || "—"}
+              </Text>
 
-                  {/* Subactividades */}
-                  {actividad.subactividades &&
-                    actividad.subactividades.filter((sub) => sub.seleccionada === true).length > 0 && (
-                      <>
-                        <View style={styles.subActividadRow}>
-                          <Text style={[styles.subActividadCell, styles.tableCellSmall, { fontWeight: "bold" }]}>
-                            Subactividades
+              {actividad.subactividades &&
+                actividad.subactividades.filter((sub) => sub.seleccionada === true).length > 0 && (
+                  <View style={styles.subActividadBlock}>
+                    <Text style={styles.label}>Subactividades:</Text>
+                    {actividad.subactividades
+                      .filter((sub) => sub.seleccionada === true)
+                      .map((subactividad, subIndex) => (
+                        <View key={subIndex} style={{ marginBottom: 4 }}>
+                          <View style={styles.subActividadRow}>
+                            <Text style={styles.subActividadTitle}>
+                              Nombre: {subactividad.nombre || `Subactividad ${subIndex + 1}`}
+                            </Text>
+                            <Text style={styles.subActividadStatus}>Aplica ✅</Text>
+                          </View>
+                          <Text style={styles.subActividadText}>
+                            Observación: {subactividad.observacion || "—"}
                           </Text>
-                          <Text style={[styles.subActividadCell, styles.tableCellSmall]}></Text>
-                          <Text style={[styles.subActividadCell, styles.tableCellLarge]}></Text>
                         </View>
-                        {actividad.subactividades
-                          .filter((sub) => sub.seleccionada === true)
-                          .map((subactividad, subIndex) => {
-                            return (
-                              <View key={subIndex} style={styles.subActividadRow}>
-                                <Text style={[styles.subActividadCell, styles.tableCellSmall]}>
-                                  {subactividad.nombre || `Subactividad ${subIndex + 1}`}
-                                </Text>
-                                <Text
-                                  style={[
-                                    styles.subActividadCell,
-                                    styles.tableCellSmall,
-                                    { color: "green", fontWeight: "bold" },
-                                  ]}
-                                >
-                                  Aplica ✅
-                                </Text>
-                                <Text style={[styles.subActividadCell, styles.tableCellLarge]}>
-                                  {subactividad.observacion || "—"}
-                                </Text>
-                              </View>
-                            );
-                          })}
-                      </>
-                    )}
-                </View>
-              );
-            })}
-        </View>
-      )}
-
-      
-      
+                      ))}
+                  </View>
+                )}
+            </View>
+          ))}
     </View>
   );
 };

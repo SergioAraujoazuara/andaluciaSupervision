@@ -49,12 +49,11 @@ const DatosRegistro = ({ dataRegister }) => {
       >
         <TituloInforme plantillaSeleccionada="2. Medios disponibles en obra: Empresas, trabajadores y maquinaria" />
         {dataRegister.mediosDisponibles.map((empresa, index) => {
-          // 🧮 Calcular cuántas columnas usar
           const totalEmpresas = dataRegister.mediosDisponibles.length;
           let width = "100%"; // default 1 columna
-
           if (totalEmpresas > 1) width = "33.33%"; // 3 columnas
 
+          const isMiddleColumn = (index + 1) % 3 === 2; // Es la columna del medio
 
           return (
             <View
@@ -62,20 +61,37 @@ const DatosRegistro = ({ dataRegister }) => {
               style={{
                 width,
                 paddingRight: 4,
-                marginBottom: 4,
+                ...(isMiddleColumn ? {
+                  borderLeftWidth: 1,
+                  borderLeftColor: "#e5e7eb",
+                  borderRightWidth: 1,
+                  borderRightColor: "#e5e7eb",
+                } : {}),
+                paddingLeft: 4,
+                marginBottom: 8,
               }}
             >
-              <SeccionesDatosRegistros
-                
-                valorDelCampo={empresa.nombreEmpresa || "No especificado"}
-              />
-              <SeccionesDatosRegistros
-                nombreCampo={`Trabajadores: `}
-                valorDelCampo={empresa.numeroTrabajadores || "No especificado"}
-              />
-               <SeccionesDatosRegistros
-                valorDelCampo={empresa.maquinaria || ""}
-              />
+              <View
+                style={{
+                  borderBottomWidth: index < totalEmpresas - 1 ? 1 : 0,
+                  borderBottomColor: "#e5e7eb",
+                  paddingBottom: 4,
+                  marginBottom: index < totalEmpresas - 1 ? 8 : 0,
+                }}
+              >
+                <SeccionesDatosRegistros
+                  nombreCampo={`Empresa:`}
+                  valorDelCampo={empresa.nombreEmpresa || "No especificado"}
+                />
+                <SeccionesDatosRegistros
+                  nombreCampo={`Trabajadores:`}
+                  valorDelCampo={empresa.numeroTrabajadores || "No especificado"}
+                />
+                <SeccionesDatosRegistros
+                  nombreCampo={`Maquinaria:`}
+                  valorDelCampo={empresa.maquinaria || ""}
+                />
+              </View>
             </View>
           );
         })}

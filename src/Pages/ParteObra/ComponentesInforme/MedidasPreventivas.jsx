@@ -1,8 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "@react-pdf/renderer";
-import TituloInforme from "./TituloInforme";
 import SeccionesDatosRegistros from "./SeccionesDatosRegistros";
-import TituloActividad from "./TituloActividad";
 
 const styles = StyleSheet.create({
   fieldGroup: {
@@ -19,10 +17,7 @@ const styles = StyleSheet.create({
 const MedidasPreventivas = ({ dataRegister }) => {
   return (
     <View style={styles.fieldGroup}>
-      
-      {/* Sección 7 */}
       <View style={styles.section}>
-        <TituloInforme plantillaSeleccionada="6. Previsión de actividades de próximo inicio. Medidas preventivas." />
         <SeccionesDatosRegistros
           valorDelCampo={dataRegister.actividadesProximoInicio}
         />

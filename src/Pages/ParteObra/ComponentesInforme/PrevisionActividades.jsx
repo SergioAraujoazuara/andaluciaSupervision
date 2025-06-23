@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet } from "@react-pdf/renderer";
+import { View, StyleSheet } from "@react-pdf/renderer";
+import TituloInforme from "./TituloInforme";
 import SeccionesDatosRegistros from "./SeccionesDatosRegistros";
 
 const styles = StyleSheet.create({
@@ -7,23 +8,43 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "flex-start",
     alignItems: "stretch",
-    width: "100%", 
+    width: "100%",
     marginBottom: 2,
   },
   section: {
-    width: "100%", 
+    width: "100%",
   },
   fieldRow: {
-    flexDirection: "row",  
-    flexWrap: "wrap",     
-    marginBottom: 2,       
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: 2,
   },
   field: {
-    width: "33.33%", 
+    width: "33.33%",
+    paddingRight: 4,
+    paddingLeft: 4,
+    marginBottom: 2,
   },
-  singleField: {
-    width: "100%",  
+  middleField: {
+    borderLeftWidth: 1,
+    borderLeftColor: "#e5e7eb",
+    borderRightWidth: 1,
+    borderRightColor: "#e5e7eb",
   },
+  fieldContent: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    paddingBottom: 4,
+    marginBottom: 2,
+  },
+  lastRow: {
+    marginBottom: 0,
+  },
+  lastField: {
+    borderBottomWidth: 0,
+    marginBottom: 0,
+    paddingBottom: 0,
+  }
 });
 
 const PrevisionActividades = ({ dataRegister }) => {
@@ -34,29 +55,40 @@ const PrevisionActividades = ({ dataRegister }) => {
     ([_, valor]) => typeof valor === "string" && valor.trim() !== ""
   );
 
-  const isSingleActivity = actividades.length === 1;
-
   return (
     <View style={styles.fieldGroup}>
       <View style={styles.section}>
+        <TituloInforme plantillaSeleccionada="6. Previsión de actividades de próximo inicio. Medidas preventivas." />
         <View style={styles.fieldRow}>
           {actividades.length > 0 ? (
             actividades.map(([actividadKey, observacion], index) => {
-              const formattedKey = `Actividad: `;
+              const isMiddleColumn = (index + 1) % 3 === 2; // Es la columna del medio
+              const isLastRow = Math.floor(index / 3) === Math.floor((actividades.length - 1) / 3);
+              const isLastField = index === actividades.length - 1;
+
               return (
-                <View
-                  key={index}
-                  style={isSingleActivity ? styles.singleField : styles.field}
+                <View 
+                  key={index} 
+                  style={[
+                    styles.field,
+                    isMiddleColumn && styles.middleField,
+                    isLastRow && styles.lastRow
+                  ]}
                 >
-                  <SeccionesDatosRegistros
-                    nombreCampo={formattedKey}
-                    valorDelCampo={observacion}
-                  />
+                  <View style={[
+                    styles.fieldContent,
+                    isLastField && styles.lastField
+                  ]}>
+                    <SeccionesDatosRegistros
+                      nombreCampo="Actividad: "
+                      valorDelCampo={observacion}
+                    />
+                  </View>
                 </View>
               );
             })
           ) : (
-            <View style={styles.singleField}>
+            <View style={styles.field}>
               <SeccionesDatosRegistros
                 valorDelCampo="Sin previsión de actividades registrada."
               />
@@ -67,6 +99,5 @@ const PrevisionActividades = ({ dataRegister }) => {
     </View>
   );
 };
-
 
 export default PrevisionActividades;

@@ -72,6 +72,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showSuccessModalMessage, setShowSuccessModalMessage] = useState('');
     const { proyecto, loading: proyectoLoading, error: proyectoError } = useProyecto(selectedProjectId);
+    const [progress, setProgress] = useState(0);
 
     useEffect(() => {
         localStorage.setItem("fechaVisita", fechaVisita);
@@ -206,7 +207,6 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                 {imagesWithMetadata.length > 0 && (
                     <Page size="A4" style={styles.page}>
                         <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
-                        <TituloInforme plantillaSeleccionada="6. Previsión de actividades de próximo inicio. Medidas preventivas." />
                         <PrevisionesActividades dataRegister={registroIndividual} />
                         <PiePaginaInforme
                             userNombre={userNombre}
@@ -230,12 +230,13 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
             return;
         }
 
-
         setIsGenerating(true);
+        setProgress(0);
 
         const pdfDoc = await PDFDocument.create();
 
-        for (const registroIndividual of registros) {
+        for (let i = 0; i < registros.length; i++) {
+            const registroIndividual = registros[i];
             console.log(`📄 Creando informe para el registro ID: ${registroIndividual.id}`);
 
             const blob = await downloadPdf(registroIndividual);
@@ -246,12 +247,13 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
             const copiedPages = await pdfDoc.copyPages(tempPdf, tempPdf.getPageIndices());
 
             copiedPages.forEach((page) => pdfDoc.addPage(page));
-        }
 
+            // Actualizar progreso
+            setProgress(Math.round(((i + 1) / registros.length) * 100));
+        }
 
         const finalPdfBytes = await pdfDoc.save();
         const finalBlob = new Blob([finalPdfBytes], { type: "application/pdf" });
-
 
         const pdfURL = URL.createObjectURL(finalBlob);
         const link = document.createElement("a");
@@ -266,8 +268,7 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
         }
 
         setIsGenerating(false);
-
-
+        setProgress(0);
     };
 
 
@@ -276,9 +277,14 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
             <div>
                 <div>
                     {isGenerating ? (
-                        <div className="flex justify-center items-center gap-2">
-                            <Spinner />
-                            <span className="text-gray-500 text-xl font-medium">Generando...</span>
+                        <div className="flex flex-col justify-center items-center gap-4 w-full">
+                            <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                                <div
+                                    className="bg-blue-500 h-4 rounded-full transition-all duration-300"
+                                    style={{ width: `${progress}%` }}
+                                ></div>
+                            </div>
+                            <span className="text-blue-700 font-semibold">Generando PDF... {progress}%</span>
                         </div>
                     ) : (
                         <button

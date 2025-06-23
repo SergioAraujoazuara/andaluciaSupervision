@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   header: {
-    marginBottom: 20,
+    marginBottom: 10,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     width: "65%",
-    fontSize: 10,
+    fontSize: 8,
     color: "#4b5563",
   },
   headerLabel: {
@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
   },
   headerValue: {
     color: "#4b5563",
-    fontSize: 10,
+    fontSize: 8,
     marginTop: 5,
   },
   headerLogos: {
