@@ -970,22 +970,56 @@ const ParteObra = () => {
 
       <div className="pt-6 pb-8 px-4">
         <div className="grid grid-cols-1 gap-4 text-xs items-end">
-          {/* Solo mostrar el filtro de "nombre" (Actividades de mantenimiento) */}
-          <div>
-            <label className="block font-medium text-gray-700 capitalize">
-              {labelMapping["nombre"] || "Áreas"}
-            </label>
+          {/* Filtros de trazabilidad */}
+          <div className="w-full flex flex-wrap gap-4 mb-4 px-4">
             <select
-              name="nombre"
-              value={filters["nombre"]}
-              onChange={handleFilterChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              value={filters.sector}
+              onChange={e => setFilters(prev => ({ ...prev, sector: e.target.value }))}
             >
-              <option value="">Todos</option>
-              {uniqueValues["nombre"].map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
+              <option value="">Todos los sectores</option>
+              {uniqueValues.sector.map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+            <select
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              value={filters.subSector}
+              onChange={e => setFilters(prev => ({ ...prev, subSector: e.target.value }))}
+            >
+              <option value="">Todos los subsectores</option>
+              {uniqueValues.subSector.map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+            <select
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              value={filters.parte}
+              onChange={e => setFilters(prev => ({ ...prev, parte: e.target.value }))}
+            >
+              <option value="">Todas las partes</option>
+              {uniqueValues.parte.map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+            <select
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              value={filters.elemento}
+              onChange={e => setFilters(prev => ({ ...prev, elemento: e.target.value }))}
+            >
+              <option value="">Todos los elementos</option>
+              {uniqueValues.elemento.map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+            <select
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              value={filters.nombre}
+              onChange={e => setFilters(prev => ({ ...prev, nombre: e.target.value }))}
+            >
+              <option value="">Todos los lotes</option>
+              {uniqueValues.nombre.map((v) => (
+                <option key={v} value={v}>{v}</option>
               ))}
             </select>
           </div>
@@ -1001,36 +1035,55 @@ const ParteObra = () => {
           <table className="min-w-full bg-white shadow rounded-lg overflow-hidden">
             <thead className="border-gray-200 bg-sky-600 text-white">
               <tr>
-                <th className="text-left px-6 py-3 text-sm font-semibold w-3/4">
-                  Trabajos del coordinador
-                </th>
-                <th className="text-left px-6 py-3 text-sm font-semibold w-1/4">
-                  Acción
-                </th>
+                <th className="text-left px-6 py-3 text-sm font-semibold">Trazabilidad del Lote</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold">Acción</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {[...filteredLotes]
-                .sort((a, b) => a.sectorNombre.localeCompare(b.sectorNombre))
+                .sort((a, b) => {
+                  // Ordenar por sector, subsector, parte, elemento, nombre
+                  const fields = ['sectorNombre', 'subSectorNombre', 'parteNombre', 'elementoNombre', 'nombre'];
+                  for (let field of fields) {
+                    const valA = (a[field] || '').toLowerCase();
+                    const valB = (b[field] || '').toLowerCase();
+                    if (valA < valB) return -1;
+                    if (valA > valB) return 1;
+                  }
+                  return 0;
+                })
                 .map((lote) => (
                   <tr
                     key={lote.loteId}
                     className="hover:bg-gray-50 transition duration-150 ease-in-out"
                   >
                     <td className="px-6 py-4 text-sm w-3/4">
-                      <div>
-                        <span className="font-medium text-gray-800">{lote.nombre}</span>
+                      <div className="flex flex-row flex-wrap gap-2 items-center">
+                        {[
+                          { label: 'Sector', value: lote.sectorNombre },
+                          { label: 'Subsector', value: lote.subSectorNombre },
+                          { label: 'Parte', value: lote.parteNombre },
+                          { label: 'Elemento', value: lote.elementoNombre },
+                          { label: 'Lote', value: lote.nombre },
+                        ]
+                          .filter(
+                            (item) => item.value && !['na', 'n-a', 'n/a'].includes(item.value.trim().toLowerCase())
+                          )
+                          .map((item, idx, arr) => (
+                            <span key={item.label} className="font-medium text-gray-800">
+                              {item.value}
+                              {idx < arr.length - 1 && <span className="text-gray-400"> - </span>}
+                            </span>
+                          ))}
+                        {lote.ppiNombre && (
+                          <span className="font-semibold text-green-700 ml-2">PPI: <span className="text-green-600">{lote.ppiNombre}</span></span>
+                        )}
                       </div>
-                      {lote.ppiNombre && (
-                        <div>
-                          <span className="text-green-600">PPI: {lote.ppiNombre}</span>
-                        </div>
-                      )}
                     </td>
-                    <td className="px-6 py-4 text-sm w-1/4">
+                    <td className="px-6 py-4 text-sm w-1/4 align-top text-right">
                       <button
                         onClick={() => handleOpenModal(lote)}
-                        className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-sky-700 transition duration-150 flex gap-2 items-center"
+                        className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-sky-700 transition duration-150 flex gap-2 items-center justify-end ml-auto"
                       >
                         <IoMdAddCircle /> Nuevo Registro
                       </button>
@@ -1045,29 +1098,38 @@ const ParteObra = () => {
         {/* Vista para dispositivos móviles: cards */}
         <div className="block lg:hidden">
           {filteredLotes
-            .map((lote) => (
-              <div
-                key={lote.loteId}
-                className="bg-gray-100 shadow rounded-lg p-4 mb-4 border border-gray-200"
-              >
-                <p className="text-sm text-gray-700">
-                  <span className="font-medium">Sector:</span> {lote.elementoNombre}
-                </p>
-                <p className="text-sm text-gray-700">
-                  <span className="font-medium">Actividad:</span> {lote.nombre}
-                </p>
-                <p className="text-sm text-gray-700">
-                  <span className="font-medium">PPI:</span>{" "}
-                  <span className="text-green-600">{lote.ppiNombre}</span>
-                </p>
-                <button
-                  onClick={() => handleOpenModal(lote)}
-                  className="mt-4 w-full px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-sky-700 transition duration-150 flex gap-2 justify-center items-center"
+            .map((lote) => {
+              const trazabilidad = [
+                lote.sectorNombre,
+                lote.subSectorNombre,
+                lote.parteNombre,
+                lote.elementoNombre,
+                lote.nombre
+              ].filter(
+                v => v && !['na', 'n-a', 'n/a'].includes(v.trim().toLowerCase())
+              ).join(' - ');
+              return (
+                <div
+                  key={lote.loteId}
+                  className="bg-gray-100 shadow rounded-lg p-4 mb-4 border border-gray-200"
                 >
-                  <IoMdAddCircle /> Nuevo Registro
-                </button>
-              </div>
-            ))}
+                  <p className="text-sm text-gray-700 font-medium">
+                    {trazabilidad}
+                  </p>
+                  {lote.ppiNombre && (
+                    <p className="text-sm text-green-700 font-semibold mt-1">
+                      PPI: <span className="text-green-600">{lote.ppiNombre}</span>
+                    </p>
+                  )}
+                  <button
+                    onClick={() => handleOpenModal(lote)}
+                    className="mt-4 w-full px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-sky-700 transition duration-150 flex gap-2 justify-center items-center"
+                  >
+                    <IoMdAddCircle /> Nuevo Registro
+                  </button>
+                </div>
+              );
+            })}
         </div>
       </div>
 
@@ -1146,7 +1208,25 @@ const ParteObra = () => {
                       Trabajo seleccionado
                     </p>
                     {selectedLote && (
-                      <p className="bg-gray-200 p-2 rounded-b-lg px-4 py-2 font-medium">{selectedLote.nombre}</p>
+                      <div className="bg-gray-200 p-2 rounded-b-lg px-4 py-2 font-medium">
+                        {/* Trazabilidad */}
+                        <span className="text-gray-800">
+                          {[
+                            selectedLote.sectorNombre,
+                            selectedLote.subSectorNombre,
+                            selectedLote.parteNombre,
+                            selectedLote.elementoNombre,
+                            selectedLote.nombre
+                          ].filter(
+                            v => v && !['na', 'n-a', 'n/a'].includes(v.trim().toLowerCase())
+                          ).join(' - ')}
+                        </span>
+                        {selectedLote.ppiNombre && (
+                          <div className="text-green-700 font-semibold mt-1">
+                            PPI: <span className="text-green-600">{selectedLote.ppiNombre}</span>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
 
@@ -1160,8 +1240,8 @@ const ParteObra = () => {
                       type="datetime-local"
                       name="fechaHora"
                       value={formData.fechaHora}
-                      readOnly
-                      className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 bg-gray-100 cursor-not-allowed"
+                      onChange={e => setFormData(prev => ({ ...prev, fechaHora: e.target.value }))}
+                      className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 bg-gray-100"
                     />
                   </div>
 
@@ -1202,7 +1282,7 @@ const ParteObra = () => {
                                         selectedActivities[actividadIndex]?.seleccionada === true ? "text-gray-800 font-bold bg-gray-300 border-gray-500" : "text-gray-500 border-gray-300"}`}
                                     >
                                       <input
-                                        maxLength={600}
+                                      
                                         type="radio"
                                         name={`actividad-${actividadIndex}`}
                                         value="si"
@@ -1248,7 +1328,7 @@ const ParteObra = () => {
                                 value={activityObservations[actividadIndex] || ""}
                                 onChange={(name, value) => handleObservationChange(actividadIndex, value)}
                                 placeholder="Escribe observaciones aquí..."
-                                maxLength={500}
+                                maxLength={350}
                                 disabled={selectedActivities[actividadIndex]?.noAplica}
                                 className={selectedActivities[actividadIndex]?.noAplica ? "bg-gray-200 cursor-not-allowed" : ""}
                               />
@@ -1274,7 +1354,7 @@ const ParteObra = () => {
                           <p className="text-amber-600 text-xs">* Mínimo 1 imagen</p>
                         </label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                          {[0, 1, 2, 3, 4, 5].map((index) => (
+                          {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => (
                             <div key={index} className="relative">
                               <PhotoUpload
                                 index={index}
@@ -1300,7 +1380,7 @@ const ParteObra = () => {
                                 </div>
                               )}
                               <textarea
-                                maxLength={150}
+                                maxLength={600}
                                 placeholder="Observaciones de la imagen..."
                                 value={observacionesImagenes[index] || ""}
                                 onChange={(e) => setObservacionesImagenes((prev) => ({
@@ -1345,7 +1425,25 @@ const ParteObra = () => {
                       Trabajo seleccionado
                     </p>
                     {selectedLote && (
-                      <p className="bg-gray-200 p-2 rounded-b-lg px-4 py-2 font-medium">{selectedLote.nombre}</p>
+                      <div className="bg-gray-200 p-2 rounded-b-lg px-4 py-2 font-medium">
+                        {/* Trazabilidad */}
+                        <span className="text-gray-800">
+                          {[
+                            selectedLote.sectorNombre,
+                            selectedLote.subSectorNombre,
+                            selectedLote.parteNombre,
+                            selectedLote.elementoNombre,
+                            selectedLote.nombre
+                          ].filter(
+                            v => v && !['na', 'n-a', 'n/a'].includes(v.trim().toLowerCase())
+                          ).join(' - ')}
+                        </span>
+                        {selectedLote.ppiNombre && (
+                          <div className="text-green-700 font-semibold mt-1">
+                            PPI: <span className="text-green-600">{selectedLote.ppiNombre}</span>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
 
@@ -1359,8 +1457,8 @@ const ParteObra = () => {
                       type="datetime-local"
                       name="fechaHora"
                       value={formData.fechaHora}
-                      readOnly
-                      className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 bg-gray-100 cursor-not-allowed"
+                      onChange={e => setFormData(prev => ({ ...prev, fechaHora: e.target.value }))}
+                      className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 bg-gray-100"
                     />
                   </div>
                 </div>

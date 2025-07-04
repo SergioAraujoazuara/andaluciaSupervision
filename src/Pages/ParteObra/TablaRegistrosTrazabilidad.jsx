@@ -734,6 +734,59 @@ const TablaRegistros = () => {
 
       <div className="w-full border-b-2"></div>
 
+      {/* Filtros de trazabilidad */}
+      <div className="w-full flex flex-wrap gap-4 mb-4 mt-4 px-4">
+        <select
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+          value={valoresFiltro.sectorNombre}
+          onChange={e => setValoresFiltro(prev => ({ ...prev, sectorNombre: e.target.value }))}
+        >
+          <option value="">Sector</option>
+          {valoresUnicos.sectorNombre.map((v) => (
+            <option key={v} value={v}>{v}</option>
+          ))}
+        </select>
+        <select
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+          value={valoresFiltro.subSectorNombre}
+          onChange={e => setValoresFiltro(prev => ({ ...prev, subSectorNombre: e.target.value }))}
+        >
+          <option value="">Sub sector</option>
+          {valoresUnicos.subSectorNombre.map((v) => (
+            <option key={v} value={v}>{v}</option>
+          ))}
+        </select>
+        <select
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+          value={valoresFiltro.parteNombre}
+          onChange={e => setValoresFiltro(prev => ({ ...prev, parteNombre: e.target.value }))}
+        >
+          <option value="">Parte</option>
+          {valoresUnicos.parteNombre.map((v) => (
+            <option key={v} value={v}>{v}</option>
+          ))}
+        </select>
+        <select
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+          value={valoresFiltro.elementoNombre}
+          onChange={e => setValoresFiltro(prev => ({ ...prev, elementoNombre: e.target.value }))}
+        >
+          <option value="">Elemento</option>
+          {valoresUnicos.elementoNombre.map((v) => (
+            <option key={v} value={v}>{v}</option>
+          ))}
+        </select>
+        <select
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+          value={valoresFiltro.nombre}
+          onChange={e => setValoresFiltro(prev => ({ ...prev, nombre: e.target.value }))}
+        >
+          <option value="">Lote</option>
+          {valoresUnicos.nombre.map((v) => (
+            <option key={v} value={v}>{v}</option>
+          ))}
+        </select>
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs mt-6 mb-2 items-end px-6">
         {/* Fecha Inicial y Fecha Final */}
@@ -830,8 +883,13 @@ const TablaRegistros = () => {
           <table className="hidden sm:table min-w-full bg-white shadow rounded-lg overflow-hidden">
             <thead className="border-gray-200 bg-sky-600 text-white">
               <tr>
+                <th className="text-left px-6 py-3 text-sm font-semibold">Sector</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold">Subsector</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold">Parte</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold">Elemento</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold">Lote</th>
                 {ordenColumnas
-                  .filter((columna) => columna !== "nombre" && columna !== "sectorNombre" && columna !== "subSectorNombre" && columna !== "elementoNombre" && columna !== "parteNombre")
+                  .filter((columna) => !['sectorNombre', 'subSectorNombre', 'parteNombre', 'elementoNombre', 'nombre', 'actividad'].includes(columna))
                   .map((columna) => (
                     <th
                       key={columna}
@@ -847,33 +905,49 @@ const TablaRegistros = () => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {registrosFiltrados
-                .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora))
+                .sort((a, b) => {
+                  // Ordenar por sector, subsector, parte, elemento, nombre
+                  const fields = ['sectorNombre', 'subSectorNombre', 'parteNombre', 'elementoNombre', 'nombre'];
+                  for (let field of fields) {
+                    const valA = (a[field] || '').toLowerCase();
+                    const valB = (b[field] || '').toLowerCase();
+                    if (valA < valB) return -1;
+                    if (valA > valB) return 1;
+                  }
+                  return 0;
+                })
                 .map((registro) => (
                   <tr
                     key={registro.id}
                     className="hover:bg-gray-50 transition duration-150 ease-in-out"
                   >
+                    {/* Trazabilidad */}
+                    {['sectorNombre', 'subSectorNombre', 'parteNombre', 'elementoNombre', 'nombre'].map((field) => {
+                      const val = registro[field];
+                      const isNA = !val || ['na', 'n-a', 'n/a'].includes(val.trim().toLowerCase());
+                      return (
+                        <td key={field} className="px-6 py-4 text-sm">
+                          {!isNA ? val : ''}
+                        </td>
+                      );
+                    })}
                     {ordenColumnas
-                      .filter((columna) => columna !== "nombre" && columna !== "sectorNombre" && columna !== "subSectorNombre" && columna !== "elementoNombre" && columna !== "parteNombre")
+                      .filter((columna) => !['sectorNombre', 'subSectorNombre', 'parteNombre', 'elementoNombre', 'nombre', 'actividad'].includes(columna))
                       .map((columna) => (
                         <td
                           key={columna}
                           className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap"
                         >
-                          {columna === "fechaHora"
-                            ? formatFecha(registro[columna]) 
-                            : columna === "observaciones" ? (
-                              <button
-                                onClick={() => openModal(registro[columna])}
-                                className="text-blue-500 hover:underline"
-                              >
-                                Ver observaciones
-                              </button>
-                            ) : columna === "actividad" ? (
-                              registro.actividad || "—"
-                            ) : (
-                              registro[columna] || "—"
-                            )}
+                          {columna === "observaciones" ? (
+                            <button
+                              onClick={() => openModal(registro[columna])}
+                              className="text-blue-500 hover:underline"
+                            >
+                              Ver observaciones
+                            </button>
+                          ) : (
+                            registro[columna]
+                          )}
                         </td>
                       ))}
                     <td className="px-6 py-4 text-sm whitespace-nowrap flex flex-col items-center gap-2">
@@ -1096,9 +1170,11 @@ const TablaRegistros = () => {
       {/* Modal para observaciones */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg max-h-[60vh] overflow-y-auto">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Observaciones</h2>
-            <p className="text-gray-600">{selectedObservation}</p>
+            <div className="text-gray-600 text-sm whitespace-pre-line break-words max-h-[40vh] overflow-y-auto">
+              {selectedObservation}
+            </div>
             <div className="flex justify-end mt-6">
               <button
                 onClick={closeModal}

@@ -1639,7 +1639,7 @@ function Trazabilidad() {
                         <div className='col-span-24 xl:col-span-6'>
                             {/* Sector == Grupo activos */}
                             <div className="flex flex-col items-start gap-3">
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 rounded-md px-3 py-2 flex items-center gap-2 w-full'>1. No aplica</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 rounded-md px-3 py-2 flex items-center gap-2 w-full'>1. Sector</p>
                                 <div className="flex flex-col xl:flex-row items-center w-full">
                                     <div className='w-full flex gap-2'>
                                         <input
@@ -1676,7 +1676,7 @@ function Trazabilidad() {
                             </div>
                             {/* Sub Sector == Activo */}
                             <div className="flex flex-col col-span-4 items-start gap-3 mt-3">
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>2. No aplica</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>2. Sub sector</p>
 
 
                                 <div className="flex flex gap-2 xl:flex-row items-center w-full">
@@ -1719,7 +1719,7 @@ function Trazabilidad() {
                         {/* Parte == Inventario vial */}
 
                         <div className='flex flex-col col-span-24 xl:col-span-6 gap-3  mt-4 xl:mt-0'>
-                            <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>3. No aplica</p>
+                            <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>3. Parte</p>
 
 
                             <div className="flex gap-2 xl:flex-row items-center w-full">
@@ -1758,7 +1758,7 @@ function Trazabilidad() {
                             {/* Elemento == Componente */}
 
                             <div className='flex flex-col col-span-24 xl:col-span-5 gap-3    mt-5 xl:mt-0'>
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>4. Sector</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>4. Elemento</p>
                                 <div className="flex gap-2 xl:flex-row items-center w-full">
 
                                     <input
@@ -1803,7 +1803,7 @@ function Trazabilidad() {
 
                         <div className='flex flex-col col-span-24 xl:col-span-12 gap-3 mt-5 xl:mt-0 '>
                             <div className='text-start'>
-                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>5. Trabajos</p>
+                                <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>5. Lote</p>
                             </div>
 
                             
@@ -1889,11 +1889,11 @@ function Trazabilidad() {
                 {/* Table */}
                 <div className="mt-5">
                     <div className="hidden xl:flex bg-gray-200 rounded-t-lg font-medium items-center">
-                        <p className="px-4 py-2 w-1/5">No aplica</p>
-                        <p className="px-4 py-2 w-1/5">No aplica</p>
-                        <p className="px-4 py-2 w-1/5">No aplica</p>
-                        <p className=" py-2 w-1/5">Sector</p>
-                        <p className="mr-5 py-2 w-1/5">Trabajos</p>
+                        <p className="px-4 py-2 w-1/5">Sector</p>
+                        <p className="px-4 py-2 w-1/5">Sub sector</p>
+                        <p className="px-4 py-2 w-1/5">Parte</p>
+                        <p className=" py-2 w-1/5">Elemento</p>
+                        <p className="mr-5 py-2 w-1/5">Lote</p>
                     </div>
 
                     <div className="divide-y divide-gray-200">

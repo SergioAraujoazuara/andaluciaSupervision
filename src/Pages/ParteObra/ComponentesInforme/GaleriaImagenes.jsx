@@ -16,41 +16,45 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   image: {
-    width: "85%",
-    height: 120,
+    width: "95%",
+    height: 130,
     borderRadius: 8,
     border: "1px solid #cccccc",
     margin: 0,
   },
   imageLink: {
-    fontSize: 7,
-    color: "#1d4ed8",
-    textDecoration: "underline",
+    fontSize: 8,
+    color: "#5F6B75",
     textAlign: "center",
     marginTop: 2,
+    textDecoration: "underline",
+  },
+  imageText: {
+    fontSize: 8,
+    color: "#5F6B75",
+    textAlign: "center",
+    marginTop: 2,
+    
   },
 });
 
-const GaleriaImagenes = ({ imagesWithMetadata }) => (
+const GaleriaImagenes = ({ imagesWithMetadata, mostrarTitulo = true }) => (
   <>
-
-    <TituloInforme plantillaSeleccionada="3. ANEXO: Registro fotográfico" />
+    {mostrarTitulo && <TituloInforme plantillaSeleccionada="2. ANEXO: Registro fotográfico" />}
     <View style={styles.imageGrid}>
       {imagesWithMetadata.map((imageData, imgIndex) => (
         <View key={imgIndex} style={styles.imageContainer}>
           {imageData.imageBase64 && <Image style={styles.image} src={imageData.imageBase64} />}
           {imageData.googleMapsLink && (
             <>
-             <Text style={styles.imageLink}>{imageData.googleMapsLink}</Text>
-             <Text style={styles.imageLink}>{imageData.observacion}</Text>
-             </>
-           
+              <Text style={styles.imageLink}>{imageData.googleMapsLink}</Text>
+              <Text style={styles.imageText}>{imageData.observacion}</Text>
+            </>
           )}
         </View>
       ))}
     </View>
   </>
-
 );
 
 export default GaleriaImagenes;

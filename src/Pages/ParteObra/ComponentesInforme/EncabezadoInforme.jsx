@@ -12,16 +12,16 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     width: "65%",
-    fontSize: 8,
-    color: "#4b5563",
+    fontSize: 12,
+    color: "#5F6B75",
   },
   headerLabel: {
     fontWeight: "bold",
-    color: "#4b5563",
+    color: "#5F6B75",
   },
   headerValue: {
-    color: "#4b5563",
-    fontSize: 8,
+    color: "#5F6B75",
+    fontSize: 12,
     marginTop: 5,
   },
   headerLogos: {
@@ -31,8 +31,8 @@ const styles = StyleSheet.create({
     width: "45%",
   },
   logo: {
-    width: 120,
-    height: 45,
+    width: 160,
+    height: 75,
     marginBottom: 10,
   },
   line: {

@@ -3,18 +3,18 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   sectionTitleMain: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: "bold",
     textAlign: "left",
     backgroundColor: "#E5E7EB",
     paddingHorizontal: 8,
-    paddingVertical:3,
+    paddingVertical:4,
     paddingLeft: 10,
     width:"536px",
       color: "#4B5563"
   },
   sectionTitle: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: "bold",
     textAlign: "left",
     backgroundColor: "#E5E7EB",

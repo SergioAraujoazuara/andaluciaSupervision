@@ -8,14 +8,14 @@ const styles = StyleSheet.create({
   labelStyle: {
     fontWeight: "bold",
     color: "#374151", // Texto más oscuro para etiquetas
-    fontSize: 8,
+    fontSize: 9,
     marginBottom: 2,
     lineHeight: 1.25,
   },
   valueStyle: {
     color: "#4B5563", // Texto del valor ligeramente más claro
-    fontSize: 8,
-    lineHeight: 1.25,
+    fontSize: 9,
+    lineHeight: 1.5,
   },
 });
 

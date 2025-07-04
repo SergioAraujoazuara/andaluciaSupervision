@@ -23,15 +23,26 @@ const DatosRegistro = ({ dataRegister }) => {
     <View style={styles.fieldGroup}>
       {/* Sección 1 */}
       <View style={styles.section}>
-        <TituloActividad plantillaSeleccionada={`Trabajos del coordinador: ${dataRegister.actividad}`} />
+        <TituloActividad plantillaSeleccionada={`Trazabilidad de inspección:`} />
+        {/* Trazabilidad visual */}
+        <View style={{ marginTop: 4, marginBottom: 8 }}>
+          <TituloInforme plantillaSeleccionada={[
+            dataRegister.sectorNombre,
+            dataRegister.subSectorNombre,
+            dataRegister.parteNombre,
+            dataRegister.elementoNombre,
+            dataRegister.nombre
+          ].filter(
+            v => v && !['na', 'n-a', 'n/a'].includes(v.trim().toLowerCase())
+          ).join(' - ')} />
+        </View>
       </View>
 
       
       {/* Sección 3 */}
-      <View style={styles.section}>
+      <View style={{ ...styles.section, marginBottom: 16 }}>
         <TituloInforme plantillaSeleccionada="1. Observaciones generales" />
         <SeccionesDatosRegistros
-      
           valorDelCampo={dataRegister.observaciones}
         />
       </View>

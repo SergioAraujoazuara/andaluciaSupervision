@@ -183,8 +183,11 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     let imagesWithMetadata = [];
     if (dataRegister.imagenes && dataRegister.imagenes.length > 0) {
       imagesWithMetadata = await fetchImagesWithMetadata(dataRegister.imagenes);
-
     }
+
+    // Dividir en 2 y 6 imágenes
+    const primeraMitad = imagesWithMetadata.slice(0, 2); // Solo las dos primeras
+    const segundaMitad = imagesWithMetadata.slice(2);    // El resto (6 imágenes)
 
     console.log(dataRegister.fechaHora, 'fecha y hora')
     console.log(dataRegister, 'registro completo')
@@ -230,16 +233,19 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             dataRegister={dataRegister}
             columnasMap={columnasMap}
           />
-          {imagesWithMetadata.length > 0 && (
-            <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
+
+          {primeraMitad.length > 0 && (
+            <GaleriaImagenes imagesWithMetadata={primeraMitad} mostrarTitulo={true} />
           )}
-
-
-
-
-
-         
         </Page>
+
+        {segundaMitad.length > 0 && (
+          <Page size="A4" style={styles.page}>
+            <GaleriaImagenes imagesWithMetadata={segundaMitad} mostrarTitulo={false} />
+          </Page>
+        )}
+
+
 
         <Page size="A4" style={styles.page}>
 
@@ -253,21 +259,25 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             ]}
             columnasMap={columnasMap}
           />
-           <PiePaginaInforme
+
+<PiePaginaInforme
             userNombre={userNombre}
             firmaEmpresa={dataRegister.firmaEmpresa}  // Firma de la empresa desde Firestore
             firmaCliente={dataRegister.firmaCliente}
             nombreUsuario={nombreUsuario} // Firma del cliente desde Firestore
           />
-
         </Page>
 
-        <Page size="A4" style={styles.page}>
+        
 
 
 
-          
-        </Page>
+
+
+
+
+
+
 
 
       </Document>

@@ -1,6 +1,7 @@
 [
     {
-      "origin": ["http://localhost:5173", "https://seguridadsalud-60b15.web.app", "https://seguridad-salud-supervision.vercel.app/"],
+      "origin": ["http://localhost:5173", "https://andalucia-supervision.vercel.app/"],
+      "responseHeader": ["Content-Type"],
       "method": ["GET", "POST", "PUT", "DELETE"],
       "maxAgeSeconds": 3600
     }

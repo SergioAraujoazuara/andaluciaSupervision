@@ -153,9 +153,13 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
             imagesWithMetadata = await fetchImagesWithMetadata(registroIndividual.imagenes);
         }
 
+        // Dividir imágenes: primeras 2 y el resto (hasta 6)
+        const primeraMitad = imagesWithMetadata.slice(0, 2); // Solo las dos primeras
+        const segundaMitad = imagesWithMetadata.slice(2);    // El resto (máximo 6)
 
         const docContent = (
             <Document>
+                {/* Página 1: Encabezado + DatosRegistro + primeras 2 imágenes */}
                 <Page size="A4" style={styles.page}>
                     <EncabezadoInforme
                         empresa={proyecto?.empresa || "Nombre de mpresa"}
@@ -184,10 +188,20 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         columnasMap={columnasMap}
                     />
 
+                    {primeraMitad.length > 0 && (
+                        <GaleriaImagenes imagesWithMetadata={primeraMitad} mostrarTitulo={true} />
+                    )}
                 </Page>
 
-                <Page size="A4" style={styles.page}>
+                {/* Página 2: resto de imágenes (hasta 6) */}
+                {segundaMitad.length > 0 && (
+                    <Page size="A4" style={styles.page}>
+                        <GaleriaImagenes imagesWithMetadata={segundaMitad} mostrarTitulo={false} />
+                    </Page>
+                )}
 
+                {/* Página 3: Tabla de datos */}
+                <Page size="A4" style={styles.page}>
                     <DatosRegistroTabla
                         registro={registroIndividual}
                         excluirClaves={[
@@ -198,27 +212,17 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         ]}
                         columnasMap={columnasMap}
                     />
-
-
+                     <PiePaginaInforme
+                        userNombre={userNombre}
+                        firmaEmpresa={registroIndividual.firmaEmpresa}
+                        firmaCliente={registroIndividual.firmaCliente}
+                        nombreUsuario={nombreUsuario}
+                    />
                 </Page>
 
-
-
-                {imagesWithMetadata.length > 0 && (
-                    <Page size="A4" style={styles.page}>
-                        <GaleriaImagenes imagesWithMetadata={imagesWithMetadata} />
-                        <PrevisionesActividades dataRegister={registroIndividual} />
-                        <PiePaginaInforme
-                            userNombre={userNombre}
-                            firmaEmpresa={registroIndividual.firmaEmpresa}
-                            firmaCliente={registroIndividual.firmaCliente}
-                            nombreUsuario={nombreUsuario}
-                        />
-                    </Page>
-                )}
+               
             </Document>
         );
-
 
         return await pdf(docContent).toBlob();
     };

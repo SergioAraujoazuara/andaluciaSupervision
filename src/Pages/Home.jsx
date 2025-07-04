@@ -28,18 +28,25 @@ function Home() {
       const fetchUserDetails = async () => {
         const db = getFirestore();
         const usersRef = collection(db, 'usuarios');
-
         const q = query(usersRef, where("uid", "==", user.uid));
         const querySnapshot = await getDocs(q);
-
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          setUserName(data.nombre); // Guarda el nombre del usuario
-          setUserProjects(data.proyectos || []); // Guarda los proyectos asignados
-          setRole(data.role); // Guarda los proyectos asignados
+          setUserName(data.nombre);
+          setUserProjects(data.proyectos || []);
+          setRole(data.role);
+          // Verifica si el proyecto guardado sigue siendo válido
+          const storedProjectId = localStorage.getItem('selectedProjectId');
+          if (storedProjectId && !(data.proyectos || []).some(p => p.id === storedProjectId)) {
+            localStorage.removeItem('selectedProjectId');
+            localStorage.removeItem('selectedProjectName');
+            localStorage.removeItem('obra');
+            localStorage.removeItem('tramo');
+            setSelectedProject(null);
+            setProjectData(null);
+          }
         });
       };
-
       fetchUserDetails();
     }
   }, [user]);

@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
 const DatosRegistroTabla = ({ registro }) => {
   return (
     <View style={styles.fieldGroup}>
-      <TituloInforme plantillaSeleccionada="2. ANEXO: Detalles de la inspección (PPI)" />
+      <TituloInforme plantillaSeleccionada="3. ANEXO: Detalles de la inspección (PPI)" />
 
       {registro.actividades &&
         Object.values(registro.actividades)

@@ -43,6 +43,11 @@ const Navbar = () => {
   }, [user]);
 
   const handleLogout = async () => {
+    // Limpiar variables de proyecto del localStorage
+    localStorage.removeItem('selectedProjectId');
+    localStorage.removeItem('selectedProjectName');
+    localStorage.removeItem('obra');
+    localStorage.removeItem('tramo');
     await logout();
     navigate('/authTabs');
     setShowLogoutConfirmation(false);
