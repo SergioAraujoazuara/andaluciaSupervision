@@ -1269,25 +1269,35 @@ const TablaRegistros = () => {
                         {actividad.nombre || "Actividad sin nombre"}
                       </p>
                     </div>
-
                     {/* Estado de la actividad (Cumple, No cumple, No aplica) */}
                     <div className="flex items-center gap-4 text-sm font-medium text-gray-600">
-                      {/* "Cumple" solo si NO está en "No Aplica" */}
                       <span className={`min-w-[90px] flex items-center justify-center px-3 py-1 
-    ${actividad.noAplica ? "text-gray-400" : actividad.seleccionada === true ? "text-gray-800 font-bold bg-gray-200 border rounded-md" : "text-gray-500"}`}>
+                        ${actividad.noAplica ? "text-gray-400" : actividad.seleccionada === true ? "text-gray-800 font-bold bg-gray-200 border rounded-md" : "text-gray-500"}`}>
                         ✅ Aplica
                       </span>
-
-
-
-                      {/* "No Aplica" siempre se muestra */}
                       <span className={`min-w-[90px] flex items-center justify-center px-3 py-1 
-    ${actividad.noAplica ? "text-gray-800 font-bold bg-gray-200 border rounded-md" : "text-gray-500"}`}>
+                        ${actividad.noAplica ? "text-gray-800 font-bold bg-gray-200 border rounded-md" : "text-gray-500"}`}>
                         ⚪ No Aplica
                       </span>
                     </div>
-
-
+                    {/* Mostrar subpuntos/subactividades si existen */}
+                    {Array.isArray(actividad.subactividades) && actividad.subactividades.length > 0 && (
+                      <div className="mt-2 ml-4 border-l-4 border-gray-300 pl-3">
+                        <h4 className="text-xs font-semibold text-gray-700 mb-1">Subpuntos:</h4>
+                        {actividad.subactividades.map((sub, subIndex) => (
+                          <div key={subIndex} className="flex items-center gap-2 mb-1 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={!!sub.seleccionada}
+                              readOnly
+                              className="form-checkbox h-3 w-3 text-sky-600 cursor-not-allowed"
+                            />
+                            <span className="font-medium text-gray-700">{sub.numero} - {sub.nombre}</span>
+                            <span className="italic text-gray-500 ml-2">Tipo: {sub.tipo_inspeccion}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {/* Observaciones (solo lectura) */}
                     <div className="mt-2">
                       <label className="block text-sm font-medium text-gray-700">Observaciones</label>
@@ -1300,7 +1310,6 @@ const TablaRegistros = () => {
                     </div>
                   </div>
                 ))}
-
             </div>
 
 

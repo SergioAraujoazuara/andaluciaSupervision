@@ -141,7 +141,7 @@ const Navbar = () => {
                         onClick={() => handleDropdownClick(setDropdownOpen, dropdownOpen)}
                         className="font-medium flex justify-between items-center w-full text-left px-6 py-2 text-gray-600 hover:bg-gray-100"
                       >
-                         Prevención<FaCaretDown />
+                         Parte de obra<FaCaretDown />
                       </button>
                       {dropdownOpen && (
                         <div className="pl-6">
@@ -279,7 +279,7 @@ const Navbar = () => {
                       }}
                       className="flex items-center gap-1 px-3 py-2 rounded-md text-md font-medium text-gray-500 hover:text-sky-600"
                     >
-                      Prevención <FaCaretDown />
+                      Parte de obra <FaCaretDown />
                     </button>
                     {dropdownOpen && (
                       <div className="absolute bg-white shadow-lg rounded-md mt-2 py-2 w-48 z-50">

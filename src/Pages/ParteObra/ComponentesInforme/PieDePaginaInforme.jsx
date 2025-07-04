@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
 
 const PiePaginaInforme = ({ userNombre, firmaEmpresa, firmaCliente, nombreUsuario }) => (
   <View style={styles.footer}>
-    <TituloInforme plantillaSeleccionada="7. Firmas" />
+    <TituloInforme plantillaSeleccionada="4. Firmas" />
     <View style={styles.container}>
 
       {/* LADO IZQUIERDO */}
@@ -50,7 +50,7 @@ const PiePaginaInforme = ({ userNombre, firmaEmpresa, firmaCliente, nombreUsuari
 
       {/* LADO DERECHO */}
       <View style={styles.rightColumn}>
-        <Text style={styles.text}>{nombreUsuario || "N/A"} - Coordinador de Seguridad y Salud</Text>
+        <Text style={styles.text}>{nombreUsuario || "N/A"} - Coordinador</Text>
         <Text style={styles.text}></Text>
         <Text style={styles.text}>TPF Getinsa Euroestudios S.L.</Text>
         {firmaEmpresa ? (

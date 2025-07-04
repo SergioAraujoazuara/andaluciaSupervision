@@ -201,7 +201,7 @@ const AddProjectForm = ({
         {/* Coordinador */}
         <div className="mb-4">
           <label className="block font-semibold mb-2" htmlFor="coordinador">
-            Coordinador de seguridad y salud
+            Coordinador
           </label>
           <input
             type="text"

@@ -7,47 +7,11 @@ import { MdOutlineEmail, MdDriveFileRenameOutline } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
 import Logo_solo from '../assets/logo_solo.png';
 import AlertaRegister from '../Alertas/AlertaRegister'; // Asegúrate de que este componente esté creado
-import imageCompression from 'browser-image-compression';
 
 
 const Register = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
-
-  const [signature, setSignature] = useState("https://us.123rf.com/450wm/koblizeek/koblizeek2208/koblizeek220800128/190320173-sin-s%C3%ADmbolo-de-vector-de-imagen-falta-el-icono-disponible-no-hay-galer%C3%ADa-para-este-marcador-de.jpg");
-
-  const handleImagenChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      try {
-        const options = {
-          maxSizeMB: 0.2,
-          maxWidthOrHeight: 500,
-          useWebWorker: true,
-        };
-        const compressedFile = await imageCompression(file, options);
-        console.log(`Tamaño del archivo comprimido: ${compressedFile.size} bytes`);
-
-        const reader = new FileReader();
-        reader.onload = async () => {
-          const imgElement = document.createElement("img");
-          imgElement.src = reader.result;
-          imgElement.onload = () => {
-            const canvas = document.createElement("canvas");
-            canvas.width = imgElement.width;
-            canvas.height = imgElement.height;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
-            const pngDataUrl = canvas.toDataURL("image/png");
-            setSignature(pngDataUrl); // Almacenar la segunda imagen PNG en el estado
-          };
-        };
-        reader.readAsDataURL(compressedFile);
-      } catch (error) {
-        console.error('Error durante la compresión de la segunda imagen:', error);
-      }
-    }
-  };
 
   const [newUser, setNewUser] = useState({
     name: '',
@@ -72,13 +36,6 @@ const Register = () => {
       return;
     }
 
-     // Verificar si se ha cargado una imagen
-     if (!signature) {
-      setError('Es necesario subir una imagen de firma.');
-      setShowModal(true);
-      return;
-  }
-
     try {
       const authResult = await signup(newUser.email, newUser.password);
       const userId = authResult.user.uid;
@@ -89,7 +46,6 @@ const Register = () => {
         email: newUser.email,
         proyectos: [],
         role: 'invitado',
-        signature: signature, // Guarda la imagen en base64
       };
 
       await setDoc(doc(db, 'usuarios', userId), userData);
@@ -97,7 +53,6 @@ const Register = () => {
       navigate('/'); // Navegar a la página de inicio después del registro
     } catch (error) {
       let errorMessage = 'Error al registrar la cuenta';
-      // Manejar errores específicos aquí
       setError(errorMessage);
       setShowModal(true);
     }
@@ -173,24 +128,6 @@ const Register = () => {
                 />
               </div>
             </div>
-
-            <div className="flex flex-col mb-6">
-              <div className="relative">
-                <div className='flex gap-2 items-center w-full'>
-                  <p className='text-gray-600'>Firma de usuario
-                    </p>
-                    <p className='text-amber-600 text-sm'>(* Requerido)</p>
-                </div>
-
-                <input
-                  type="file"
-                  onChange={handleImagenChange}
-                  accept="image/*"
-                  className="mb-4 mt-2"
-                />
-              </div>
-            </div>
-
 
             <div className="flex justify-center">
               <button type="submit" className="bg-amber-600 text-white w-full py-2 rounded-lg hover:bg-amber-700 focus:outline-none">
