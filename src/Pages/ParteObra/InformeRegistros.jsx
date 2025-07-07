@@ -260,16 +260,20 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             columnasMap={columnasMap}
           />
 
-<PiePaginaInforme
+
+        </Page>
+
+        <Page size="A4" style={styles.page}>
+
+        <PiePaginaInforme
             userNombre={userNombre}
             firmaEmpresa={dataRegister.firmaEmpresa}  // Firma de la empresa desde Firestore
             firmaCliente={dataRegister.firmaCliente}
             nombreUsuario={nombreUsuario} // Firma del cliente desde Firestore
           />
+
         </Page>
-
         
-
 
 
 

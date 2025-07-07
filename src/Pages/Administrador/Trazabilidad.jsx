@@ -738,10 +738,10 @@ function Trazabilidad() {
         try {
             // Referencia a la subcolección 'parte' dentro del subsector
             const partesRef = collection(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte`);
-            
+
             // Obtener todas las partes dentro del subsector
             const partesSnapshot = await getDocs(partesRef);
-    
+
             // Si hay partes dentro, mostrar alerta y cancelar eliminación
             if (!partesSnapshot.empty) {
                 setAlerta('No se puede eliminar. El subsector tiene partes dentro. Elimínalas primero.');
@@ -749,13 +749,13 @@ function Trazabilidad() {
                 setMostrarModal(true);
                 return;
             }
-    
+
             // Referencia al documento 'subsector' en Firestore
             const subsectorRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector`, subsectorIdAEliminar);
-            
+
             // Eliminar el subsector de Firestore
             await deleteDoc(subsectorRef);
-    
+
             // Actualizar el estado local para reflejar la eliminación
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === sectorIdAEliminar) {
@@ -766,15 +766,15 @@ function Trazabilidad() {
                 }
                 return sector;
             });
-    
+
             // Actualizar el estado con la nueva lista de sectores
             setSectores(sectoresActualizados);
-    
+
             // Mostrar mensaje de éxito
             setAlerta('Subsector eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
-    
+
         } catch (error) {
             // Manejar errores y mostrar alerta de error
             console.error('Error al eliminar el subsector:', error);
@@ -782,11 +782,11 @@ function Trazabilidad() {
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-    
+
         // Cerrar el modal de confirmación
         setMostrarModalEliminarSubSector(false);
     };
-    
+
 
 
     // State to manage the delete lote modal visibility and IDs
@@ -893,10 +893,10 @@ function Trazabilidad() {
         try {
             // Referencia a la subcolección 'subsector' dentro del sector
             const subsectoresRef = collection(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector`);
-            
+
             // Obtener todos los subsectores dentro del sector
             const subsectoresSnapshot = await getDocs(subsectoresRef);
-    
+
             // Si hay subsectores dentro, mostrar alerta y cancelar eliminación
             if (!subsectoresSnapshot.empty) {
                 setAlerta('No se puede eliminar. El sector tiene subsectores dentro. Elimínalos primero.');
@@ -904,22 +904,22 @@ function Trazabilidad() {
                 setMostrarModal(true);
                 return;
             }
-    
+
             // Referencia al documento del sector en Firestore
             const sectorRef = doc(db, `proyectos/${id}/sector`, sectorIdAEliminar);
-    
+
             // Eliminar el sector de Firestore
             await deleteDoc(sectorRef);
-    
+
             // Actualizar el estado eliminando el sector
             const sectoresActualizados = sectores.filter(sector => sector.id !== sectorIdAEliminar);
             setSectores(sectoresActualizados);
-    
+
             // Mostrar mensaje de éxito
             setAlerta('Sector eliminado correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
-    
+
         } catch (error) {
             // Manejar errores y mostrar alerta de error
             console.error('Error al eliminar el sector:', error);
@@ -927,11 +927,11 @@ function Trazabilidad() {
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-    
+
         // Ocultar el modal de confirmación
         setMostrarModalEliminarSector(false);
     };
-    
+
     // State to store the ID of the 'parte' to delete and manage the delete confirmation modal visibility
     const [parteIdAEliminar, setParteIdAEliminar] = useState(null);
     const [mostrarModalEliminarParte, setMostrarModalEliminarParte] = useState(false)
@@ -947,10 +947,10 @@ function Trazabilidad() {
         try {
             // Referencia a la subcolección 'elemento' dentro de la parte
             const elementosRef = collection(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento`);
-            
+
             // Obtener todos los elementos dentro de la parte
             const elementosSnapshot = await getDocs(elementosRef);
-    
+
             // Si hay elementos dentro, mostrar alerta y cancelar eliminación
             if (!elementosSnapshot.empty) {
                 setAlerta('No se puede eliminar. La parte tiene elementos dentro. Elimínalos primero.');
@@ -958,13 +958,13 @@ function Trazabilidad() {
                 setMostrarModal(true);
                 return;
             }
-    
+
             // Referencia al documento 'parte' en Firestore
             const parteRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte`, parteIdAEliminar);
-            
+
             // Eliminar la parte de Firestore
             await deleteDoc(parteRef);
-    
+
             // Actualizar el estado local para reflejar la eliminación
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === sectorIdAEliminar) {
@@ -983,15 +983,15 @@ function Trazabilidad() {
                 }
                 return sector;
             });
-    
+
             // Actualizar el estado con la nueva lista de sectores
             setSectores(sectoresActualizados);
-    
+
             // Mostrar mensaje de éxito
             setAlerta('Parte eliminada correctamente.');
             setTipoAlerta('success');
             setMostrarModal(true);
-    
+
         } catch (error) {
             // Manejar errores y mostrar alerta de error
             console.error('Error al eliminar:', error);
@@ -999,11 +999,11 @@ function Trazabilidad() {
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-    
+
         // Cerrar el modal de confirmación
         setMostrarModalEliminarParte(false);
     };
-    
+
 
 
     // Eliminar elemento
@@ -1022,10 +1022,10 @@ function Trazabilidad() {
         try {
             // Referencia a la subcolección 'lote' dentro del elemento
             const lotesRef = collection(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento/${elementoIdAEliminar}/lote`);
-            
+
             // Obtener todos los lotes dentro del elemento
             const lotesSnapshot = await getDocs(lotesRef);
-    
+
             // 🔹 Si hay lotes, mostrar alerta y cancelar la eliminación
             if (!lotesSnapshot.empty) {
                 setAlerta("⚠️ No puedes eliminar este elemento porque contiene actividades. Elimina las actividades primero.");
@@ -1033,13 +1033,13 @@ function Trazabilidad() {
                 setMostrarModal(true);
                 return;
             }
-    
+
             // Referencia al documento 'elemento'
             const elementoRef = doc(db, `proyectos/${id}/sector/${sectorIdAEliminar}/subsector/${subsectorIdAEliminar}/parte/${parteIdAEliminar}/elemento/${elementoIdAEliminar}`);
-    
+
             // Eliminar el 'elemento'
             await deleteDoc(elementoRef);
-    
+
             // Actualizar el estado local
             const sectoresActualizados = sectores.map(sector => {
                 if (sector.id === sectorIdAEliminar) {
@@ -1066,10 +1066,10 @@ function Trazabilidad() {
                 }
                 return sector;
             });
-    
+
             // Actualizar el estado en React
             setSectores(sectoresActualizados);
-    
+
             // Mostrar mensaje de éxito
             setAlerta('✅ Elemento eliminado correctamente.');
             setTipoAlerta('success');
@@ -1080,12 +1080,12 @@ function Trazabilidad() {
             setTipoAlerta('error');
             setMostrarModal(true);
         }
-    
+
         // Cerrar el modal de confirmación
         setMostrarModalEliminarElemento(false);
     };
-    
-    
+
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1454,9 +1454,9 @@ function Trazabilidad() {
         const ppiSeleccionado = ppis.find(ppi => ppi.id === selectedPpi);
         const ppiNombre = ppiSeleccionado ? ppiSeleccionado.nombre : "";
 
-        console.log(ppiNombre,'ppi seleccionado *****')
+        console.log(ppiNombre, 'ppi seleccionado *****')
         let ppiData = null;
-        
+
         // Buscar el documento completo del PPI en Firestore
         if (selectedPpi) {
             const ppiRef = doc(db, `ppis/${selectedPpi}`);
@@ -1504,16 +1504,16 @@ function Trazabilidad() {
             });
 
             // Crear la subcolección 'inspecciones' y guardar la información del PPI
-        if (ppiData) {
-            const inspeccionRef = doc(collection(db, `lotes/${loteIdAEditar}/inspecciones`));
-            await setDoc(inspeccionRef, {
-                ...ppiData, // Guardamos toda la información del PPI
-            });
-            console.log("✅ Subcolección 'inspecciones' creada con éxito.");
-        } else {
-            console.log("⚠️ No se pudo crear la subcolección 'inspecciones' porque no hay PPI.");
-        }
-            
+            if (ppiData) {
+                const inspeccionRef = doc(collection(db, `lotes/${loteIdAEditar}/inspecciones`));
+                await setDoc(inspeccionRef, {
+                    ...ppiData, // Guardamos toda la información del PPI
+                });
+                console.log("✅ Subcolección 'inspecciones' creada con éxito.");
+            } else {
+                console.log("⚠️ No se pudo crear la subcolección 'inspecciones' porque no hay PPI.");
+            }
+
 
             // Actualizar el estado local
             const sectoresActualizados = sectores.map((sector) => {
@@ -1806,7 +1806,7 @@ function Trazabilidad() {
                                 <p className='text-md bg-gray-200 font-medium text-gray-500 w-full rounded-md px-3 py-2 flex items-center gap-2'>5. Lote</p>
                             </div>
 
-                            
+
 
 
                             <div className='grid xl:grid-cols-12 gap-3'>
@@ -1902,25 +1902,9 @@ function Trazabilidad() {
                                 key={sector.id}
                                 className={`flex flex-wrap items-center ${index % 2 === 0 ? 'bg-gray-100' : 'bg-gray-50'} md:flex-row flex-col`}
                             >
-                                <div className="xl:bg-transparent bg-sky-600 rounded-t-lg text-gray-100 xl:text-gray-500 font-medium px-4 py-3 md:w-1/5 w-full group cursor-pointer flex justify-between">
-                                    <p className='w-full text-lg'>{sector.nombre}</p>
-                                    <div className="flex gap-4">
-                                        <button
-                                            onClick={() => solicitarEditarSector(sector.id, sector.nombre)}
-                                            className="text-gray-100 xl:text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                                        >
-                                            <VscEdit />
-                                        </button>
-                                        <button
-                                            onClick={() => solicitarEliminarSector(sector.id)}
-                                            className="text-amber-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                                        >
-                                            <RiDeleteBinLine />
-                                        </button>
-                                    </div>
-                                </div>
-                                {sector.subsectores && sector.subsectores.length > 0 && (
-                                    <ul className="divide-y divide-gray-200 md:w-4/5 w-full">
+                                
+                                
+                                    <ul className="divide-y divide-gray-200 md:w-5/5 w-full">
                                         {sector.subsectores.map((subsector) =>
                                             subsector.partes && subsector.partes.length > 0
                                                 ? subsector.partes.sort((a, b) => a.nombre.localeCompare(b.nombre)).map((parte) =>
@@ -1930,8 +1914,27 @@ function Trazabilidad() {
                                                                 ? elemento.lotes.map((lote) => (
                                                                     <li
                                                                         key={lote.id}
-                                                                        className="py-4 p-4 mb-4 md:mb-0 md:grid md:grid-cols-4"
+                                                                        className="py-4 p-4 mb-4 md:mb-0 md:grid md:grid-cols-5"
                                                                     >
+                                                                        <div className="flex justify-between items-center group">
+                                                                            <p>{sector.nombre}</p>
+                                                                            <div className="flex gap-4">
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        solicitarEditarSector(sector.id, sector.nombre)
+                                                                                    }
+                                                                                    className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <VscEdit />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => solicitarEliminarSector(sector.id)}
+                                                                                    className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <RiDeleteBinLine />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
                                                                         <div className="flex justify-between items-center group">
                                                                             <p>{subsector.nombre}</p>
                                                                             <div className="flex gap-4">
@@ -2028,8 +2031,27 @@ function Trazabilidad() {
                                                                 : (
                                                                     <li
                                                                         key={`${elemento.id}-sin-lote`}
-                                                                        className="py-4  rounded-lg p-4 mb-4 md:mb-0 md:grid md:grid-cols-4"
+                                                                        className="py-4  rounded-lg p-4 mb-4 md:mb-0 md:grid md:grid-cols-5"
                                                                     >
+                                                                        <div className="flex justify-between items-center group">
+                                                                            <p>{sector.nombre}</p>
+                                                                            <div className="flex gap-4">
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        solicitarEditarSector(sector.id, sector.nombre)
+                                                                                    }
+                                                                                    className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <VscEdit />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => solicitarEliminarSector(sector.id)}
+                                                                                    className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <RiDeleteBinLine />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
                                                                         <div className="flex justify-between items-center group">
                                                                             <p>{subsector.nombre}</p>
                                                                             <div className="flex gap-4">
@@ -2109,8 +2131,27 @@ function Trazabilidad() {
                                                         : (
                                                             <li
                                                                 key={`${parte.id}-sin-elemento`}
-                                                                className="py-4 rounded-lg p-4 mb-4 md:mb-0 md:grid md:grid-cols-4"
+                                                                className="py-4 rounded-lg p-4 mb-4 md:mb-0 md:grid md:grid-cols-5"
                                                             >
+                                                                <div className="flex justify-between items-center group">
+                                                                            <p>{sector.nombre}</p>
+                                                                            <div className="flex gap-4">
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        solicitarEditarSector(sector.id, sector.nombre)
+                                                                                    }
+                                                                                    className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <VscEdit />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => solicitarEliminarSector(sector.id)}
+                                                                                    className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <RiDeleteBinLine />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
                                                                 <div className="flex justify-between items-center group">
                                                                     <p>{subsector.nombre}</p>
                                                                     <div className="flex gap-4">
@@ -2172,10 +2213,29 @@ function Trazabilidad() {
                                                 : (
                                                     <li
                                                         key={`${subsector.id}-sin-parte`}
-                                                        className="py-4 rounded-lg p-4 mb-4 md:mb-0 md:grid md:grid-cols-4"
+                                                        className="py-4 rounded-lg p-4 mb-4 md:mb-0 md:grid md:grid-cols-5"
                                                     >
                                                         <div className="flex justify-between items-center group">
-                                                            <p>{subsector.nombre}</p>
+                                                                            <p>{sector.nombre}</p>
+                                                                            <div className="flex gap-4">
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        solicitarEditarSector(sector.id, sector.nombre)
+                                                                                    }
+                                                                                    className="text-gray-500 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <VscEdit />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => solicitarEliminarSector(sector.id)}
+                                                                                    className="text-amber-600 text-md opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                                >
+                                                                                    <RiDeleteBinLine />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                        <div className="flex justify-between items-center group">
+                                                           <p>{subsector.nombre}</p>
                                                             <div className="flex gap-4">
                                                                 <button
                                                                     onClick={() => solicitarEditarSubSector(sector.id, subsector.id, subsector.nombre)}
@@ -2217,7 +2277,7 @@ function Trazabilidad() {
                                                 )
                                         )}
                                     </ul>
-                                )}
+                                
                             </div>
                         ))}
                     </div>
@@ -2631,18 +2691,18 @@ function Trazabilidad() {
                                 {/* Selector de PPI para lotes sin PPI */}
                                 {ppiIdAEditar == "" && (
                                     <select
-                                    value={selectedPpi}
-                                    onChange={(e) => setSelectedPpi(e.target.value)}
-                                    className="mt-2 border px-3 py-1 rounded-lg w-full"
-                                >
-                                    <option value="">Seleccione un PPI</option>
-                                    {ppis.map(ppi => (
-                                        <option key={ppi.id} value={ppi.id}>{ppi.nombre}</option>
-                                    ))}
-                                </select>
+                                        value={selectedPpi}
+                                        onChange={(e) => setSelectedPpi(e.target.value)}
+                                        className="mt-2 border px-3 py-1 rounded-lg w-full"
+                                    >
+                                        <option value="">Seleccione un PPI</option>
+                                        {ppis.map(ppi => (
+                                            <option key={ppi.id} value={ppi.id}>{ppi.nombre}</option>
+                                        ))}
+                                    </select>
                                 )}
 
-                                
+
 
 
                                 <div className='flex justify-center gap-5 mt-3'>
