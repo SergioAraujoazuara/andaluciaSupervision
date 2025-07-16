@@ -153,13 +153,16 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
             imagesWithMetadata = await fetchImagesWithMetadata(registroIndividual.imagenes);
         }
 
-        // Dividir imágenes: primeras 2 y el resto (hasta 6)
-        const primeraMitad = imagesWithMetadata.slice(0, 2); // Solo las dos primeras
-        const segundaMitad = imagesWithMetadata.slice(2);    // El resto (máximo 6)
+        // Agrupar todas las imágenes en un solo array y dividir en grupos de 4
+        const chunkArray = (arr, size) =>
+            arr.reduce((acc, _, i) =>
+                i % size === 0 ? [...acc, arr.slice(i, i + size)] : acc
+            , []);
+        const imagenesPorPagina = chunkArray(imagesWithMetadata, 4);
 
         const docContent = (
             <Document>
-                {/* Página 1: Encabezado + DatosRegistro + primeras 2 imágenes */}
+                {/* Página 1: Encabezado + DatosRegistro */}
                 <Page size="A4" style={styles.page}>
                     <EncabezadoInforme
                         empresa={proyecto?.empresa || "Nombre de mpresa"}
@@ -187,20 +190,22 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         dataRegister={registroIndividual}
                         columnasMap={columnasMap}
                     />
-
-                    {primeraMitad.length > 0 && (
-                        <GaleriaImagenes imagesWithMetadata={primeraMitad} mostrarTitulo={true} />
-                    )}
+                     <PiePaginaInforme
+                        userNombre={userNombre}
+                        firmaEmpresa={registroIndividual.firmaEmpresa}
+                        firmaCliente={registroIndividual.firmaCliente}
+                        nombreUsuario={nombreUsuario}
+                    />
                 </Page>
 
-                {/* Página 2: resto de imágenes (hasta 6) */}
-                {segundaMitad.length > 0 && (
-                    <Page size="A4" style={styles.page}>
-                        <GaleriaImagenes imagesWithMetadata={segundaMitad} mostrarTitulo={false} />
+                {/* Paginación de imágenes: 4 por página */}
+                {imagenesPorPagina.map((grupo, idx) => (
+                    <Page key={idx} size="A4" style={styles.page}>
+                        <GaleriaImagenes imagesWithMetadata={grupo} mostrarTitulo={idx === 0} />
                     </Page>
-                )}
+                ))}
 
-                {/* Página 3: Tabla de datos */}
+                {/* Página: Tabla de datos */}
                 <Page size="A4" style={styles.page}>
                     <DatosRegistroTabla
                         registro={registroIndividual}
@@ -212,15 +217,8 @@ const InformeFinal = ({ fechaInicio, fechaFin, formatFechaActual, nombreUsuario,
                         ]}
                         columnasMap={columnasMap}
                     />
-                     <PiePaginaInforme
-                        userNombre={userNombre}
-                        firmaEmpresa={registroIndividual.firmaEmpresa}
-                        firmaCliente={registroIndividual.firmaCliente}
-                        nombreUsuario={nombreUsuario}
-                    />
+                    
                 </Page>
-
-               
             </Document>
         );
 

@@ -247,7 +247,7 @@ const ParteObra = () => {
           .filter((l) =>
             (filters.sector === "" || l.sectorNombre === filters.sector) &&
             (filters.subSector === "" || l.subSectorNombre === filters.subSector) &&
-            (filters.elemento === "" || l.elementoNombre === filters.elemento) &&
+            (filters.parte === "" || l.parteNombre === filters.parte) &&
             (filters.nombre === "" || l.nombre === filters.nombre)
           )
           .map((l) => l.parteNombre))],
@@ -477,7 +477,32 @@ const ParteObra = () => {
         });
       } else {
         initializeFormState();
-        finalizeOpenModal(lote);
+        // Inicializar selectedActivities con todas las actividades en 'No Aplica' si hay ppiDetails
+        if (lote.ppiId) {
+          const ppiDocRef = doc(db, "ppis", lote.ppiId);
+          const ppiDocSnap = await getDoc(ppiDocRef);
+          if (ppiDocSnap.exists()) {
+            const ppiData = ppiDocSnap.data();
+            if (ppiData && ppiData.actividades) {
+              const initialSelected = {};
+              ppiData.actividades.forEach((actividad, idx) => {
+                initialSelected[idx] = {
+                  nombre: actividad.actividad,
+                  seleccionada: false,
+                  noAplica: true,
+                  subactividades: Array.isArray(actividad.subactividades)
+                    ? actividad.subactividades.map(sub => ({
+                        nombre: sub.nombre,
+                        seleccionada: false,
+                      }))
+                    : [],
+                };
+              });
+              setSelectedActivities(initialSelected);
+            }
+          }
+          finalizeOpenModal(lote);
+        }
       }
     } catch (error) {
       console.error("Error al verificar borrador:", error);
@@ -800,7 +825,7 @@ const ParteObra = () => {
         newSelected[actividadIndex] = {
           nombre: actividadNombre,
           seleccionada: value === "si",
-          noAplica: false,
+          noAplica: false, // Siempre desactivar 'No Aplica' al seleccionar 'Aplica'
           subactividades: subactividades.map((sub) => ({
             nombre: sub.nombre,
             seleccionada: value === "si",
@@ -812,7 +837,7 @@ const ParteObra = () => {
           ...sub,
           seleccionada: value === "si",
         }));
-        newSelected[actividadIndex].noAplica = false;
+        newSelected[actividadIndex].noAplica = false; // Siempre desactivar 'No Aplica' al seleccionar 'Aplica'
       }
       return newSelected;
     });
@@ -1288,7 +1313,6 @@ const ParteObra = () => {
                                         value="si"
                                         checked={selectedActivities[actividadIndex]?.seleccionada === true}
                                         onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas, "si")}
-                                        disabled={selectedActivities[actividadIndex]?.noAplica}
                                         className="hidden"
                                       />
                                       ✅ Aplica
@@ -1503,7 +1527,6 @@ const ParteObra = () => {
                                       value="si"
                                       checked={selectedActivities[actividadIndex]?.seleccionada === true}
                                       onChange={() => handleActivityChange(actividadIndex, actividad.actividad, subactividadesValidas, "si")}
-                                      disabled={selectedActivities[actividadIndex]?.noAplica}
                                       className="hidden"
                                     />
                                     ✅ Aplica

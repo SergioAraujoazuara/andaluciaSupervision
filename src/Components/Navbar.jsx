@@ -302,13 +302,13 @@ const Navbar = () => {
                         >
                           Informes de visita 
                         </Link>
-                        <Link
+                        {/* <Link
                           to="/verRegistrosActasReunion"
                           className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                           onClick={handleLinkClick}
                         >
                           Actas de reunión
-                        </Link>
+                        </Link> */}
                       </div>
                     )}
                   </div>

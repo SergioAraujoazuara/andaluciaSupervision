@@ -120,18 +120,21 @@ const DatosRegistroTablaActas = ({ registro }) => {
                   </View>
 
                   {/* Subactividades */}
-                  {actividad.subactividades &&
-                    actividad.subactividades.filter((sub) => sub.seleccionada === true).length > 0 && (
+                  {Array.isArray(actividad.subactividades) &&
+                    actividad.subactividades.length > 0 &&
+                    actividad.subactividades.filter(
+                      (sub) => sub.seleccionada === true && ((sub.nombre && sub.nombre.trim() !== "") || (sub.observacion && sub.observacion.trim() !== ""))
+                    ).length > 0 && (
                       <>
                         <View style={styles.subActividadRow}>
-                          <Text style={[styles.subActividadCell, styles.tableCellSmall, { fontWeight: "bold" }]}>
-                            Subactividades
-                          </Text>
+                          <Text style={[styles.subActividadCell, styles.tableCellSmall, { fontWeight: "bold" }]}>Subactividades</Text>
                           <Text style={[styles.subActividadCell, styles.tableCellSmall]}></Text>
                           <Text style={[styles.subActividadCell, styles.tableCellLarge]}></Text>
                         </View>
                         {actividad.subactividades
-                          .filter((sub) => sub.seleccionada === true)
+                          .filter(
+                            (sub) => sub.seleccionada === true && ((sub.nombre && sub.nombre.trim() !== "") || (sub.observacion && sub.observacion.trim() !== ""))
+                          )
                           .map((subactividad, subIndex) => {
                             return (
                               <View key={subIndex} style={styles.subActividadRow}>

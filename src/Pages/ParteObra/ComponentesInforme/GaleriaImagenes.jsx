@@ -8,39 +8,39 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: 18,
   },
   imageContainer: {
-    width: "45%",
-    margin: "1%",
+    width: "43%",
+    margin: "2%",
     alignItems: "center",
   },
   image: {
-    width: "95%",
-    height: 130,
+    width: "100%",
+    height: 170,
     borderRadius: 8,
     border: "1px solid #cccccc",
-    margin: 0,
+    marginTop: 40,
   },
   imageLink: {
     fontSize: 8,
     color: "#5F6B75",
     textAlign: "center",
-    marginTop: 2,
+    marginTop: 6,
     textDecoration: "underline",
   },
   imageText: {
     fontSize: 8,
     color: "#5F6B75",
     textAlign: "center",
-    marginTop: 2,
+    marginTop: 6,
     
   },
 });
 
 const GaleriaImagenes = ({ imagesWithMetadata, mostrarTitulo = true }) => (
   <>
-    {mostrarTitulo && <TituloInforme plantillaSeleccionada="2. ANEXO: Registro fotográfico" />}
+    {mostrarTitulo && <TituloInforme plantillaSeleccionada="3. ANEXO: Registro fotográfico" />}
     <View style={styles.imageGrid}>
       {imagesWithMetadata.map((imageData, imgIndex) => (
         <View key={imgIndex} style={styles.imageContainer}>

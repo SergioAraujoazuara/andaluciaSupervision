@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
 const DatosRegistroTabla = ({ registro }) => {
   return (
     <View style={styles.fieldGroup}>
-      <TituloInforme plantillaSeleccionada="3. ANEXO: Detalles de la inspección (PPI)" />
+      <TituloInforme plantillaSeleccionada="4. ANEXO: Detalles de la inspección (PPI)" />
 
       {registro.actividades &&
         Object.values(registro.actividades)
@@ -109,25 +109,14 @@ const DatosRegistroTabla = ({ registro }) => {
                 {actividad.observacion || "—"}
               </Text>
 
-              {actividad.subactividades &&
-                actividad.subactividades.filter((sub) => sub.seleccionada === true).length > 0 && (
+              {Array.isArray(actividad.subactividades) &&
+                actividad.subactividades.length > 0 &&
+                actividad.subactividades.filter(
+                  (sub) => sub.seleccionada === true && ((sub.nombre && sub.nombre.trim() !== "") || (sub.observacion && sub.observacion.trim() !== ""))
+                ).length > 0 && (
                   <View style={styles.subActividadBlock}>
                     <Text style={styles.label}>Subactividades:</Text>
-                    {actividad.subactividades
-                      .filter((sub) => sub.seleccionada === true)
-                      .map((subactividad, subIndex) => (
-                        <View key={subIndex} style={{ marginBottom: 4 }}>
-                          <View style={styles.subActividadRow}>
-                            <Text style={styles.subActividadTitle}>
-                              Nombre: {subactividad.nombre || `Subactividad ${subIndex + 1}`}
-                            </Text>
-                            <Text style={styles.subActividadStatus}>Aplica ✅</Text>
-                          </View>
-                          <Text style={styles.subActividadText}>
-                            Observación: {subactividad.observacion || "—"}
-                          </Text>
-                        </View>
-                      ))}
+                    
                   </View>
                 )}
             </View>

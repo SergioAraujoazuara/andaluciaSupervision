@@ -185,18 +185,15 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       imagesWithMetadata = await fetchImagesWithMetadata(dataRegister.imagenes);
     }
 
-    // Dividir en 2 y 6 imágenes
-    const primeraMitad = imagesWithMetadata.slice(0, 2); // Solo las dos primeras
-    const segundaMitad = imagesWithMetadata.slice(2);    // El resto (6 imágenes)
-
-    console.log(dataRegister.fechaHora, 'fecha y hora')
-    console.log(dataRegister, 'registro completo')
-
-
+    // Agrupar todas las imágenes en un solo array y dividir en grupos de 4
+    const chunkArray = (arr, size) =>
+      arr.reduce((acc, _, i) =>
+        i % size === 0 ? [...acc, arr.slice(i, i + size)] : acc
+      , []);
+    const imagenesPorPagina = chunkArray(imagesWithMetadata, 4);
 
     const docContent = (
       <Document>
-
         <Page size="A4" style={styles.page}>
           <EncabezadoInforme
             empresa={proyecto?.empresa || "Nombre de mpresa"}
@@ -215,13 +212,8 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
               }) + " hrs"
               : "Fecha no disponible"
               }`}
-
-
             logos={[proyecto?.logo, proyecto?.logoCliente].filter(Boolean)}
           />
-
-
-
           <DatosRegistro
             registro={dataRegister}
             excluirClaves={[
@@ -233,22 +225,22 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             dataRegister={dataRegister}
             columnasMap={columnasMap}
           />
-
-          {primeraMitad.length > 0 && (
-            <GaleriaImagenes imagesWithMetadata={primeraMitad} mostrarTitulo={true} />
-          )}
+          <PiePaginaInforme
+            userNombre={userNombre}
+            firmaEmpresa={dataRegister.firmaEmpresa}
+            firmaCliente={dataRegister.firmaCliente}
+            nombreUsuario={nombreUsuario}
+          />
         </Page>
 
-        {segundaMitad.length > 0 && (
-          <Page size="A4" style={styles.page}>
-            <GaleriaImagenes imagesWithMetadata={segundaMitad} mostrarTitulo={false} />
+        {/* Paginación de imágenes: 4 por página */}
+        {imagenesPorPagina.map((grupo, idx) => (
+          <Page key={idx} size="A4" style={styles.page}>
+            <GaleriaImagenes imagesWithMetadata={grupo} mostrarTitulo={idx === 0} />
           </Page>
-        )}
-
-
+        ))}
 
         <Page size="A4" style={styles.page}>
-
           <DatosRegistroTabla
             registro={dataRegister}
             excluirClaves={[
@@ -259,31 +251,8 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             ]}
             columnasMap={columnasMap}
           />
-
-
-        </Page>
-
-        <Page size="A4" style={styles.page}>
-
-        <PiePaginaInforme
-            userNombre={userNombre}
-            firmaEmpresa={dataRegister.firmaEmpresa}  // Firma de la empresa desde Firestore
-            firmaCliente={dataRegister.firmaCliente}
-            nombreUsuario={nombreUsuario} // Firma del cliente desde Firestore
-          />
-
         </Page>
         
-
-
-
-
-
-
-
-
-
-
       </Document>
     );
 
