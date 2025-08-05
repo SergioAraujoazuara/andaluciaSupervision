@@ -7,7 +7,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#4b5563",
     paddingHorizontal:"8",
-    marginTop:180
+    marginTop:20
   },
   container: {
     flexDirection: "row",
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
 
 const PiePaginaInforme = ({ userNombre, firmaEmpresa, firmaCliente, nombreUsuario }) => (
   <View style={styles.footer}>
-    <TituloInforme plantillaSeleccionada="2. Firmas" />
+    <TituloInforme plantillaSeleccionada="4. Firmas" />
     <View style={styles.container}>
 
       {/* LADO IZQUIERDO */}

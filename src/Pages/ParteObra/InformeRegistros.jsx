@@ -185,15 +185,18 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
       imagesWithMetadata = await fetchImagesWithMetadata(dataRegister.imagenes);
     }
 
-    // Agrupar todas las imágenes en un solo array y dividir en grupos de 4
+    // Dividir imágenes: primeras 2 para la página de datos, el resto para las siguientes páginas (6 por página)
+    const primerasDos = imagesWithMetadata.slice(0, 2);
+    const resto = imagesWithMetadata.slice(2);
     const chunkArray = (arr, size) =>
       arr.reduce((acc, _, i) =>
         i % size === 0 ? [...acc, arr.slice(i, i + size)] : acc
       , []);
-    const imagenesPorPagina = chunkArray(imagesWithMetadata, 4);
+    const imagenesPorPagina = chunkArray(resto, 6);
 
     const docContent = (
       <Document>
+        {/* Página 1: Datos + 2 imágenes */}
         <Page size="A4" style={styles.page}>
           <EncabezadoInforme
             empresa={proyecto?.empresa || "Nombre de mpresa"}
@@ -225,18 +228,14 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             dataRegister={dataRegister}
             columnasMap={columnasMap}
           />
-          <PiePaginaInforme
-            userNombre={userNombre}
-            firmaEmpresa={dataRegister.firmaEmpresa}
-            firmaCliente={dataRegister.firmaCliente}
-            nombreUsuario={nombreUsuario}
-          />
+          {/* Mostrar solo 2 imágenes en la primera página, con título */}
+          <GaleriaImagenes imagesWithMetadata={primerasDos} mostrarTitulo={true} />
         </Page>
 
-        {/* Paginación de imágenes: 4 por página */}
+        {/* Páginas siguientes: solo galería de imágenes (6 por página), sin título */}
         {imagenesPorPagina.map((grupo, idx) => (
           <Page key={idx} size="A4" style={styles.page}>
-            <GaleriaImagenes imagesWithMetadata={grupo} mostrarTitulo={idx === 0} />
+            <GaleriaImagenes imagesWithMetadata={grupo} mostrarTitulo={false} />
           </Page>
         ))}
 
@@ -251,8 +250,17 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             ]}
             columnasMap={columnasMap}
           />
+          
         </Page>
-        
+
+        <Page size="A4" style={styles.page}>
+          <PiePaginaInforme
+            userNombre={userNombre}
+            firmaEmpresa={dataRegister.firmaEmpresa}
+            firmaCliente={dataRegister.firmaCliente}
+            nombreUsuario={nombreUsuario}
+          />
+        </Page>
       </Document>
     );
 

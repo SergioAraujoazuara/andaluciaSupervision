@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    marginBottom: 18,
+   
   },
   imageContainer: {
     width: "43%",
@@ -17,10 +17,10 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 170,
+    height: 150,
     borderRadius: 8,
     border: "1px solid #cccccc",
-    marginTop: 40,
+    marginTop: 10,
   },
   imageLink: {
     fontSize: 8,
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
 
 const GaleriaImagenes = ({ imagesWithMetadata, mostrarTitulo = true }) => (
   <>
-    {mostrarTitulo && <TituloInforme plantillaSeleccionada="3. ANEXO: Registro fotográfico" />}
+    {mostrarTitulo && <TituloInforme plantillaSeleccionada="2. Registro fotográfico" />}
     <View style={styles.imageGrid}>
       {imagesWithMetadata.map((imageData, imgIndex) => (
         <View key={imgIndex} style={styles.imageContainer}>
