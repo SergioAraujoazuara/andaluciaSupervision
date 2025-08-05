@@ -4,7 +4,7 @@ import TituloInforme from "./TituloInforme";
 
 const styles = StyleSheet.create({
   footer: {
-    fontSize: 10,
+    fontSize: 8,
     color: "#4b5563",
     paddingHorizontal:"8",
     marginTop:20
@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   signature: {
-    width: 120,
+    width: 100,
     height: 40,
   },
   text: {

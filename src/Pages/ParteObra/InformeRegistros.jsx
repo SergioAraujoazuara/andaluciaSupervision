@@ -250,17 +250,15 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             ]}
             columnasMap={columnasMap}
           />
-          
-        </Page>
-
-        <Page size="A4" style={styles.page}>
-          <PiePaginaInforme
+           <PiePaginaInforme
             userNombre={userNombre}
             firmaEmpresa={dataRegister.firmaEmpresa}
             firmaCliente={dataRegister.firmaCliente}
             nombreUsuario={nombreUsuario}
           />
         </Page>
+
+       
       </Document>
     );
 

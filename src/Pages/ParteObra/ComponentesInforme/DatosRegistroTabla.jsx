@@ -5,12 +5,12 @@ import TituloInforme from "./TituloInforme";
 const styles = StyleSheet.create({
   fieldGroup: {
     flexDirection: "column",
-    marginBottom: 6,
+    marginBottom: 3,
     marginLeft: 8,
   },
   actividadBlock: {
     borderRadius: 6,
-    marginBottom: 8,
+    marginBottom: 3,
     paddingHorizontal: 6,
     paddingVertical: 3,
     backgroundColor: "#fff",
@@ -20,10 +20,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 4,
-    paddingBottom: 4,
+    marginBottom: 3,
+    paddingBottom: 2,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: "#9ca3af", // Color más oscuro
   },
   actividadTitle: {
     fontSize: 8,
@@ -46,28 +46,28 @@ const styles = StyleSheet.create({
   },
   subActividadBlock: {
     borderRadius: 4,
-    marginTop: 6,
+    marginTop: 2,
     marginBottom: 4,
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 2,
     backgroundColor: "#fff",
   },
   subActividadTitle: {
     fontSize: 8,
     fontWeight: "bold",
     color: "#374151",
-    marginBottom: 2,
+    marginBottom: 3,
   },
   subActividadText: {
     fontSize: 8,
     color: "#5F6B75",
-    marginBottom: 2,
-    lineHeight: 1.2,
+    marginBottom: 3,
+    lineHeight: 1,
   },
   subActividadRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 2,
+    marginBottom: 3,
   },
   subActividadStatus: {
     fontSize: 8,
@@ -78,12 +78,12 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: "bold",
     color: "#374151",
-    marginBottom: 2,
+    marginBottom: 3,
   },
   value: {
     fontSize: 8,
     color: "#5F6B75",
-    marginBottom: 4,
+    marginBottom: 3,
     lineHeight: 1.2,
   },
 });
@@ -100,7 +100,7 @@ const DatosRegistroTabla = ({ registro }) => {
             <View key={index} style={styles.actividadBlock}>
               <View style={styles.actividadHeader}>
                 <Text style={styles.actividadTitle}>
-                  Actividad: {actividad.nombre || `Actividad ${index + 1}`}
+                 {actividad.nombre || `${index + 1}`}
                 </Text>
                 <Text style={styles.actividadEstado}>Aplica ✅</Text>
               </View>

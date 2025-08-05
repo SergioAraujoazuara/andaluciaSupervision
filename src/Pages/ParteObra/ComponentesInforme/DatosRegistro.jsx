@@ -25,7 +25,7 @@ const DatosRegistro = ({ dataRegister }) => {
       <View style={styles.section}>
         <TituloActividad plantillaSeleccionada={`Trazabilidad de inspección:`} />
         {/* Trazabilidad visual */}
-        <View style={{ marginTop: 4, marginBottom: 8 }}>
+        <View style={{ marginTop: 4, marginBottom: 8, fontSize: 12 }}>
           <TituloInforme plantillaSeleccionada={[
             dataRegister.sectorNombre,
             dataRegister.subSectorNombre,
@@ -40,7 +40,7 @@ const DatosRegistro = ({ dataRegister }) => {
 
       
       {/* Sección 3 */}
-      <View style={{ ...styles.section, marginBottom: 16 }}>
+      <View style={{ ...styles.section, marginBottom: 16, marginTop: 20 }}>
         <TituloInforme plantillaSeleccionada="1. Observaciones generales" />
         <SeccionesDatosRegistros
           valorDelCampo={dataRegister.observaciones}
