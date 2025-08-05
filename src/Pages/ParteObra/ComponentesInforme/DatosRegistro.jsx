@@ -40,6 +40,7 @@ const DatosRegistro = ({ dataRegister }) => {
 
       
       {/* Sección 3 */}
+      {/* Sección 3 */}
       <View style={{ ...styles.section, marginBottom: 16, marginTop: 20 }}>
         <TituloInforme plantillaSeleccionada="1. Observaciones generales" />
         <SeccionesDatosRegistros
