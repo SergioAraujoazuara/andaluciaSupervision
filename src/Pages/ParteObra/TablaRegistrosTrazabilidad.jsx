@@ -704,6 +704,15 @@ const TablaRegistros = () => {
     const registroActualizado = registrosParteDeObra.find(r => r.id === registro.id);
     setDataRegister(registroActualizado || registro);
   };
+
+
+  // Condicional del boton de informe final
+  const todosLosRegistrosFirmados = () => {
+    return registrosFiltrados.length > 0 && registrosFiltrados.every(registro => 
+      registro.firmaEmpresa && registro.firmaCliente
+    );
+  };
+
   return (
     <div className="container mx-auto xl:px-14 py-2 text-gray-500 mb-10 min-h-screen">
       <div className="flex md:flex-row flex-col gap-2 items-center justify-between px-5 py-3 text-md">
