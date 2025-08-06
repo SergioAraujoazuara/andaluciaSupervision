@@ -8,6 +8,7 @@ import Viewer_admin from './Viewer_admin';
 import VerPpis from '../Pages/Administrador/VerPpis';
 import AgregarPPi from '../Pages/Administrador/AgregarPPi';
 import Roles from '../Pages/Administrador/Roles';
+import GestionDominios from '../Pages/Administrador/GestionDominios';
 
 const adminRoutes = [
   { path: '/admin', element: <AdminHome />, roles: ['admin', 'usuario'] },
@@ -16,6 +17,7 @@ const adminRoutes = [
   { path: '/verPPis', element: <VerPpis />, roles: ['admin'] },
   { path: '/agregarPpi', element: <AgregarPPi />, roles: ['admin'] },
   { path: '/roles', element: <Roles />, roles: ['admin'] },
+  { path: '/gestion-dominios', element: <GestionDominios />, roles: ['admin'] },
 ];
 
 const AdminRoutes = () => {

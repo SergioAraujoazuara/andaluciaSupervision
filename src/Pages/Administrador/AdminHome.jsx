@@ -13,6 +13,7 @@ import { useAuth } from '../../context/authContext';
 import { BsClipboardDataFill } from "react-icons/bs";
 import { FaInfoCircle } from "react-icons/fa";
 import { CiShare2 } from "react-icons/ci";
+import { TfiWorld } from "react-icons/tfi";
 
 /**
  * AdminHome Component
@@ -220,6 +221,27 @@ function AdminHome() {
                                             <div className='sm:col-span-9 flex flex-col justify-center xl:items-start items-center text-center xl:text-start sm:justify-center text-base font-medium ps-5'>
                                                 <p className='flex items-center gap-2 '>  <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>Roles de usuarios</p>
                                                 <p className='mt-4 font-normal text-sm xl:'>Asignar y editar roles a los usuarios registrados del proyecto:
+
+                                                </p>
+
+                                            </div>
+                                        </div>
+
+                                    </Link>
+                                )
+                            }
+
+                            {/* Gestión de Dominios */}
+                            {
+                                userRole === 'admin' && (
+                                    <Link className=' w-full' to={'/gestion-dominios'}>
+                                        <div className='flex flex-col xl:flex-row gap-4 items-center transition duration-300 ease-in-out  hover:-translate-y-1'>
+                                        <div className=' flex items-center text-gray-600'>
+                                                <span ><TfiWorld  className='xl:w-[80px] xl:h-[100px] w-[70px] h-[70px]' /></span>
+                                            </div>
+                                            <div className='sm:col-span-9 flex flex-col justify-center xl:items-start items-center text-center xl:text-start sm:justify-center text-base font-medium ps-5'>
+                                                <p className='flex items-center gap-2 '>  <span className='text-amber-500 text-md transition duration-300 ease-in-out hover:translate-x-1 shadow-xl'><FaArrowAltCircleRight /></span>Gestión de Dominios</p>
+                                                <p className='mt-4 font-normal text-sm xl:'>Controlar qué dominios pueden registrarse en la aplicación:
 
                                                 </p>
 

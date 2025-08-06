@@ -12,6 +12,7 @@ import Viewer_admin from './Pages/BIM/Viewer_admin';
 import VerPpis from './Pages/Administrador/VerPpis';
 import AgregarPPi from './Pages/Administrador/AgregarPPi';
 import Roles from './Pages/Administrador/Roles';
+import GestionDominios from './Pages/Administrador/GestionDominios';
 import Viewer_inspeccion from './Pages/BIM/Viewer_inspeccion';
 import Elemento from './Pages/Inspeccion/Elemento';
 import TablaPpi from './Pages/Inspeccion/TablaPpi';
@@ -52,6 +53,7 @@ function App() {
     { path: '/verPPis', element: <TabsPpi />, roles: ['admin'] },
     { path: '/agregarPpi', element: <AgregarPPi />, roles: ['admin'] },
     { path: '/roles', element: <Roles />, roles: ['admin'] },
+    { path: '/gestion-dominios', element: <GestionDominios />, roles: ['admin'] },
     { path: '/project', element: <Projects />, roles: ['admin'] },
     { path: '/copiarTrazabilidad', element: <ListaProyectos />, roles: ['admin'] },
   ];

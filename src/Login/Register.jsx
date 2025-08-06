@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase_config';
 import { useAuth } from '../context/authContext';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { MdOutlineEmail, MdDriveFileRenameOutline } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
 import Logo_solo from '../assets/logo_solo.png';
@@ -21,20 +21,93 @@ const Register = () => {
   });
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [dominiosPermitidos, setDominiosPermitidos] = useState([]);
+  const [emailError, setEmailError] = useState('');
+  const [isValidating, setIsValidating] = useState(false);
+
+  // Cargar dominios permitidos al montar el componente
+  useEffect(() => {
+    cargarDominiosPermitidos();
+  }, []);
+
+  const cargarDominiosPermitidos = async () => {
+    try {
+      const dominiosRef = collection(db, 'dominiosPermitidos');
+      const snapshot = await getDocs(dominiosRef);
+      const dominiosData = snapshot.docs.map(doc => doc.data().dominio);
+      setDominiosPermitidos(dominiosData);
+    } catch (error) {
+      console.error('Error al cargar dominios permitidos:', error);
+    }
+  };
+
+  const validarEmail = (email) => {
+    // Validación básica de formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return 'Formato de email inválido';
+    }
+
+    // Validar dominio permitido
+    const dominio = email.split('@')[1]?.toLowerCase();
+    if (!dominio) {
+      return 'Email inválido';
+    }
+
+          if (dominiosPermitidos.length > 0 && !dominiosPermitidos.includes(dominio)) {
+        return `🌐 El dominio ${dominio} no está permitido`;
+      }
+
+    return '';
+  };
 
   const handleChange = ({ target: { name, value } }) => {
     setNewUser({ ...newUser, [name]: value });
+    
+    // Validar email en tiempo real
+    if (name === 'email') {
+      setEmailError('');
+      if (value.trim()) {
+        const error = validarEmail(value);
+        setEmailError(error);
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setEmailError('');
 
+    // Validar campos requeridos
+    if (!newUser.name.trim() || !newUser.email.trim() || !newUser.password || !newUser.confirmPassword) {
+      setError('Todos los campos son requeridos.');
+      setShowModal(true);
+      return;
+    }
+
+    // Validar email
+    const emailValidationError = validarEmail(newUser.email);
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
+      return;
+    }
+
+    // Validar contraseñas
     if (newUser.password !== newUser.confirmPassword) {
       setError('Las contraseñas no coinciden.');
       setShowModal(true);
       return;
     }
+
+    // Validar longitud de contraseña
+    if (newUser.password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.');
+      setShowModal(true);
+      return;
+    }
+
+    setIsValidating(true);
 
     try {
       const authResult = await signup(newUser.email, newUser.password);
@@ -53,8 +126,17 @@ const Register = () => {
       navigate('/'); // Navegar a la página de inicio después del registro
     } catch (error) {
       let errorMessage = 'Error al registrar la cuenta';
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'Este email ya está registrado.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'La contraseña es demasiado débil.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'El formato del email es inválido.';
+      }
       setError(errorMessage);
       setShowModal(true);
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -66,16 +148,14 @@ const Register = () => {
 
   return (
     <div className="flex h-screen bg-gray-200">
-      <div className="w-full h-2/3 max-w-4xl mx-auto mb-56 rounded-lg overflow-hidden flex bg-gray-100">
+      <div className="w-full h-2/3 max-w-4xl mx-auto flex rounded-lg overflow-hidden ">
 
-
-
-        <div className=" w-full p-10 flex flex-col items-center justify-center">
+        <div className="xl:w-1/2 w-full flex p-10 flex-col justify-center bg-gray-100">
           <div className="text-center mb-5">
 
-            <h1 className="text-3xl font-semibold text-gray-700 my-4">Registro</h1>
+            <h1 className="text-3xl font-semibold text-gray-500 my-4">Registro</h1>
           </div>
-          <form onSubmit={handleSubmit} className="max-w-xl mx-auto ">
+          <form onSubmit={handleSubmit} className="max-w-xl mx-auto">
             <div className="flex flex-col mb-4 ">
               <div className="relative">
                 <MdDriveFileRenameOutline className="absolute left-0 top-0 m-3" />
@@ -89,17 +169,24 @@ const Register = () => {
                 />
               </div>
             </div>
-            <div className="flex flex-col mb-4">
+            <div className="flex flex-col mb-6">
               <div className="relative">
                 <MdOutlineEmail className="absolute left-0 top-0 m-3" />
                 <input
                   type="email"
                   name="email"
                   placeholder="Email"
-                  className="w-full px-12 py-2 border rounded-lg text-gray-700 focus:outline-none focus:border-teal-500"
+                  className={`w-full px-12 py-2 border rounded-lg text-gray-700 focus:outline-none ${
+                    emailError ? 'border-red-500' : 'focus:border-teal-500'
+                  }`}
                   value={newUser.email}
                   onChange={handleChange}
                 />
+                {emailError && (
+                  <p className="text-red-500 text-xs">
+                    <span className='text-gray-400'>🌐</span> {emailError}
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex flex-col mb-4">
@@ -130,31 +217,39 @@ const Register = () => {
             </div>
 
             <div className="flex justify-center">
-              <button type="submit" className="bg-amber-600 text-white w-full py-2 rounded-lg hover:bg-amber-700 focus:outline-none">
-                Register
+              <button 
+                type="submit" 
+                disabled={isValidating || !!emailError}
+                className={`w-full py-2 rounded-lg focus:outline-none ${
+                  isValidating || emailError 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-amber-600 hover:bg-amber-700 text-white'
+                }`}
+              >
+                {isValidating ? 'Registrando...' : 'Register'}
               </button>
             </div>
           </form>
           {showModal && <AlertaRegister message={error} closeModal={closeModal} />}
         </div>
 
-        <div className="md:w-1/2 bg-sky-600 text-white xl:flex hidden flex-col justify-center px-10 pb-10">
-
+        <div className="xl:w-1/2 bg-sky-600 text-white flex flex-col justify-center px-10 pb-10 xl:flex hidden">
+          
           <div className='flex justify-center'>
-            <img src={Logo_solo} width={150} alt="logo" className="mb-5" />
+          <img src={Logo_solo} width={150} alt="logo" className="mb-5" />
           </div>
-
+          
           <h2 className="text-5xl font-bold text-center">Tpf ingeniería</h2>
-
-
+          
+         
           <p className="mb-4 text-center text-xl my-6">Building the world, better</p>
           <div className='flex justify-center mt-2'>
-            {/* <button onClick={() => navigate('/signin')} className="flex items-center gap-3 text-sky-600 font-semibold bg-white py-2 px-4 rounded-full shadow-md">
+          {/* <button onClick={() => navigate('/signin')} className="flex items-center gap-3 text-sky-600 font-semibold bg-white py-2 px-4 rounded-full shadow-md">
             <span className='text-amber-500'><FaArrowAltCircleRight /></span>
             Área inspección
           </button> */}
           </div>
-
+          
         </div>
 
       </div>
