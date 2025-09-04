@@ -6,7 +6,9 @@ import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { MdOutlineEmail, MdDriveFileRenameOutline } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
 import Logo_solo from '../assets/logo_solo.png';
-import AlertaRegister from '../Alertas/AlertaRegister'; // Asegúrate de que este componente esté creado
+import AlertaRegister from '../Alertas/AlertaRegister';
+import PasswordInput from '../Components/PasswordInput';
+import { validatePassword } from '../utils/passwordValidation';
 
 
 const Register = () => {
@@ -24,6 +26,8 @@ const Register = () => {
   const [dominiosPermitidos, setDominiosPermitidos] = useState([]);
   const [emailError, setEmailError] = useState('');
   const [isValidating, setIsValidating] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
   // Cargar dominios permitidos al montar el componente
   useEffect(() => {
@@ -72,12 +76,33 @@ const Register = () => {
         setEmailError(error);
       }
     }
+    
+    // Validar contraseña en tiempo real
+    if (name === 'password') {
+      setPasswordError('');
+      if (value.trim()) {
+        const validation = validatePassword(value);
+        if (!validation.isValid) {
+          setPasswordError('La contraseña no cumple con los requisitos de seguridad');
+        }
+      }
+    }
+    
+    // Validar confirmación de contraseña
+    if (name === 'confirmPassword') {
+      setConfirmPasswordError('');
+      if (value.trim() && newUser.password !== value) {
+        setConfirmPasswordError('Las contraseñas no coinciden');
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setEmailError('');
+    setPasswordError('');
+    setConfirmPasswordError('');
 
     // Validar campos requeridos
     if (!newUser.name.trim() || !newUser.email.trim() || !newUser.password || !newUser.confirmPassword) {
@@ -93,16 +118,19 @@ const Register = () => {
       return;
     }
 
-    // Validar contraseñas
-    if (newUser.password !== newUser.confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+    // Validar contraseña con nuevos requisitos
+    const passwordValidation = validatePassword(newUser.password);
+    if (!passwordValidation.isValid) {
+      setPasswordError('La contraseña no cumple con los requisitos de seguridad');
+      setError('La contraseña debe cumplir con todos los requisitos de seguridad.');
       setShowModal(true);
       return;
     }
 
-    // Validar longitud de contraseña
-    if (newUser.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
+    // Validar que las contraseñas coincidan
+    if (newUser.password !== newUser.confirmPassword) {
+      setConfirmPasswordError('Las contraseñas no coinciden');
+      setError('Las contraseñas no coinciden.');
       setShowModal(true);
       return;
     }
@@ -155,7 +183,7 @@ const Register = () => {
 
             <h1 className="text-3xl font-semibold text-gray-500 my-4">Registro</h1>
           </div>
-          <form onSubmit={handleSubmit} className="max-w-xl mx-auto">
+          <form onSubmit={handleSubmit} className="max-w-xl mx-auto p-5 overflow-y-auto">
             <div className="flex flex-col mb-4 ">
               <div className="relative">
                 <MdDriveFileRenameOutline className="absolute left-0 top-0 m-3" />
@@ -189,39 +217,37 @@ const Register = () => {
                 )}
               </div>
             </div>
-            <div className="flex flex-col mb-4">
-              <div className="relative">
-                <RiLockPasswordLine className="absolute left-0 top-0 m-3" />
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Password"
-                  className="w-full px-12 py-2 border rounded-lg text-gray-700 focus:outline-none focus:border-teal-500"
-                  value={newUser.password}
-                  onChange={handleChange}
-                />
-              </div>
+            <div className="flex flex-col mb-3">
+              <PasswordInput
+                name="password"
+                placeholder="Contraseña"
+                value={newUser.password}
+                onChange={handleChange}
+                showStrengthIndicator={true}
+                showGenerator={true}
+                showExamples={false}
+                error={passwordError}
+              />
             </div>
             <div className="flex flex-col mb-6">
-              <div className="relative">
-                <RiLockPasswordLine className="absolute left-0 top-0 m-3" />
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Confirmar Contraseña"
-                  className="w-full px-12 py-2 border rounded-lg text-gray-700 focus:outline-none focus:border-teal-500"
-                  value={newUser.confirmPassword}
-                  onChange={handleChange}
-                />
-              </div>
+              <PasswordInput
+                name="confirmPassword"
+                placeholder="Confirmar Contraseña"
+                value={newUser.confirmPassword}
+                onChange={handleChange}
+                showStrengthIndicator={false}
+                showGenerator={false}
+                showExamples={false}
+                error={confirmPasswordError}
+              />
             </div>
 
             <div className="flex justify-center">
               <button 
                 type="submit" 
-                disabled={isValidating || !!emailError}
+                disabled={isValidating || !!emailError || !!passwordError || !!confirmPasswordError}
                 className={`w-full py-2 rounded-lg focus:outline-none ${
-                  isValidating || emailError 
+                  isValidating || emailError || passwordError || confirmPasswordError
                     ? 'bg-gray-400 cursor-not-allowed' 
                     : 'bg-amber-600 hover:bg-amber-700 text-white'
                 }`}

@@ -152,11 +152,11 @@ const GestionDominios = () => {
       {/* Contenido */}
       <div className="p-6">
         <div className="">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">🌐 Gestión de Dominios Permitidos</h2>
+          <h2 className="text-md font-semibold text-gray-800 mb-6">Gestión de Dominios Permitidos</h2>
           
           {/* Formulario para agregar dominio */}
           <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Agregar Nuevo Dominio</h3>
+            <h3 className="text font-semibold text-gray-700 mb-4">Agregar Nuevo Dominio</h3>
             <form onSubmit={agregarDominio} className="flex gap-4">
               <input
                 type="text"
