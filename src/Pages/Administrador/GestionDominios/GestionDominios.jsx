@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../firebase_config';
-import { useAuth } from '../../context/authContext';
+import { db } from '../../../../firebase_config';
+import { useAuth } from '../../../context/authContext';
 import { GoHomeFill } from "react-icons/go";
 import { IoArrowBackCircle } from "react-icons/io5";
 import { Link, useNavigate } from 'react-router-dom';

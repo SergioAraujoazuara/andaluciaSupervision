@@ -7,7 +7,7 @@ import { MdOutlineEmail, MdDriveFileRenameOutline } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
 import Logo_solo from '../assets/logo_solo.png';
 import AlertaRegister from '../Alertas/AlertaRegister';
-import PasswordInput from '../Components/PasswordInput';
+import PasswordInput from './PasswordInput';
 import { validatePassword } from '../utils/passwordValidation';
 
 
@@ -176,7 +176,7 @@ const Register = () => {
 
   return (
     <div className="flex h-screen bg-gray-200">
-      <div className="w-full h-2/3 max-w-4xl mx-auto flex rounded-lg overflow-hidden ">
+      <div className="w-full max-w-4xl mx-auto flex rounded-lg overflow-hidden pb-10">
 
         <div className="xl:w-1/2 w-full flex p-10 flex-col justify-center bg-gray-100">
           <div className="text-center mb-5">

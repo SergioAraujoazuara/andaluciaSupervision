@@ -48,7 +48,7 @@ function Login() {
 
   return (
     <div className="flex h-screen bg-gray-200">
-      <div className="w-full h-2/3 max-w-4xl mx-auto flex rounded-lg overflow-hidden ">
+      <div className="w-full max-w-4xl mx-auto flex rounded-lg overflow-hidden pb-10">
 
         <div className="xl:w-1/2  bg-sky-600 text-white flex flex-col justify-center px-10 pb-10 xl:flex hidden">
           
