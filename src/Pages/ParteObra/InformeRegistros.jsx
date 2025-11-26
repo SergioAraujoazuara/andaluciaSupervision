@@ -203,7 +203,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             obra={proyecto?.obra || "Nombre de obra"}
             promotor={proyecto?.promotor || "Promotor"}
             description={proyecto?.descripcion || "Contratista"}
-            coordinador={proyecto?.coordinador || "Nombre coordinador de seguridad y salud"}
+            coordinador={proyecto?.coordinador || "Nombre coordinador"}
             director={proyecto?.director || "Nombre director de la obra"}
             rangoFechas={`${dataRegister?.fechaHora
               ? new Date(dataRegister.fechaHora).toLocaleString("es-ES", {
