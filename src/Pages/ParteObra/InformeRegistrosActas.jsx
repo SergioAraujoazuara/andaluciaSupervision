@@ -176,11 +176,11 @@ const InformeRegistrosActas = ({ registros, columnas, fechaInicio, fechaFin, fil
 
     const downloadPdf = async () => {
      
-
-        if (!dataRegister?.firmaEmpresa || !dataRegister?.firmaCliente) {
-            console.error("⚠️ No hay firmas guardadas en Firestore.");
-            return; 
-        }
+        // ✅ Permitir generar PDF sin necesidad de firmas
+        // if (!dataRegister?.firmaEmpresa || !dataRegister?.firmaCliente) {
+        //     console.error("⚠️ No hay firmas guardadas en Firestore.");
+        //     return; 
+        // }
 
 
         if (userNombre !== "NA") {
@@ -226,6 +226,8 @@ const InformeRegistrosActas = ({ registros, columnas, fechaInicio, fechaFin, fil
                         firmaEmpresa={dataRegister.firmaEmpresa} 
                         firmaCliente={dataRegister.firmaCliente}
                         nombreUsuario={nombreUsuario}
+                        requiereContratistaFirma={dataRegister.requiereContratistaFirma ?? true}
+                        requiereCoordinadorFirma={dataRegister.requiereCoordinadorFirma ?? true}
                     />
                 </Page>
 
@@ -277,18 +279,11 @@ const InformeRegistrosActas = ({ registros, columnas, fechaInicio, fechaFin, fil
                 </div>
             ) : (
                 <button
-                    className={`w-10 h-10 flex justify-center items-center text-xl font-medium rounded-md ${dataRegister.firmaEmpresa && dataRegister.firmaCliente
-                        ? "text-gray-500 hover:text-sky-700"
-                        : "text-gray-500 cursor-not-allowed"
-                        }`}
-                    onClick={dataRegister.firmaEmpresa && dataRegister.firmaCliente ? handlegeneratePDF : null}
-                    disabled={!dataRegister.firmaEmpresa || !dataRegister.firmaCliente} 
+                    className="w-10 h-10 flex justify-center items-center text-xl font-medium rounded-md text-gray-500 hover:text-sky-700"
+                    onClick={handlegeneratePDF}
+                    title="Generar PDF"
                 >
-                    {dataRegister.firmaEmpresa && dataRegister.firmaCliente ? (
-                        <FaFilePdf className="w-6 h-6" />
-                    ) : (
-                        <FaBan className="w-6 h-6" />
-                    )}
+                    <FaFilePdf className="w-6 h-6" />
                 </button>
             )}
         </div>

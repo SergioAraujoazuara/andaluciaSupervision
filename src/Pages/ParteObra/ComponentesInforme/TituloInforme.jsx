@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   sectionTitleMain: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
     textAlign: "left",
     color: "#4b5563",
@@ -12,19 +12,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical:4,
     paddingLeft: 10,
-    marginBottom:10,
+    marginBottom: 6,
     width:"536px"
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
-    marginBottom: 8,
     textAlign: "left",
     color: "#FFFFFF",
     backgroundColor: "#0369A1",
-    padding: 3,
     paddingLeft: 10,
-    width:"536px"
+    width:"536px",
+    marginBottom: 6
   },
 });
 

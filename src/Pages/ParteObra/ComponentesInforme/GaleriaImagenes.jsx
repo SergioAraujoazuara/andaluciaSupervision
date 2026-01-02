@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 8,
     border: "1px solid #cccccc",
-    marginTop: 10,
+    marginTop: 4,
   },
   imageLink: {
     fontSize: 8,
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     textDecoration: "underline",
   },
   imageText: {
-    fontSize: 8,
+    fontSize: 9,
     color: "#5F6B75",
     textAlign: "center",
     marginTop: 6,

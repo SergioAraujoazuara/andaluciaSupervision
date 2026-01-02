@@ -168,10 +168,11 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
 
   const downloadPdf = async () => {
 
-    if (!dataRegister?.firmaEmpresa || !dataRegister?.firmaCliente) {
-      console.error("⚠️ No hay firmas guardadas en Firestore.");
-      return;
-    }
+    // ✅ Permitir generar PDF sin necesidad de firmas
+    // if (!dataRegister?.firmaEmpresa || !dataRegister?.firmaCliente) {
+    //   console.error("⚠️ No hay firmas guardadas en Firestore.");
+    //   return;
+    // }
 
 
     if (userNombre !== "NA") {
@@ -186,8 +187,8 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
     }
 
     // Dividir imágenes: primeras 2 para la página de datos, el resto para las siguientes páginas (6 por página)
-    const primerasDos = imagesWithMetadata.slice(0, 2);
-    const resto = imagesWithMetadata.slice(2);
+    const primerasDos = imagesWithMetadata.slice(0, 4);
+    const resto = imagesWithMetadata.slice(4);
     const chunkArray = (arr, size) =>
       arr.reduce((acc, _, i) =>
         i % size === 0 ? [...acc, arr.slice(i, i + size)] : acc
@@ -204,7 +205,7 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             promotor={proyecto?.promotor || "Promotor"}
             description={proyecto?.descripcion || "Contratista"}
             coordinador={proyecto?.coordinador || "Nombre coordinador"}
-            director={proyecto?.director || "Nombre director de la obra"}
+            director={proyecto?.director || ""}
             rangoFechas={`${dataRegister?.fechaHora
               ? new Date(dataRegister.fechaHora).toLocaleString("es-ES", {
                 day: "2-digit",
@@ -255,6 +256,8 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
             firmaEmpresa={dataRegister.firmaEmpresa}
             firmaCliente={dataRegister.firmaCliente}
             nombreUsuario={nombreUsuario}
+            requiereContratistaFirma={dataRegister.requiereContratistaFirma ?? true}
+            requiereCoordinadorFirma={dataRegister.requiereCoordinadorFirma ?? true}
           />
         </Page>
 
@@ -313,18 +316,11 @@ const PdfInformeTablaRegistros = ({ registros, columnas, fechaInicio, fechaFin, 
         </div>
       ) : (
         <button
-          className={`w-10 h-10 flex justify-center items-center text-xl font-medium rounded-md ${dataRegister.firmaEmpresa && dataRegister.firmaCliente
-            ? "text-gray-500 hover:text-sky-700"
-            : "text-gray-500 cursor-not-allowed"
-            }`}
-          onClick={dataRegister.firmaEmpresa && dataRegister.firmaCliente ? handlegeneratePDF : null}
-          disabled={!dataRegister.firmaEmpresa || !dataRegister.firmaCliente}
+          className="w-10 h-10 flex justify-center items-center text-xl font-medium rounded-md text-gray-500 hover:text-sky-700"
+          onClick={handlegeneratePDF}
+          title="Generar PDF"
         >
-          {dataRegister.firmaEmpresa && dataRegister.firmaCliente ? (
-            <FaFilePdf className="w-6 h-6" />
-          ) : (
-            <FaBan className="w-6 h-6" />
-          )}
+          <FaFilePdf className="w-6 h-6" />
         </button>
       )}
     </div>

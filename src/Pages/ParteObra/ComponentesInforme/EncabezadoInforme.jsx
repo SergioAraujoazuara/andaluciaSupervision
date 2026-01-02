@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     width: "65%",
-    fontSize: 12,
+    fontSize: 10,
     color: "#5F6B75",
   },
   headerLabel: {
@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
   },
   headerValue: {
     color: "#5F6B75",
-    fontSize: 12,
+    fontSize: 10,
     marginTop: 5,
   },
   headerLogos: {
@@ -31,9 +31,9 @@ const styles = StyleSheet.create({
     width: "45%",
   },
   logo: {
-    width: 160,
-    height: 75,
-    marginBottom: 10,
+    width: 120,
+    height: 50,
+    marginBottom: 4,
   },
   line: {
     marginTop: 5,
@@ -61,8 +61,8 @@ const EncabezadoInforme = ({
       <View style={styles.line} />
       <Text style={styles.headerLabel}>Promotor: {promotor}</Text>
       <Text style={styles.headerValue}>Contratista: {description}</Text>
-      <Text style={styles.headerValue}>Coordinador: {coordinador}</Text>
-      <Text style={styles.headerValue}>Director de la obra: {director}</Text>
+      {/* <Text style={styles.headerValue}>Coordinador: {coordinador}</Text> */}
+      {/* <Text style={styles.headerValue}>Director de la obra: {director}</Text> */}
       <Text style={styles.headerValue}>Fecha: {rangoFechas}</Text>
       
       

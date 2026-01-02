@@ -7,14 +7,18 @@ import ObservacionesActividades from "./ObservacionesActividades ";
 
 const styles = StyleSheet.create({
   fieldGroup: {
-    flexDirection: "column", // ⬅️ Asegura que cada sección use el ancho completo
+    flexDirection: "column",
     justifyContent: "flex-start",
     alignItems: "stretch",
-    width: "100%", // ⬅️ Usa todo el ancho disponible
+    width: "100%",
     marginBottom: 2,
   },
   section: {
-    width: "100%", // ⬅️ Cada sección ocupa todo el ancho disponible
+    width: "100%",
+  },
+  sectionWithTopMargin: {
+    width: "100%",
+    marginTop: 8,
   },
 });
 
@@ -25,7 +29,7 @@ const DatosRegistro = ({ dataRegister }) => {
       <View style={styles.section}>
         <TituloActividad plantillaSeleccionada={`Trazabilidad de inspección:`} />
         {/* Trazabilidad visual */}
-        <View style={{ marginTop: 4, marginBottom: 8, fontSize: 12 }}>
+        <View>
           <TituloInforme plantillaSeleccionada={[
             dataRegister.sectorNombre,
             dataRegister.subSectorNombre,
@@ -40,8 +44,7 @@ const DatosRegistro = ({ dataRegister }) => {
 
       
       {/* Sección 3 */}
-      {/* Sección 3 */}
-      <View style={{ ...styles.section, marginBottom: 16, marginTop: 20 }}>
+      <View style={styles.sectionWithTopMargin}>
         <TituloInforme plantillaSeleccionada="1. Observaciones generales" />
         <SeccionesDatosRegistros
           valorDelCampo={dataRegister.observaciones}

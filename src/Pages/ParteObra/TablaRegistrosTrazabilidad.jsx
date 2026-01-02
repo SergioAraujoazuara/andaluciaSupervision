@@ -124,10 +124,18 @@ const TablaRegistros = () => {
   const [firmaCliente, setFirmaCliente] = useState(null);
   const [modalFirma, setModalFirma] = useState(false)
   const [modalFirmaMensaje, setModalFirmaMensaje] = useState(false)
+  const [requiereContratistaFirma, setRequiereContratistaFirma] = useState(true)
+  const [requiereCoordinadorFirma, setRequiereCoordinadorFirma] = useState(true)
 
 
   const handleAbrirModalFirma = async (registro) => {
     try {
+      // Inicializar estado por defecto primero
+      setRequiereContratistaFirma(true);
+      setRequiereCoordinadorFirma(true);
+      setFirmaEmpresa(null);
+      setFirmaCliente(null);
+      
       const docRef = doc(db, "registrosParteDeObra", registro.id);
       const docSnap = await getDoc(docRef);
 
@@ -135,6 +143,10 @@ const TablaRegistros = () => {
 
       if (docSnap.exists()) {
         const data = docSnap.data();
+        
+        // Cargar el estado del checkbox (por defecto true para registros antiguos)
+        setRequiereContratistaFirma(data.requiereContratistaFirma ?? true);
+        setRequiereCoordinadorFirma(data.requiereCoordinadorFirma ?? true);
 
         if (data.firmaEmpresa && data.firmaCliente) {
           setModalFirma(true)
@@ -165,18 +177,22 @@ const TablaRegistros = () => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         const campoFirma = tipoFirma === "empresa" ? "firmaEmpresa" : "firmaCliente";
-        await updateDoc(docRef, { [campoFirma]: firmaURL });
+        await updateDoc(docRef, { 
+          [campoFirma]: firmaURL,
+          requiereContratistaFirma: requiereContratistaFirma,
+          requiereCoordinadorFirma: requiereCoordinadorFirma
+        });
 
        
         setRegistrosParteDeObra((prev) =>
           prev.map((registro) =>
-            registro.id === registroId ? { ...registro, [campoFirma]: firmaURL } : registro
+            registro.id === registroId ? { ...registro, [campoFirma]: firmaURL, requiereContratistaFirma, requiereCoordinadorFirma } : registro
           )
         );
 
         setRegistrosFiltrados((prev) =>
           prev.map((registro) =>
-            registro.id === registroId ? { ...registro, [campoFirma]: firmaURL } : registro
+            registro.id === registroId ? { ...registro, [campoFirma]: firmaURL, requiereContratistaFirma, requiereCoordinadorFirma } : registro
           )
         );
 
@@ -989,7 +1005,7 @@ const TablaRegistros = () => {
                               onClick={() => handleAbrirModalFirma(registro)}
                               className="px-4 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex flex-col gap-2 items-center"
                             >
-                              <FaSignature /> <span className="text-xs">Pendiente</span>
+                              <FaSignature /> <span className="text-xs">Firmar</span>
                             </button>
                           )}
                         </div>
@@ -1140,7 +1156,7 @@ const TablaRegistros = () => {
                           onClick={() => handleAbrirModalFirma(registro)}
                           className="px-4 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex flex-col gap-2 items-center"
                         >
-                          <FaSignature /> <span className="text-xs">Pendiente</span>
+                          <FaSignature /> <span className="text-xs">Firmar</span>
                         </button>
                       )}
                     </div>
@@ -1633,7 +1649,7 @@ const TablaRegistros = () => {
 
       {isFirmaModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-md">
-          <div className="bg-white p-6 rounded-lg shadow-2xl text-center border-t-4 relative">
+          <div className="bg-white p-6 rounded-lg shadow-2xl text-center border-t-4 relative w-[450px]">
 
             {/* Botón de Cerrar */}
             <button
@@ -1644,7 +1660,7 @@ const TablaRegistros = () => {
             </button>
 
             <h2 className="text-xl font-bold text-gray-700 mb-5 flex justify-center items-center gap-2">
-              🖋 Estado de Firmas
+            Estado de Firmas
             </h2>
 
             {firmaEmpresa && firmaCliente ? (
@@ -1660,41 +1676,61 @@ const TablaRegistros = () => {
               <>
                 {/* Estado de las firmas */}
                 <div className="flex flex-col gap-3 mb-6 text-sm">
-                  <div className={`flex items-center gap-3 p-3  border-b-2 ${firmaEmpresa ? "border-green-500 bg-green-100" : "border-gray-300"}`}>
-                    <span className="text-2xl">{firmaEmpresa ? "📑" : "🟡"}</span>
-                    <p className="font-semibold">{firmaEmpresa ? "Firma coordinador registrada" : "Pendiente Firma coordinador"}</p>
+                  {/* Firma Coordinador */}
+                  <div className={`flex items-center justify-between gap-3 p-3 border-b-2 ${firmaEmpresa ? "border-green-500 bg-green-100" : "border-gray-300"}`}>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="requiereCoordinador"
+                        checked={requiereCoordinadorFirma}
+                        onChange={(e) => setRequiereCoordinadorFirma(e.target.checked)}
+                        className="w-4 h-4 cursor-pointer"
+                      />
+                      <span className="text-2xl">{firmaEmpresa ? "📑" : "🟡"}</span>
+                      <p className="font-semibold">{firmaEmpresa ? "Firma coordinador registrada" : "Firma coordinador"}</p>
+                    </div>
+                    {/* Botón Firma Empresa - mantener espacio aunque esté oculto */}
+                    <div className={requiereCoordinadorFirma ? "" : "invisible"}>
+                      <button
+                        onClick={() => handleSelectFirma("empresa")}
+                        className={`flex items-center gap-2 px-5 py-2 rounded-md font-semibold transition ${firmaEmpresa
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          : "bg-sky-700 text-white hover:bg-sky-800"}`
+                        }
+                        disabled={firmaEmpresa || !requiereCoordinadorFirma}
+                      >
+                        Firmar
+                      </button>
+                    </div>
                   </div>
-                  <div className={`flex items-center gap-3 p-3 rounded-lg ${firmaCliente ? "border-green-500 bg-green-100" : "border-gray-300"}`}>
-                    <span className="text-2xl">{firmaCliente ? "🏢" : "🟡"}</span>
-                    <p className="font-semibold">{firmaCliente ? "Firma contratista registrada" : "Pendiente Firma contratista"}</p>
+                  
+                  {/* Firma Contratista - siempre visible */}
+                  <div className={`flex items-center justify-between gap-3 p-3 rounded-lg ${firmaCliente ? "border-green-500 bg-green-100" : "border-gray-300"}`}>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="requiereContratista"
+                        checked={requiereContratistaFirma}
+                        onChange={(e) => setRequiereContratistaFirma(e.target.checked)}
+                        className="w-4 h-4 cursor-pointer"
+                      />
+                      <span className="text-2xl">{firmaCliente ? "🏢" : "🟡"}</span>
+                      <p className="font-semibold">{firmaCliente ? "Firma contratista registrada" : "Firma contratista"}</p>
+                    </div>
+                    {/* Botón Firma Cliente - mantener espacio aunque esté oculto */}
+                    <div className={requiereContratistaFirma ? "" : "invisible"}>
+                      <button
+                        onClick={() => handleSelectFirma("cliente")}
+                        className={`flex items-center gap-2 px-5 py-2 rounded-md font-semibold transition ${firmaCliente
+                          ? "bg-sky-700 text-gray-500 cursor-not-allowed"
+                          : "bg-sky-700 text-white hover:bg-sky-800"}`
+                        }
+                        disabled={firmaCliente || !requiereContratistaFirma}
+                      >
+                        Firmar
+                      </button>
+                    </div>
                   </div>
-                </div>
-
-                {/* Botones de Firma */}
-                <div className="flex justify-center gap-4">
-                  {/* Botón Firma Empresa */}
-                  <button
-                    onClick={() => handleSelectFirma("empresa")}
-                    className={`flex items-center gap-2 px-5 py-2 rounded-md font-semibold transition ${firmaEmpresa
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-sky-700 text-white hover:bg-sky-800"}`
-                    }
-                    disabled={firmaEmpresa}
-                  >
-                    Firma coordinador
-                  </button>
-
-                  {/* Botón Firma Cliente */}
-                  <button
-                    onClick={() => handleSelectFirma("cliente")}
-                    className={`flex items-center gap-2 px-5 py-2 rounded-md font-semibold transition ${firmaCliente
-                      ? "bg-sky-700 text-gray-500 cursor-not-allowed"
-                      : "bg-sky-700 text-white hover:bg-sky-800"}`
-                    }
-                    disabled={firmaCliente}
-                  >
-                    Firma contratista
-                  </button>
                 </div>
               </>
             )}
