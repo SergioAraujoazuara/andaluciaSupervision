@@ -68,7 +68,7 @@ const PiePaginaInforme = ({ userNombre, firmaEmpresa, firmaCliente, nombreUsuari
         {/* LADO DERECHO - Solo mostrar si hay firma del coordinador */}
         {tieneFirmaCoordinador && (
           <View style={requiereContratistaFirma && tieneFirmaContratista ? styles.rightColumn : styles.rightColumnCentered}>
-            <Text style={styles.text}>{nombreUsuario || "N/A"} - Coordinador</Text>
+            <Text style={styles.text}>{nombreUsuario || "N/A"} - Supervisor</Text>
             <Text style={styles.text}></Text>
             <Text style={styles.text}>TPF Getinsa Euroestudios S.L.</Text>
             <Image src={firmaEmpresa} style={styles.signature} />

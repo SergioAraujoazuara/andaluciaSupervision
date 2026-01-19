@@ -902,7 +902,7 @@ const TablaRegistrosActaReunion = () => {
                               onClick={() => handleAbrirModalFirma(registro)}
                               className="px-4 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex flex-col gap-2 items-center"
                             >
-                              <FaSignature /> <span className="text-xs">Pendiente</span>
+                              <FaSignature /> <span className="text-xs">Firmar</span>
                             </button>
                           )}
                         </div>
@@ -1051,7 +1051,7 @@ const TablaRegistrosActaReunion = () => {
                           onClick={() => handleAbrirModalFirma(registro)}
                           className="px-4 py-2 text-gray-500 text-2xl font-medium hover:text-sky-700 transition flex flex-col gap-2 items-center"
                         >
-                          <FaSignature /> <span className="text-xs">Pendiente</span>
+                          <FaSignature /> <span className="text-xs">Firmar</span>
                         </button>
                       )}
                     </div>
@@ -1413,7 +1413,7 @@ const TablaRegistrosActaReunion = () => {
               <>
                 {/* Estado de las firmas */}
                 <div className="flex flex-col gap-3 mb-6 text-sm">
-                  {/* Firma Coordinador */}
+                  {/* Firma Supervisor */}
                   <div className={`flex items-center justify-between gap-3 p-3 border-b-2 ${firmaEmpresa ? "border-green-500 bg-green-100" : "border-gray-300"}`}>
                     <div className="flex items-center gap-3">
                       <input
@@ -1424,7 +1424,7 @@ const TablaRegistrosActaReunion = () => {
                         className="w-4 h-4 cursor-pointer"
                       />
                       <span className="text-2xl">{firmaEmpresa ? "📑" : "🟡"}</span>
-                      <p className="font-semibold">{firmaEmpresa ? "Firma coordinador registrada" : "Firma coordinador"}</p>
+                      <p className="font-semibold">{firmaEmpresa ? "Firma supervisor registrada" : "Firma supervisor"}</p>
                     </div>
                     {/* Botón Firma Empresa - mantener espacio aunque esté oculto */}
                     <div className={requiereCoordinadorFirma ? "" : "invisible"}>
@@ -1436,7 +1436,7 @@ const TablaRegistrosActaReunion = () => {
                         }
                         disabled={firmaEmpresa || !requiereCoordinadorFirma}
                       >
-                        Firma coordinador
+                        Firmar
                       </button>
                     </div>
                   </div>
@@ -1464,7 +1464,7 @@ const TablaRegistrosActaReunion = () => {
                         }
                         disabled={firmaCliente || !requiereContratistaFirma}
                       >
-                        Firma contratista
+                        Firmar
                       </button>
                     </div>
                   </div>

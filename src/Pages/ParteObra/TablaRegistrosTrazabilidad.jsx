@@ -1676,7 +1676,7 @@ const TablaRegistros = () => {
               <>
                 {/* Estado de las firmas */}
                 <div className="flex flex-col gap-3 mb-6 text-sm">
-                  {/* Firma Coordinador */}
+                  {/* Firma Supervisor */}
                   <div className={`flex items-center justify-between gap-3 p-3 border-b-2 ${firmaEmpresa ? "border-green-500 bg-green-100" : "border-gray-300"}`}>
                     <div className="flex items-center gap-3">
                       <input
@@ -1687,7 +1687,7 @@ const TablaRegistros = () => {
                         className="w-4 h-4 cursor-pointer"
                       />
                       <span className="text-2xl">{firmaEmpresa ? "📑" : "🟡"}</span>
-                      <p className="font-semibold">{firmaEmpresa ? "Firma coordinador registrada" : "Firma coordinador"}</p>
+                      <p className="font-semibold">{firmaEmpresa ? "Firma supervisor registrada" : "Firma supervisor"}</p>
                     </div>
                     {/* Botón Firma Empresa - mantener espacio aunque esté oculto */}
                     <div className={requiereCoordinadorFirma ? "" : "invisible"}>
