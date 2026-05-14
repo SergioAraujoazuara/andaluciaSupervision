@@ -6,7 +6,7 @@ import { MdErrorOutline } from "react-icons/md";
 import { IoFolderOpen } from "react-icons/io5";
 import { FaArrowRight } from "react-icons/fa";
 import { IoArrowBackCircle } from "react-icons/io5";
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { FaBuilding, FaUserTie, FaTools, FaMapMarkerAlt, FaFileContract, FaClock, FaMoneyBillWave, FaShieldAlt, FaUser } from "react-icons/fa";
 import ListaProyectos from './Administrador/ShareTrazabilidadProyectos/ListaProyectos ';
 import PhotoUpload from './ParteObra/PhotoUpload';
@@ -91,21 +91,19 @@ function Home() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-start mt-40 min-h-screen">
-        {/* Spinner animado */}
         <div className="w-16 h-16 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
-
-        {/* Mensaje de carga */}
         <h2 className="text-lg font-semibold text-gray-700 mt-4">
           Cargando información...
         </h2>
-
-        {/* Subtítulo con mensaje amigable */}
         <p className="text-gray-500 text-sm mt-2">
           Estamos obteniendo los datos, por favor espera un momento.
         </p>
       </div>
-    )
-      ; // Muestra mientras se carga la autenticación
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/authTabs" replace />;
   }
 
   return (
