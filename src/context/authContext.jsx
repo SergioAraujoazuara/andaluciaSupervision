@@ -6,8 +6,6 @@ import {
     signOut,
     OAuthProvider,
     signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
     fetchSignInMethodsForEmail,
     linkWithCredential
 } from 'firebase/auth';
@@ -27,8 +25,6 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [role, setRole] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [redirectResolved, setRedirectResolved] = useState(false);
-    const [lastRedirectErrorCode, setLastRedirectErrorCode] = useState(null);
     const db = getFirestore();
 
     const signup = (email, password) => createUserWithEmailAndPassword(auth, email, password);
@@ -52,35 +48,28 @@ export function AuthProvider({ children }) {
         return provider;
     };
 
-    // Login corporativo interactivo con popup (selector de cuenta).
-    const loginWithMicrosoft = ({ prompt = 'select_account' } = {}) => {
-        const provider = buildMicrosoftProvider({ prompt });
-        return signInWithPopup(auth, provider);
-    };
-
-    // Login corporativo por redirect (misma pestaña).
-    const loginWithMicrosoftRedirect = ({ prompt = 'select_account' } = {}) => {
-        const provider = buildMicrosoftProvider({ prompt });
-        return signInWithRedirect(auth, provider);
-    };
-
-    // Intenta SSO silencioso una sola vez por pestaña.
-    const tryMicrosoftSsoSilently = async () => {
-        if (typeof window === 'undefined') {
-            return { status: 'skipped' };
-        }
-
-        const ssoAttemptedKey = 'ap4i_m365_sso_silent_attempted';
-        if (window.sessionStorage.getItem(ssoAttemptedKey) === '1') {
-            return { status: 'skipped' };
-        }
-
-        window.sessionStorage.setItem(ssoAttemptedKey, '1');
+    // Login corporativo: intenta SSO silencioso reutilizando sesión Microsoft del navegador.
+    // Si no hay sesión activa o Microsoft requiere interacción, cae al selector de cuenta.
+    const loginWithMicrosoft = async ({ prompt = 'select_account' } = {}) => {
         try {
-            await loginWithMicrosoftRedirect({ prompt: 'none' });
-            return { status: 'redirect_started' };
-        } catch (error) {
-            return { status: 'failed', error };
+            const silentProvider = buildMicrosoftProvider({ prompt: 'none' });
+            return await signInWithPopup(auth, silentProvider);
+        } catch (silentError) {
+            const silentFailureCodes = [
+                'auth/popup-closed-by-user',
+                'auth/cancelled-popup-request',
+                'auth/user-cancelled',
+                'auth/internal-error',
+            ];
+            const microsoftSilentFailure =
+                typeof silentError?.message === 'string' &&
+                /interaction_required|login_required|consent_required|account_selection_required/i.test(silentError.message);
+
+            if (silentFailureCodes.includes(silentError?.code) || microsoftSilentFailure) {
+                const interactiveProvider = buildMicrosoftProvider({ prompt });
+                return signInWithPopup(auth, interactiveProvider);
+            }
+            throw silentError;
         }
     };
 
@@ -149,30 +138,6 @@ export function AuthProvider({ children }) {
     };
 
     useEffect(() => {
-        let mounted = true;
-
-        const resolveRedirectResult = async () => {
-            try {
-                await getRedirectResult(auth);
-                if (!mounted) return;
-                setLastRedirectErrorCode(null);
-            } catch (error) {
-                if (!mounted) return;
-                setLastRedirectErrorCode(error?.code || 'auth/unknown');
-            } finally {
-                if (mounted) {
-                    setRedirectResolved(true);
-                }
-            }
-        };
-
-        resolveRedirectResult();
-        return () => {
-            mounted = false;
-        };
-    }, []);
-
-    useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             try {
                 if (currentUser) {
@@ -200,12 +165,8 @@ export function AuthProvider({ children }) {
                 signup,
                 login,
                 loginWithMicrosoft,
-                loginWithMicrosoftRedirect,
-                tryMicrosoftSsoSilently,
                 getMicrosoftLinkDataFromError,
                 linkMicrosoftWithPassword,
-                redirectResolved,
-                lastRedirectErrorCode,
                 user,
                 role,
                 logout,
