@@ -6,11 +6,34 @@ import Imagen from '../assets/tpf_marca.png'; // Asegúrate de que la ruta de la
 import { db } from '../../firebase_config';
 import { HiFolderOpen } from "react-icons/hi2";
 
-import { FaUserAlt, FaDoorOpen, FaBars, FaCaretDown } from "react-icons/fa";
+import { FaUserAlt, FaDoorOpen, FaBars, FaCaretDown, FaClock } from "react-icons/fa";
+
+const formatSessionRemaining = (expiresAt) => {
+  if (!expiresAt) return null;
+  const ms = expiresAt - Date.now();
+  if (ms <= 0) return null;
+  const totalSeconds = Math.floor(ms / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`;
+  if (m >= 5) return `${m}m`;
+  return `${m}m ${String(s).padStart(2, '0')}s`;
+};
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, sessionExpiresAt } = useAuth();
+  const [timeRemaining, setTimeRemaining] = useState(() => formatSessionRemaining(sessionExpiresAt));
+
+  useEffect(() => {
+    if (!sessionExpiresAt) { setTimeRemaining(null); return; }
+    setTimeRemaining(formatSessionRemaining(sessionExpiresAt));
+    const interval = setInterval(() => {
+      setTimeRemaining(formatSessionRemaining(sessionExpiresAt));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [sessionExpiresAt]);
   const proyecto = 'i8l2VQeDIIB7fs3kUQxA';
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [userNombre, setUserNombre] = useState('');
@@ -375,6 +398,12 @@ const Navbar = () => {
                       <FaUserAlt className="hidden xl:block" />
                       <p className="hidden xl:block">{userNombre || 'Usuario'}</p>
                     </div>
+                    {timeRemaining && (
+                      <span className="hidden sm:inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-400">
+                        <FaClock className="text-[9px]" />
+                        {timeRemaining}
+                      </span>
+                    )}
                     <div className="relative bg-sky-600 text-white px-4 py-2 rounded-lg">
                       <button className="flex items-center text-md" onClick={toggleLogoutConfirmation}>
                         Salir

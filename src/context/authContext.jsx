@@ -12,7 +12,26 @@ import {
 import { auth } from '../../firebase_config';
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 
-// Funciones de contexto para obtener el user
+const SESSION_KEY = 'browser_session_active';
+const EXPIRY_KEY = 'session_expiry';
+const DEFAULT_DURATION_MS = 4 * 60 * 60 * 1000;
+
+const writeSessionExpiry = (durationMs) => {
+    const expiresAt = Date.now() + durationMs;
+    localStorage.setItem(EXPIRY_KEY, String(expiresAt));
+    return expiresAt;
+};
+
+const isSessionExpired = () => {
+    const expiry = localStorage.getItem(EXPIRY_KEY);
+    return !expiry || Date.now() > Number(expiry);
+};
+
+const clearSession = () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(EXPIRY_KEY);
+};
+
 export const authContext = createContext();
 
 export const useAuth = () => {
@@ -25,13 +44,55 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [role, setRole] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [sessionExpiresAt, setSessionExpiresAt] = useState(() => {
+        const stored = localStorage.getItem(EXPIRY_KEY);
+        return stored ? Number(stored) : null;
+    });
     const db = getFirestore();
 
-    const signup = (email, password) => createUserWithEmailAndPassword(auth, email, password);
+    const readConfiguredDuration = async () => {
+        try {
+            const snap = await getDoc(doc(db, 'config', 'sesion'));
+            const val = snap.exists() ? Number(snap.data()?.duracionMs) : 0;
+            return val > 0 ? val : DEFAULT_DURATION_MS;
+        } catch {
+            return DEFAULT_DURATION_MS;
+        }
+    };
 
-    const logout = () => signOut(auth);
+    const signup = async (email, password) => {
+        const duration = await readConfiguredDuration();
+        const expiresAt = writeSessionExpiry(duration);
+        sessionStorage.setItem(SESSION_KEY, 'true');
+        try {
+            const result = await createUserWithEmailAndPassword(auth, email, password);
+            setSessionExpiresAt(expiresAt);
+            return result;
+        } catch (error) {
+            clearSession();
+            throw error;
+        }
+    };
 
-    const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
+    const logout = () => {
+        clearSession();
+        setSessionExpiresAt(null);
+        return signOut(auth);
+    };
+
+    const login = async (email, password) => {
+        const duration = await readConfiguredDuration();
+        const expiresAt = writeSessionExpiry(duration);
+        sessionStorage.setItem(SESSION_KEY, 'true');
+        try {
+            const result = await signInWithEmailAndPassword(auth, email, password);
+            setSessionExpiresAt(expiresAt);
+            return result;
+        } catch (error) {
+            clearSession();
+            throw error;
+        }
+    };
 
     const buildMicrosoftProvider = ({ prompt = 'select_account' } = {}) => {
         const provider = new OAuthProvider('microsoft.com');
@@ -49,27 +110,26 @@ export function AuthProvider({ children }) {
     };
 
     // Login corporativo: intenta SSO silencioso reutilizando sesión Microsoft del navegador.
-    // Si no hay sesión activa o Microsoft requiere interacción, cae al selector de cuenta.
+    // Si el silencioso falla por cualquier razón, cae al selector de cuenta interactivo.
     const loginWithMicrosoft = async ({ prompt = 'select_account' } = {}) => {
+        const duration = await readConfiguredDuration();
+        const expiresAt = writeSessionExpiry(duration);
+        sessionStorage.setItem(SESSION_KEY, 'true');
         try {
             const silentProvider = buildMicrosoftProvider({ prompt: 'none' });
-            return await signInWithPopup(auth, silentProvider);
-        } catch (silentError) {
-            const silentFailureCodes = [
-                'auth/popup-closed-by-user',
-                'auth/cancelled-popup-request',
-                'auth/user-cancelled',
-                'auth/internal-error',
-            ];
-            const microsoftSilentFailure =
-                typeof silentError?.message === 'string' &&
-                /interaction_required|login_required|consent_required|account_selection_required/i.test(silentError.message);
-
-            if (silentFailureCodes.includes(silentError?.code) || microsoftSilentFailure) {
+            const result = await signInWithPopup(auth, silentProvider);
+            setSessionExpiresAt(expiresAt);
+            return result;
+        } catch {
+            try {
                 const interactiveProvider = buildMicrosoftProvider({ prompt });
-                return signInWithPopup(auth, interactiveProvider);
+                const result = await signInWithPopup(auth, interactiveProvider);
+                setSessionExpiresAt(expiresAt);
+                return result;
+            } catch (error) {
+                clearSession();
+                throw error;
             }
-            throw silentError;
         }
     };
 
@@ -91,7 +151,12 @@ export function AuthProvider({ children }) {
 
     // Vincula Microsoft con una cuenta existente autenticando primero por contraseña.
     const linkMicrosoftWithPassword = async (email, password, pendingCredential) => {
+        const duration = await readConfiguredDuration();
+        const expiresAt = writeSessionExpiry(duration);
+        sessionStorage.setItem(SESSION_KEY, 'true');
+
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        setSessionExpiresAt(expiresAt);
 
         // Si ya estaba vinculada no bloqueamos el flujo.
         try {
@@ -141,12 +206,20 @@ export function AuthProvider({ children }) {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             try {
                 if (currentUser) {
+                    if (!sessionStorage.getItem(SESSION_KEY) || isSessionExpired()) {
+                        clearSession();
+                        setSessionExpiresAt(null);
+                        await signOut(auth);
+                        return;
+                    }
+                    setSessionExpiresAt(Number(localStorage.getItem(EXPIRY_KEY)));
                     setUser(currentUser);
                     const profileData = await ensureUserProfile(currentUser);
                     await fetchUserRole(currentUser.uid, profileData);
                 } else {
                     setUser(null);
                     setRole(null);
+                    setSessionExpiresAt(null);
                 }
             } catch (error) {
                 console.error('Error sincronizando sesión:', error);
@@ -156,7 +229,18 @@ export function AuthProvider({ children }) {
             }
         });
 
-        return () => unsubscribe();
+        const expiryInterval = setInterval(async () => {
+            if (auth.currentUser && isSessionExpired()) {
+                clearSession();
+                setSessionExpiresAt(null);
+                await signOut(auth);
+            }
+        }, 30 * 1000);
+
+        return () => {
+            unsubscribe();
+            clearInterval(expiryInterval);
+        };
     }, []);
 
     return (
@@ -170,7 +254,8 @@ export function AuthProvider({ children }) {
                 user,
                 role,
                 logout,
-                loading
+                loading,
+                sessionExpiresAt,
             }}
         >
             {children}

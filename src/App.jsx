@@ -28,6 +28,7 @@ import ParteObraTrazabilidad from './Pages/ParteObra/ParteDeObraTrazabilidad.jsx
 import TablaRegistrosActaReunion from './Pages/ParteObra/tablaRegistrosActasReunion.jsx';
 import ListaProyectos from './Pages/Administrador/ShareTrazabilidadProyectos/ListaProyectos .jsx';
 import TabsPpi from './Pages/Administrador/TabsPpi.jsx';
+import ConfiguracionSesion from './Pages/Administrador/ConfiguracionSesion';
 
 // App.js
 // This is the main entry point for the application. It defines the routing structure
@@ -56,6 +57,7 @@ function App() {
     { path: '/gestion-dominios', element: <GestionDominios />, roles: ['admin'] },
     { path: '/project', element: <Projects />, roles: ['admin'] },
     { path: '/copiarTrazabilidad', element: <ListaProyectos />, roles: ['admin'] },
+    { path: '/configuracion-sesion', element: <ConfiguracionSesion />, roles: ['admin'] },
   ];
 
   // inspectionRoutes
